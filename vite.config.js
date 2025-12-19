@@ -24,5 +24,8 @@ export default defineConfig({
       },
     },
   },
-  root: '.',
+  build: {
+    outDir: path.resolve(__dirname, 'dist/public'),
+    emptyOutDir: true,
+  },
 })
