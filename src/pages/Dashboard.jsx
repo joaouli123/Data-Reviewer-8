@@ -23,16 +23,19 @@ export default function DashboardPage() {
     { id: 'recentTransactions', title: 'Transações Recentes', icon: DollarSign, visible: true, description: 'Últimas movimentações' }
   ];
 
-  // Load widget preferences from localStorage
-  const [widgets, setWidgets] = useState(() => {
-    const saved = localStorage.getItem('dashboardWidgets');
-    return saved ? JSON.parse(saved) : defaultWidgets;
-  });
+  // Load widget preferences (disabled localStorage to prevent crash)
+  const [widgets, setWidgets] = useState(defaultWidgets);
 
+  /*
   // Save preferences to localStorage
   useEffect(() => {
-    localStorage.setItem('dashboardWidgets', JSON.stringify(widgets));
+    try {
+      localStorage.setItem('dashboardWidgets', JSON.stringify(widgets));
+    } catch (e) {
+      console.error("LocalStorage error", e);
+    }
   }, [widgets]);
+  */
 
   // Fetch data
   const { data: transactions } = useQuery({
@@ -55,73 +58,91 @@ export default function DashboardPage() {
 
   // Calculate metrics
   const calculateMetrics = () => {
-    const now = new Date();
-    const threeMonthsAgo = subMonths(startOfMonth(now), 2);
-    const recentTransactions = transactions.filter(t => new Date(t.date) >= threeMonthsAgo);
+    try {
+      const safeTransactions = Array.isArray(transactions) ? transactions : [];
+      const safeSaleInstallments = Array.isArray(saleInstallments) ? saleInstallments : [];
+      const safePurchaseInstallments = Array.isArray(purchaseInstallments) ? purchaseInstallments : [];
 
-    const totalRevenue = recentTransactions
-      .filter(t => t.type === 'income')
-      .reduce((acc, curr) => acc + (curr.amount || 0), 0);
-    
-    const totalExpenses = recentTransactions
-      .filter(t => t.type === 'expense')
-      .reduce((acc, curr) => acc + (curr.amount || 0), 0);
+      const now = new Date();
+      const threeMonthsAgo = subMonths(startOfMonth(now), 2);
+      const recentTransactions = safeTransactions.filter(t => new Date(t.date) >= threeMonthsAgo);
 
-    const netProfit = totalRevenue - totalExpenses;
-
-    // Working Capital (Receivables - Payables)
-    const receivables = saleInstallments
-      .filter(i => !i.paid)
-      .reduce((sum, i) => sum + i.amount, 0);
-    
-    const payables = purchaseInstallments
-      .filter(i => !i.paid)
-      .reduce((sum, i) => sum + i.amount, 0);
-
-    const workingCapital = receivables - payables;
-
-    // Debt
-    const totalDebt = purchaseInstallments
-      .filter(i => !i.paid)
-      .reduce((sum, i) => sum + i.amount, 0);
-
-    // Future Cash Flow (30 days)
-    const next30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-    const futureRevenue = saleInstallments
-      .filter(i => !i.paid && new Date(i.due_date) >= now && new Date(i.due_date) <= next30Days)
-      .reduce((sum, i) => sum + i.amount, 0);
-    
-    const futureExpenses = purchaseInstallments
-      .filter(i => !i.paid && new Date(i.due_date) >= now && new Date(i.due_date) <= next30Days)
-      .reduce((sum, i) => sum + i.amount, 0);
-
-    // Chart data
-    const chartData = [];
-    for (let i = 5; i >= 0; i--) {
-      const date = subMonths(new Date(), i);
-      const monthKey = date.toISOString().slice(0, 7);
-      const monthTrans = transactions.filter(t => t.date.startsWith(monthKey));
+      const totalRevenue = recentTransactions
+        .filter(t => t.type === 'income')
+        .reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
       
-      const income = monthTrans.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
-      const expense = monthTrans.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
+      const totalExpenses = recentTransactions
+        .filter(t => t.type === 'expense')
+        .reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
 
-      chartData.push({
-        name: date.toLocaleString('pt-BR', { month: 'short' }).toUpperCase(),
-        income,
-        expense
-      });
+      const netProfit = totalRevenue - totalExpenses;
+
+      // Working Capital (Receivables - Payables)
+      const receivables = safeSaleInstallments
+        .filter(i => !i.paid)
+        .reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
+      
+      const payables = safePurchaseInstallments
+        .filter(i => !i.paid)
+        .reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
+      
+      const workingCapital = receivables - payables;
+
+      // Debt
+      const totalDebt = safePurchaseInstallments
+        .filter(i => !i.paid)
+        .reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
+
+      // Future Cash Flow (30 days)
+      const next30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+      const futureRevenue = safeSaleInstallments
+        .filter(i => !i.paid && new Date(i.due_date) >= now && new Date(i.due_date) <= next30Days)
+        .reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
+      
+      const futureExpenses = safePurchaseInstallments
+        .filter(i => !i.paid && new Date(i.due_date) >= now && new Date(i.due_date) <= next30Days)
+        .reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
+
+      // Chart data
+      const chartData = [];
+      for (let i = 5; i >= 0; i--) {
+        const date = subMonths(new Date(), i);
+        const monthKey = date.toISOString().slice(0, 7);
+        const monthTrans = safeTransactions.filter(t => t.date.startsWith(monthKey));
+        
+        const income = monthTrans.filter(t => t.type === 'income').reduce((acc, t) => acc + (Number(t.amount) || 0), 0);
+        const expense = monthTrans.filter(t => t.type === 'expense').reduce((acc, t) => acc + (Number(t.amount) || 0), 0);
+
+        chartData.push({
+          name: date.toLocaleString('pt-BR', { month: 'short' }).toUpperCase(),
+          income,
+          expense
+        });
+      }
+
+      return {
+        totalRevenue,
+        totalExpenses,
+        netProfit,
+        workingCapital,
+        totalDebt,
+        futureRevenue,
+        futureExpenses,
+        chartData
+      };
+    } catch (error) {
+      console.error("Error calculating metrics:", error);
+      return {
+        totalRevenue: 0,
+        totalExpenses: 0,
+        netProfit: 0,
+        workingCapital: 0,
+        totalDebt: 0,
+        futureRevenue: 0,
+        futureExpenses: 0,
+        chartData: []
+      };
     }
-
-    return {
-      totalRevenue,
-      totalExpenses,
-      netProfit,
-      workingCapital,
-      totalDebt,
-      futureRevenue,
-      futureExpenses,
-      chartData
-    };
   };
 
   const metrics = calculateMetrics();
