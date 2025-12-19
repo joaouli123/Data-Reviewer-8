@@ -8,9 +8,9 @@
 ### Brand Colors
 
 **Primary Color - Royal Blue**
-- Hex: #0066CC
-- HSL: 210° 100% 40%
-- RGB: 0, 102, 204
+- Hex: #004E90
+- HSL: 210° 100% 28%
+- RGB: 0, 78, 144
 - Usage: Headers, primary buttons, active states, key metrics
 
 **Secondary Color - Golden Yellow**

@@ -27,9 +27,9 @@ export default {
           border: "hsl(var(--popover-border) / <alpha-value>)",
         },
         primary: {
-          DEFAULT: "#0066CC",
+          DEFAULT: "#004E90",
           foreground: "#FFFFFF",
-          border: "#0052A3",
+          border: "#003A68",
         },
         secondary: {
           DEFAULT: "#FFB800",
