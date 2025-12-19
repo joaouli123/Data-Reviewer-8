@@ -14,14 +14,14 @@ interface KPICardProps {
 
 export function KPICard({ label, value, icon, trend }: KPICardProps) {
   return (
-    <Card className="hover-elevate border-primary/20" data-testid={`card-kpi-${label.toLowerCase().replace(/\s+/g, "-")}`}>
+    <Card className="hover-elevate border border-[#001F47]/20 bg-white dark:bg-slate-900" data-testid={`card-kpi-${label.toLowerCase().replace(/\s+/g, "-")}`}>
       <CardContent className="p-6">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
             <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide" data-testid={`label-${label.toLowerCase()}`}>
               {label}
             </p>
-            <p className="mt-2 text-3xl font-bold tracking-tight text-primary" data-testid={`value-${label.toLowerCase()}`}>
+            <p className="mt-2 text-3xl font-bold tracking-tight text-[#001F47] dark:text-white" data-testid={`value-${label.toLowerCase()}`}>
               {value}
             </p>
             {trend && (
@@ -40,8 +40,8 @@ export function KPICard({ label, value, icon, trend }: KPICardProps) {
               </div>
             )}
           </div>
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10" data-testid={`icon-${label.toLowerCase()}`}>
-            <div className="text-primary">
+          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#001F47]/10 dark:bg-[#001F47]/20" data-testid={`icon-${label.toLowerCase()}`}>
+            <div className="text-[#001F47] dark:text-white">
               {icon}
             </div>
           </div>
