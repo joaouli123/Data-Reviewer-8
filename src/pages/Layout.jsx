@@ -21,8 +21,8 @@ export default function Layout({ children }) {
   ];
 
   const NavContent = () => (
-    <div className="flex flex-col h-full py-8 px-4 text-white" style={{ backgroundColor: '#040303' }}>
-      <div className="flex items-center justify-center px-2 mb-12">
+    <div className="flex flex-col h-full py-3 px-4 text-white" style={{ backgroundColor: '#040303' }}>
+      <div className="flex items-center justify-center px-2 mb-4">
         <img 
           src={LogoHUA} 
           alt="HUA Logo" 
