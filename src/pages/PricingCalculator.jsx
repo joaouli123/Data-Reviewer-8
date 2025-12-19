@@ -1,3 +1,4 @@
+import { InvokeLLM, UploadFile, ExtractDataFromUploadedFile } from '@/api/integrations';
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -5,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Calculator, TrendingUp, DollarSign, Percent, Sparkles, Loader2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+
 import { toast } from 'sonner';
 import PredictivePricingAnalysis from '../components/pricing/PredictivePricingAnalysis';
 
@@ -66,9 +67,9 @@ ${formData.marketComparison ? `Preços de Mercado: ${formData.marketComparison}`
 
 Forneça recomendações estratégicas de precificação.`;
 
-      const response = await base44.integrations.Core.InvokeLLM({
+      const response = await InvokeLLM({
         prompt: prompt,
-        response_json_schema: {
+        
           type: "object",
           properties: {
             recommended_strategy: { type: "string" },

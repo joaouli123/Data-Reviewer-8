@@ -1,3 +1,4 @@
+import { InvokeLLM, UploadFile, ExtractDataFromUploadedFile } from '@/api/integrations';
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +11,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarIcon, Plus, Sparkles, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { base44 } from '@/api/base44Client';
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
@@ -32,12 +33,12 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
   // Fetch Categories
   const { data: categories } = useQuery({
     queryKey: ['categories'],
-    queryFn: () => base44.entities.Category.list(),
+    queryFn: () => Category.list(),
     initialData: []
   });
 
   const createCategoryMutation = useMutation({
-    mutationFn: (data) => base44.entities.Category.create(data),
+    mutationFn: (data) => Category.create(data),
     onSuccess: (newCat) => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       setFormData({ ...formData, category: newCat.name });
@@ -101,7 +102,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
       sugira a categoria mais apropriada dentre as seguintes: ${categoryNames}.
       Retorne apenas o nome exato da categoria, nada mais.`;
 
-      const response = await base44.integrations.Core.InvokeLLM({
+      const response = await InvokeLLM({
         prompt: prompt
       });
 

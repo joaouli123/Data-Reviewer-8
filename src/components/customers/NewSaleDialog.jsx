@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+
 import { format, addMonths } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -24,14 +24,14 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
 
   const { data: categories } = useQuery({
     queryKey: ['categories'],
-    queryFn: () => base44.entities.Category.list(),
+    queryFn: () => Category.list(),
     initialData: []
   });
 
   const createSaleMutation = useMutation({
     mutationFn: async (data) => {
       // Create sale
-      const sale = await base44.entities.Sale.create({
+      const sale = await Sale.create({
         customer_id: customer.id,
         description: data.description,
         total_amount: data.total_amount,
@@ -48,7 +48,7 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
         // Use custom installments
         data.customInstallments.forEach((inst, idx) => {
           installmentPromises.push(
-            base44.entities.Installment.create({
+            Installment.create({
               sale_id: sale.id,
               installment_number: idx + 1,
               amount: parseFloat(inst.amount),
@@ -66,7 +66,7 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
         for (let i = 1; i <= data.installments; i++) {
           const dueDate = addMonths(new Date(data.sale_date), i - 1);
           installmentPromises.push(
-            base44.entities.Installment.create({
+            Installment.create({
               sale_id: sale.id,
               installment_number: i,
               amount: installmentAmount,

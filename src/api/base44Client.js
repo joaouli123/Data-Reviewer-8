@@ -1,5 +1,5 @@
-// PostgreSQL Database Client
-// Dados locais para inicialização sem dependência externa
+// Local Database Client - Sem dependências externas
+// Dados em memória para inicialização
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
 

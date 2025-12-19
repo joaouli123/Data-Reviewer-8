@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CheckCircle2, Clock, DollarSign } from 'lucide-react';
@@ -16,7 +16,7 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
 
   const { data: sales } = useQuery({
     queryKey: ['sales', customer?.id],
-    queryFn: () => base44.entities.Sale.filter({ customer_id: customer.id }),
+    queryFn: () => Sale.filter({ customer_id: customer.id }),
     enabled: !!customer,
     initialData: []
   });
@@ -26,7 +26,7 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
     queryFn: async () => {
       const saleIds = sales.map(s => s.id);
       if (saleIds.length === 0) return [];
-      const installments = await base44.entities.Installment.list();
+      const installments = await Installment.list();
       return installments.filter(i => saleIds.includes(i.sale_id));
     },
     enabled: !!customer && sales.length > 0,
@@ -36,7 +36,7 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
   const confirmPaymentMutation = useMutation({
     mutationFn: async ({ installment, sale }) => {
       // Create transaction
-      const transaction = await base44.entities.Transaction.create({
+      const transaction = await Transaction.create({
         description: `${sale.description} - Parcela ${installment.installment_number}/${sale.installments}`,
         amount: installment.amount,
         type: 'income',
@@ -47,7 +47,7 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
       });
 
       // Update installment
-      await base44.entities.Installment.update(installment.id, {
+      await Installment.update(installment.id, {
         paid: true,
         paid_date: format(new Date(), 'yyyy-MM-dd'),
         transaction_id: transaction.id
@@ -58,9 +58,9 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
       const allPaid = saleInstallments.every(i => i.id === installment.id || i.paid);
       
       if (allPaid) {
-        await base44.entities.Sale.update(sale.id, { status: 'completed' });
+        await Sale.update(sale.id, { status: 'completed' });
       } else {
-        await base44.entities.Sale.update(sale.id, { status: 'partial' });
+        await Sale.update(sale.id, { status: 'partial' });
       }
     },
     onSuccess: () => {

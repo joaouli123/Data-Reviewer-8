@@ -6,7 +6,7 @@ import { createPageUrl } from '@/utils';
 import TransactionForm from '../transactions/TransactionForm';
 import BankStatementUpload from '../transactions/BankStatementUpload';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+
 import { toast } from 'sonner';
 
 export default function QuickActionsWidget() {
@@ -15,7 +15,7 @@ export default function QuickActionsWidget() {
   const queryClient = useQueryClient();
 
   const createTransactionMutation = useMutation({
-    mutationFn: (data) => base44.entities.Transaction.create(data),
+    mutationFn: (data) => Transaction.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       setTransactionFormOpen(false);

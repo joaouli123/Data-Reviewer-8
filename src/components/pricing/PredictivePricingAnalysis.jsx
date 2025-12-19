@@ -1,9 +1,10 @@
+import { InvokeLLM, UploadFile, ExtractDataFromUploadedFile } from '@/api/integrations';
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, TrendingUp, Target, Loader2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+
 import { toast } from 'sonner';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
@@ -34,9 +35,9 @@ Crie uma análise preditiva incluindo:
 4. Ponto ótimo de precificação
 5. Risco de cada estratégia`;
 
-      const response = await base44.integrations.Core.InvokeLLM({
+      const response = await InvokeLLM({
         prompt: prompt,
-        response_json_schema: {
+        
           type: "object",
           properties: {
             optimal_price_point: {

@@ -1,9 +1,10 @@
+import { InvokeLLM, UploadFile, ExtractDataFromUploadedFile } from '@/api/integrations';
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Upload, FileSpreadsheet, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+
 import { toast } from 'sonner';
 
 export default function BankStatementUpload({ open, onOpenChange, onExtracted }) {
@@ -34,7 +35,7 @@ export default function BankStatementUpload({ open, onOpenChange, onExtracted })
     setIsUploading(true);
     try {
       // Upload file
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const { file_url } = await UploadFile({ file });
 
       // Extract data from file
       const schema = {
@@ -51,7 +52,7 @@ export default function BankStatementUpload({ open, onOpenChange, onExtracted })
         }
       };
 
-      const extractionResult = await base44.integrations.Core.ExtractDataFromUploadedFile({
+      const extractionResult = await ExtractDataFromUploadedFile({
         file_url: file_url,
         json_schema: schema
       });

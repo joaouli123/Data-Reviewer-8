@@ -7,7 +7,7 @@ import { CheckCircle2, XCircle, AlertCircle, Plus, ArrowRight } from 'lucide-rea
 import { format, parseISO, isEqual } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+
 import { toast } from 'sonner';
 
 export default function BankReconciliation({ open, onOpenChange, statementData, transactions }) {
@@ -15,7 +15,7 @@ export default function BankReconciliation({ open, onOpenChange, statementData, 
   const queryClient = useQueryClient();
 
   const createTransactionMutation = useMutation({
-    mutationFn: (data) => base44.entities.Transaction.create(data),
+    mutationFn: (data) => Transaction.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
     }

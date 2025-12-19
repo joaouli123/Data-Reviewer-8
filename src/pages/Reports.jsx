@@ -1,5 +1,6 @@
+import { InvokeLLM, UploadFile, ExtractDataFromUploadedFile } from '@/api/integrations';
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -31,37 +32,37 @@ export default function ReportsPage() {
 
   const { data: transactions } = useQuery({
     queryKey: ['transactions'],
-    queryFn: () => base44.entities.Transaction.list(),
+    queryFn: () => Transaction.list(),
     initialData: []
   });
 
   const { data: customers } = useQuery({
     queryKey: ['customers'],
-    queryFn: () => base44.entities.Customer.list(),
+    queryFn: () => Customer.list(),
     initialData: []
   });
 
   const { data: categories } = useQuery({
     queryKey: ['categories'],
-    queryFn: () => base44.entities.Category.list(),
+    queryFn: () => Category.list(),
     initialData: []
   });
 
   const { data: saleInstallments } = useQuery({
     queryKey: ['installments'],
-    queryFn: () => base44.entities.Installment.list(),
+    queryFn: () => Installment.list(),
     initialData: []
   });
 
   const { data: purchaseInstallments } = useQuery({
     queryKey: ['purchaseInstallments'],
-    queryFn: () => base44.entities.PurchaseInstallment.list(),
+    queryFn: () => entities.PurchaseInstallment.list(),
     initialData: []
   });
 
   const { data: purchases } = useQuery({
     queryKey: ['purchases'],
-    queryFn: () => base44.entities.Purchase.list(),
+    queryFn: () => entities.Purchase.list(),
     initialData: []
   });
 
@@ -138,9 +139,9 @@ export default function ReportsPage() {
         5. Alertas de anomalias se houver.
       `;
 
-      const response = await base44.integrations.Core.InvokeLLM({
+      const response = await InvokeLLM({
         prompt: prompt,
-        response_json_schema: {
+        
           type: "object",
           properties: {
             executive_summary: { type: "string" },

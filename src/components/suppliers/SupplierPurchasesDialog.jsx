@@ -1,5 +1,5 @@
 import React from 'react';
-import { base44 } from '@/api/base44Client';
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -15,14 +15,14 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
 
   const { data: purchases } = useQuery({
     queryKey: ['purchases', supplier?.id],
-    queryFn: () => base44.entities.Purchase.list(),
+    queryFn: () => entities.Purchase.list(),
     enabled: !!supplier,
     select: (data) => data.filter(p => p.supplier_id === supplier?.id)
   });
 
   const { data: allInstallments } = useQuery({
     queryKey: ['purchaseInstallments'],
-    queryFn: () => base44.entities.PurchaseInstallment.list(),
+    queryFn: () => entities.PurchaseInstallment.list(),
     enabled: !!supplier,
     initialData: []
   });
@@ -33,7 +33,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
 
   const confirmPaymentMutation = useMutation({
     mutationFn: async ({ installment, purchase }) => {
-      const transaction = await base44.entities.Transaction.create({
+      const transaction = await Transaction.create({
         description: `Pagamento - ${purchase.description} (Parcela ${installment.installment_number})`,
         amount: installment.amount,
         type: 'expense',
@@ -42,7 +42,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
         status: 'completed'
       });
 
-      await base44.entities.PurchaseInstallment.update(installment.id, {
+      await entities.PurchaseInstallment.update(installment.id, {
         paid: true,
         paid_date: format(new Date(), 'yyyy-MM-dd'),
         transaction_id: transaction.id
@@ -53,7 +53,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
       const newStatus = paidCount === purchaseInstallments.length ? 'completed' : 
                         paidCount > 0 ? 'partial' : 'pending';
 
-      await base44.entities.Purchase.update(purchase.id, { status: newStatus });
+      await entities.Purchase.update(purchase.id, { status: newStatus });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['purchases'] });

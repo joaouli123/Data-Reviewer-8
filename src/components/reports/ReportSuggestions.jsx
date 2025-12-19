@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, TrendingUp, TrendingDown, AlertCircle, BarChart3, Calendar, Loader2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { InvokeLLM } from '@/api/integrations';
 import { toast } from 'sonner';
 import { subMonths } from 'date-fns';
 
@@ -37,21 +37,17 @@ export default function ReportSuggestions({ transactions, saleInstallments, purc
 
 Sugira 4-5 relatórios mais relevantes que devem ser gerados, com justificativa de cada um.`;
 
-      const response = await base44.integrations.Core.InvokeLLM({
-        prompt: prompt,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            suggested_reports: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  report_name: { type: "string" },
-                  priority: { type: "string", enum: ["high", "medium", "low"] },
-                  reason: { type: "string" },
-                  key_insight: { type: "string" }
-                }
+      const response = await InvokeLLM(prompt, {
+        properties: {
+          suggested_reports: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                report_name: { type: "string" },
+                priority: { type: "string", enum: ["high", "medium", "low"] },
+                reason: { type: "string" },
+                key_insight: { type: "string" }
               }
             }
           }

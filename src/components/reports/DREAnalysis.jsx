@@ -1,9 +1,10 @@
+import { InvokeLLM, UploadFile, ExtractDataFromUploadedFile } from '@/api/integrations';
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Sparkles, Loader2, TrendingUp, TrendingDown } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+
 import { toast } from 'sonner';
 import { subMonths, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -88,9 +89,9 @@ Histórico (últimos 6 meses): ${JSON.stringify(historicalData)}
 
 Gere previsões para os próximos 3 meses com análise de tendências.`;
 
-      const response = await base44.integrations.Core.InvokeLLM({
+      const response = await InvokeLLM({
         prompt: prompt,
-        response_json_schema: {
+        
           type: "object",
           properties: {
             forecast_months: {

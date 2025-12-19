@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
@@ -20,31 +20,31 @@ export default function CashFlowForecastPage() {
 
   const { data: transactions } = useQuery({
     queryKey: ['transactions'],
-    queryFn: () => base44.entities.Transaction.list(),
+    queryFn: () => Transaction.list(),
     initialData: []
   });
 
   const { data: saleInstallments } = useQuery({
     queryKey: ['installments'],
-    queryFn: () => base44.entities.Installment.list(),
+    queryFn: () => Installment.list(),
     initialData: []
   });
 
   const { data: purchaseInstallments } = useQuery({
     queryKey: ['purchaseInstallments'],
-    queryFn: () => base44.entities.PurchaseInstallment.list(),
+    queryFn: () => entities.PurchaseInstallment.list(),
     initialData: []
   });
 
   const { data: sales } = useQuery({
     queryKey: ['sales'],
-    queryFn: () => base44.entities.Sale.list(),
+    queryFn: () => Sale.list(),
     initialData: []
   });
 
   const { data: purchases } = useQuery({
     queryKey: ['purchases'],
-    queryFn: () => base44.entities.Purchase.list(),
+    queryFn: () => entities.Purchase.list(),
     initialData: []
   });
 

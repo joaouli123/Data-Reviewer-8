@@ -1,9 +1,10 @@
+import { InvokeLLM, UploadFile, ExtractDataFromUploadedFile } from '@/api/integrations';
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, TrendingDown, BarChart3, Sparkles, Loader2, Calendar } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+
 import { toast } from 'sonner';
 import { addMonths, parseISO, differenceInMonths } from 'date-fns';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
@@ -92,9 +93,9 @@ export default function DebtAnalysis({ transactions, purchases, purchaseInstallm
 
 Forneça uma análise detalhada e recomendações para gestão de endividamento.`;
 
-      const response = await base44.integrations.Core.InvokeLLM({
+      const response = await InvokeLLM({
         prompt: prompt,
-        response_json_schema: {
+        
           type: "object",
           properties: {
             overall_assessment: { type: "string" },

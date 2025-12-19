@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
 
   const { data: categories } = useQuery({
     queryKey: ['categories'],
-    queryFn: () => base44.entities.Category.list(),
+    queryFn: () => Category.list(),
     initialData: []
   });
 
@@ -31,7 +31,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
 
   const createPurchaseMutation = useMutation({
     mutationFn: async (data) => {
-      const purchase = await base44.entities.Purchase.create({
+      const purchase = await entities.Purchase.create({
         supplier_id: supplier.id,
         description: data.description,
         total_amount: parseFloat(data.total_amount),
@@ -49,7 +49,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
       for (let i = 0; i < parseInt(data.installments); i++) {
         const dueDate = addMonths(parseISO(data.purchase_date), i);
         installmentPromises.push(
-          base44.entities.PurchaseInstallment.create({
+          entities.PurchaseInstallment.create({
             purchase_id: purchase.id,
             installment_number: i + 1,
             amount: installmentAmount,

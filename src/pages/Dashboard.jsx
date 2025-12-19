@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Settings, DollarSign, TrendingUp, Wallet, AlertCircle, PieChart, Zap } from 'lucide-react';
@@ -37,19 +37,19 @@ export default function DashboardPage() {
   // Fetch data
   const { data: transactions } = useQuery({
     queryKey: ['transactions', 'all'],
-    queryFn: () => base44.entities.Transaction.list(),
+    queryFn: () => Transaction.list(),
     initialData: []
   });
 
   const { data: saleInstallments } = useQuery({
     queryKey: ['installments'],
-    queryFn: () => base44.entities.Installment.list(),
+    queryFn: () => Installment.list(),
     initialData: []
   });
 
   const { data: purchaseInstallments } = useQuery({
     queryKey: ['purchaseInstallments'],
-    queryFn: () => base44.entities.PurchaseInstallment.list(),
+    queryFn: () => entities.PurchaseInstallment.list(),
     initialData: []
   });
 

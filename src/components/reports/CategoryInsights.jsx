@@ -1,8 +1,9 @@
+import { InvokeLLM, UploadFile, ExtractDataFromUploadedFile } from '@/api/integrations';
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { base44 } from '@/api/base44Client';
+
 import { AlertTriangle, TrendingUp, TrendingDown, Sparkles, Loader2, Target } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, subMonths } from 'date-fns';
@@ -66,9 +67,9 @@ Identifique:
 3. Oportunidades de otimização (onde há potencial de redução ou melhoria)
 4. Regras de categorização inteligentes (padrões nas descrições que podem ajudar a categorizar automaticamente futuras transações)`;
 
-      const response = await base44.integrations.Core.InvokeLLM({
+      const response = await InvokeLLM({
         prompt: prompt,
-        response_json_schema: {
+        
           type: "object",
           properties: {
             anomalies: {

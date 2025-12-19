@@ -1,29 +1,23 @@
-import { base44 } from './base44Client';
 import { invokeGemini } from './geminiClient';
 
+// Integrations locais sem dependências externas
 export const Core = {
   InvokeLLM: invokeGemini,
-  SendEmail: base44.integrations.Core.SendEmail,
-  UploadFile: base44.integrations.Core.UploadFile,
-  GenerateImage: base44.integrations.Core.GenerateImage,
-  ExtractDataFromUploadedFile: base44.integrations.Core.ExtractDataFromUploadedFile,
-  CreateFileSignedUrl: base44.integrations.Core.CreateFileSignedUrl,
-  UploadPrivateFile: base44.integrations.Core.UploadPrivateFile,
+  SendEmail: async () => null,
+  UploadFile: async () => null,
+  GenerateImage: async () => null,
+  ExtractDataFromUploadedFile: async () => null,
+  CreateFileSignedUrl: async () => null,
+  UploadPrivateFile: async () => null,
 };
 
 export const InvokeLLM = invokeGemini;
-
-export const SendEmail = base44.integrations.Core.SendEmail;
-
-export const UploadFile = base44.integrations.Core.UploadFile;
-
-export const GenerateImage = base44.integrations.Core.GenerateImage;
-
-export const ExtractDataFromUploadedFile = base44.integrations.Core.ExtractDataFromUploadedFile;
-
-export const CreateFileSignedUrl = base44.integrations.Core.CreateFileSignedUrl;
-
-export const UploadPrivateFile = base44.integrations.Core.UploadPrivateFile;
+export const SendEmail = Core.SendEmail;
+export const UploadFile = Core.UploadFile;
+export const GenerateImage = Core.GenerateImage;
+export const ExtractDataFromUploadedFile = Core.ExtractDataFromUploadedFile;
+export const CreateFileSignedUrl = Core.CreateFileSignedUrl;
+export const UploadPrivateFile = Core.UploadPrivateFile;
 
 
 
