@@ -22,17 +22,13 @@ export default function Layout({ children }) {
 
   const NavContent = () => (
     <div className="flex flex-col h-full py-6 px-4 text-white" style={{ backgroundColor: '#040303' }}>
-      <div className="flex items-center gap-3 px-2 mb-10">
+      <div className="flex items-center justify-center px-2 mb-10">
         <img 
           src={LogoHUA} 
           alt="HUA Logo" 
           className="w-12 h-12 object-contain flex-shrink-0"
           title="HUA - Consultoria e Análise"
         />
-        <div className="flex flex-col gap-0.5">
-          <span className="text-sm font-bold tracking-tighter text-white">HUA</span>
-          <span className="text-xs font-medium text-yellow-400">CONSULTORIA</span>
-        </div>
       </div>
       
       <nav className="space-y-1 flex-1">
@@ -78,18 +74,12 @@ export default function Layout({ children }) {
 
       {/* Mobile Header */}
       <div className="md:hidden flex items-center justify-between p-4 text-white sticky top-0 z-20" style={{ backgroundColor: '#040303' }}>
-        <div className="flex items-center gap-2">
-          <img 
-            src={LogoHUA} 
-            alt="HUA Logo" 
-            className="w-10 h-10 object-contain"
-            title="HUA - Consultoria e Análise"
-          />
-          <div className="flex flex-col gap-0">
-            <span className="text-sm font-bold text-white">HUA</span>
-            <span className="text-xs font-medium text-yellow-400">CONSULTORIA</span>
-          </div>
-        </div>
+        <img 
+          src={LogoHUA} 
+          alt="HUA Logo" 
+          className="w-10 h-10 object-contain"
+          title="HUA - Consultoria e Análise"
+        />
         <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" className="text-white hover:bg-white/10">
