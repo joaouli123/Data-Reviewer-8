@@ -150,7 +150,7 @@ export default function DashboardPage() {
             title="Receita (3 meses)"
             value={`R$ ${metrics.totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
             icon={TrendingUp}
-            color="emerald"
+            color="primary"
             trend="up"
             trendValue="12% vs período anterior"
           />
@@ -158,31 +158,31 @@ export default function DashboardPage() {
             title="Despesas (3 meses)"
             value={`R$ ${metrics.totalExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
             icon={DollarSign}
-            color="rose"
+            color="secondary"
           />
           <KPIWidget
             title="Lucro Líquido"
             value={`R$ ${metrics.netProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
             icon={Wallet}
-            color={metrics.netProfit >= 0 ? 'emerald' : 'rose'}
+            color={metrics.netProfit >= 0 ? 'primary' : 'secondary'}
           />
           <KPIWidget
             title="Capital de Giro"
             value={`R$ ${metrics.workingCapital.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
             icon={Wallet}
-            color={metrics.workingCapital >= 0 ? 'blue' : 'amber'}
+            color={metrics.workingCapital >= 0 ? 'primary' : 'secondary'}
           />
           <KPIWidget
             title="Endividamento"
             value={`R$ ${metrics.totalDebt.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
             icon={AlertCircle}
-            color="purple"
+            color="secondary"
           />
           <KPIWidget
             title="Saúde Financeira"
             value={metrics.netProfit >= 0 && metrics.workingCapital >= 0 ? 'Saudável' : 'Atenção'}
             icon={PieChart}
-            color={metrics.netProfit >= 0 && metrics.workingCapital >= 0 ? 'emerald' : 'amber'}
+            color={metrics.netProfit >= 0 && metrics.workingCapital >= 0 ? 'primary' : 'secondary'}
           />
         </div>
       ),
@@ -190,32 +190,32 @@ export default function DashboardPage() {
       revenueChart: <RevenueChart data={metrics.chartData} />,
       cashFlow: (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-4 rounded-lg bg-emerald-50 border border-emerald-100">
+          <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800">
             <div className="flex items-center gap-2 mb-1">
-              <TrendingUp className="w-4 h-4 text-emerald-600" />
-              <p className="text-sm text-emerald-600 font-medium">Receitas Previstas</p>
+              <TrendingUp className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">Receitas Previstas</p>
             </div>
-            <p className="text-2xl font-bold text-emerald-700">
+            <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">
               R$ {metrics.futureRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </p>
           </div>
           
-          <div className="p-4 rounded-lg bg-rose-50 border border-rose-100">
+          <div className="p-4 rounded-lg bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800">
             <div className="flex items-center gap-2 mb-1">
-              <AlertCircle className="w-4 h-4 text-rose-600" />
-              <p className="text-sm text-rose-600 font-medium">Despesas Previstas</p>
+              <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              <p className="text-sm text-amber-600 dark:text-amber-400 font-medium">Despesas Previstas</p>
             </div>
-            <p className="text-2xl font-bold text-rose-700">
+            <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">
               R$ {metrics.futureExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </p>
           </div>
           
-          <div className="p-4 rounded-lg bg-indigo-50 border border-indigo-100">
+          <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800">
             <div className="flex items-center gap-2 mb-1">
-              <Wallet className="w-4 h-4 text-indigo-600" />
-              <p className="text-sm text-indigo-600 font-medium">Saldo Projetado</p>
+              <Wallet className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">Saldo Projetado</p>
             </div>
-            <p className={`text-2xl font-bold ${metrics.futureRevenue - metrics.futureExpenses >= 0 ? 'text-indigo-700' : 'text-rose-700'}`}>
+            <p className={`text-2xl font-bold ${metrics.futureRevenue - metrics.futureExpenses >= 0 ? 'text-blue-700 dark:text-blue-300' : 'text-amber-700 dark:text-amber-300'}`}>
               {metrics.futureRevenue - metrics.futureExpenses >= 0 ? '+' : ''} R$ {(metrics.futureRevenue - metrics.futureExpenses).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </p>
           </div>
@@ -224,19 +224,19 @@ export default function DashboardPage() {
       recentTransactions: (
         <div className="space-y-3">
           {transactions.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5).map((t) => (
-            <div key={t.id} className="flex items-center justify-between p-3 hover:bg-slate-50 rounded-lg transition-colors">
+            <div key={t.id} className="flex items-center justify-between p-3 hover:bg-slate-50 dark:hover:bg-slate-900 rounded-lg transition-colors">
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                  t.type === 'income' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'
+                  t.type === 'income' ? 'bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400' : 'bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400'
                 }`}>
                   {t.type === 'income' ? <TrendingUp className="w-5 h-5" /> : <DollarSign className="w-5 h-5" />}
                 </div>
                 <div>
-                  <p className="font-medium text-slate-900">{t.description}</p>
-                  <p className="text-xs text-slate-500">{new Date(t.date).toLocaleDateString('pt-BR')}</p>
+                  <p className="font-medium text-slate-900 dark:text-slate-100">{t.description}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{new Date(t.date).toLocaleDateString('pt-BR')}</p>
                 </div>
               </div>
-              <span className={`font-semibold ${t.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}`}>
+              <span className={`font-semibold ${t.type === 'income' ? 'text-blue-600 dark:text-blue-400' : 'text-amber-600 dark:text-amber-400'}`}>
                 {t.type === 'income' ? '+' : '-'} R$ {t.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </span>
             </div>
