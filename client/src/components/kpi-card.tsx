@@ -10,30 +10,29 @@ interface KPICardProps {
     isPositive: boolean;
     period: string;
   };
-  iconBgColor?: string;
 }
 
-export function KPICard({ label, value, icon, trend, iconBgColor = "bg-blue-50 dark:bg-blue-950" }: KPICardProps) {
+export function KPICard({ label, value, icon, trend }: KPICardProps) {
   return (
-    <Card className="hover-elevate" data-testid={`card-kpi-${label.toLowerCase().replace(/\s+/g, "-")}`}>
+    <Card className="hover-elevate border-primary/20" data-testid={`card-kpi-${label.toLowerCase().replace(/\s+/g, "-")}`}>
       <CardContent className="p-6">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
             <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide" data-testid={`label-${label.toLowerCase()}`}>
               {label}
             </p>
-            <p className="mt-2 text-3xl font-bold tracking-tight" data-testid={`value-${label.toLowerCase()}`}>
+            <p className="mt-2 text-3xl font-bold tracking-tight text-primary" data-testid={`value-${label.toLowerCase()}`}>
               {value}
             </p>
             {trend && (
               <div className="mt-3 flex items-center gap-1">
                 <div className="flex items-center gap-1">
                   {trend.isPositive ? (
-                    <TrendingUp className="h-4 w-4 text-green-600 dark:text-green-500" />
+                    <TrendingUp className="h-4 w-4 text-accent" />
                   ) : (
-                    <TrendingDown className="h-4 w-4 text-red-600 dark:text-red-500" />
+                    <TrendingDown className="h-4 w-4 text-destructive" />
                   )}
-                  <span className={`text-sm font-medium ${trend.isPositive ? "text-green-600 dark:text-green-500" : "text-red-600 dark:text-red-500"}`}>
+                  <span className={`text-sm font-medium ${trend.isPositive ? "text-accent" : "text-destructive"}`}>
                     {trend.value}
                   </span>
                 </div>
@@ -41,8 +40,10 @@ export function KPICard({ label, value, icon, trend, iconBgColor = "bg-blue-50 d
               </div>
             )}
           </div>
-          <div className={`flex h-12 w-12 items-center justify-center rounded-lg ${iconBgColor}`} data-testid={`icon-${label.toLowerCase()}`}>
-            {icon}
+          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10" data-testid={`icon-${label.toLowerCase()}`}>
+            <div className="text-primary">
+              {icon}
+            </div>
           </div>
         </div>
       </CardContent>

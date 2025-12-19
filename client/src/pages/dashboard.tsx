@@ -21,8 +21,7 @@ export default function Dashboard() {
           <KPICard
             label="Receita (3 meses)"
             value="R$ 4.300,00"
-            icon={<DollarSign className="h-6 w-6 text-primary" />}
-            iconBgColor="bg-blue-50 dark:bg-blue-950"
+            icon={<DollarSign className="h-6 w-6" />}
             trend={{
               value: "+12%",
               isPositive: true,
@@ -33,8 +32,7 @@ export default function Dashboard() {
           <KPICard
             label="Despesas (3 meses)"
             value="R$ 850,00"
-            icon={<CreditCard className="h-6 w-6 text-primary" />}
-            iconBgColor="bg-orange-50 dark:bg-orange-950"
+            icon={<CreditCard className="h-6 w-6" />}
             trend={{
               value: "-5%",
               isPositive: true,
@@ -45,15 +43,13 @@ export default function Dashboard() {
           <KPICard
             label="Lucro Líquido"
             value="R$ 3.450,00"
-            icon={<TrendingUp className="h-6 w-6 text-primary" />}
-            iconBgColor="bg-green-50 dark:bg-green-950"
+            icon={<TrendingUp className="h-6 w-6" />}
           />
 
           <KPICard
             label="Saúde Financeira"
             value="Saudável"
-            icon={<Activity className="h-6 w-6 text-primary" />}
-            iconBgColor="bg-emerald-50 dark:bg-emerald-950"
+            icon={<Activity className="h-6 w-6" />}
           />
         </div>
 
