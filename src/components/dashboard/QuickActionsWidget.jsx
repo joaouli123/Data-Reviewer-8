@@ -35,43 +35,43 @@ export default function QuickActionsWidget() {
     {
       label: 'Nova Transação',
       icon: Plus,
-      color: 'bg-indigo-600 hover:bg-indigo-700',
+      className: 'bg-primary hover:bg-primary/90 text-white',
       onClick: () => setTransactionFormOpen(true)
     },
     {
       label: 'Importar Extrato',
       icon: Upload,
-      color: 'bg-emerald-600 hover:bg-emerald-700',
+      className: 'bg-primary hover:bg-primary/90 text-white',
       onClick: () => setUploadOpen(true)
     },
     {
       label: 'Ver Transações',
       icon: DollarSign,
-      color: 'bg-blue-600 hover:bg-blue-700',
+      className: 'bg-accent hover:bg-accent/90 text-primary font-semibold',
       link: '/transactions'
     },
     {
       label: 'Clientes',
       icon: Users,
-      color: 'bg-purple-600 hover:bg-purple-700',
+      className: 'bg-primary hover:bg-primary/90 text-white',
       link: '/customers'
     },
     {
       label: 'Fluxo de Caixa',
       icon: TrendingUp,
-      color: 'bg-amber-600 hover:bg-amber-700',
+      className: 'bg-accent hover:bg-accent/90 text-primary font-semibold',
       link: '/cashflowforecast'
     },
     {
       label: 'IA Analista',
       icon: FileText,
-      color: 'bg-rose-600 hover:bg-rose-700',
+      className: 'bg-primary hover:bg-primary/90 text-white',
       link: '/reports'
     },
     {
       label: 'Calc. Preços',
       icon: Calculator,
-      color: 'bg-teal-600 hover:bg-teal-700',
+      className: 'bg-accent hover:bg-accent/90 text-primary font-semibold',
       link: '/pricingcalculator'
     }
   ];
@@ -91,7 +91,7 @@ export default function QuickActionsWidget() {
             return (
               <Link key={action.label} to={action.link}>
                 <Button
-                  className={`w-full h-24 flex flex-col items-center justify-center text-white ${action.color}`}
+                  className={`w-full h-24 flex flex-col items-center justify-center ${action.className}`}
                 >
                   {ButtonContent}
                 </Button>
@@ -103,7 +103,7 @@ export default function QuickActionsWidget() {
             <Button
               key={action.label}
               onClick={action.onClick}
-              className={`w-full h-24 flex flex-col items-center justify-center text-white ${action.color}`}
+              className={`w-full h-24 flex flex-col items-center justify-center ${action.className}`}
             >
               {ButtonContent}
             </Button>
