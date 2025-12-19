@@ -1,87 +1,72 @@
-# Dashboard Financeiro - Documentação do Projeto
+# Base44 Dashboard - Documentação do Projeto
 
 ## 📋 Visão Geral
 
-Sistema de dashboard financeiro em português com interface moderna e responsiva. Exibe KPIs principais, indicadores de desempenho e análises financeiras.
+Sistema de dashboard financeiro completo com interface moderna, dark mode e componentes Shadcn UI.
 
-**Status**: ✅ Funcional e Otimizado  
+**Status**: ✅ Reorganizado e Limpo  
 **Data Última Atualização**: 19 de Dezembro de 2025
-
----
-
-## 🎯 Features Atuais
-
-- ✅ Dashboard principal com KPI cards
-- ✅ Indicadores de tendência (positivos/negativos)
-- ✅ Cards de análise financeira (Capital, Endividamento, Visibilidade)
-- ✅ Resumo financeiro com período customizável
-- ✅ Interface responsiva (mobile, tablet, desktop)
-- ✅ Dark mode completo
-- ✅ Componentes Shadcn UI integrados
-- ✅ Design system documentado
 
 ---
 
 ## 🏗️ Arquitetura
 
-### Frontend (React + Vite)
+### Estrutura do Projeto
 ```
-client/src/
-├── App.tsx                    # Router principal
-├── index.css                  # Estilos globais (light/dark mode)
-├── design_guidelines.md       # Documentação de design
-├── pages/
-│   ├── dashboard.tsx         # Página principal
-│   └── not-found.tsx         # Página 404
-├── components/
-│   ├── kpi-card.tsx          # Componente reutilizável de KPI
-│   └── ui/                   # Shadcn components
-├── hooks/
-│   └── use-toast.ts          # Hook customizado
-└── lib/
-    ├── queryClient.ts        # TanStack Query config
-    └── utils.ts              # Utilities
-```
-
-### Backend (Express)
-```
-server/
-├── index.ts                  # Servidor principal
-├── routes.ts                 # API routes (vazio, pronto para expansão)
-├── storage.ts                # Interface de storage (genérica)
-├── db.ts                     # Database config
-├── static.ts                 # Static files
-└── vite.ts                   # Vite middleware
+.
+├── src/                          # Código principal (React + JavaScript)
+│   ├── App.jsx                  # Componente raiz
+│   ├── main.jsx                 # Entry point
+│   ├── index.css                # Estilos globais
+│   ├── api/                     # Clientes API
+│   ├── components/              # Componentes React
+│   │   ├── ui/                  # Componentes Shadcn
+│   │   ├── dashboard/           # Dashboard components
+│   │   ├── customers/           # Customer management
+│   │   ├── pricing/             # Pricing analysis
+│   │   ├── reports/             # Report components
+│   │   ├── suppliers/           # Supplier management
+│   │   └── transactions/        # Transaction management
+│   ├── hooks/                   # Hooks customizados
+│   ├── lib/                     # Utilidades
+│   ├── pages/                   # Páginas
+│   └── utils/                   # Funções utilitárias
+│
+├── client/                      # Cliente estático
+│   ├── index.html               # HTML principal
+│   └── public/                  # Assets estáticos
+│
+├── server/                      # Backend Express (opcional)
+│   ├── index.ts
+│   ├── routes.ts
+│   ├── storage.ts
+│   └── ...
+│
+├── shared/                      # Tipos compartilhados
+│   └── schema.ts
+│
+├── attached_assets/             # Assets do usuário
+│
+└── [Configurações]
+    ├── vite.config.js           # Configuração Vite
+    ├── tailwind.config.js       # Configuração Tailwind
+    ├── tsconfig.json            # Configuração TypeScript
+    ├── package.json             # Dependências
+    └── replit.md                # Este arquivo
 ```
 
 ---
 
-## 🎨 Paleta de Cores
+## 🎯 Features Atuais
 
-| Elemento | Valor HSL | Uso |
-|----------|-----------|-----|
-| Primary | 210 100% 40% | Ações, headings |
-| Accent | 39 100% 50% | Destaques, tendências positivas |
-| Destructive | 0 100% 50% | Warnings, tendências negativas |
-| Muted | 210 10% 50-60% | Texto secundário |
-
----
-
-## 📝 Histórico de Otimizações (19/Dez/2025)
-
-### Limpezas Realizadas
-1. ✅ Removido código morto (User/InsertUser não utilizado)
-2. ✅ Limpeza de comentários desnecessários
-3. ✅ Criação de design_guidelines.md
-4. ✅ Criação de OPTIMIZATION_REPORT.md
-
-### Verificações Completadas
-- ✅ Zero duplicatas de componentes
-- ✅ Zero rotas conflitantes
-- ✅ Zero código morto significativo
-- ✅ Paleta de cores consistente
-- ✅ Dark mode funcional
-- ✅ Layout responsivo OK
+- ✅ Dashboard com KPI cards
+- ✅ Indicadores de tendência
+- ✅ Análise financeira
+- ✅ Interface responsiva
+- ✅ Dark mode completo
+- ✅ Componentes Shadcn UI
+- ✅ Múltiplas páginas (Dashboard, Customers, Suppliers, Transactions, etc)
+- ✅ API client para integração
 
 ---
 
@@ -91,7 +76,7 @@ server/
 # Instalar dependências
 npm install
 
-# Rodar em desenvolvimento
+# Rodar em desenvolvimento (Vite)
 npm run dev
 
 # Build para produção
@@ -106,66 +91,66 @@ Acesso: `http://localhost:5000`
 
 - **React 18** - Framework UI
 - **TailwindCSS** - Styling
-- **Shadcn/ui** - Componentes prefeitos
+- **Shadcn/ui** - Componentes prontos
 - **Lucide React** - Icons
-- **Wouter** - Routing lightweight
-- **TanStack Query** - Data fetching
-- **Zod** - Validação de dados
-- **Express** - Backend
+- **Framer Motion** - Animações
+- **Recharts** - Gráficos
+- **Date-fns** - Manipulação de datas
+- **Zod** - Validação
 
 ---
 
-## 📋 Routes Atuais
+## 🔄 Estrutura de Componentes
 
-### Frontend
-- `/` → Dashboard
-- `/*` → NotFound (404)
-
-### Backend
-- `/api/*` → Pronto para novas rotas
-
----
-
-## 🔄 Próximos Passos Recomendados
-
-1. **Implementar APIs** quando houver necessidade de dados dinâmicos
-2. **Adicionar novas páginas** conforme requisitos
-3. **Expandir Storage Interface** para operações específicas
-4. **Integrar com banco de dados** quando necessário
+### Hierarquia de Pastas
+```
+src/components/
+├── ui/                          # Componentes base (Shadcn)
+├── dashboard/                   # Dashboard específico
+├── customers/                   # Gestão de clientes
+├── pricing/                     # Análise de preços
+├── reports/                     # Relatórios
+├── suppliers/                   # Gestão de fornecedores
+└── transactions/                # Gestão de transações
+```
 
 ---
 
-## 📄 Arquivos de Referência
+## 📝 Nota de Reorganização (19/Dez/2025)
 
-- `OPTIMIZATION_REPORT.md` - Relatório completo de otimizações
-- `client/src/design_guidelines.md` - Guia de design e componentes
-- `replit.md` - Este arquivo (documentação do projeto)
+### Limpeza Realizada
+- ✅ Removidos configs duplicados (vite.config.js único)
+- ✅ Removidos arquivos obsoletos (REFACTORING_PLAN, OPTIMIZATION_REPORT, etc)
+- ✅ Estrutura padronizada em src/
+- ✅ client/ contém apenas HTML e assets estáticos
+- ✅ Aliases corrigidos (@, @assets, @shared)
+
+### Arquivos Removidos
+- ❌ vite.config.ts (duplicado)
+- ❌ tailwind.config.ts (duplicado)
+- ❌ jsconfig.json (duplicado)
+- ❌ REFACTORING_PLAN.md
+- ❌ OPTIMIZATION_REPORT.md
+- ❌ OBSERVACOES_BUGS_E_FALHAS.md
+- ❌ design_guidelines.md (da raiz)
 
 ---
 
 ## ⚙️ Configurações Importantes
 
-- **Alias @** → `client/src/` (imports)
+- **Alias @** → `src/` (imports de código)
 - **Alias @assets** → `attached_assets/` (media)
 - **Alias @shared** → `shared/` (tipos compartilhados)
-- **Ambiente**: Development (PORT 5000)
-- **Dark Mode**: Suportado via CSS classes
+- **Servidor**: Vite em PORT 5000
+- **Dark Mode**: Suportado
 
 ---
 
-## 🔍 Verificação de Saúde do Projeto
+## 🎨 Paleta de Cores
 
-```
-✅ Compilação: OK
-✅ Workflow: Running
-✅ Browser Console: Connected
-✅ Rotas: Funcionando
-✅ Estilos: Aplicados corretamente
-✅ Dark mode: Funcional
-✅ Responsividade: OK
-```
+Gerenciada via Tailwind CSS com variáveis CSS customizadas em `src/index.css`
 
 ---
 
-**Última verificação**: 19/Dez/2025 - 22:32 UTC  
-**Sistema**: 🟢 Pronto para expansão
+**Última atualização**: 19/Dez/2025  
+**Sistema**: 🟢 Pronto para desenvolvimento
