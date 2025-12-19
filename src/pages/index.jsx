@@ -15,6 +15,7 @@ import CashFlowForecast from "./CashFlowForecast";
 import PricingCalculator from "./PricingCalculator";
 
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
+import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 
 const PAGES = {
     
@@ -78,10 +79,15 @@ function PagesContent() {
     );
 }
 
+// Create QueryClient instance
+const queryClient = new QueryClient();
+
 export default function Pages() {
     return (
-        <Router>
-            <PagesContent />
-        </Router>
+        <QueryClientProvider client={queryClient}>
+            <Router>
+                <PagesContent />
+            </Router>
+        </QueryClientProvider>
     );
 }
