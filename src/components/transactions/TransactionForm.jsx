@@ -1,5 +1,6 @@
 import { InvokeLLM, UploadFile, ExtractDataFromUploadedFile } from '@/api/integrations';
 import React, { useState } from 'react';
+import { Category } from '@/api/entities';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -102,9 +103,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
       sugira a categoria mais apropriada dentre as seguintes: ${categoryNames}.
       Retorne apenas o nome exato da categoria, nada mais.`;
 
-      const response = await InvokeLLM({
-        prompt: prompt
-      });
+      const response = await InvokeLLM(prompt);
 
       const suggestedCategory = response.toLowerCase().trim();
       const matchingCategory = categories.find(c => c.name.toLowerCase() === suggestedCategory);
