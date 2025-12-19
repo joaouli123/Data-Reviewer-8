@@ -25,19 +25,19 @@ export default function DashboardCustomizer({ open, onOpenChange, widgets, onTog
                   <div className="flex items-center gap-3">
                     {IconComponent && <IconComponent className="w-5 h-5 text-indigo-600" />}
                     <div>
-                    <Label htmlFor={widget.id} className="text-sm font-medium cursor-pointer">
-                      {widget.title}
-                    </Label>
-                    {widget.description && (
-                      <p className="text-xs text-slate-500">{widget.description}</p>
-                    )}
+                      <Label htmlFor={widget.id} className="text-sm font-medium cursor-pointer">
+                        {widget.title}
+                      </Label>
+                      {widget.description && (
+                        <p className="text-xs text-slate-500">{widget.description}</p>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <Switch
-                  id={widget.id}
-                  checked={widget.visible}
-                  onCheckedChange={() => onToggleWidget(widget.id)}
-                />
+                  <Switch
+                    id={widget.id}
+                    checked={widget.visible}
+                    onCheckedChange={() => onToggleWidget(widget.id)}
+                  />
                 </div>
               );
             })}

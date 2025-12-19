@@ -42,3 +42,8 @@ author = "agent"
 task = "shell.exec"
 args = "npm run dev"
 waitForPort = 5000
+
+[userenv]
+
+[userenv.shared]
+VITE_GOOGLE_GEMINI_API_KEY = "AIzaSyA3Rpd0u-hpinU3onQTHLihZuckbEifAws"
