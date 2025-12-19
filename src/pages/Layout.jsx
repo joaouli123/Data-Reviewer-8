@@ -21,12 +21,12 @@ export default function Layout({ children }) {
   ];
 
   const NavContent = () => (
-    <div className="flex flex-col h-full py-6 px-4 text-white" style={{ backgroundColor: '#040303' }}>
-      <div className="flex items-center justify-center px-2 mb-10">
+    <div className="flex flex-col h-full py-8 px-4 text-white" style={{ backgroundColor: '#040303' }}>
+      <div className="flex items-center justify-center px-2 mb-12">
         <img 
           src={LogoHUA} 
           alt="HUA Logo" 
-          className="w-12 h-12 object-contain flex-shrink-0"
+          className="w-20 h-20 object-contain flex-shrink-0"
           title="HUA - Consultoria e Análise"
         />
       </div>
@@ -74,11 +74,11 @@ export default function Layout({ children }) {
       </div>
 
       {/* Mobile Header */}
-      <div className="md:hidden flex items-center justify-between p-4 text-white sticky top-0 z-20" style={{ backgroundColor: '#040303' }}>
+      <div className="md:hidden flex items-center justify-between p-3 text-white sticky top-0 z-20" style={{ backgroundColor: '#040303' }}>
         <img 
           src={LogoHUA} 
           alt="HUA Logo" 
-          className="w-10 h-10 object-contain"
+          className="w-12 h-12 object-contain"
           title="HUA - Consultoria e Análise"
         />
         <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
