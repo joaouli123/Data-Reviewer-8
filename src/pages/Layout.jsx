@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Receipt, Users, Settings, Menu, X, Brain, Building2, TrendingUp } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import LogoHUA from '@assets/Logo_HUA_1766187037233.png';
 
 export default function Layout({ children }) {
   const location = useLocation();
@@ -20,12 +21,18 @@ export default function Layout({ children }) {
   ];
 
   const NavContent = () => (
-    <div className="flex flex-col h-full py-6 px-4 bg-slate-900 text-white">
-      <div className="flex items-center gap-2 px-2 mb-10">
-        <div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center font-bold text-xl">
-          F
+    <div className="flex flex-col h-full py-6 px-4 text-white" style={{ backgroundColor: '#040303' }}>
+      <div className="flex items-center gap-3 px-2 mb-10">
+        <img 
+          src={LogoHUA} 
+          alt="HUA Logo" 
+          className="w-12 h-12 object-contain flex-shrink-0"
+          title="HUA - Consultoria e Análise"
+        />
+        <div className="flex flex-col gap-0.5">
+          <span className="text-sm font-bold tracking-tighter text-white">HUA</span>
+          <span className="text-xs font-medium text-yellow-400">CONSULTORIA</span>
         </div>
-        <span className="text-lg font-semibold tracking-tight">FinançasPro</span>
       </div>
       
       <nav className="space-y-1 flex-1">
@@ -70,10 +77,18 @@ export default function Layout({ children }) {
       </div>
 
       {/* Mobile Header */}
-      <div className="md:hidden flex items-center justify-between p-4 bg-slate-900 text-white sticky top-0 z-20">
+      <div className="md:hidden flex items-center justify-between p-4 text-white sticky top-0 z-20" style={{ backgroundColor: '#040303' }}>
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center font-bold text-lg">F</div>
-          <span className="font-semibold">FinançasPro</span>
+          <img 
+            src={LogoHUA} 
+            alt="HUA Logo" 
+            className="w-10 h-10 object-contain"
+            title="HUA - Consultoria e Análise"
+          />
+          <div className="flex flex-col gap-0">
+            <span className="text-sm font-bold text-white">HUA</span>
+            <span className="text-xs font-medium text-yellow-400">CONSULTORIA</span>
+          </div>
         </div>
         <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
           <SheetTrigger asChild>
@@ -81,7 +96,7 @@ export default function Layout({ children }) {
               <Menu className="w-6 h-6" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="p-0 border-r-slate-800 w-64 bg-slate-900">
+          <SheetContent side="left" className="p-0 border-r-slate-800 w-64" style={{ backgroundColor: '#040303' }}>
             <NavContent />
           </SheetContent>
         </Sheet>
