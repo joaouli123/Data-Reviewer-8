@@ -233,15 +233,15 @@ export default function CashFlowForecastPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900 border-slate-900">
+        <Card className={finalBalance >= 0 ? "bg-emerald-600 border-emerald-600" : "bg-rose-600 border-rose-600"}>
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-400">Saldo Final</p>
+              <p className="text-sm text-white/80">Saldo Final</p>
               <p className="text-2xl font-bold text-white">
                 R$ {finalBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </p>
             </div>
-            <Wallet className="w-8 h-8 text-indigo-400" />
+            <Wallet className={`w-8 h-8 ${finalBalance >= 0 ? 'text-emerald-200' : 'text-rose-200'}`} />
           </CardContent>
         </Card>
       </div>
