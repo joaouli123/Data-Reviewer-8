@@ -6,17 +6,41 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarIcon, TrendingUp, TrendingDown, Wallet, ChevronDown, ChevronRight } from 'lucide-react';
-import { format, parseISO, isWithinInterval, addMonths, startOfMonth, endOfMonth, eachMonthOfInterval } from 'date-fns';
+import { format, parseISO, isWithinInterval, addMonths, startOfMonth, endOfMonth, eachMonthOfInterval, subDays, startOfDay, endOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from "@/lib/utils";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 export default function CashFlowForecastPage() {
   const [dateRange, setDateRange] = useState({
     from: startOfMonth(new Date()),
-    to: endOfMonth(addMonths(new Date(), 5))
+    to: endOfMonth(addMonths(new Date(), 5)),
+    label: 'Próximos 6 meses'
   });
   const [expandedMonths, setExpandedMonths] = useState({});
+  const [customOpen, setCustomOpen] = useState(false);
+  const [customStart, setCustomStart] = useState(null);
+  const [customEnd, setCustomEnd] = useState(null);
+
+  const handlePreset = (months, label) => {
+    const start = startOfMonth(new Date());
+    const end = endOfMonth(addMonths(new Date(), months - 1));
+    const newRange = { from: start, to: end, label };
+    setDateRange(newRange);
+  };
+
+  const handleCustom = () => {
+    if (customStart && customEnd) {
+      const newRange = {
+        from: startOfMonth(customStart),
+        to: endOfMonth(customEnd),
+        label: `${format(customStart, 'MMM/yy', { locale: ptBR })} - ${format(customEnd, 'MMM/yy', { locale: ptBR })}`
+      };
+      setDateRange(newRange);
+      setCustomOpen(false);
+    }
+  };
 
   const { data: transactions } = useQuery({
     queryKey: ['transactions'],
@@ -152,31 +176,65 @@ export default function CashFlowForecastPage() {
           <p className="text-slate-500">Visualize receitas e despesas projetadas por período</p>
         </div>
 
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" className={cn("w-[300px] justify-start text-left font-normal")}>
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {dateRange?.from ? (
-                dateRange.to ? (
-                  <>
-                    {format(dateRange.from, "dd/MM/y", { locale: ptBR })} - {format(dateRange.to, "dd/MM/y", { locale: ptBR })}
-                  </>
-                ) : format(dateRange.from, "dd/MM/y", { locale: ptBR })
-              ) : <span>Selecione o período</span>}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className={cn("w-[280px] justify-between")}>
+              <span className="flex items-center gap-2">
+                <CalendarIcon className="h-4 w-4" />
+                {dateRange?.label || 'Selecione período'}
+              </span>
+              <ChevronDown className="h-4 w-4" />
             </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="end">
-            <Calendar
-              initialFocus
-              mode="range"
-              defaultMonth={dateRange?.from}
-              selected={dateRange}
-              onSelect={setDateRange}
-              numberOfMonths={2}
-              locale={ptBR}
-            />
-          </PopoverContent>
-        </Popover>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-[250px]">
+            <DropdownMenuItem onClick={() => handlePreset(1, 'Próximo mês')}>
+              Próximo mês
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handlePreset(3, 'Próximos 3 meses')}>
+              Próximos 3 meses
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handlePreset(6, 'Próximos 6 meses')}>
+              Próximos 6 meses
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handlePreset(12, 'Próximo ano')}>
+              Próximo ano
+            </DropdownMenuItem>
+            <div className="border-t my-2" />
+            <DropdownMenuItem onClick={() => setCustomOpen(!customOpen)}>
+              Personalizado
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {customOpen && (
+          <Popover open={customOpen} onOpenChange={setCustomOpen}>
+            <PopoverContent className="w-auto p-0 absolute z-50" align="end">
+              <div className="p-4 space-y-4">
+                <div>
+                  <p className="text-sm font-medium mb-2">Data Inicial</p>
+                  <Calendar
+                    mode="single"
+                    selected={customStart}
+                    onSelect={setCustomStart}
+                    locale={ptBR}
+                  />
+                </div>
+                <div>
+                  <p className="text-sm font-medium mb-2">Data Final</p>
+                  <Calendar
+                    mode="single"
+                    selected={customEnd}
+                    onSelect={setCustomEnd}
+                    locale={ptBR}
+                  />
+                </div>
+                <Button onClick={handleCustom} className="w-full">
+                  Aplicar
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+        )}
       </div>
 
       {/* Summary Cards */}
