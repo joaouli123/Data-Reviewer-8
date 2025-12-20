@@ -6,14 +6,14 @@ export default function StatsCard({ title, value, trend, trendValue, icon: Icon,
   const colors = {
     positive: "text-emerald-600",
     negative: "text-rose-600",
-    neutral: "text-indigo-600",
+    neutral: "text-blue-600",
     warning: "text-amber-600"
   };
 
   const bgColors = {
     positive: "bg-emerald-50",
     negative: "bg-rose-50",
-    neutral: "bg-indigo-50",
+    neutral: "bg-blue-50",
     warning: "bg-amber-50"
   };
 

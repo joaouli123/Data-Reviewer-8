@@ -205,7 +205,7 @@ export default function ReportsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-2">
-            <Brain className="w-8 h-8 text-indigo-600" />
+            <Brain className="w-8 h-8 text-blue-600" />
             IA Analista Financeiro
           </h1>
           <p className="text-slate-500 mt-1">Insights inteligentes para o seu negócio baseados em dados reais.</p>
@@ -226,7 +226,7 @@ export default function ReportsPage() {
           <Button 
             onClick={generateAnalysis} 
             disabled={isAnalyzing}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6"
             size="lg"
           >
             {isAnalyzing ? (
@@ -248,7 +248,7 @@ export default function ReportsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
-            <Filter className="w-5 h-5 text-indigo-600" />
+            <Filter className="w-5 h-5 text-blue-600" />
             Filtros de Análise
           </CardTitle>
         </CardHeader>
@@ -299,8 +299,8 @@ export default function ReportsPage() {
       {!analysisResult && !isAnalyzing && (
         <Card className="bg-slate-50 border-dashed border-2 border-slate-200">
           <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mb-4">
-              <FileText className="w-8 h-8 text-indigo-600" />
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+              <FileText className="w-8 h-8 text-blue-600" />
             </div>
             <h3 className="text-xl font-semibold text-slate-900 mb-2">Nenhuma análise gerada ainda</h3>
             <p className="text-slate-500 max-w-md mb-6">

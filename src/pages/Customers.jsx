@@ -98,7 +98,7 @@ export default function CustomersPage() {
         
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-                <Button className="bg-indigo-600 hover:bg-indigo-700">
+                <Button className="bg-blue-600 hover:bg-blue-700">
                     <Plus className="w-4 h-4 mr-2" /> Novo Cliente
                 </Button>
             </DialogTrigger>
@@ -131,7 +131,7 @@ export default function CustomersPage() {
                         />
                     </div>
                     <div className="flex justify-end pt-4">
-                        <Button type="submit" className="bg-indigo-600">Salvar Cliente</Button>
+                        <Button type="submit" className="bg-blue-600">Salvar Cliente</Button>
                     </div>
                 </form>
             </DialogContent>
@@ -169,7 +169,7 @@ export default function CustomersPage() {
                             <TableRow key={c.id} className="hover:bg-slate-50/50">
                                 <TableCell>
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-semibold">
+                                        <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-semibold">
                                             {c.name.charAt(0).toUpperCase()}
                                         </div>
                                         <span className="font-medium text-slate-900">{c.name}</span>
@@ -202,7 +202,7 @@ export default function CustomersPage() {
                                         <Button 
                                             variant="ghost" 
                                             size="sm" 
-                                            className="h-8 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+                                            className="h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                                             onClick={() => openNewSaleDialog(c)}
                                         >
                                             <TrendingUp className="w-4 h-4 mr-1" /> Venda
