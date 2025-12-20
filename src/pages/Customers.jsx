@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Mail, Phone, User, MoreHorizontal, Trash2, DollarSign, TrendingUp, Eye } from 'lucide-react';
+import { Plus, Search, Mail, Phone, User, MoreHorizontal, Trash2, TrendingUp, Eye } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -189,8 +189,7 @@ export default function CustomersPage() {
                                     </Badge>
                                 </TableCell>
                                 <TableCell>
-                                    <div className="flex items-center gap-2 text-emerald-600 font-semibold">
-                                        <DollarSign className="w-4 h-4" />
+                                    <div className="text-emerald-600 font-semibold">
                                         R$ {getCustomerSales(c.id).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                     </div>
                                 </TableCell>

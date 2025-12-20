@@ -8,7 +8,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CheckCircle2, Clock, DollarSign } from 'lucide-react';
+import { CheckCircle2, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
