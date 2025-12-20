@@ -85,7 +85,8 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
     onSubmit({
       ...formData,
       amount: Number(formData.amount),
-      date: format(formData.date, 'yyyy-MM-dd')
+      date: format(formData.date, 'yyyy-MM-dd'),
+      shift: 'turno1'
     });
   };
 
@@ -94,7 +95,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
     if (!newCategoryName.trim()) return;
     createCategoryMutation.mutate({
         name: newCategoryName.toLowerCase(),
-        type: formData.type === 'income' ? 'income' : 'expense' // Default to current type logic or 'both'
+        type: formData.type === 'income' ? 'entrada' : 'saida'
     });
   };
 
