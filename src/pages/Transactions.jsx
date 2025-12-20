@@ -125,7 +125,9 @@ export default function TransactionsPage() {
   const filteredTransactions = transactions
     .filter(t => {
       const tDate = parseISO(t.date);
-      const matchesType = typeFilter === 'all' || t.type === typeFilter;
+      const typeMap = { 'income': 'venda', 'expense': 'compra', 'all': 'all' };
+      const mappedType = typeMap[typeFilter] || typeFilter;
+      const matchesType = mappedType === 'all' || t.type === mappedType;
       const matchesCategory = categoryFilter === 'all' || t.category === categoryFilter;
       const matchesSearch = t.description.toLowerCase().includes(searchTerm.toLowerCase()) || 
                             t.category.toLowerCase().includes(searchTerm.toLowerCase());
@@ -143,15 +145,15 @@ export default function TransactionsPage() {
 
     transactions.forEach(t => {
       const tDate = parseISO(t.date);
-      const amount = t.amount || 0;
+      const amount = parseFloat(t.amount) || 0;
       
       if (dateRange?.from && isBefore(tDate, dateRange.from)) {
         // Transaction is before the selected period -> contributes to opening balance
-        if (t.type === 'income') openingBalance += amount;
+        if (t.type === 'venda') openingBalance += amount;
         else openingBalance -= amount;
       } else if (dateRange?.from && dateRange?.to && isWithinInterval(tDate, { start: dateRange.from, end: dateRange.to })) {
         // Transaction is within period
-        if (t.type === 'income') periodIncome += amount;
+        if (t.type === 'venda') periodIncome += amount;
         else periodExpense += amount;
       }
     });
@@ -349,8 +351,8 @@ export default function TransactionsPage() {
                                         Concluído
                                     </span>
                                 </TableCell>
-                                <TableCell className={`text-right font-bold ${t.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                    {t.type === 'income' ? '+' : '-'} R$ {t.amount?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                <TableCell className={`text-right font-bold ${t.type === 'venda' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                    {t.type === 'venda' ? '+' : '-'} R$ {parseFloat(t.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                 </TableCell>
                                 <TableCell>
                                     <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
