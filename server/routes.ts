@@ -6,12 +6,12 @@ import {
   insertSupplierSchema,
   insertTransactionSchema,
   insertCashFlowSchema,
-} from "@shared/schema";
+} from "../shared/schema";
 
-export async function registerRoutes(
+export function registerRoutes(
   httpServer: Server,
   app: Express
-): Promise<Server> {
+): Server {
   console.log("[registerRoutes] Registering API routes...");
 
   // Test route to verify API works

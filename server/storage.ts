@@ -12,7 +12,7 @@ import {
   type Supplier,
   type Transaction,
   type CashFlow,
-} from "@shared/schema";
+} from "../shared/schema";
 
 export interface IStorage {
   // Customer operations
