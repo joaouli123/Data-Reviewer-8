@@ -81,9 +81,8 @@ Sugira 4-5 relatórios mais relevantes que devem ser gerados, com justificativa 
           <Button
             onClick={generateSuggestions}
             disabled={isGenerating}
-            variant="outline"
             size="sm"
-            className="border-blue-300 hover:bg-indigo-100"
+            className="bg-primary text-white hover:bg-primary"
           >
             {isGenerating ? (
               <>
