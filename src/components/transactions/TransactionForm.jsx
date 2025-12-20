@@ -70,6 +70,14 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!formData.description.trim()) {
+        toast.error('Digite uma descrição');
+        return;
+    }
+    if (!formData.amount || Number(formData.amount) <= 0) {
+        toast.error('Digite um valor válido');
+        return;
+    }
     if (!formData.category) {
         toast.error('Selecione uma categoria');
         return;
@@ -239,7 +247,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
                     )}
                   >
                     {formData.date ? (
-                      format(formData.date, "PPP", { locale: ptBR })
+                      format(formData.date, "dd/MM/yyyy")
                     ) : (
                       <span>Selecione uma data</span>
                     )}
@@ -256,6 +264,24 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
                   />
                 </PopoverContent>
               </Popover>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Status</Label>
+              <Select 
+                value={formData.status} 
+                onValueChange={(v) => setFormData({...formData, status: v})}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="concluído">Concluído</SelectItem>
+                  <SelectItem value="pendente">Pendente</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
