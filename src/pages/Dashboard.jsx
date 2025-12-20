@@ -138,7 +138,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Fluxo de Caixa Futuro */}
-      <div className="bg-white dark:bg-slate-900 rounded-lg p-6 border border-border">
+      <div className="bg-white dark:bg-slate-900 rounded-lg p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
         <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
           <Wallet className="w-4 h-4 text-primary" />
           Fluxo de Caixa Futuro (Próximos 30 dias)
@@ -169,13 +169,13 @@ export default function DashboardPage() {
       </div>
 
       {/* Gráfico de Receita */}
-      <div className="bg-white dark:bg-slate-900 rounded-lg p-6 border border-border">
+      <div className="bg-white dark:bg-slate-900 rounded-lg p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
         <h2 className="text-sm font-semibold text-foreground mb-6">Evolução de Receitas e Despesas (Últimos 6 meses)</h2>
         <RevenueChart data={metrics.chartData} />
       </div>
 
       {/* Transações Recentes */}
-      <div className="bg-white dark:bg-slate-900 rounded-lg p-6 border border-border">
+      <div className="bg-white dark:bg-slate-900 rounded-lg p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
         <h2 className="text-sm font-semibold text-foreground mb-4">Transações Recentes</h2>
         <div className="space-y-2">
           {metrics.filteredTransactions.length > 0 ? (
