@@ -5,7 +5,7 @@ import { DollarSign, TrendingUp, Wallet, Users, Plus } from 'lucide-react';
 import { subMonths, startOfMonth, format, isAfter, isBefore } from 'date-fns';
 import KPIWidget from '../components/dashboard/KPIWidget';
 import RevenueChart from '../components/dashboard/RevenueChart';
-import QuickActionsWidget from '../components/dashboard/QuickActionsWidget';
+import QuickActionsFAB from '../components/dashboard/QuickActionsFAB';
 import DateFilter from '../components/dashboard/DateFilter';
 import { Transaction, Installment } from '@/api/entities';
 import { PurchaseInstallment } from '@/api/entities';
@@ -142,12 +142,6 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* Ações Rápidas */}
-      <div className="bg-white dark:bg-slate-900 rounded-lg p-6 border border-border">
-        <h2 className="text-sm font-semibold text-foreground mb-4">Ações Rápidas</h2>
-        <QuickActionsWidget />
-      </div>
-
       {/* Fluxo de Caixa Futuro */}
       <div className="bg-white dark:bg-slate-900 rounded-lg p-6 border border-border">
         <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
@@ -240,6 +234,9 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+
+      {/* Quick Actions FAB */}
+      <QuickActionsFAB />
     </div>
   );
 }
