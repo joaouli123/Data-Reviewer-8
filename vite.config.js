@@ -1,40 +1,14 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
+import { fileURLToPath } from "url";
 
-let expressApp = null;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export default defineConfig({
   plugins: [
     react(),
-    {
-      name: "express-server",
-      configResolved(config) {
-        if (config.command === "serve") {
-          return;
-        }
-      },
-      configureServer(server) {
-        return () => {
-          server.middlewares.use(async (req, res, next) => {
-            try {
-              if (!expressApp) {
-                const module = await import("./server/index.ts");
-                expressApp = module.default || module.app;
-              }
-              if (expressApp) {
-                expressApp(req, res, next);
-              } else {
-                next();
-              }
-            } catch (e) {
-              console.error("Error loading Express app:", e);
-              next();
-            }
-          });
-        };
-      },
-    },
   ],
   server: {
     allowedHosts: true,
