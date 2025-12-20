@@ -10,6 +10,14 @@ import {
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+export const DEFAULT_CATEGORIES = [
+  { name: "Vendas", type: "entrada" },
+  { name: "Compras", type: "saida" },
+  { name: "Devolução", type: "entrada" },
+  { name: "Ajuste", type: "saida" },
+  { name: "Pagamento", type: "saida" }
+];
+
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),
@@ -37,10 +45,18 @@ export const suppliers = pgTable("suppliers", {
   createdAt: timestamp("created_at").notNull().default(sql`now()`),
 });
 
+export const categories = pgTable("categories", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull().unique(),
+  type: text("type").notNull(), // "entrada" or "saida"
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+});
+
 export const transactions = pgTable("transactions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   customerId: varchar("customer_id").references(() => customers.id),
   supplierId: varchar("supplier_id").references(() => suppliers.id),
+  categoryId: varchar("category_id").references(() => categories.id),
   type: text("type").notNull(),
   amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
   description: text("description"),
@@ -76,6 +92,11 @@ export const insertSupplierSchema = createInsertSchema(suppliers).omit({
   createdAt: true,
 });
 
+export const insertCategorySchema = createInsertSchema(categories).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertTransactionSchema = createInsertSchema(transactions).omit({
   id: true,
 });
@@ -92,6 +113,9 @@ export type Customer = typeof customers.$inferSelect;
 
 export type InsertSupplier = z.infer<typeof insertSupplierSchema>;
 export type Supplier = typeof suppliers.$inferSelect;
+
+export type InsertCategory = z.infer<typeof insertCategorySchema>;
+export type Category = typeof categories.$inferSelect;
 
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type Transaction = typeof transactions.$inferSelect;
