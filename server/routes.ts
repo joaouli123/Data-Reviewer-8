@@ -14,7 +14,6 @@ export function registerRoutes(
   httpServer: Server,
   app: Express
 ): Server {
-  console.log("[registerRoutes] Registering API routes...");
 
   // Test route to verify API works
   app.get("/api/health", (req, res) => {
