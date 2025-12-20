@@ -136,7 +136,7 @@ export default function DashboardPage() {
 
         <KPIWidget
           title="Clientes Ativos"
-          value={saleInstallments.filter(i => !i.paid).length.toString()}
+          value={new Set(transactions.filter(t => t.type === 'venda' && t.customerId).map(t => t.customerId)).size.toString()}
           icon={Users}
           trend="up"
           trendValue="+2 vs período anterior"
@@ -185,7 +185,7 @@ export default function DashboardPage() {
         {/* Transações Recentes */}
         <div className="bg-white dark:bg-slate-900 rounded-lg p-6 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
           <h2 className="text-sm font-semibold text-foreground mb-4">Transações Recentes</h2>
-          <div className="space-y-2 flex-1 overflow-y-auto">
+          <div className="space-y-3 flex-1 overflow-y-auto">
             {metrics.filteredTransactions.length > 0 ? (
               metrics.filteredTransactions
                 .sort((a, b) => new Date(b.date) - new Date(a.date))
@@ -193,39 +193,38 @@ export default function DashboardPage() {
                 .map((t) => (
                   <div
                     key={t.id}
-                    className="flex items-center justify-between p-3 hover:bg-muted/50 dark:hover:bg-muted/20 rounded-lg transition-colors"
+                    className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
                   >
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          t.type === 'income'
-                            ? 'bg-primary/10 text-primary'
-                            : 'bg-muted/50 text-muted-foreground'
+                        className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          t.type === 'venda'
+                            ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400'
+                            : 'bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400'
                         }`}
                       >
-                        {t.type === 'income' ? (
+                        {t.type === 'venda' ? (
                           <TrendingUp className="w-5 h-5" />
                         ) : (
                           <DollarSign className="w-5 h-5" />
                         )}
                       </div>
                       <div className="min-w-0">
-                        <p className="font-medium text-foreground truncate">{t.description}</p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="font-semibold text-foreground truncate text-sm">{t.description}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
                           {new Date(t.date).toLocaleDateString('pt-BR', {
                             day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric'
-                          })}
+                            month: 'short'
+                          }).replace('.', '')}
                         </p>
                       </div>
                     </div>
                     <span
-                      className={`font-semibold text-sm flex-shrink-0 ml-2 ${
-                        t.type === 'income' ? 'text-primary' : 'text-muted-foreground'
+                      className={`font-bold text-sm flex-shrink-0 ml-2 whitespace-nowrap ${
+                        t.type === 'venda' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
                       }`}
                     >
-                      {t.type === 'income' ? '+' : '-'} R${' '}
+                      {t.type === 'venda' ? '+' : '-'} R${' '}
                       {t.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </span>
                   </div>
