@@ -14,6 +14,8 @@ import CashFlowForecast from "./CashFlowForecast";
 
 import PricingCalculator from "./PricingCalculator";
 
+import Categories from "./Categories";
+
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 
@@ -32,6 +34,8 @@ const PAGES = {
     CashFlowForecast: CashFlowForecast,
     
     PricingCalculator: PricingCalculator,
+    
+    Categories: Categories,
     
 }
 
@@ -63,6 +67,7 @@ function PagesContent() {
                 <Route path="/suppliers" element={<Suppliers />} />
                 <Route path="/cashflowforecast" element={<CashFlowForecast />} />
                 <Route path="/pricingcalculator" element={<PricingCalculator />} />
+                <Route path="/categories" element={<Categories />} />
             </Routes>
         </Layout>
     );
