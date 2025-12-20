@@ -7,12 +7,12 @@ export default function RevenueChart({ data }) {
       <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
         <defs>
           <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+            <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3}/>
+            <stop offset="95%" stopColor="#22c55e" stopOpacity={0}/>
           </linearGradient>
           <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="hsl(var(--secondary))" stopOpacity={0.3}/>
-            <stop offset="95%" stopColor="hsl(var(--secondary))" stopOpacity={0}/>
+            <stop offset="5%" stopColor="#dc2626" stopOpacity={0.3}/>
+            <stop offset="95%" stopColor="#dc2626" stopOpacity={0}/>
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
@@ -46,7 +46,7 @@ export default function RevenueChart({ data }) {
           type="monotone" 
           dataKey="income" 
           name="Receita"
-          stroke="hsl(var(--primary))" 
+          stroke="#22c55e" 
           strokeWidth={2}
           fillOpacity={1} 
           fill="url(#colorIncome)" 
@@ -55,7 +55,7 @@ export default function RevenueChart({ data }) {
           type="monotone" 
           dataKey="expense" 
           name="Despesa"
-          stroke="hsl(var(--secondary))" 
+          stroke="#dc2626" 
           strokeWidth={2}
           fillOpacity={1} 
           fill="url(#colorExpense)" 
