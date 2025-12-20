@@ -168,65 +168,68 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Gráfico de Receita */}
-      <div className="bg-white dark:bg-slate-900 rounded-lg p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
-        <h2 className="text-sm font-semibold text-foreground mb-6">Evolução de Receitas e Despesas (Últimos 6 meses)</h2>
-        <RevenueChart data={metrics.chartData} />
-      </div>
+      {/* Gráfico de Receita e Transações Recentes - Side by Side */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Gráfico de Receita */}
+        <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-lg p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
+          <h2 className="text-sm font-semibold text-foreground mb-6">Evolução de Receitas e Despesas (Últimos 6 meses)</h2>
+          <RevenueChart data={metrics.chartData} />
+        </div>
 
-      {/* Transações Recentes */}
-      <div className="bg-white dark:bg-slate-900 rounded-lg p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
-        <h2 className="text-sm font-semibold text-foreground mb-4">Transações Recentes</h2>
-        <div className="space-y-2">
-          {metrics.filteredTransactions.length > 0 ? (
-            metrics.filteredTransactions
-              .sort((a, b) => new Date(b.date) - new Date(a.date))
-              .slice(0, 10)
-              .map((t) => (
-                <div
-                  key={t.id}
-                  className="flex items-center justify-between p-3 hover:bg-muted/50 dark:hover:bg-muted/20 rounded-lg transition-colors"
-                >
-                  <div className="flex items-center gap-3 flex-1">
-                    <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        t.type === 'income'
-                          ? 'bg-primary/10 text-primary'
-                          : 'bg-muted/50 text-muted-foreground'
+        {/* Transações Recentes */}
+        <div className="bg-white dark:bg-slate-900 rounded-lg p-6 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
+          <h2 className="text-sm font-semibold text-foreground mb-4">Transações Recentes</h2>
+          <div className="space-y-2 flex-1 overflow-y-auto">
+            {metrics.filteredTransactions.length > 0 ? (
+              metrics.filteredTransactions
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .slice(0, 10)
+                .map((t) => (
+                  <div
+                    key={t.id}
+                    className="flex items-center justify-between p-3 hover:bg-muted/50 dark:hover:bg-muted/20 rounded-lg transition-colors"
+                  >
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div
+                        className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          t.type === 'income'
+                            ? 'bg-primary/10 text-primary'
+                            : 'bg-muted/50 text-muted-foreground'
+                        }`}
+                      >
+                        {t.type === 'income' ? (
+                          <TrendingUp className="w-5 h-5" />
+                        ) : (
+                          <DollarSign className="w-5 h-5" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium text-foreground truncate">{t.description}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(t.date).toLocaleDateString('pt-BR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric'
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                    <span
+                      className={`font-semibold text-sm flex-shrink-0 ml-2 ${
+                        t.type === 'income' ? 'text-primary' : 'text-muted-foreground'
                       }`}
                     >
-                      {t.type === 'income' ? (
-                        <TrendingUp className="w-5 h-5" />
-                      ) : (
-                        <DollarSign className="w-5 h-5" />
-                      )}
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">{t.description}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(t.date).toLocaleDateString('pt-BR', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric'
-                        })}
-                      </p>
-                    </div>
+                      {t.type === 'income' ? '+' : '-'} R${' '}
+                      {t.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </span>
                   </div>
-                  <span
-                    className={`font-semibold text-sm ${
-                      t.type === 'income' ? 'text-primary' : 'text-muted-foreground'
-                    }`}
-                  >
-                    {t.type === 'income' ? '+' : '-'} R${' '}
-                    {t.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </span>
-                </div>
-              ))
-          ) : (
-            <p className="text-center text-muted-foreground text-sm py-8">
-              Nenhuma transação no período selecionado
-            </p>
-          )}
+                ))
+            ) : (
+              <p className="text-center text-muted-foreground text-sm py-8">
+                Nenhuma transação no período selecionado
+              </p>
+            )}
+          </div>
         </div>
       </div>
 
