@@ -41,13 +41,13 @@ export default function QuickActionsWidget() {
     {
       label: 'Importar Extrato',
       icon: Upload,
-      className: 'bg-primary hover:bg-primary/90 text-white',
+      className: 'bg-primary/80 hover:bg-primary/70 text-white',
       onClick: () => setUploadOpen(true)
     },
     {
       label: 'Ver Transações',
       icon: DollarSign,
-      className: 'bg-accent hover:bg-accent/90 text-primary font-semibold',
+      className: 'bg-primary/60 hover:bg-primary/50 text-white',
       link: '/transactions'
     },
     {
@@ -59,7 +59,7 @@ export default function QuickActionsWidget() {
     {
       label: 'Fluxo de Caixa',
       icon: TrendingUp,
-      className: 'bg-accent hover:bg-accent/90 text-primary font-semibold',
+      className: 'bg-primary/80 hover:bg-primary/70 text-white',
       link: '/cashflowforecast'
     },
     {
@@ -71,7 +71,7 @@ export default function QuickActionsWidget() {
     {
       label: 'Calc. Preços',
       icon: Calculator,
-      className: 'bg-accent hover:bg-accent/90 text-primary font-semibold',
+      className: 'bg-primary/60 hover:bg-primary/50 text-white',
       link: '/pricingcalculator'
     }
   ];
