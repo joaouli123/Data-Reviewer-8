@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarIcon, TrendingUp, TrendingDown, Wallet, ChevronRight } from 'lucide-react';
-import { format, parseISO, isWithinInterval, addMonths, startOfMonth, endOfMonth, eachMonthOfInterval } from 'date-fns';
+import { format, parseISO, isWithinInterval, addMonths, startOfMonth, endOfMonth, eachMonthOfInterval, startOfDay, endOfDay, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import PeriodFilter from '../components/dashboard/PeriodFilter';
@@ -29,9 +29,9 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 export default function CashFlowForecastPage() {
   const [dateRange, setDateRange] = useState({
-    startDate: startOfMonth(new Date()),
-    endDate: endOfMonth(addMonths(new Date(), 5)),
-    label: 'Próximos 6 meses'
+    startDate: startOfDay(new Date()),
+    endDate: endOfDay(new Date()),
+    label: 'Hoje'
   });
   const [expandedMonths, setExpandedMonths] = useState({});
 
@@ -171,8 +171,8 @@ export default function CashFlowForecastPage() {
 
         <PeriodFilter 
           onPeriodChange={setDateRange}
-          mode="months"
-          defaultPeriod="last6Months"
+          mode="days"
+          defaultPeriod="today"
         />
       </div>
 

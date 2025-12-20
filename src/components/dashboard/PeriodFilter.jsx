@@ -73,7 +73,7 @@ export default function PeriodFilter({
       label: 'Últimos 7 dias',
       getValue: () => {
         const end = endOfDay(new Date());
-        const start = startOfDay(subDays(new Date(), 6));
+        const start = startOfDay(subDays(new Date(), 7));
         return { startDate: start, endDate: end, label: 'Últimos 7 dias' };
       }
     },
@@ -81,7 +81,7 @@ export default function PeriodFilter({
       label: 'Últimos 30 dias',
       getValue: () => {
         const end = endOfDay(new Date());
-        const start = startOfDay(subDays(new Date(), 29));
+        const start = startOfDay(subDays(new Date(), 30));
         return { startDate: start, endDate: end, label: 'Últimos 30 dias' };
       }
     },
@@ -89,7 +89,7 @@ export default function PeriodFilter({
       label: 'Últimos 90 dias',
       getValue: () => {
         const end = endOfDay(new Date());
-        const start = startOfDay(subDays(new Date(), 89));
+        const start = startOfDay(subDays(new Date(), 90));
         return { startDate: start, endDate: end, label: 'Últimos 90 dias' };
       }
     }
