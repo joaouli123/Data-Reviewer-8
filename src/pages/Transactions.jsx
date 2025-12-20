@@ -14,6 +14,7 @@ import TransactionForm from '../components/transactions/TransactionForm';
 import BankStatementUpload from '../components/transactions/BankStatementUpload';
 import BankReconciliation from '../components/transactions/BankReconciliation';
 import PeriodFilter from '../components/dashboard/PeriodFilter';
+import Pagination from '../components/Pagination';
 import { toast } from 'sonner';
 import { cn } from "@/lib/utils";
 
@@ -31,6 +32,8 @@ export default function TransactionsPage() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [reconciliationOpen, setReconciliationOpen] = useState(false);
   const [statementData, setStatementData] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(15);
 
 
   // Categories not implemented, use static list
@@ -169,6 +172,10 @@ export default function TransactionsPage() {
 
   const balances = calculateBalances();
 
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedTransactions = filteredTransactions.slice(startIndex, endIndex);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -299,8 +306,8 @@ export default function TransactionsPage() {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {filteredTransactions.length > 0 ? (
-                        filteredTransactions.map((t) => (
+                    {paginatedTransactions.length > 0 ? (
+                        paginatedTransactions.map((t) => (
                             <TableRow key={t.id} className="hover:bg-slate-50/50 group">
                                 <TableCell className="font-medium text-slate-600">
                                     {format(new Date(t.date), "dd/MM/yyyy", { locale: ptBR })}
@@ -341,6 +348,16 @@ export default function TransactionsPage() {
                 </TableBody>
             </Table>
         </div>
+        <Pagination 
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalItems={filteredTransactions.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(newSize) => {
+            setPageSize(newSize);
+            setCurrentPage(1);
+          }}
+        />
       </div>
 
       <TransactionForm 

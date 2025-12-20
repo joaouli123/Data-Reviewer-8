@@ -8,12 +8,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Category } from '@/api/entities';
+import Pagination from '../components/Pagination';
 
 export default function CategoriesPage() {
   const queryClient = useQueryClient();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const [formData, setFormData] = useState({ name: '' });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(15);
 
   const { data: categories } = useQuery({
     queryKey: ['categories'],
@@ -79,6 +82,10 @@ export default function CategoriesPage() {
     setFormData({ name: '' });
   };
 
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedCategories = categories.slice(startIndex, endIndex);
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -105,8 +112,8 @@ export default function CategoriesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {categories.length > 0 ? (
-                  categories.map((cat) => (
+                {paginatedCategories.length > 0 ? (
+                  paginatedCategories.map((cat) => (
                     <TableRow key={cat.id} className="hover:bg-slate-50/50">
                       <TableCell className="font-medium text-slate-900">
                         {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
@@ -144,6 +151,16 @@ export default function CategoriesPage() {
             </Table>
           </div>
         </CardContent>
+        <Pagination 
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalItems={categories.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(newSize) => {
+            setPageSize(newSize);
+            setCurrentPage(1);
+          }}
+        />
       </Card>
 
       <Dialog open={isFormOpen} onOpenChange={handleClose}>

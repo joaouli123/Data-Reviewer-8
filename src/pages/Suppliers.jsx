@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import NewPurchaseDialog from '../components/suppliers/NewPurchaseDialog';
 import SupplierPurchasesDialog from '../components/suppliers/SupplierPurchasesDialog';
+import Pagination from '../components/Pagination';
 
 export default function SuppliersPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -22,6 +23,8 @@ export default function SuppliersPage() {
   const [selectedSupplier, setSelectedSupplier] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [newSupplier, setNewSupplier] = useState({ name: '', email: '', phone: '', cnpj: '', status: 'active' });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(15);
   
   const queryClient = useQueryClient();
 
@@ -77,6 +80,10 @@ export default function SuppliersPage() {
     s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
     s.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedSuppliers = filteredSuppliers.slice(startIndex, endIndex);
 
   return (
     <div className="space-y-6">
@@ -160,8 +167,8 @@ export default function SuppliersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredSuppliers.length > 0 ? (
-                filteredSuppliers.map((s) => (
+              {paginatedSuppliers.length > 0 ? (
+                paginatedSuppliers.map((s) => (
                   <TableRow key={s.id} className="hover:bg-slate-50/50">
                     <TableCell>
                       <div className="flex items-center gap-3">
@@ -237,6 +244,16 @@ export default function SuppliersPage() {
             </TableBody>
           </Table>
         </div>
+        <Pagination 
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalItems={filteredSuppliers.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(newSize) => {
+            setPageSize(newSize);
+            setCurrentPage(1);
+          }}
+        />
       </div>
 
       <NewPurchaseDialog 
