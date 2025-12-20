@@ -97,9 +97,14 @@ export const insertCategorySchema = createInsertSchema(categories).omit({
   createdAt: true,
 });
 
-export const insertTransactionSchema = createInsertSchema(transactions).omit({
-  id: true,
-});
+export const insertTransactionSchema = createInsertSchema(transactions)
+  .omit({
+    id: true,
+  })
+  .transform((data) => ({
+    ...data,
+    date: data.date instanceof Date ? data.date : new Date(String(data.date))
+  }));
 
 export const insertCashFlowSchema = createInsertSchema(cashFlow).omit({
   id: true,
