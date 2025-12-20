@@ -50,8 +50,12 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
 
   React.useEffect(() => {
     if (initialData) {
+      // Find category ID by name
+      const matchedCategory = categories.find(c => c.name.toLowerCase() === (initialData.category || '').toLowerCase());
       setFormData({
         ...initialData,
+        categoryId: matchedCategory?.id || '',
+        type: matchedCategory?.type === 'entrada' ? 'venda' : 'compra',
         date: new Date(initialData.date),
         amount: Math.abs(initialData.amount).toString()
       });
@@ -65,7 +69,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
         status: 'concluído'
       });
     }
-  }, [initialData, open]);
+  }, [initialData, open, categories]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
