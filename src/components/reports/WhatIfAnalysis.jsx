@@ -178,7 +178,7 @@ Forneça análise detalhada e recomendações estratégicas.`;
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-indigo-600" />
+          <Sparkles className="w-5 h-5 text-primary" />
           Análise Preditiva "What-If"
         </CardTitle>
         <CardDescription>
@@ -231,7 +231,7 @@ Forneça análise detalhada e recomendações estratégicas.`;
         <Button
           onClick={runScenarioAnalysis}
           disabled={isAnalyzing}
-          className="w-full bg-indigo-600 hover:bg-indigo-700"
+          className="w-full bg-primary hover:bg-primary"
         >
           {isAnalyzing ? (
             <>
@@ -274,7 +274,7 @@ Forneça análise detalhada e recomendações estratégicas.`;
                       type="monotone" 
                       data={scenarios.withChanges} 
                       dataKey="balance" 
-                      stroke="#6366f1" 
+                      stroke="#0059A8" 
                       name="Com Alterações"
                       strokeWidth={2}
                     />
@@ -311,9 +311,9 @@ Forneça análise detalhada e recomendações estratégicas.`;
                   <p className="text-sm text-slate-700">{scenarios.analysis.scenario_analysis.base_case}</p>
                 </div>
                 
-                <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+                <div className="p-4 bg-indigo-50 rounded-lg border border-blue-200">
                   <h4 className="font-medium text-indigo-900 mb-2">Com Alterações</h4>
-                  <p className="text-sm text-indigo-700">{scenarios.analysis.scenario_analysis.with_changes}</p>
+                  <p className="text-sm text-primary">{scenarios.analysis.scenario_analysis.with_changes}</p>
                 </div>
 
                 <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200">
@@ -379,9 +379,9 @@ Forneça análise detalhada e recomendações estratégicas.`;
               )}
 
               {/* Impact Summary */}
-              <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+              <div className="p-4 bg-indigo-50 rounded-lg border border-blue-200">
                 <h4 className="font-semibold text-indigo-900 mb-2">Impacto no Fluxo de Caixa</h4>
-                <p className="text-sm text-indigo-700">{scenarios.analysis.cash_flow_impact}</p>
+                <p className="text-sm text-primary">{scenarios.analysis.cash_flow_impact}</p>
               </div>
             </div>
           </div>

@@ -83,7 +83,7 @@ export default function ExecutiveSummary({ summary, transactions, saleInstallmen
       <Card className="bg-gradient-to-br from-white to-slate-50 border-slate-200 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-xl text-slate-800">
-            <FileText className="w-5 h-5 text-indigo-600" />
+            <FileText className="w-5 h-5 text-primary" />
             Sumário Executivo
           </CardTitle>
         </CardHeader>

@@ -93,11 +93,11 @@ Crie uma análise preditiva incluindo:
   };
 
   return (
-    <Card className="border-indigo-200 bg-gradient-to-br from-indigo-50 to-white">
+    <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-white">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="flex items-center gap-2 text-indigo-700">
+            <CardTitle className="flex items-center gap-2 text-primary">
               <Sparkles className="w-5 h-5" />
               Análise Preditiva de Preços
             </CardTitle>
@@ -108,7 +108,6 @@ Crie uma análise preditiva incluindo:
           <Button
             onClick={runPredictiveAnalysis}
             disabled={isAnalyzing || !results}
-            className="bg-indigo-600 hover:bg-indigo-700"
           >
             {isAnalyzing ? (
               <>
@@ -176,7 +175,7 @@ Crie uma análise preditiva incluindo:
                         }}
                       />
                       <Legend />
-                      <Bar dataKey="total_revenue" fill="#6366f1" name="Receita Total" />
+                      <Bar dataKey="total_revenue" fill="#0059A8" name="Receita Total" />
                       <Bar dataKey="profit_margin" fill="#10b981" name="Margem %" />
                     </BarChart>
                   </ResponsiveContainer>
@@ -199,11 +198,11 @@ Crie uma análise preditiva incluindo:
             {/* Price Elasticity */}
             <Card className="bg-blue-50 border-blue-200">
               <CardHeader>
-                <CardTitle className="text-base text-blue-900">Elasticidade de Preço</CardTitle>
+                <CardTitle className="text-base text-primary">Elasticidade de Preço</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex items-center gap-3">
-                  <Badge className="bg-blue-600">
+                  <Badge className="bg-primary">
                     {predictions.price_elasticity.classification === 'elastic' ? 'Elástico' :
                      predictions.price_elasticity.classification === 'inelastic' ? 'Inelástico' : 'Unitário'}
                   </Badge>
@@ -235,7 +234,7 @@ Crie uma análise preditiva incluindo:
                             Risco {strategy.risk_level === 'low' ? 'Baixo' : strategy.risk_level === 'medium' ? 'Médio' : 'Alto'}
                           </Badge>
                         </div>
-                        <p className="text-2xl font-bold text-indigo-600 mb-2">
+                        <p className="text-2xl font-bold text-primary mb-2">
                           R$ {strategy.price.toFixed(2)}
                         </p>
                         <p className="text-sm text-slate-700">{strategy.expected_outcome}</p>
@@ -247,9 +246,9 @@ Crie uma análise preditiva incluindo:
             )}
 
             {/* Market Positioning */}
-            <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+            <div className="p-4 bg-indigo-50 rounded-lg border border-blue-200">
               <h4 className="font-semibold text-indigo-900 mb-2">Posicionamento de Mercado</h4>
-              <p className="text-sm text-indigo-700">{predictions.market_positioning}</p>
+              <p className="text-sm text-primary">{predictions.market_positioning}</p>
             </div>
           </>
         )}

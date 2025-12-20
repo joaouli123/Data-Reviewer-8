@@ -201,7 +201,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
                         {isSuggestingCategory ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
-                          <Sparkles className="w-4 h-4 text-indigo-600" />
+                          <Sparkles className="w-4 h-4 text-primary" />
                         )}
                     </Button>
                     <Button 
@@ -278,7 +278,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700">
+            <Button type="submit" className="bg-primary hover:bg-primary">
               {initialData ? 'Atualizar' : 'Salvar'}
             </Button>
           </div>

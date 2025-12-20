@@ -147,7 +147,7 @@ Identifique:
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="flex items-center gap-2 text-indigo-600">
+            <CardTitle className="flex items-center gap-2 text-primary">
               <Sparkles className="w-5 h-5" />
               Insights Inteligentes por Categoria
             </CardTitle>
@@ -158,7 +158,7 @@ Identifique:
           <Button
             onClick={analyzeCategories}
             disabled={isAnalyzing}
-            className="bg-indigo-600 hover:bg-indigo-700"
+            className="bg-primary hover:bg-primary"
           >
             {isAnalyzing ? (
               <>
@@ -213,7 +213,7 @@ Identifique:
           {/* Trends */}
           {insights.trends?.length > 0 && (
             <div>
-              <h3 className="font-semibold text-lg mb-3 flex items-center gap-2 text-indigo-600">
+              <h3 className="font-semibold text-lg mb-3 flex items-center gap-2 text-primary">
                 <TrendingUp className="w-5 h-5" />
                 Tendências Identificadas
               </h3>
@@ -279,7 +279,7 @@ Identifique:
           {/* Categorization Rules */}
           {insights.categorization_rules?.length > 0 && (
             <div>
-              <h3 className="font-semibold text-lg mb-3 flex items-center gap-2 text-indigo-600">
+              <h3 className="font-semibold text-lg mb-3 flex items-center gap-2 text-primary">
                 <Sparkles className="w-5 h-5" />
                 Regras Inteligentes de Categorização
               </h3>
@@ -288,11 +288,11 @@ Identifique:
               </p>
               <div className="space-y-3">
                 {insights.categorization_rules.map((rule, idx) => (
-                  <div key={idx} className="p-4 rounded-lg border bg-indigo-50 border-indigo-200">
+                  <div key={idx} className="p-4 rounded-lg border bg-indigo-50 border-blue-200">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
                         <p className="font-medium text-slate-900 mb-1">
-                          <span className="text-indigo-600">Padrão:</span> {rule.pattern}
+                          <span className="text-primary">Padrão:</span> {rule.pattern}
                         </p>
                         <p className="text-sm text-slate-700 mb-2">
                           <span className="font-semibold">→ Categoria Sugerida:</span>{' '}
@@ -312,7 +312,7 @@ Identifique:
                       </Badge>
                     </div>
                     {rule.examples?.length > 0 && (
-                      <div className="mt-2 pt-2 border-t border-indigo-200">
+                      <div className="mt-2 pt-2 border-t border-blue-200">
                         <p className="text-xs font-semibold text-slate-600 mb-1">Exemplos:</p>
                         <div className="flex flex-wrap gap-1">
                           {rule.examples.map((ex, eIdx) => (

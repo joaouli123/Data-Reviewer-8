@@ -16,7 +16,7 @@ export default function CashFlowForecastChart({ forecast }) {
   return (
     <Card className="border-slate-200 shadow-sm">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-indigo-600">
+        <CardTitle className="flex items-center gap-2 text-primary">
           <TrendingUp className="w-5 h-5" />
           Previsão de Fluxo de Caixa (3 Meses)
         </CardTitle>

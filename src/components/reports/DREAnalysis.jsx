@@ -144,7 +144,7 @@ Gere previsões para os próximos 3 meses com análise de tendências.`;
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
-              <FileText className="w-5 h-5 text-indigo-600" />
+              <FileText className="w-5 h-5 text-primary" />
               DRE - Demonstração do Resultado do Exercício
             </CardTitle>
             <CardDescription>Análise detalhada do desempenho financeiro</CardDescription>
@@ -152,7 +152,7 @@ Gere previsões para os próximos 3 meses com análise de tendências.`;
           <Button
             onClick={generateForecast}
             disabled={isAnalyzing}
-            className="bg-indigo-600 hover:bg-indigo-700"
+            className="bg-primary hover:bg-primary"
           >
             {isAnalyzing ? (
               <>
@@ -210,10 +210,10 @@ Gere previsões para os próximos 3 meses com análise de tendências.`;
             </div>
           </div>
 
-          <div className="flex justify-between items-center p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border border-indigo-200">
+          <div className="flex justify-between items-center p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
             <div>
               <span className="font-bold text-indigo-900 text-lg">= Lucro Operacional</span>
-              <p className="text-xs text-indigo-600 mt-1">Margem Líquida: {dre.margemLiquida.toFixed(1)}%</p>
+              <p className="text-xs text-primary mt-1">Margem Líquida: {dre.margemLiquida.toFixed(1)}%</p>
             </div>
             <span className={`text-2xl font-bold ${dre.lucroOperacional >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
               {dre.lucroOperacional >= 0 ? '+' : ''} R$ {dre.lucroOperacional.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
@@ -225,7 +225,7 @@ Gere previsões para os próximos 3 meses com análise de tendências.`;
         {forecast && (
           <div className="space-y-6 pt-6 border-t">
             <h4 className="font-semibold text-slate-900 flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-indigo-600" />
+              <TrendingUp className="w-4 h-4 text-primary" />
               Previsões Futuras (Próximos 3 Meses)
             </h4>
 
@@ -269,9 +269,9 @@ Gere previsões para os próximos 3 meses com análise de tendências.`;
             </div>
 
             {/* Trend Analysis */}
-            <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+            <div className="p-4 bg-indigo-50 rounded-lg border border-blue-200">
               <h5 className="font-semibold text-indigo-900 mb-2">Análise de Tendências</h5>
-              <p className="text-sm text-indigo-700">{forecast.trend_analysis}</p>
+              <p className="text-sm text-primary">{forecast.trend_analysis}</p>
             </div>
 
             {/* Growth Opportunities */}

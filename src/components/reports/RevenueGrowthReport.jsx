@@ -72,22 +72,22 @@ export default function RevenueGrowthReport({ strategies, transactions, customer
             </p>
           </div>
 
-          <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-100">
+          <div className="p-4 bg-indigo-50 rounded-lg border border-blue-100">
             <div className="flex items-center gap-2 mb-1">
-              <TrendingUp className="w-4 h-4 text-indigo-600" />
-              <span className="text-xs text-indigo-600 font-medium">Crescimento</span>
+              <TrendingUp className="w-4 h-4 text-primary" />
+              <span className="text-xs text-primary font-medium">Crescimento</span>
             </div>
             <p className={`text-xl font-bold ${growthRate >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
               {growthRate >= 0 ? '+' : ''}{growthRate.toFixed(1)}%
             </p>
           </div>
 
-          <div className="p-4 bg-purple-50 rounded-lg border border-purple-100">
+          <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
             <div className="flex items-center gap-2 mb-1">
-              <Target className="w-4 h-4 text-purple-600" />
-              <span className="text-xs text-purple-600 font-medium">Ticket Médio</span>
+              <Target className="w-4 h-4 text-primary600" />
+              <span className="text-xs text-primary600 font-medium">Ticket Médio</span>
             </div>
-            <p className="text-xl font-bold text-purple-700">
+            <p className="text-xl font-bold text-primary700">
               R$ {avgTicket.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
             </p>
           </div>
@@ -157,7 +157,7 @@ export default function RevenueGrowthReport({ strategies, transactions, customer
               return (
                 <div key={customerId} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm">
+                    <div className="w-8 h-8 rounded-full bg-indigo-100 text-primary flex items-center justify-center font-bold text-sm">
                       {idx + 1}
                     </div>
                     <span className="font-medium text-slate-900">{customer?.name || 'Cliente'}</span>
