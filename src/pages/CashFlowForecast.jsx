@@ -420,7 +420,7 @@ export default function CashFlowForecastPage() {
                                 </h4>
                                 <div className="space-y-2">
                                   {item.revenueDetails.map((detail, dIdx) => (
-                                    <div key={dIdx} className="bg-white rounded-lg p-3 border border-emerald-100">
+                                    <div key={dIdx} className="bg-white dark:bg-slate-900 rounded-lg p-3 border border-slate-200 dark:border-slate-700 shadow-sm">
                                       <div className="flex justify-between items-start">
                                         <div className="flex-1">
                                           <p className="text-sm font-medium text-slate-900">{detail.description}</p>
@@ -449,7 +449,7 @@ export default function CashFlowForecastPage() {
                                 </h4>
                                 <div className="space-y-2">
                                   {item.expenseDetails.map((detail, dIdx) => (
-                                    <div key={dIdx} className="bg-white rounded-lg p-3 border border-rose-100">
+                                    <div key={dIdx} className="bg-white dark:bg-slate-900 rounded-lg p-3 border border-slate-200 dark:border-slate-700 shadow-sm">
                                       <div className="flex justify-between items-start">
                                         <div className="flex-1">
                                           <p className="text-sm font-medium text-slate-900">{detail.description}</p>

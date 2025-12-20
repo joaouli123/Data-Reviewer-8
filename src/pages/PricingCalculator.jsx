@@ -203,11 +203,11 @@ Forneça recomendações estratégicas de precificação.`;
                       Lucro: R$ {results.profitAmount.toFixed(2)} ({formData.desiredMargin}%)
                     </p>
                     <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div className="p-2 bg-white rounded border">
+                      <div className="p-2 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
                         <p className="text-slate-500">Custo Total</p>
                         <p className="font-semibold">R$ {results.totalCost.toFixed(2)}</p>
                       </div>
-                      <div className="p-2 bg-white rounded border">
+                      <div className="p-2 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
                         <p className="text-slate-500">Markup</p>
                         <p className="font-semibold">{results.markupMultiplier.toFixed(2)}x</p>
                       </div>
@@ -221,29 +221,29 @@ Forneça recomendações estratégicas de precificação.`;
                   <CardTitle className="text-base">Estratégias Alternativas</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                  <div className="flex items-center justify-between p-3 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
                     <div>
-                      <p className="text-sm font-medium text-slate-900">Competitivo</p>
+                      <p className="text-sm font-medium text-slate-900 dark:text-slate-100">Competitivo</p>
                       <p className="text-xs text-slate-500">Margem de 30%</p>
                     </div>
-                    <p className="text-lg font-bold text-emerald-700">
+                    <p className="text-lg font-bold text-emerald-600">
                       R$ {results.alternatives.competitivePrice.toFixed(2)}
                     </p>
                   </div>
 
-                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-center justify-between p-3 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
                     <div>
-                      <p className="text-sm font-medium text-slate-900">Custo Plus</p>
+                      <p className="text-sm font-medium text-slate-900 dark:text-slate-100">Custo Plus</p>
                       <p className="text-xs text-slate-500">Margem de 50%</p>
                     </div>
-                    <p className="text-lg font-bold text-blue-700">
+                    <p className="text-lg font-bold text-primary">
                       R$ {results.alternatives.costPlus.toFixed(2)}
                     </p>
                   </div>
 
-                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-center justify-between p-3 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
                     <div>
-                      <p className="text-sm font-medium text-slate-900">Premium</p>
+                      <p className="text-sm font-medium text-slate-900 dark:text-slate-100">Premium</p>
                       <p className="text-xs text-slate-500">Margem de 100%</p>
                     </div>
                     <p className="text-lg font-bold text-primary">
@@ -322,14 +322,14 @@ Forneça recomendações estratégicas de precificação.`;
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="p-4 bg-white rounded-lg border">
-              <h4 className="font-semibold text-slate-900 mb-2">Estratégia Recomendada</h4>
-              <p className="text-sm text-slate-700">{aiSuggestion.recommended_strategy}</p>
+            <div className="p-4 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+              <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">Estratégia Recomendada</h4>
+              <p className="text-sm text-slate-700 dark:text-slate-300">{aiSuggestion.recommended_strategy}</p>
             </div>
 
             {aiSuggestion.optimal_price_range && (
-              <div className="p-4 bg-white rounded-lg border">
-                <h4 className="font-semibold text-slate-900 mb-2">Faixa de Preço Ideal</h4>
+              <div className="p-4 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">Faixa de Preço Ideal</h4>
                 <div className="flex items-center gap-4">
                   <div>
                     <p className="text-xs text-slate-500">Mínimo</p>
@@ -348,19 +348,19 @@ Forneça recomendações estratégicas de precificação.`;
               </div>
             )}
 
-            <div className="p-4 bg-white rounded-lg border">
-              <h4 className="font-semibold text-slate-900 mb-2">Posicionamento</h4>
-              <p className="text-sm text-slate-700">{aiSuggestion.positioning}</p>
+            <div className="p-4 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+              <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">Posicionamento</h4>
+              <p className="text-sm text-slate-700 dark:text-slate-300">{aiSuggestion.positioning}</p>
             </div>
 
-            <div className="p-4 bg-white rounded-lg border">
-              <h4 className="font-semibold text-slate-900 mb-2">Insights de Mercado</h4>
-              <p className="text-sm text-slate-700">{aiSuggestion.market_insights}</p>
+            <div className="p-4 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+              <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">Insights de Mercado</h4>
+              <p className="text-sm text-slate-700 dark:text-slate-300">{aiSuggestion.market_insights}</p>
             </div>
 
             {aiSuggestion.pricing_tactics?.length > 0 && (
-              <div className="p-4 bg-white rounded-lg border">
-                <h4 className="font-semibold text-slate-900 mb-3">Táticas de Precificação</h4>
+              <div className="p-4 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-3">Táticas de Precificação</h4>
                 <ul className="space-y-2">
                   {aiSuggestion.pricing_tactics.map((tactic, idx) => (
                     <li key={idx} className="flex items-start gap-2 text-sm text-slate-700">
