@@ -15,10 +15,11 @@ export function formatCurrency(value: number): string {
 }
 
 export function formatCurrencySimple(value: number): string {
-  if (typeof value !== 'number' || isNaN(value)) return 'R$ 0,00';
-  const parts = value.toFixed(2).split('.');
-  const intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  return `R$ ${intPart},${parts[1]}`;
+  const formatted = new Intl.NumberFormat('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+  return `R$ ${formatted}`;
 }
 
 export function formatDate(date: Date | string, formatStr: string = 'dd/MM/yyyy'): string {

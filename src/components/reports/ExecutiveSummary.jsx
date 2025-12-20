@@ -28,28 +28,28 @@ export default function ExecutiveSummary({ summary, transactions, saleInstallmen
   const kpis = [
     {
       title: 'Receita Mensal',
-      value: `R$ ${currentRevenue}`,
+      value: `R$ ${currentRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
       change: `${revenueGrowth > 0 ? '+' : ''}${revenueGrowth.toFixed(1)}%`,
       positive: revenueGrowth >= 0,
       icon: DollarSign
     },
     {
       title: 'Lucro Líquido',
-      value: `R$ ${netProfit}`,
+      value: `R$ ${netProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
       change: `${profitMargin.toFixed(1)}% margem`,
       positive: netProfit >= 0,
       icon: TrendingUp
     },
     {
       title: 'Contas a Receber',
-      value: `R$ ${pendingReceivables}`,
+      value: `R$ ${pendingReceivables.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
       change: `${saleInstallments.filter(i => !i.paid).length} parcelas`,
       positive: true,
       icon: Calendar
     },
     {
       title: 'Contas a Pagar',
-      value: `R$ ${pendingPayables}`,
+      value: `R$ ${pendingPayables.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
       change: `${purchaseInstallments.filter(i => !i.paid).length} parcelas`,
       positive: false,
       icon: Calendar
@@ -83,7 +83,7 @@ export default function ExecutiveSummary({ summary, transactions, saleInstallmen
       <Card className="bg-gradient-to-br from-white to-slate-50 border-slate-200 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-xl text-slate-800">
-            <FileText className="w-5 h-5 text-blue-600" />
+            <FileText className="w-5 h-5 text-indigo-600" />
             Sumário Executivo
           </CardTitle>
         </CardHeader>

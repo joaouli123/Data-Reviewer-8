@@ -186,7 +186,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+            <Button type="submit" className="bg-purple-600 hover:bg-purple-700">
               Registrar Compra
             </Button>
           </div>

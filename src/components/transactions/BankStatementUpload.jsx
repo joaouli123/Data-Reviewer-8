@@ -97,17 +97,17 @@ export default function BankStatementUpload({ open, onOpenChange, onExtracted })
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <FileSpreadsheet className="w-5 h-5 text-blue-600" />
+            <FileSpreadsheet className="w-5 h-5 text-indigo-600" />
             Importar Extrato Bancário
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 mt-4">
-          <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <p className="text-sm text-blue-700">
+          <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+            <p className="text-sm text-indigo-700">
               <strong>Formatos aceitos:</strong> PDF ou CSV
             </p>
-            <p className="text-xs text-blue-600 mt-1">
+            <p className="text-xs text-indigo-600 mt-1">
               O sistema irá extrair automaticamente as transações do seu extrato bancário.
             </p>
           </div>
@@ -116,7 +116,7 @@ export default function BankStatementUpload({ open, onOpenChange, onExtracted })
             <Label>Selecionar Arquivo</Label>
             <div className="flex items-center gap-3">
               <label className="flex-1">
-                <div className="flex items-center justify-center w-full h-32 px-4 transition bg-white border-2 border-slate-300 border-dashed rounded-lg appearance-none cursor-pointer hover:border-blue-400 focus:outline-none">
+                <div className="flex items-center justify-center w-full h-32 px-4 transition bg-white border-2 border-slate-300 border-dashed rounded-lg appearance-none cursor-pointer hover:border-indigo-400 focus:outline-none">
                   <div className="flex flex-col items-center space-y-2">
                     <Upload className="w-8 h-8 text-slate-400" />
                     <span className="text-sm text-slate-600">
@@ -156,7 +156,7 @@ export default function BankStatementUpload({ open, onOpenChange, onExtracted })
             <Button
               onClick={handleUpload}
               disabled={!file || isUploading}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-indigo-600 hover:bg-indigo-700"
             >
               {isUploading ? (
                 <>

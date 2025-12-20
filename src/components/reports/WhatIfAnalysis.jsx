@@ -178,7 +178,7 @@ Forneça análise detalhada e recomendações estratégicas.`;
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-blue-600" />
+          <Sparkles className="w-5 h-5 text-indigo-600" />
           Análise Preditiva "What-If"
         </CardTitle>
         <CardDescription>
@@ -231,7 +231,7 @@ Forneça análise detalhada e recomendações estratégicas.`;
         <Button
           onClick={runScenarioAnalysis}
           disabled={isAnalyzing}
-          className="w-full bg-blue-600 hover:bg-blue-700"
+          className="w-full bg-indigo-600 hover:bg-indigo-700"
         >
           {isAnalyzing ? (
             <>
@@ -260,7 +260,7 @@ Forneça análise detalhada e recomendações estratégicas.`;
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
                     <YAxis tickFormatter={(value) => `R$${(value/1000).toFixed(0)}k`} />
-                    <Tooltip formatter={(value) => `R$ ${value}`} />
+                    <Tooltip formatter={(value) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} />
                     <Legend />
                     <Line 
                       type="monotone" 
@@ -311,9 +311,9 @@ Forneça análise detalhada e recomendações estratégicas.`;
                   <p className="text-sm text-slate-700">{scenarios.analysis.scenario_analysis.base_case}</p>
                 </div>
                 
-                <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <h4 className="font-medium text-blue-900 mb-2">Com Alterações</h4>
-                  <p className="text-sm text-blue-700">{scenarios.analysis.scenario_analysis.with_changes}</p>
+                <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+                  <h4 className="font-medium text-indigo-900 mb-2">Com Alterações</h4>
+                  <p className="text-sm text-indigo-700">{scenarios.analysis.scenario_analysis.with_changes}</p>
                 </div>
 
                 <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200">
@@ -379,9 +379,9 @@ Forneça análise detalhada e recomendações estratégicas.`;
               )}
 
               {/* Impact Summary */}
-              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <h4 className="font-semibold text-blue-900 mb-2">Impacto no Fluxo de Caixa</h4>
-                <p className="text-sm text-blue-700">{scenarios.analysis.cash_flow_impact}</p>
+              <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+                <h4 className="font-semibold text-indigo-900 mb-2">Impacto no Fluxo de Caixa</h4>
+                <p className="text-sm text-indigo-700">{scenarios.analysis.cash_flow_impact}</p>
               </div>
             </div>
           </div>

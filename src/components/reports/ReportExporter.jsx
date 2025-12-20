@@ -18,7 +18,7 @@ export default function ReportExporter({ reportData, reportType = 'general' }) {
 
       // Header
       pdf.setFontSize(20);
-      pdf.setTextColor(79, 70, 229); // blue-600
+      pdf.setTextColor(79, 70, 229); // indigo-600
       pdf.text('FinançasPro', 20, yPosition);
       
       yPosition += 10;
@@ -80,7 +80,7 @@ export default function ReportExporter({ reportData, reportType = 'general' }) {
           
           const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
           const valueStr = typeof value === 'number' 
-            ? `R$ ${value}`
+            ? `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
             : value;
           
           pdf.text(`${label}: ${valueStr}`, 20, yPosition);
@@ -110,7 +110,7 @@ export default function ReportExporter({ reportData, reportType = 'general' }) {
         Object.entries(reportData.summary).forEach(([key, value]) => {
           const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
           const valueStr = typeof value === 'number' 
-            ? value
+            ? value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })
             : value;
           csvContent += `${label},${valueStr}\n`;
         });

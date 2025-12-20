@@ -12,7 +12,6 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { formatCurrencySimple } from '@/utils/formatters';
 import CustomerSalesDialog from '../components/customers/CustomerSalesDialog';
 import NewSaleDialog from '../components/customers/NewSaleDialog';
 
@@ -192,7 +191,7 @@ export default function CustomersPage() {
                                 <TableCell>
                                     <div className="flex items-center gap-2 text-emerald-600 font-semibold">
                                         <DollarSign className="w-4 h-4" />
-                                        {formatCurrencySimple(getCustomerSales(c.id))}
+                                        R$ {getCustomerSales(c.id).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                     </div>
                                 </TableCell>
                                 <TableCell className="text-slate-500 text-sm">

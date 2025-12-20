@@ -1,4 +1,3 @@
-import { formatCurrencySimple } from '@/utils/formatters';
 import { InvokeLLM, UploadFile, ExtractDataFromUploadedFile } from '@/api/integrations';
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -162,7 +161,7 @@ Forneça uma análise detalhada e recomendações para gestão de endividamento.
             <Button
               onClick={analyzeWithAI}
               disabled={isAnalyzing}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-indigo-600 hover:bg-indigo-700"
             >
               {isAnalyzing ? (
                 <>
@@ -191,7 +190,7 @@ Forneça uma análise detalhada e recomendações para gestão de endividamento.
               <div>
                 <p className="text-sm font-medium mb-1">Dívida Total</p>
                 <p className="text-3xl font-bold">
-                  R$ {formatCurrencySimple(metrics.totalDebt}
+                  R$ {metrics.totalDebt.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </p>
               </div>
               <div>
@@ -211,7 +210,7 @@ Forneça uma análise detalhada e recomendações para gestão de endividamento.
                 <p className="text-sm font-medium text-rose-700">Curto Prazo (3m)</p>
               </div>
               <p className="text-2xl font-bold text-rose-700">
-                R$ {formatCurrencySimple(metrics.shortTermDebt}
+                R$ {metrics.shortTermDebt.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </p>
             </div>
 
@@ -221,17 +220,17 @@ Forneça uma análise detalhada e recomendações para gestão de endividamento.
                 <p className="text-sm font-medium text-amber-700">Longo Prazo</p>
               </div>
               <p className="text-2xl font-bold text-amber-700">
-                R$ {formatCurrencySimple(metrics.longTermDebt}
+                R$ {metrics.longTermDebt.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </p>
             </div>
 
-            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-200">
               <div className="flex items-center gap-2 mb-2">
-                <BarChart3 className="w-4 h-4 text-blue-600" />
-                <p className="text-sm font-medium text-blue-700">Pagamento Mensal</p>
+                <BarChart3 className="w-4 h-4 text-indigo-600" />
+                <p className="text-sm font-medium text-indigo-700">Pagamento Mensal</p>
               </div>
-              <p className="text-2xl font-bold text-blue-700">
-                R$ {formatCurrencySimple(metrics.monthlyDebtPayment}
+              <p className="text-2xl font-bold text-indigo-700">
+                R$ {metrics.monthlyDebtPayment.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </p>
             </div>
           </div>
@@ -259,7 +258,7 @@ Forneça uma análise detalhada e recomendações para gestão de endividamento.
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value) => `R$ ${value}`} />
+                    <Tooltip formatter={(value) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} />
                   </PieChart>
                 </ResponsiveContainer>
               </CardContent>

@@ -1,4 +1,3 @@
-import { formatCurrencySimple } from '@/utils/formatters';
 import { InvokeLLM, UploadFile, ExtractDataFromUploadedFile } from '@/api/integrations';
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -62,7 +61,7 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
 - Contas a Pagar (30 dias): R$ ${wc.currentPayables.toFixed(2)}
 - Despesas Mensais Médias: R$ ${wc.avgMonthlyExpenses.toFixed(2)}
 - Capital de Giro Recomendado: R$ ${wc.recommendedWorkingCapital.toFixed(2)}
-- Déficit/Superávit: R$ ${(wc.workingCapital - wc.recommendedWorkingCapital)}
+- Déficit/Superávit: R$ ${(wc.workingCapital - wc.recommendedWorkingCapital).toFixed(2)}
 
 Forneça recomendações específicas para melhorar a gestão do capital de giro.`;
 
@@ -111,7 +110,7 @@ Forneça recomendações específicas para melhorar a gestão do capital de giro
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="flex items-center gap-2">
-                <Wallet className="w-5 h-5 text-blue-600" />
+                <Wallet className="w-5 h-5 text-indigo-600" />
                 Análise de Capital de Giro
               </CardTitle>
               <CardDescription>
@@ -121,7 +120,7 @@ Forneça recomendações específicas para melhorar a gestão do capital de giro
             <Button
               onClick={analyzeWithAI}
               disabled={isAnalyzing}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-indigo-600 hover:bg-indigo-700"
             >
               {isAnalyzing ? (
                 <>
@@ -150,13 +149,13 @@ Forneça recomendações específicas para melhorar a gestão do capital de giro
               <div>
                 <p className="text-sm font-medium mb-1">Capital de Giro Atual</p>
                 <p className="text-3xl font-bold">
-                  R$ {formatCurrencySimple(wc.workingCapital}
+                  R$ {wc.workingCapital.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </p>
               </div>
               <div>
                 <p className="text-sm font-medium mb-1">Recomendado</p>
                 <p className="text-3xl font-bold">
-                  R$ {formatCurrencySimple(wc.recommendedWorkingCapital}
+                  R$ {wc.recommendedWorkingCapital.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </p>
               </div>
             </div>
@@ -170,7 +169,7 @@ Forneça recomendações específicas para melhorar a gestão do capital de giro
                 <p className="text-sm font-medium text-emerald-700">Recebimentos (30d)</p>
               </div>
               <p className="text-2xl font-bold text-emerald-700">
-                R$ {formatCurrencySimple(wc.currentReceivables}
+                R$ {wc.currentReceivables.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </p>
             </div>
 
@@ -180,17 +179,17 @@ Forneça recomendações específicas para melhorar a gestão do capital de giro
                 <p className="text-sm font-medium text-rose-700">Pagamentos (30d)</p>
               </div>
               <p className="text-2xl font-bold text-rose-700">
-                R$ {formatCurrencySimple(wc.currentPayables}
+                R$ {wc.currentPayables.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </p>
             </div>
 
-            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-200">
               <div className="flex items-center gap-2 mb-2">
-                <Wallet className="w-4 h-4 text-blue-600" />
-                <p className="text-sm font-medium text-blue-700">Despesa Mensal Média</p>
+                <Wallet className="w-4 h-4 text-indigo-600" />
+                <p className="text-sm font-medium text-indigo-700">Despesa Mensal Média</p>
               </div>
-              <p className="text-2xl font-bold text-blue-700">
-                R$ {formatCurrencySimple(wc.avgMonthlyExpenses}
+              <p className="text-2xl font-bold text-indigo-700">
+                R$ {wc.avgMonthlyExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </p>
             </div>
           </div>
@@ -202,7 +201,7 @@ Forneça recomendações específicas para melhorar a gestão do capital de giro
               <div>
                 <p className="font-semibold text-rose-900 mb-1">Déficit de Capital de Giro</p>
                 <p className="text-sm text-rose-700 mb-2">
-                  Você precisa de <strong>R$ {formatCurrencySimple(wc.deficit}</strong> adicionais 
+                  Você precisa de <strong>R$ {wc.deficit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> adicionais 
                   para manter 2 meses de despesas operacionais em caixa.
                 </p>
                 <p className="text-xs text-rose-600">
@@ -218,7 +217,7 @@ Forneça recomendações específicas para melhorar a gestão do capital de giro
               <div>
                 <p className="font-semibold text-emerald-900 mb-1">Superávit de Capital de Giro</p>
                 <p className="text-sm text-emerald-700">
-                  Você tem <strong>R$ {formatCurrencySimple(wc.surplus}</strong> além do recomendado.
+                  Você tem <strong>R$ {wc.surplus.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> além do recomendado.
                   Considere investir esse valor para maior rentabilidade.
                 </p>
               </div>
