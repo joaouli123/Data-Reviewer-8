@@ -82,7 +82,16 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
         toast.error('Selecione uma categoria');
         return;
     }
-    const amount = Number(formData.amount).toFixed(2);
+    
+    // Get selected category to determine if value should be negative
+    const selectedCategory = categories.find(c => c.id === formData.categoryId);
+    let amount = Number(formData.amount).toFixed(2);
+    
+    // If category is "saida" (expense), make amount negative
+    if (selectedCategory && selectedCategory.type === 'saida') {
+      amount = (-Number(amount)).toFixed(2);
+    }
+    
     onSubmit({
       ...formData,
       amount: amount,
@@ -139,34 +148,16 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Tipo</Label>
-              <Select 
-                value={formData.type} 
-                onValueChange={(v) => setFormData({...formData, type: v})}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="venda">Receita</SelectItem>
-                  <SelectItem value="compra">Despesa</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Valor (R$)</Label>
-              <Input 
-                type="number" 
-                step="0.01" 
-                placeholder="0.00"
-                value={formData.amount}
-                onChange={(e) => setFormData({...formData, amount: e.target.value})}
-                required
-              />
-            </div>
+          <div className="space-y-2">
+            <Label>Valor (R$)</Label>
+            <Input 
+              type="number" 
+              step="0.01" 
+              placeholder="0.00"
+              value={formData.amount}
+              onChange={(e) => setFormData({...formData, amount: e.target.value})}
+              required
+            />
           </div>
 
           <div className="space-y-2">
@@ -186,7 +177,11 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
                 <div className="flex gap-2">
                     <Select 
                         value={formData.categoryId} 
-                        onValueChange={(v) => setFormData({...formData, categoryId: v})}
+                        onValueChange={(v) => {
+                          const selectedCat = categories.find(c => c.id === v);
+                          const newType = selectedCat?.type === 'entrada' ? 'venda' : 'compra';
+                          setFormData({...formData, categoryId: v, type: newType});
+                        }}
                     >
                         <SelectTrigger className="w-full">
                         <SelectValue placeholder="Selecione..." />
@@ -237,36 +232,45 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
               )}
             </div>
 
-            <div className="space-y-2 flex flex-col">
-              <Label className="mb-2">Data</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-full pl-3 text-left font-normal",
-                      !formData.date && "text-muted-foreground"
-                    )}
-                  >
-                    {formData.date ? (
-                      format(formData.date, "dd/MM/yyyy")
-                    ) : (
-                      <span>Selecione uma data</span>
-                    )}
-                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={formData.date}
-                    onSelect={(d) => d && setFormData({...formData, date: d})}
-                    initialFocus
-                    locale={ptBR}
-                  />
-                </PopoverContent>
-              </Popover>
+            <div className="space-y-2">
+              <Label>Tipo</Label>
+              <div className={`px-3 py-2 rounded-md border border-slate-200 text-sm font-medium flex items-center ${
+                formData.type === 'venda' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
+              }`}>
+                {formData.type === 'venda' ? '+ Receita' : '- Despesa'}
+              </div>
             </div>
+          </div>
+
+          <div className="space-y-2 flex flex-col">
+            <Label className="mb-2">Data</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-full pl-3 text-left font-normal",
+                    !formData.date && "text-muted-foreground"
+                  )}
+                >
+                  {formData.date ? (
+                    format(formData.date, "dd/MM/yyyy")
+                  ) : (
+                    <span>Selecione uma data</span>
+                  )}
+                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={formData.date}
+                  onSelect={(d) => d && setFormData({...formData, date: d})}
+                  initialFocus
+                  locale={ptBR}
+                />
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
