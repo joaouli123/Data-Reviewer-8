@@ -62,12 +62,14 @@ app.use((req, res, next) => {
 (async () => {
   await registerRoutes(httpServer, app);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-
-    res.status(status).json({ message });
-    throw err;
+  // Middleware to catch any /api/* requests that weren't handled by registerRoutes
+  // and return a proper 404 JSON response instead of letting vite serve HTML
+  app.use((req, res, next) => {
+    if (req.path.startsWith("/api/")) {
+      res.status(404).json({ error: "API endpoint not found" });
+      return;
+    }
+    next();
   });
 
   // importantly only setup vite in development and after
@@ -79,6 +81,15 @@ app.use((req, res, next) => {
     const { setupVite } = await import("./vite");
     await setupVite(httpServer, app);
   }
+
+  // Error handler middleware MUST be last
+  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+    const status = err.status || err.statusCode || 500;
+    const message = err.message || "Internal Server Error";
+
+    res.status(status).json({ message });
+    throw err;
+  });
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
   // Other ports are firewalled. Default to 5000 if not specified.
