@@ -236,7 +236,7 @@ export default function DashboardPage() {
                   onClick={() => window.location.href = '/transactions'}
                   className="w-full mt-2 text-xs"
                 >
-                  Ver mais <ChevronRight className="w-3 h-3 ml-1" />
+                  Ver tudo <ChevronRight className="w-3 h-3 ml-1" />
                 </Button>
               </>
             ) : (
