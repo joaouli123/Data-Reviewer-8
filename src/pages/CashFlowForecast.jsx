@@ -51,19 +51,20 @@ export default function CashFlowForecastPage() {
         transactions.forEach(t => {
           const tDate = parseISO(t.date);
           if (isWithinInterval(tDate, { start: monthStart, end: monthEnd })) {
+            const amount = parseFloat(t.amount) || 0;
             if (t.type === 'venda') {
-              revenue += parseFloat(t.amount || 0);
+              revenue += amount;
               revenueDetails.push({
                 description: t.description,
-                amount: t.amount,
+                amount: amount,
                 date: t.date,
                 category: t.type
               });
             } else if (t.type === 'compra') {
-              expense += parseFloat(t.amount || 0);
+              expense += amount;
               expenseDetails.push({
                 description: t.description,
-                amount: t.amount,
+                amount: amount,
                 date: t.date,
                 category: t.type
               });
@@ -124,7 +125,8 @@ export default function CashFlowForecastPage() {
   const openingBalance = transactions
     .filter(t => parseISO(t.date) < dateRange.from)
     .reduce((acc, t) => {
-      return acc + (t.type === 'income' ? t.amount : -t.amount);
+      const amount = parseFloat(t.amount) || 0;
+      return acc + (t.type === 'venda' ? amount : -amount);
     }, 0);
 
   // Calculate cumulative balance
