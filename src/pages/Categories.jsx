@@ -123,7 +123,7 @@ export default function CategoriesPage() {
                         {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={cat.type === 'entrada' ? 'default' : 'destructive'}>
+                        <Badge className={cat.type === 'entrada' ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-red-100 text-red-700 hover:bg-red-200'}>
                           {cat.type === 'entrada' ? '+ Entrada' : '- Saída'}
                         </Badge>
                       </TableCell>
