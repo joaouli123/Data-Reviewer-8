@@ -16,11 +16,12 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white p-3 border border-slate-200 rounded-lg shadow-lg">
+      <div className="bg-white p-3 border border-e2e8f0 rounded-lg shadow-lg">
         <p className="text-sm font-semibold text-slate-900 mb-2">{label}</p>
         {payload.map((entry, index) => (
-          <p key={index} style={{ color: entry.color }} className="text-sm">
-            {entry.name}: R$ {entry.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+          <p key={index} style={{ color: entry.color }} className="text-sm font-medium">
+            <span className="inline-block min-w-fit">{entry.name}:</span>
+            <span className="ml-2">R$ {entry.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
           </p>
         ))}
       </div>
@@ -318,10 +319,10 @@ export default function CashFlowForecastPage() {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis dataKey="month" tick={{fill: '#64748b', fontSize: 12}} />
                 <YAxis tick={{fill: '#64748b', fontSize: 12}} tickFormatter={(value) => `R$${(value/1000).toFixed(0)}k`} />
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip content={CustomTooltip} cursor={{ fill: 'rgba(0,0,0,0.05)' }} />
                 <Legend />
                 <Bar dataKey="receita" fill="#10b981" name="Receita" radius={[8, 8, 0, 0]} />
-                <Bar dataKey="despesa" fill="#f43f5e" name="Despesa" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="despesa" fill="#dc2626" name="Despesa" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -338,7 +339,7 @@ export default function CashFlowForecastPage() {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis dataKey="month" tick={{fill: '#64748b', fontSize: 12}} />
                 <YAxis tick={{fill: '#64748b', fontSize: 12}} tickFormatter={(value) => `R$${(value/1000).toFixed(0)}k`} />
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip content={CustomTooltip} cursor={{ fill: 'rgba(0,0,0,0.05)' }} />
                 <Line 
                   type="monotone" 
                   dataKey="saldoAcumulado" 
