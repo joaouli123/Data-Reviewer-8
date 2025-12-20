@@ -8,8 +8,11 @@ import KPIWidget from '../components/dashboard/KPIWidget';
 import RevenueChart from '../components/dashboard/RevenueChart';
 import QuickActionsFAB from '../components/dashboard/QuickActionsFAB';
 import DateFilter from '../components/dashboard/DateFilter';
+import TransactionForm from '../components/transactions/TransactionForm';
 import { Transaction, Installment } from '@/api/entities';
 import { PurchaseInstallment } from '@/api/entities';
+import { useQueryClient, useMutation } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 export default function DashboardPage() {
   const [dateRange, setDateRange] = useState({
@@ -17,6 +20,21 @@ export default function DashboardPage() {
     endDate: new Date(),
     label: 'Hoje'
   });
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  const createMutation = useMutation({
+    mutationFn: (data) => Transaction.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      setIsFormOpen(false);
+      toast.success('Transação criada com sucesso!');
+    }
+  });
+
+  const handleSubmit = (data) => {
+    createMutation.mutate(data);
+  };
 
   // Fetch data
   const { data: transactions } = useQuery({
@@ -106,7 +124,10 @@ export default function DashboardPage() {
         </div>
         <div className="flex items-center gap-3">
           <DateFilter onDateRangeChange={setDateRange} />
-          <Button className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
+          <Button 
+            onClick={() => setIsFormOpen(true)}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
+          >
             <Plus className="w-4 h-4" />
             Nova Transação
           </Button>
@@ -246,6 +267,13 @@ export default function DashboardPage() {
 
       {/* Quick Actions FAB */}
       <QuickActionsFAB />
+
+      {/* Transaction Form */}
+      <TransactionForm 
+        open={isFormOpen} 
+        onOpenChange={setIsFormOpen} 
+        onSubmit={handleSubmit}
+      />
     </div>
   );
 }
