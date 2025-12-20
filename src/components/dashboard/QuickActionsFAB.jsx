@@ -20,6 +20,10 @@ export default function QuickActionsFAB() {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       setTransactionFormOpen(false);
       toast.success('Transação criada!');
+    },
+    onError: (error) => {
+      console.error('Transaction mutation failed:', error);
+      toast.error(`Erro ao criar transação: ${error.message}`);
     }
   });
 

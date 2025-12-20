@@ -82,10 +82,11 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
         toast.error('Selecione uma categoria');
         return;
     }
+    const amount = Number(formData.amount).toFixed(2);
     onSubmit({
       ...formData,
-      amount: Number(formData.amount),
-      date: format(formData.date, 'yyyy-MM-dd'),
+      amount: amount,
+      date: formData.date.toISOString(),
       shift: 'turno1'
     });
   };

@@ -31,8 +31,12 @@ export const Transaction = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
       });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return await response.json();
+      const result = await response.json();
+      if (!response.ok) {
+        console.error('Transaction API error:', result);
+        throw new Error(result.details || result.error || `HTTP ${response.status}`);
+      }
+      return result;
     } catch (error) {
       console.error('Error creating transaction:', error);
       throw error;

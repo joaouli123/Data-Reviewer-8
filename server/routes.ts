@@ -224,7 +224,8 @@ export function registerRoutes(
       const transaction = await storage.createTransaction(data);
       res.status(201).json(transaction);
     } catch (error) {
-      res.status(400).json({ error: "Invalid transaction data" });
+      console.error("[POST /api/transactions] Validation error:", error);
+      res.status(400).json({ error: "Invalid transaction data", details: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
