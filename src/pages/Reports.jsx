@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Brain, Sparkles, TrendingUp, AlertTriangle, Lightbulb, FileText, Loader2, ArrowRight, Filter, BarChart3 } from 'lucide-react';
-import { format, subMonths, startOfMonth, endOfMonth, isAfter, isBefore } from 'date-fns';
+import { format, subMonths, startOfMonth, endOfMonth, isAfter, isBefore, startOfDay, endOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
@@ -29,9 +29,9 @@ export default function ReportsPage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
   const [dateRange, setDateRange] = useState({
-    startDate: startOfMonth(subMonths(new Date(), 5)),
-    endDate: endOfMonth(new Date()),
-    label: 'Últimos 6 Meses'
+    startDate: startOfDay(new Date()),
+    endDate: endOfDay(new Date()),
+    label: 'Hoje'
   });
   const [categoryFilter, setCategoryFilter] = useState('all');
 
@@ -187,11 +187,6 @@ export default function ReportsPage() {
           <p className="text-slate-500 mt-1">Insights inteligentes para o seu negócio baseados em dados reais.</p>
         </div>
         <div className="flex gap-3">
-          <PeriodFilter 
-            onPeriodChange={setDateRange}
-            mode="months"
-            defaultPeriod="last6Months"
-          />
           <ReportExporter 
             reportData={{
               summary: analysisResult ? {
@@ -235,6 +230,14 @@ export default function ReportsPage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700">Período</label>
+              <PeriodFilter 
+                onPeriodChange={setDateRange}
+                mode="days"
+                defaultPeriod="today"
+              />
+            </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-700">Categoria</label>
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
