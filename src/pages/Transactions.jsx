@@ -195,10 +195,9 @@ export default function TransactionsPage() {
             <Button 
               onClick={() => setUploadOpen(true)} 
               variant="outline"
+              className="flex items-center gap-2"
             >
-              <Upload className="w-4 h-4 mr-2" />
-              Importar Extrato
-              <ChevronRight className="w-4 h-4 ml-2" />
+              <Upload className="w-4 h-4" /> Importar Extrato
             </Button>
             <Button onClick={() => { setEditingTransaction(null); setIsFormOpen(true); }} className="bg-primary hover:bg-primary">
                 <Plus className="w-4 h-4 mr-2" /> Nova Transação
