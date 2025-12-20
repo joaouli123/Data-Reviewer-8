@@ -26,7 +26,7 @@ export default function Layout({ children }) {
         <img 
           src={LogoHUA} 
           alt="HUA Logo" 
-          className="w-38 h-23 object-contain flex-shrink-0"
+          className="w-36 h-22 object-contain flex-shrink-0"
           title="HUA - Consultoria e Análise"
         />
       </div>
