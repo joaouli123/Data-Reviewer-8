@@ -2,10 +2,11 @@
 
 ## 📋 Visão Geral
 
-Sistema de dashboard financeiro completo com interface moderna, dark mode e componentes Shadcn UI.
+Sistema de dashboard financeiro completo com interface moderna, dark mode e componentes Shadcn UI. Integrado com API Base44 e IA Gemini para análises preditivas.
 
-**Status**: ✅ Reorganizado e Limpo  
-**Data Última Atualização**: 19 de Dezembro de 2025
+**Status**: ✅ Atualizado com Novos Commits  
+**Data Última Atualização**: 20 de Dezembro de 2025
+**Commits Recentes**: Padronização de cores azul e formatação brasileira
 
 ---
 
@@ -59,14 +60,40 @@ Sistema de dashboard financeiro completo com interface moderna, dark mode e comp
 
 ## 🎯 Features Atuais
 
-- ✅ Dashboard com KPI cards
-- ✅ Indicadores de tendência
-- ✅ Análise financeira
-- ✅ Interface responsiva
-- ✅ Dark mode completo
-- ✅ Componentes Shadcn UI
-- ✅ Múltiplas páginas (Dashboard, Customers, Suppliers, Transactions, etc)
-- ✅ API client para integração
+### Dashboard
+- ✅ KPI cards com indicadores de tendência
+- ✅ Gráfico de receita em tempo real
+- ✅ Indicadores de desempenho financeiro
+- ✅ Widgets de ações rápidas (FAB)
+- ✅ Filtro de data customizável
+
+### Gestão
+- ✅ Gerenciamento de clientes com histórico de vendas
+- ✅ Gerenciamento de fornecedores com histórico de compras
+- ✅ Registro e rastreamento de transações
+
+### Relatórios Avançados
+- ✅ Análise DRE (Demonstração de Resultado)
+- ✅ Análise de Fluxo de Caixa e Previsões
+- ✅ Análise de Despesas e Crescimento de Receita
+- ✅ Análise de Dívidas e Capital de Giro
+- ✅ Simulador What-If e Resumo Executivo
+
+### Interface & Experiência
+- ✅ Dark mode completo com persistência
+- ✅ Componentes Shadcn UI premium
+- ✅ Ícones Lucide React
+- ✅ Animações Framer Motion
+- ✅ Gráficos Recharts interativos
+- ✅ Layout responsivo
+- ✅ Integração API Base44
+- ✅ Análise preditiva com Gemini AI
+
+### Localização & Formatação
+- ✅ Moeda brasileira (R$) com formatação correta
+- ✅ Fuso horário São Paulo integrado
+- ✅ Remoção de símbolos desnecessários ($)
+- ✅ Paleta de cores azul consistente
 
 ---
 
@@ -116,23 +143,33 @@ src/components/
 
 ---
 
-## 📝 Nota de Reorganização (19/Dez/2025)
+## 📝 Atualizações Recentes (20/Dez/2025)
 
-### Limpeza Realizada
+### Alterações de UI/UX
+- ✅ **Padronização de Cores**: Toda paleta atualizada para azul primário
+- ✅ **Remoção de Ícones $**: Símbolos de dólar removidos de displays financeiros
+- ✅ **Botões Padronizados**: Todos os botões com cor azul e texto branco
+- ✅ **Valores Financeiros**: Formatados apenas como números em Real (R$)
+
+### Formatação Brasileira
+- ✅ `formatCurrency()` - Converte valores para R$ com separadores corretos
+- ✅ `formatDate()` - Datas formatadas com fuso horário SP
+- ✅ `getBrazilianTimezone()` - Timestamp com timezone São Paulo
+- ✅ Arquivo: `src/utils/formatters.ts`
+
+### Commits Principais
+```
+9a400fc - Remove dollar sign icons from financial value displays
+5a1e258 - Update button color to match primary blue
+19f9649 - Standardize button colors across application
+da7ab65 - Add Brazilian currency and São Paulo time formatting
+```
+
+### Anterior (19/Dez/2025) - Limpeza Realizada
 - ✅ Removidos configs duplicados (vite.config.js único)
-- ✅ Removidos arquivos obsoletos (REFACTORING_PLAN, OPTIMIZATION_REPORT, etc)
+- ✅ Removidos arquivos obsoletos
 - ✅ Estrutura padronizada em src/
-- ✅ client/ contém apenas HTML e assets estáticos
 - ✅ Aliases corrigidos (@, @assets, @shared)
-
-### Arquivos Removidos
-- ❌ vite.config.ts (duplicado)
-- ❌ tailwind.config.ts (duplicado)
-- ❌ jsconfig.json (duplicado)
-- ❌ REFACTORING_PLAN.md
-- ❌ OPTIMIZATION_REPORT.md
-- ❌ OBSERVACOES_BUGS_E_FALHAS.md
-- ❌ design_guidelines.md (da raiz)
 
 ---
 
