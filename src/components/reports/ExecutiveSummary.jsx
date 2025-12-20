@@ -28,28 +28,28 @@ export default function ExecutiveSummary({ summary, transactions, saleInstallmen
   const kpis = [
     {
       title: 'Receita Mensal',
-      value: `R$ ${currentRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+      value: `R$ ${currentRevenue}`,
       change: `${revenueGrowth > 0 ? '+' : ''}${revenueGrowth.toFixed(1)}%`,
       positive: revenueGrowth >= 0,
       icon: DollarSign
     },
     {
       title: 'Lucro Líquido',
-      value: `R$ ${netProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+      value: `R$ ${netProfit}`,
       change: `${profitMargin.toFixed(1)}% margem`,
       positive: netProfit >= 0,
       icon: TrendingUp
     },
     {
       title: 'Contas a Receber',
-      value: `R$ ${pendingReceivables.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+      value: `R$ ${pendingReceivables}`,
       change: `${saleInstallments.filter(i => !i.paid).length} parcelas`,
       positive: true,
       icon: Calendar
     },
     {
       title: 'Contas a Pagar',
-      value: `R$ ${pendingPayables.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+      value: `R$ ${pendingPayables}`,
       change: `${purchaseInstallments.filter(i => !i.paid).length} parcelas`,
       positive: false,
       icon: Calendar

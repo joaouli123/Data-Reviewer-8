@@ -1,4 +1,5 @@
 import { InvokeLLM, UploadFile, ExtractDataFromUploadedFile } from '@/api/integrations';
+import { formatCurrencySimple } from '@/utils/formatters';
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -197,15 +198,15 @@ Forneça recomendações estratégicas de precificação.`;
                 <CardContent>
                   <div className="text-center">
                     <p className="text-5xl font-bold text-blue-600 mb-2">
-                      R$ {results.suggestedPrice.toFixed(2)}
+                      R$ {formatCurrencySimple(results.suggestedPrice.toFixed(2)}
                     </p>
                     <p className="text-sm text-slate-600 mb-4">
-                      Lucro: R$ {results.profitAmount.toFixed(2)} ({formData.desiredMargin}%)
+                      Lucro: R$ {formatCurrencySimple(results.profitAmount.toFixed(2)} ({formData.desiredMargin}%)
                     </p>
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       <div className="p-2 bg-white rounded border">
                         <p className="text-slate-500">Custo Total</p>
-                        <p className="font-semibold">R$ {results.totalCost.toFixed(2)}</p>
+                        <p className="font-semibold">R$ {formatCurrencySimple(results.totalCost.toFixed(2)}</p>
                       </div>
                       <div className="p-2 bg-white rounded border">
                         <p className="text-slate-500">Markup</p>
@@ -227,7 +228,7 @@ Forneça recomendações estratégicas de precificação.`;
                       <p className="text-xs text-slate-500">Margem de 30%</p>
                     </div>
                     <p className="text-lg font-bold text-emerald-700">
-                      R$ {results.alternatives.competitivePrice.toFixed(2)}
+                      R$ {formatCurrencySimple(results.alternatives.competitivePrice.toFixed(2)}
                     </p>
                   </div>
 
@@ -237,7 +238,7 @@ Forneça recomendações estratégicas de precificação.`;
                       <p className="text-xs text-slate-500">Margem de 50%</p>
                     </div>
                     <p className="text-lg font-bold text-blue-700">
-                      R$ {results.alternatives.costPlus.toFixed(2)}
+                      R$ {formatCurrencySimple(results.alternatives.costPlus.toFixed(2)}
                     </p>
                   </div>
 
@@ -247,7 +248,7 @@ Forneça recomendações estratégicas de precificação.`;
                       <p className="text-xs text-slate-500">Margem de 100%</p>
                     </div>
                     <p className="text-lg font-bold text-blue-700">
-                      R$ {results.alternatives.premiumPrice.toFixed(2)}
+                      R$ {formatCurrencySimple(results.alternatives.premiumPrice.toFixed(2)}
                     </p>
                   </div>
                 </CardContent>
@@ -336,14 +337,14 @@ Forneça recomendações estratégicas de precificação.`;
                   <div>
                     <p className="text-xs text-slate-500">Mínimo</p>
                     <p className="text-xl font-bold text-slate-900">
-                      R$ {aiSuggestion.optimal_price_range.min.toFixed(2)}
+                      R$ {formatCurrencySimple(aiSuggestion.optimal_price_range.min.toFixed(2)}
                     </p>
                   </div>
                   <div className="flex-1 h-2 bg-gradient-to-r from-emerald-300 to-blue-500 rounded-full" />
                   <div>
                     <p className="text-xs text-slate-500">Máximo</p>
                     <p className="text-xl font-bold text-slate-900">
-                      R$ {aiSuggestion.optimal_price_range.max.toFixed(2)}
+                      R$ {formatCurrencySimple(aiSuggestion.optimal_price_range.max.toFixed(2)}
                     </p>
                   </div>
                 </div>

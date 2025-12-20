@@ -260,7 +260,7 @@ Forneça análise detalhada e recomendações estratégicas.`;
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
                     <YAxis tickFormatter={(value) => `R$${(value/1000).toFixed(0)}k`} />
-                    <Tooltip formatter={(value) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} />
+                    <Tooltip formatter={(value) => `R$ ${value}`} />
                     <Legend />
                     <Line 
                       type="monotone" 

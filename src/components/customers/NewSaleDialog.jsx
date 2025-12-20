@@ -195,7 +195,7 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
                   step="0.01"
                   value={formData.installment_amount}
                   onChange={(e) => setFormData({ ...formData, installment_amount: e.target.value })}
-                  placeholder={`R$ ${(parseFloat(formData.total_amount || 0) / Number(formData.installments || 1)).toFixed(2)}`}
+                  placeholder={`R$ ${(parseFloat(formData.total_amount || 0) / Number(formData.installments || 1))}`}
                 />
               </div>
             )}
@@ -205,8 +205,8 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
             <div className="p-3 bg-slate-50 rounded-lg text-sm text-slate-600">
               <p>
                 {formData.installment_amount && !isNaN(parseFloat(formData.installment_amount))
-                  ? `${formData.installments}x de R$ ${parseFloat(formData.installment_amount).toFixed(2)}`
-                  : `${formData.installments}x de R$ ${(parseFloat(formData.total_amount || 0) / Number(formData.installments || 1)).toFixed(2)}`
+                  ? `${formData.installments}x de R$ ${parseFloat(formData.installment_amount)}`
+                  : `${formData.installments}x de R$ ${(parseFloat(formData.total_amount || 0) / Number(formData.installments || 1))}`
                 }
               </p>
             </div>
@@ -256,7 +256,7 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
                         ? 'text-emerald-600'
                         : 'text-rose-600'
                     }`}>
-                      R$ {customInstallments.reduce((sum, inst) => sum + parseFloat(inst.amount || 0), 0).toFixed(2)}
+                      R$ {formatCurrencySimple(customInstallments.reduce((sum, inst) => sum + parseFloat(inst.amount || 0), 0)}
                     </span>
                   </div>
                 </div>

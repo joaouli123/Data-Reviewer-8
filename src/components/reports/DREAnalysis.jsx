@@ -8,6 +8,7 @@ import { FileText, Sparkles, Loader2, TrendingUp, TrendingDown } from 'lucide-re
 import { toast } from 'sonner';
 import { subMonths, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { formatCurrencySimple } from '@/utils/formatters';
 
 export default function DREAnalysis({ transactions, period = 'currentYear' }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -174,21 +175,21 @@ Gere previsões para os próximos 3 meses com análise de tendências.`;
           <div className="flex justify-between items-center p-3 bg-emerald-50 rounded-lg border border-emerald-200">
             <span className="font-semibold text-emerald-900">Receita Bruta</span>
             <span className="text-lg font-bold text-emerald-700">
-              R$ {dre.receitaBruta.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              R$ format
             </span>
           </div>
 
           <div className="flex justify-between items-center p-3 bg-white rounded-lg border pl-8">
             <span className="text-slate-700">(-) Custos Diretos</span>
             <span className="text-slate-900 font-semibold">
-              R$ {dre.custosDiretos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              R$ format
             </span>
           </div>
 
           <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border border-blue-200">
             <span className="font-semibold text-blue-900">= Receita Líquida</span>
             <span className="text-lg font-bold text-blue-700">
-              R$ {dre.receitaLiquida.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              R$ format
             </span>
           </div>
 
@@ -198,14 +199,14 @@ Gere previsões para os próximos 3 meses com análise de tendências.`;
               <div key={cat} className="flex justify-between items-center p-2 bg-white rounded border text-sm">
                 <span className="text-slate-600 capitalize">{cat}</span>
                 <span className="text-slate-900">
-                  R$ {val.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  R$ format
                 </span>
               </div>
             ))}
             <div className="flex justify-between items-center p-2 bg-slate-50 rounded border font-medium">
               <span className="text-slate-700">Total Despesas Operacionais</span>
               <span className="text-slate-900">
-                R$ {dre.despesasOperacionais.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                R$ format
               </span>
             </div>
           </div>
@@ -216,7 +217,7 @@ Gere previsões para os próximos 3 meses com análise de tendências.`;
               <p className="text-xs text-blue-600 mt-1">Margem Líquida: {dre.margemLiquida.toFixed(1)}%</p>
             </div>
             <span className={`text-2xl font-bold ${dre.lucroOperacional >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-              {dre.lucroOperacional >= 0 ? '+' : ''} R$ {dre.lucroOperacional.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              {dre.lucroOperacional >= 0 ? '+' : ''} R$ format
             </span>
           </div>
         </div>
@@ -245,19 +246,19 @@ Gere previsões para os próximos 3 meses com análise de tendências.`;
                     <div className="flex justify-between">
                       <span className="text-slate-600">Receita Bruta</span>
                       <span className="font-medium text-emerald-600">
-                        R$ {month.receita_bruta.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        R$ format
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-600">Custos/Despesas</span>
                       <span className="font-medium text-rose-600">
-                        R$ {(month.custos_diretos + month.despesas_operacionais).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        R$ format
                       </span>
                     </div>
                     <div className="flex justify-between pt-2 border-t">
                       <span className="font-semibold text-slate-900">Lucro Previsto</span>
                       <span className={`font-bold ${month.lucro_previsto >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                        R$ {month.lucro_previsto.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        R$ format
                       </span>
                     </div>
                     <div className="text-xs text-slate-500">

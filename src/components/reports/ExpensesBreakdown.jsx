@@ -1,3 +1,4 @@
+import { formatCurrencySimple } from '@/utils/formatters';
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
@@ -54,7 +55,7 @@ export default function ExpensesBreakdown({ opportunities, transactions }) {
                   ))}
                 </Pie>
                 <Tooltip 
-                  formatter={(value) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                  formatter={(value) => `R$ ${value}`}
                   contentStyle={{ 
                     backgroundColor: '#fff', 
                     borderRadius: '8px', 
@@ -77,7 +78,7 @@ export default function ExpensesBreakdown({ opportunities, transactions }) {
                   </div>
                   <div className="text-right">
                     <span className="font-semibold text-slate-900">
-                      R$ {item.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      R$ {formatCurrencySimple(item.value}
                     </span>
                     <span className="text-xs text-slate-500 ml-2">
                       ({((item.value / totalExpenses) * 100).toFixed(1)}%)

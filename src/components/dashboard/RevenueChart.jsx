@@ -1,5 +1,6 @@
 import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { formatCurrencySimple } from '@/utils/formatters';
 
 export default function RevenueChart({ data }) {
   return (
@@ -37,7 +38,10 @@ export default function RevenueChart({ data }) {
             boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
             color: 'hsl(var(--foreground))'
           }}
-          formatter={(value) => [`R$ ${value.toLocaleString('pt-BR')}`, '']}
+          formatter={(value, name) => {
+            const labels = { income: 'Receita', expense: 'Despesa' };
+            return [formatCurrencySimple(value), labels[name] || name];
+          }}
         />
         <Area 
           type="monotone" 

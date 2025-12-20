@@ -80,7 +80,7 @@ export default function ReportExporter({ reportData, reportType = 'general' }) {
           
           const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
           const valueStr = typeof value === 'number' 
-            ? `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+            ? `R$ ${value}`
             : value;
           
           pdf.text(`${label}: ${valueStr}`, 20, yPosition);
@@ -110,7 +110,7 @@ export default function ReportExporter({ reportData, reportType = 'general' }) {
         Object.entries(reportData.summary).forEach(([key, value]) => {
           const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
           const valueStr = typeof value === 'number' 
-            ? value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })
+            ? value
             : value;
           csvContent += `${label},${valueStr}\n`;
         });

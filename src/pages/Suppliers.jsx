@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { formatCurrencySimple } from '@/utils/formatters';
 import { Supplier, Purchase } from '@/api/entities';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -193,7 +194,7 @@ export default function SuppliersPage() {
                     <TableCell>
                       <div className="flex items-center gap-2 text-blue-600 font-semibold">
                         <Building2 className="w-4 h-4" />
-                        R$ {getSupplierPurchases(s.id).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        R$ {formatCurrencySimple(getSupplierPurchases(s.id)}
                       </div>
                     </TableCell>
                     <TableCell>

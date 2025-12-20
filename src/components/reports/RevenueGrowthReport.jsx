@@ -1,3 +1,4 @@
+import { formatCurrencySimple } from '@/utils/formatters';
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -68,7 +69,7 @@ export default function RevenueGrowthReport({ strategies, transactions, customer
               <span className="text-xs text-emerald-600 font-medium">Receita Total</span>
             </div>
             <p className="text-xl font-bold text-emerald-700">
-              R$ {totalRevenue.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
+              R$ {formatCurrencySimple(totalRevenue}
             </p>
           </div>
 
@@ -88,7 +89,7 @@ export default function RevenueGrowthReport({ strategies, transactions, customer
               <span className="text-xs text-blue-600 font-medium">Ticket Médio</span>
             </div>
             <p className="text-xl font-bold text-blue-700">
-              R$ {avgTicket.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
+              R$ {formatCurrencySimple(avgTicket}
             </p>
           </div>
 
@@ -126,7 +127,7 @@ export default function RevenueGrowthReport({ strategies, transactions, customer
                 tickFormatter={(value) => `R$${(value/1000).toFixed(0)}k`}
               />
               <Tooltip 
-                formatter={(value) => [`R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 'Receita']}
+                formatter={(value) => [`R$ ${value}`, 'Receita']}
                 contentStyle={{ 
                   backgroundColor: '#fff', 
                   borderRadius: '8px', 
@@ -163,7 +164,7 @@ export default function RevenueGrowthReport({ strategies, transactions, customer
                     <span className="font-medium text-slate-900">{customer?.name || 'Cliente'}</span>
                   </div>
                   <span className="font-bold text-emerald-600">
-                    R$ {revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    R$ {formatCurrencySimple(revenue}
                   </span>
                 </div>
               );

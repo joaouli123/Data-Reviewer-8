@@ -1,3 +1,4 @@
+import { formatCurrencySimple } from '@/utils/formatters';
 import { InvokeLLM, UploadFile, ExtractDataFromUploadedFile } from '@/api/integrations';
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -72,7 +73,7 @@ Situação Atual:
 Nova Dívida Proposta:
 - Valor: R$ ${debtAmount.toFixed(2)}
 - Parcelas: ${installments}
-- Taxa de Juros: ${(interestRate * 100).toFixed(2)}%
+- Taxa de Juros: ${(interestRate * 100)}%
 - Pagamento Mensal: R$ ${monthlyPayment.toFixed(2)}
 - Total a Pagar: R$ ${totalPayment.toFixed(2)}
 - Total em Juros: R$ ${totalInterest.toFixed(2)}
@@ -220,19 +221,19 @@ Forneça análise detalhada do impacto e recomendações.`;
               <div className="p-4 bg-white rounded-lg border">
                 <p className="text-sm text-slate-600 mb-1">Pagamento Mensal</p>
                 <p className="text-2xl font-bold text-slate-900">
-                  R$ {simulation.inputs.monthlyPayment.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  R$ {formatCurrencySimple(simulation.inputs.monthlyPayment}
                 </p>
               </div>
               <div className="p-4 bg-white rounded-lg border">
                 <p className="text-sm text-slate-600 mb-1">Total com Juros</p>
                 <p className="text-2xl font-bold text-slate-900">
-                  R$ {simulation.inputs.totalPayment.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  R$ {formatCurrencySimple(simulation.inputs.totalPayment}
                 </p>
               </div>
               <div className="p-4 bg-white rounded-lg border">
                 <p className="text-sm text-slate-600 mb-1">Total em Juros</p>
                 <p className="text-2xl font-bold text-rose-600">
-                  R$ {simulation.inputs.totalInterest.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  R$ {formatCurrencySimple(simulation.inputs.totalInterest}
                 </p>
               </div>
             </div>
@@ -277,7 +278,7 @@ Forneça análise detalhada do impacto e recomendações.`;
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
                     <YAxis tickFormatter={(value) => `R$${(value/1000).toFixed(0)}k`} />
-                    <Tooltip formatter={(value) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} />
+                    <Tooltip formatter={(value) => `R$ ${value}`} />
                     <Legend />
                     <Line type="monotone" dataKey="currentDebt" stroke="#64748b" name="Dívida Atual" strokeWidth={2} />
                     <Line type="monotone" dataKey="projectedDebt" stroke="#ef4444" name="Dívida Projetada" strokeWidth={2} />

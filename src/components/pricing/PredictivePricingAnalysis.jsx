@@ -1,3 +1,4 @@
+import { formatCurrencySimple } from '@/utils/formatters';
 import { InvokeLLM, UploadFile, ExtractDataFromUploadedFile } from '@/api/integrations';
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -138,13 +139,13 @@ Crie uma análise preditiva incluindo:
               <CardContent>
                 <div className="text-center mb-4">
                   <p className="text-4xl font-bold text-emerald-600 mb-2">
-                    R$ {predictions.optimal_price_point.price.toFixed(2)}
+                    R$ {formatCurrencySimple(predictions.optimal_price_point.price.toFixed(2)}
                   </p>
                   <p className="text-sm text-slate-600 mb-1">
                     Volume Esperado: {predictions.optimal_price_point.expected_volume}
                   </p>
                   <p className="text-sm font-semibold text-emerald-700">
-                    Receita Projetada: R$ {predictions.optimal_price_point.expected_revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    Receita Projetada: R$ {formatCurrencySimple(predictions.optimal_price_point.expected_revenue}
                   </p>
                 </div>
                 <div className="p-3 bg-white rounded border">
@@ -170,7 +171,7 @@ Crie uma análise preditiva incluindo:
                       <YAxis />
                       <Tooltip 
                         formatter={(value, name) => {
-                          if (name === 'total_revenue') return `R$ ${value.toLocaleString('pt-BR')}`;
+                          if (name === 'total_revenue') return `R$ ${value}`;
                           if (name === 'profit_margin') return `${value}%`;
                           return value;
                         }}
@@ -184,7 +185,7 @@ Crie uma análise preditiva incluindo:
                   <div className="mt-4 space-y-2">
                     {predictions.demand_forecast.map((forecast, idx) => (
                       <div key={idx} className="flex items-center justify-between p-2 bg-white rounded border text-sm">
-                        <span className="font-medium">R$ {forecast.price_point.toFixed(2)}</span>
+                        <span className="font-medium">R$ {formatCurrencySimple(forecast.price_point.toFixed(2)}</span>
                         <span className="text-slate-600">{forecast.estimated_demand}</span>
                         <Badge variant="outline">
                           {forecast.profit_margin.toFixed(1)}% margem
@@ -236,7 +237,7 @@ Crie uma análise preditiva incluindo:
                           </Badge>
                         </div>
                         <p className="text-2xl font-bold text-blue-600 mb-2">
-                          R$ {strategy.price.toFixed(2)}
+                          R$ {formatCurrencySimple(strategy.price.toFixed(2)}
                         </p>
                         <p className="text-sm text-slate-700">{strategy.expected_outcome}</p>
                       </div>

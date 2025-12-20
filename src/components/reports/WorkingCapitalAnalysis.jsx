@@ -1,3 +1,4 @@
+import { formatCurrencySimple } from '@/utils/formatters';
 import { InvokeLLM, UploadFile, ExtractDataFromUploadedFile } from '@/api/integrations';
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -61,7 +62,7 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
 - Contas a Pagar (30 dias): R$ ${wc.currentPayables.toFixed(2)}
 - Despesas Mensais Médias: R$ ${wc.avgMonthlyExpenses.toFixed(2)}
 - Capital de Giro Recomendado: R$ ${wc.recommendedWorkingCapital.toFixed(2)}
-- Déficit/Superávit: R$ ${(wc.workingCapital - wc.recommendedWorkingCapital).toFixed(2)}
+- Déficit/Superávit: R$ ${(wc.workingCapital - wc.recommendedWorkingCapital)}
 
 Forneça recomendações específicas para melhorar a gestão do capital de giro.`;
 
@@ -149,13 +150,13 @@ Forneça recomendações específicas para melhorar a gestão do capital de giro
               <div>
                 <p className="text-sm font-medium mb-1">Capital de Giro Atual</p>
                 <p className="text-3xl font-bold">
-                  R$ {wc.workingCapital.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  R$ {formatCurrencySimple(wc.workingCapital}
                 </p>
               </div>
               <div>
                 <p className="text-sm font-medium mb-1">Recomendado</p>
                 <p className="text-3xl font-bold">
-                  R$ {wc.recommendedWorkingCapital.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  R$ {formatCurrencySimple(wc.recommendedWorkingCapital}
                 </p>
               </div>
             </div>
@@ -169,7 +170,7 @@ Forneça recomendações específicas para melhorar a gestão do capital de giro
                 <p className="text-sm font-medium text-emerald-700">Recebimentos (30d)</p>
               </div>
               <p className="text-2xl font-bold text-emerald-700">
-                R$ {wc.currentReceivables.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                R$ {formatCurrencySimple(wc.currentReceivables}
               </p>
             </div>
 
@@ -179,7 +180,7 @@ Forneça recomendações específicas para melhorar a gestão do capital de giro
                 <p className="text-sm font-medium text-rose-700">Pagamentos (30d)</p>
               </div>
               <p className="text-2xl font-bold text-rose-700">
-                R$ {wc.currentPayables.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                R$ {formatCurrencySimple(wc.currentPayables}
               </p>
             </div>
 
@@ -189,7 +190,7 @@ Forneça recomendações específicas para melhorar a gestão do capital de giro
                 <p className="text-sm font-medium text-blue-700">Despesa Mensal Média</p>
               </div>
               <p className="text-2xl font-bold text-blue-700">
-                R$ {wc.avgMonthlyExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                R$ {formatCurrencySimple(wc.avgMonthlyExpenses}
               </p>
             </div>
           </div>
@@ -201,7 +202,7 @@ Forneça recomendações específicas para melhorar a gestão do capital de giro
               <div>
                 <p className="font-semibold text-rose-900 mb-1">Déficit de Capital de Giro</p>
                 <p className="text-sm text-rose-700 mb-2">
-                  Você precisa de <strong>R$ {wc.deficit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> adicionais 
+                  Você precisa de <strong>R$ {formatCurrencySimple(wc.deficit}</strong> adicionais 
                   para manter 2 meses de despesas operacionais em caixa.
                 </p>
                 <p className="text-xs text-rose-600">
@@ -217,7 +218,7 @@ Forneça recomendações específicas para melhorar a gestão do capital de giro
               <div>
                 <p className="font-semibold text-emerald-900 mb-1">Superávit de Capital de Giro</p>
                 <p className="text-sm text-emerald-700">
-                  Você tem <strong>R$ {wc.surplus.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> além do recomendado.
+                  Você tem <strong>R$ {formatCurrencySimple(wc.surplus}</strong> além do recomendado.
                   Considere investir esse valor para maior rentabilidade.
                 </p>
               </div>

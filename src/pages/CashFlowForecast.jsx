@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { formatCurrencySimple } from '@/utils/formatters';
 import { Transaction, Installment, PurchaseInstallment, Sale, Purchase } from '@/api/entities';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -202,7 +203,7 @@ export default function CashFlowForecastPage() {
             <div>
               <p className="text-sm text-slate-500">Saldo Inicial</p>
               <p className="text-2xl font-bold text-slate-700">
-                R$ {openingBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                R$ {formatCurrencySimple(openingBalance}
               </p>
             </div>
             <Wallet className="w-8 h-8 text-slate-400" />
@@ -214,7 +215,7 @@ export default function CashFlowForecastPage() {
             <div>
               <p className="text-sm text-emerald-600">Total Receitas</p>
               <p className="text-2xl font-bold text-emerald-600">
-                + R$ {totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                + R$ {formatCurrencySimple(totalRevenue}
               </p>
             </div>
             <TrendingUp className="w-8 h-8 text-emerald-400" />
@@ -226,7 +227,7 @@ export default function CashFlowForecastPage() {
             <div>
               <p className="text-sm text-rose-600">Total Despesas</p>
               <p className="text-2xl font-bold text-rose-600">
-                - R$ {totalExpense.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                - R$ {formatCurrencySimple(totalExpense}
               </p>
             </div>
             <TrendingDown className="w-8 h-8 text-rose-400" />
@@ -238,7 +239,7 @@ export default function CashFlowForecastPage() {
             <div>
               <p className="text-sm text-slate-400">Saldo Final</p>
               <p className="text-2xl font-bold text-white">
-                R$ {finalBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                R$ {formatCurrencySimple(finalBalance}
               </p>
             </div>
             <Wallet className="w-8 h-8 text-blue-400" />
@@ -260,7 +261,7 @@ export default function CashFlowForecastPage() {
                 <XAxis dataKey="month" tick={{fill: '#64748b', fontSize: 12}} />
                 <YAxis tick={{fill: '#64748b', fontSize: 12}} tickFormatter={(value) => `R$${(value/1000).toFixed(0)}k`} />
                 <Tooltip 
-                  formatter={(value) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                  formatter={(value) => `R$ ${value}`}
                   contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0' }}
                 />
                 <Legend />
@@ -283,7 +284,7 @@ export default function CashFlowForecastPage() {
                 <XAxis dataKey="month" tick={{fill: '#64748b', fontSize: 12}} />
                 <YAxis tick={{fill: '#64748b', fontSize: 12}} tickFormatter={(value) => `R$${(value/1000).toFixed(0)}k`} />
                 <Tooltip 
-                  formatter={(value) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                  formatter={(value) => `R$ ${value}`}
                   contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0' }}
                 />
                 <Line 
@@ -335,16 +336,16 @@ export default function CashFlowForecastPage() {
                           </div>
                         </td>
                         <td className="py-3 px-4 text-right text-emerald-600 font-semibold">
-                          R$ {item.receita.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          R$ {formatCurrencySimple(item.receita}
                         </td>
                         <td className="py-3 px-4 text-right text-rose-600 font-semibold">
-                          R$ {item.despesa.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          R$ {formatCurrencySimple(item.despesa}
                         </td>
                         <td className={`py-3 px-4 text-right font-bold ${item.saldo >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                          {item.saldo >= 0 ? '+' : ''} R$ {item.saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          {item.saldo >= 0 ? '+' : ''} R$ {formatCurrencySimple(item.saldo}
                         </td>
                         <td className={`py-3 px-4 text-right font-bold ${item.saldoAcumulado >= 0 ? 'text-slate-900' : 'text-rose-600'}`}>
-                          R$ {item.saldoAcumulado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          R$ {formatCurrencySimple(item.saldoAcumulado}
                         </td>
                         <td className="py-3 px-4 text-center">
                           <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
@@ -376,7 +377,7 @@ export default function CashFlowForecastPage() {
                                           </p>
                                         </div>
                                         <p className="text-sm font-bold text-emerald-600 ml-3">
-                                          R$ {detail.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                          R$ {formatCurrencySimple(detail.amount}
                                         </p>
                                       </div>
                                     </div>
@@ -405,7 +406,7 @@ export default function CashFlowForecastPage() {
                                           </p>
                                         </div>
                                         <p className="text-sm font-bold text-rose-600 ml-3">
-                                          R$ {detail.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                          R$ {formatCurrencySimple(detail.amount}
                                         </p>
                                       </div>
                                     </div>

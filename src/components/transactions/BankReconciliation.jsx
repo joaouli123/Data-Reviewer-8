@@ -151,7 +151,7 @@ export default function BankReconciliation({ open, onOpenChange, statementData, 
                       <p className="text-sm font-medium text-slate-900">{match.statement.description}</p>
                       <p className="text-xs text-slate-600">
                         {format(parseISO(match.statement.date), "dd/MM/yyyy")} - 
-                        R$ {Math.abs(match.statement.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        R$ {formatCurrencySimple(Math.abs(match.statement.amount)}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -178,7 +178,7 @@ export default function BankReconciliation({ open, onOpenChange, statementData, 
                       <p className="text-sm font-medium text-slate-900">{match.statement.description}</p>
                       <p className="text-xs text-slate-600">
                         {format(parseISO(match.statement.date), "dd/MM/yyyy")} - 
-                        R$ {Math.abs(match.statement.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        R$ {formatCurrencySimple(Math.abs(match.statement.amount)}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -225,7 +225,7 @@ export default function BankReconciliation({ open, onOpenChange, statementData, 
                       <div className="flex items-center gap-3 text-xs text-slate-600 mt-1">
                         <span>{format(parseISO(item.date), "dd/MM/yyyy")}</span>
                         <span className="font-semibold">
-                          R$ {Math.abs(item.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          R$ {formatCurrencySimple(Math.abs(item.amount)}
                         </span>
                         <Badge variant={item.type === 'income' ? 'default' : 'destructive'} className="text-xs">
                           {item.type === 'income' ? 'Receita' : 'Despesa'}
