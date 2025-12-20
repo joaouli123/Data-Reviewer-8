@@ -12,12 +12,11 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  // Middleware to prevent Vite from intercepting API routes
-  app.use((req, res, next) => {
-    if (req.path.startsWith("/api/")) {
-      return next();
-    }
-    next();
+  console.log("[registerRoutes] Registering API routes...");
+
+  // Test route to verify API works
+  app.get("/api/health", (req, res) => {
+    res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
 
   // Customer routes

@@ -76,14 +76,6 @@ app.use((req, res, next) => {
   if (process.env.NODE_ENV === "production") {
     serveStatic(app);
   } else {
-    // Add API protection middleware BEFORE setting up Vite
-    // This ensures API routes are never served by Vite
-    const apiProtection = express.Router();
-    apiProtection.use((req, res) => {
-      res.status(404).json({ error: "API route not found" });
-    });
-    app.use("/api", apiProtection);
-
     const { setupVite } = await import("./vite");
     await setupVite(httpServer, app);
   }
