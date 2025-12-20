@@ -88,7 +88,7 @@ export default function QuickActionsFAB() {
                 : 'opacity-0 scale-95 pointer-events-none'
             }`}
           >
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-border overflow-hidden">
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-border overflow-hidden min-w-56">
               <div className="space-y-1 p-2">
                 {actions.map((action, index) => {
                   const Icon = action.icon;
@@ -101,7 +101,7 @@ export default function QuickActionsFAB() {
                         onClick={() => handleActionClick()}
                       >
                         <button
-                          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-accent/10 dark:hover:bg-accent/20 transition-all duration-200 text-left hover:translate-x-1"
+                          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-accent/10 dark:hover:bg-accent/20 transition-all duration-200 text-left hover:translate-x-1 whitespace-nowrap"
                           style={{
                             transitionDelay: isOpen ? `${index * 30}ms` : '0ms'
                           }}
@@ -117,7 +117,7 @@ export default function QuickActionsFAB() {
                     <button
                       key={action.label}
                       onClick={() => handleActionClick(action.onClick)}
-                      className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 dark:hover:bg-primary/20 transition-all duration-200 text-left hover:translate-x-1"
+                      className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 dark:hover:bg-primary/20 transition-all duration-200 text-left hover:translate-x-1 whitespace-nowrap"
                       style={{
                         transitionDelay: isOpen ? `${index * 30}ms` : '0ms'
                       }}
