@@ -12,14 +12,14 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarIcon, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import CreateCategoryModal from './CreateCategoryModal';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 export default function TransactionForm({ open, onOpenChange, onSubmit, initialData = null }) {
   const queryClient = useQueryClient();
-  const [isNewCategoryMode, setIsNewCategoryMode] = useState(false);
-  const [newCategoryName, setNewCategoryName] = useState('');
+  const [isCreateCategoryModalOpen, setIsCreateCategoryModalOpen] = useState(false);
   const [isSuggestingCategory, setIsSuggestingCategory] = useState(false);
   
   const [formData, setFormData] = React.useState({
@@ -43,8 +43,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
     onSuccess: (newCat) => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       setFormData((prev) => ({ ...prev, categoryId: newCat.id }));
-      setIsNewCategoryMode(false);
-      setNewCategoryName('');
+      setIsCreateCategoryModalOpen(false);
       toast.success('Categoria criada!');
     }
   });
@@ -54,7 +53,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
       setFormData({
         ...initialData,
         date: new Date(initialData.date),
-        amount: initialData.amount.toString()
+        amount: Math.abs(initialData.amount).toString()
       });
     } else {
       setFormData({
@@ -100,14 +99,6 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
     });
   };
 
-  const handleCreateCategory = (e) => {
-    e.preventDefault();
-    if (!newCategoryName.trim()) return;
-    createCategoryMutation.mutate({
-        name: newCategoryName.toLowerCase(),
-        type: formData.type === 'venda' ? 'entrada' : 'saida'
-    });
-  };
 
   const suggestCategory = async () => {
     if (!formData.description.trim() || categories.length === 0) {
@@ -173,63 +164,36 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Categoria</Label>
-              {!isNewCategoryMode ? (
-                <div className="flex gap-2">
-                    <Select 
-                        value={formData.categoryId} 
-                        onValueChange={(v) => {
-                          const selectedCat = categories.find(c => c.id === v);
-                          const newType = selectedCat?.type === 'entrada' ? 'venda' : 'compra';
-                          setFormData({...formData, categoryId: v, type: newType});
-                        }}
-                    >
-                        <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Selecione..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {categories.map((cat) => (
-                                <SelectItem key={cat.id} value={cat.id}>
-                                    {cat.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                    <Button 
-                        type="button" 
-                        variant="outline" 
-                        size="icon" 
-                        onClick={() => setIsNewCategoryMode(true)}
-                        title="Nova Categoria"
-                    >
-                        <Plus className="w-4 h-4" />
-                    </Button>
-                </div>
-              ) : (
-                <div className="flex gap-2">
-                    <Input 
-                        placeholder="Nova categoria..." 
-                        value={newCategoryName}
-                        onChange={(e) => setNewCategoryName(e.target.value)}
-                        className="flex-1"
-                    />
-                    <Button 
-                        type="button" 
-                        size="sm" 
-                        onClick={handleCreateCategory}
-                        className="bg-green-600 hover:bg-green-700"
-                    >
-                        OK
-                    </Button>
-                    <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => setIsNewCategoryMode(false)}
-                    >
-                        X
-                    </Button>
-                </div>
-              )}
+              <div className="flex gap-2">
+                <Select 
+                    value={formData.categoryId} 
+                    onValueChange={(v) => {
+                      const selectedCat = categories.find(c => c.id === v);
+                      const newType = selectedCat?.type === 'entrada' ? 'venda' : 'compra';
+                      setFormData({...formData, categoryId: v, type: newType});
+                    }}
+                >
+                    <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {categories.map((cat) => (
+                            <SelectItem key={cat.id} value={cat.id}>
+                                {cat.name}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+                <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="icon" 
+                    onClick={() => setIsCreateCategoryModalOpen(true)}
+                    title="Nova Categoria"
+                >
+                    <Plus className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -300,6 +264,13 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
             </Button>
           </div>
         </form>
+
+        <CreateCategoryModal 
+          open={isCreateCategoryModalOpen}
+          onOpenChange={setIsCreateCategoryModalOpen}
+          onSubmit={(data) => createCategoryMutation.mutate(data)}
+          isLoading={createCategoryMutation.isPending}
+        />
       </DialogContent>
     </Dialog>
   );
