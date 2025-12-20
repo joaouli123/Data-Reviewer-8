@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
-import { CheckCircle2, Calendar, DollarSign } from 'lucide-react';
+import { CheckCircle2, Calendar } from 'lucide-react';
 
 export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }) {
   const queryClient = useQueryClient();
@@ -189,8 +189,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                           <Calendar className="w-3 h-3" />
                           {format(parseISO(inst.due_date), "dd/MM/yyyy")}
                         </span>
-                        <span className="flex items-center gap-1">
-                          <DollarSign className="w-3 h-3" />
+                        <span>
                           R$ {inst.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </span>
                       </div>

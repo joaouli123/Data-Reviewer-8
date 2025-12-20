@@ -64,7 +64,6 @@ export default function RevenueGrowthReport({ strategies, transactions, customer
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-100">
             <div className="flex items-center gap-2 mb-1">
-              <DollarSign className="w-4 h-4 text-emerald-600" />
               <span className="text-xs text-emerald-600 font-medium">Receita Total</span>
             </div>
             <p className="text-xl font-bold text-emerald-700">
