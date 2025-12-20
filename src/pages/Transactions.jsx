@@ -224,13 +224,13 @@ export default function TransactionsPage() {
                 </div>
             </CardContent>
         </Card>
-        <Card className="bg-slate-900 border-slate-900 shadow-md">
+        <Card className={balances.closing >= 0 ? "bg-emerald-600 border-emerald-600 shadow-md" : "bg-rose-600 border-rose-600 shadow-md"}>
             <CardContent className="p-4 flex items-center justify-between">
                 <div>
-                    <p className="text-sm font-medium text-slate-400">Saldo Final</p>
+                    <p className="text-sm font-medium text-white/80">Saldo Final</p>
                     <h3 className="text-xl font-bold text-white">R$ {balances.closing.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
                 </div>
-                <div className="p-2 bg-indigo-500 rounded-lg text-white">
+                <div className={`p-2 rounded-lg text-white ${balances.closing >= 0 ? 'bg-emerald-700' : 'bg-rose-700'}`}>
                     <Wallet className="w-5 h-5" />
                 </div>
             </CardContent>
