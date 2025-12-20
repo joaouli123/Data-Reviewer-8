@@ -47,7 +47,7 @@ export default function DateFilter({ onDateRangeChange }) {
     <div className="flex items-center gap-2">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline" className="gap-2 no-default-hover-elevate">
             <Calendar className="w-4 h-4" />
             {dateRange.label}
             <ChevronDown className="w-4 h-4 ml-2 opacity-50" />
@@ -69,7 +69,7 @@ export default function DateFilter({ onDateRangeChange }) {
           
           <Popover open={customOpen} onOpenChange={setCustomOpen}>
             <PopoverTrigger asChild>
-              <div className="px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm">
+              <div className="px-2 py-1.5 text-sm cursor-pointer rounded-sm">
                 Personalizado
               </div>
             </PopoverTrigger>
@@ -94,7 +94,7 @@ export default function DateFilter({ onDateRangeChange }) {
                 <Button
                   onClick={handleCustom}
                   disabled={!customStart || !customEnd}
-                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                  className="w-full bg-primary text-primary-foreground no-default-hover-elevate"
                 >
                   Aplicar
                 </Button>

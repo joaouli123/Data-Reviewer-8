@@ -150,13 +150,14 @@ export default function BankStatementUpload({ open, onOpenChange, onExtracted })
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isUploading}
+              className="no-default-hover-elevate"
             >
               Cancelar
             </Button>
             <Button
               onClick={handleUpload}
               disabled={!file || isUploading}
-              className="bg-primary hover:bg-primary"
+              className="bg-primary no-default-hover-elevate"
             >
               {isUploading ? (
                 <>
