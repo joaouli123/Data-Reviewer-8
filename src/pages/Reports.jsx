@@ -5,12 +5,13 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Brain, Sparkles, TrendingUp, AlertTriangle, Lightbulb, FileText, Loader2, ArrowRight, Filter, BarChart3 } from 'lucide-react';
-import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
+import { format, subMonths, startOfMonth, endOfMonth, isAfter, isBefore } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import PeriodFilter from '../components/dashboard/PeriodFilter';
 import CashFlowForecastChart from '../components/reports/CashFlowForecastChart';
 import ExpensesBreakdown from '../components/reports/ExpensesBreakdown';
 import RevenueGrowthReport from '../components/reports/RevenueGrowthReport';
@@ -27,7 +28,11 @@ import ReportExporter from '../components/reports/ReportExporter';
 export default function ReportsPage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
-  const [periodFilter, setPeriodFilter] = useState('last6Months');
+  const [dateRange, setDateRange] = useState({
+    startDate: startOfMonth(subMonths(new Date(), 5)),
+    endDate: endOfMonth(new Date()),
+    label: 'Últimos 6 Meses'
+  });
   const [categoryFilter, setCategoryFilter] = useState('all');
 
   const { data: transactions } = useQuery({
@@ -53,21 +58,10 @@ export default function ReportsPage() {
     let filtered = [...transactions];
     
     // Period filter
-    const now = new Date();
-    switch (periodFilter) {
-      case 'last3Months':
-        filtered = filtered.filter(t => new Date(t.date) >= subMonths(now, 3));
-        break;
-      case 'last6Months':
-        filtered = filtered.filter(t => new Date(t.date) >= subMonths(now, 6));
-        break;
-      case 'lastYear':
-        filtered = filtered.filter(t => new Date(t.date) >= subMonths(now, 12));
-        break;
-      case 'all':
-      default:
-        break;
-    }
+    filtered = filtered.filter(t => {
+      const tDate = new Date(t.date);
+      return isAfter(tDate, dateRange.startDate) && isBefore(tDate, dateRange.endDate);
+    });
     
     // Category filter
     if (categoryFilter !== 'all') {
@@ -193,12 +187,17 @@ export default function ReportsPage() {
           <p className="text-slate-500 mt-1">Insights inteligentes para o seu negócio baseados em dados reais.</p>
         </div>
         <div className="flex gap-3">
+          <PeriodFilter 
+            onPeriodChange={setDateRange}
+            mode="months"
+            defaultPeriod="last6Months"
+          />
           <ReportExporter 
             reportData={{
               summary: analysisResult ? {
                 receita_total: filteredTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0),
                 despesas_total: filteredTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0),
-                periodo: periodFilter
+                periodo: dateRange.label
               } : null,
               transactions: filteredTransactions,
               forecast: analysisResult?.cash_flow_forecast
@@ -236,20 +235,6 @@ export default function ReportsPage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">Período</label>
-              <Select value={periodFilter} onValueChange={setPeriodFilter}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="last3Months">Últimos 3 Meses</SelectItem>
-                  <SelectItem value="last6Months">Últimos 6 Meses</SelectItem>
-                  <SelectItem value="lastYear">Último Ano</SelectItem>
-                  <SelectItem value="all">Todo o Período</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-700">Categoria</label>
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>

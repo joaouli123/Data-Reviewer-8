@@ -10,11 +10,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Download, Search, Filter, Trash2, Pencil, Calendar as CalendarIcon, Wallet, TrendingUp, TrendingDown, Upload } from 'lucide-react';
-import { format, parseISO, startOfMonth, endOfMonth, isWithinInterval, isBefore, parse, subDays, startOfDay, endOfDay } from 'date-fns';
+import { format, parseISO, startOfMonth, endOfMonth, isWithinInterval, isBefore, parse, subDays, startOfDay, endOfDay, isAfter } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import TransactionForm from '../components/transactions/TransactionForm';
 import BankStatementUpload from '../components/transactions/BankStatementUpload';
 import BankReconciliation from '../components/transactions/BankReconciliation';
+import PeriodFilter from '../components/dashboard/PeriodFilter';
 import { toast } from 'sonner';
 import { cn } from "@/lib/utils";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -27,35 +28,14 @@ export default function TransactionsPage() {
   const [typeFilter, setTypeFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [dateRange, setDateRange] = useState({
-    from: startOfDay(new Date()),
-    to: endOfDay(new Date()),
+    startDate: startOfDay(new Date()),
+    endDate: endOfDay(new Date()),
     label: 'Hoje'
   });
-  const [customOpen, setCustomOpen] = useState(false);
-  const [customStart, setCustomStart] = useState(null);
-  const [customEnd, setCustomEnd] = useState(null);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [reconciliationOpen, setReconciliationOpen] = useState(false);
   const [statementData, setStatementData] = useState(null);
 
-  const handlePreset = (days, label) => {
-    const end = endOfDay(new Date());
-    const start = startOfDay(subDays(new Date(), days));
-    const newRange = { from: start, to: end, label };
-    setDateRange(newRange);
-  };
-
-  const handleCustom = () => {
-    if (customStart && customEnd) {
-      const newRange = {
-        from: startOfDay(customStart),
-        to: endOfDay(customEnd),
-        label: `${format(customStart, 'dd/MM/yyyy')} - ${format(customEnd, 'dd/MM/yyyy')}`
-      };
-      setDateRange(newRange);
-      setCustomOpen(false);
-    }
-  };
 
   // Categories not implemented, use static list
   const categories = [
@@ -156,7 +136,7 @@ export default function TransactionsPage() {
       const matchesCategory = categoryFilter === 'all' || t.category === categoryFilter;
       const matchesSearch = t.description.toLowerCase().includes(searchTerm.toLowerCase()) || 
                             t.category.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesDate = dateRange?.from && dateRange?.to ? isWithinInterval(tDate, { start: dateRange.from, end: dateRange.to }) : true;
+      const matchesDate = isAfter(tDate, dateRange.startDate) && isBefore(tDate, dateRange.endDate);
 
       return matchesType && matchesCategory && matchesSearch && matchesDate;
     })
@@ -172,11 +152,11 @@ export default function TransactionsPage() {
       const tDate = parseISO(t.date);
       const amount = parseFloat(t.amount) || 0;
       
-      if (dateRange?.from && isBefore(tDate, dateRange.from)) {
+      if (isBefore(tDate, dateRange.startDate)) {
         // Transaction is before the selected period -> contributes to opening balance
         if (t.type === 'venda') openingBalance += amount;
         else openingBalance -= amount;
-      } else if (dateRange?.from && dateRange?.to && isWithinInterval(tDate, { start: dateRange.from, end: dateRange.to })) {
+      } else if (isAfter(tDate, dateRange.startDate) && isBefore(tDate, dateRange.endDate)) {
         // Transaction is within period
         if (t.type === 'venda') periodIncome += amount;
         else periodExpense += amount;
@@ -201,51 +181,11 @@ export default function TransactionsPage() {
             <p className="text-slate-500">Gerencie suas receitas e despesas.</p>
         </div>
         <div className="flex gap-2 flex-wrap">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="gap-2 no-default-hover-elevate">
-                  <CalendarIcon className="w-4 h-4" />
-                  {dateRange.label}
-                  <ChevronDown className="w-4 h-4 ml-2 opacity-50" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-56">
-                <DropdownMenuItem onClick={() => handlePreset(0, 'Hoje')}>
-                  Hoje
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handlePreset(6, 'Última semana')}>
-                  Última semana
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handlePreset(29, 'Últimos 30 dias')}>
-                  Últimos 30 dias
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handlePreset(89, 'Últimos 90 dias')}>
-                  Últimos 90 dias
-                </DropdownMenuItem>
-                <Popover open={customOpen} onOpenChange={setCustomOpen}>
-                  <PopoverTrigger asChild>
-                    <div className="px-2 py-1.5 text-sm cursor-pointer rounded-sm">
-                      Personalizado
-                    </div>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-80">
-                    <div className="space-y-4">
-                      <div>
-                        <p className="text-sm font-medium text-foreground mb-2">De:</p>
-                        <Calendar mode="single" selected={customStart} onSelect={setCustomStart} />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-foreground mb-2">Até:</p>
-                        <Calendar mode="single" selected={customEnd} onSelect={setCustomEnd} />
-                      </div>
-                      <Button onClick={handleCustom} disabled={!customStart || !customEnd} className="w-full bg-primary text-primary-foreground">
-                        Aplicar
-                      </Button>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <PeriodFilter 
+              onPeriodChange={setDateRange}
+              mode="days"
+              defaultPeriod="today"
+            />
             <Button variant="outline" onClick={handleExport} className="flex items-center gap-2">
                 <Download className="w-4 h-4" /> Exportar CSV
             </Button>
