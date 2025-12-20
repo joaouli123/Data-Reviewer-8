@@ -136,7 +136,7 @@ export default function TransactionsPage() {
       const matchesCategory = categoryFilter === 'all' || t.category === categoryFilter;
       const matchesSearch = t.description.toLowerCase().includes(searchTerm.toLowerCase()) || 
                             t.category.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesDate = isAfter(tDate, dateRange.startDate) && isBefore(tDate, dateRange.endDate);
+      const matchesDate = tDate >= dateRange.startDate && tDate <= dateRange.endDate;
 
       return matchesType && matchesCategory && matchesSearch && matchesDate;
     })
@@ -152,11 +152,11 @@ export default function TransactionsPage() {
       const tDate = parseISO(t.date);
       const amount = parseFloat(t.amount) || 0;
       
-      if (isBefore(tDate, dateRange.startDate)) {
+      if (tDate < dateRange.startDate) {
         // Transaction is before the selected period -> contributes to opening balance
         if (t.type === 'venda') openingBalance += amount;
         else openingBalance -= amount;
-      } else if (isAfter(tDate, dateRange.startDate) && isBefore(tDate, dateRange.endDate)) {
+      } else if (tDate >= dateRange.startDate && tDate <= dateRange.endDate) {
         // Transaction is within period
         if (t.type === 'venda') periodIncome += amount;
         else periodExpense += amount;

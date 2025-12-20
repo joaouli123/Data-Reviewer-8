@@ -32,7 +32,7 @@ export default function DashboardPage() {
   const calculateMetrics = () => {
     const filteredTransactions = transactions.filter(t => {
       const tDate = new Date(t.date);
-      return isAfter(tDate, dateRange.startDate) && isBefore(tDate, dateRange.endDate);
+      return tDate >= dateRange.startDate && tDate <= dateRange.endDate;
     });
 
     const totalRevenue = filteredTransactions

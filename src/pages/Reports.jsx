@@ -60,7 +60,7 @@ export default function ReportsPage() {
     // Period filter
     filtered = filtered.filter(t => {
       const tDate = new Date(t.date);
-      return isAfter(tDate, dateRange.startDate) && isBefore(tDate, dateRange.endDate);
+      return tDate >= dateRange.startDate && tDate <= dateRange.endDate;
     });
     
     // Category filter

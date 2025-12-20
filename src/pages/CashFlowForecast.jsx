@@ -3,8 +3,8 @@ import { Transaction, Installment, PurchaseInstallment, Sale, Purchase } from '@
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { Calendar as CalendarIcon, TrendingUp, TrendingDown, Wallet, ChevronRight } from 'lucide-react';
-import { format, parseISO, isWithinInterval, addMonths, startOfMonth, endOfMonth, eachMonthOfInterval, startOfDay, endOfDay, subDays } from 'date-fns';
+import { Calendar as CalendarIcon, TrendingUp, TrendingDown, Wallet } from 'lucide-react';
+import { format, parseISO, isWithinInterval, addMonths, startOfMonth, endOfMonth, eachMonthOfInterval, startOfDay, endOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import PeriodFilter from '../components/dashboard/PeriodFilter';
@@ -50,7 +50,9 @@ export default function CashFlowForecastPage() {
   const calculateCashFlow = () => {
     if (!dateRange.startDate || !dateRange.endDate) return [];
 
-    const months = eachMonthOfInterval({ start: dateRange.startDate, end: dateRange.endDate });
+    const start = startOfDay(dateRange.startDate);
+    const end = endOfDay(dateRange.endDate);
+    const months = eachMonthOfInterval({ start, end });
     
     return months.map(month => {
       const monthStart = startOfMonth(month);
