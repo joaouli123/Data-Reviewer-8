@@ -5,6 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Category } from '@/api/entities';
@@ -14,7 +17,7 @@ export default function CategoriesPage() {
   const queryClient = useQueryClient();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
-  const [formData, setFormData] = useState({ name: '' });
+  const [formData, setFormData] = useState({ name: '', type: 'entrada' });
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(15);
 
@@ -72,14 +75,14 @@ export default function CategoriesPage() {
 
   const handleEdit = (category) => {
     setEditingCategory(category);
-    setFormData({ name: category.name });
+    setFormData({ name: category.name, type: category.type || 'entrada' });
     setIsFormOpen(true);
   };
 
   const handleClose = () => {
     setIsFormOpen(false);
     setEditingCategory(null);
-    setFormData({ name: '' });
+    setFormData({ name: '', type: 'entrada' });
   };
 
   const startIndex = (currentPage - 1) * pageSize;
@@ -108,6 +111,7 @@ export default function CategoriesPage() {
               <TableHeader className="bg-slate-50">
                 <TableRow>
                   <TableHead>Nome</TableHead>
+                  <TableHead>Tipo</TableHead>
                   <TableHead className="w-[120px]">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -117,6 +121,11 @@ export default function CategoriesPage() {
                     <TableRow key={cat.id} className="hover:bg-slate-50/50">
                       <TableCell className="font-medium text-slate-900">
                         {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={cat.type === 'entrada' ? 'default' : 'destructive'}>
+                          {cat.type === 'entrada' ? '+ Entrada' : '- Saída'}
+                        </Badge>
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
@@ -142,7 +151,7 @@ export default function CategoriesPage() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={2} className="text-center py-10 text-slate-500">
+                    <TableCell colSpan={3} className="text-center py-10 text-slate-500">
                       Nenhuma categoria encontrada.
                     </TableCell>
                   </TableRow>
@@ -170,13 +179,31 @@ export default function CategoriesPage() {
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4 mt-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">Nome da Categoria</label>
+              <Label>Nome da Categoria</Label>
               <Input 
                 placeholder="Ex: Venda, Compra, Devolução..." 
                 value={formData.name}
-                onChange={(e) => setFormData({ name: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
               />
+            </div>
+
+            <div className="space-y-3">
+              <Label>Tipo</Label>
+              <RadioGroup value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
+                <div className="flex items-center space-x-2 p-3 border border-emerald-200 rounded-md bg-emerald-50">
+                  <RadioGroupItem value="entrada" id="entrada" />
+                  <Label htmlFor="entrada" className="flex-1 cursor-pointer text-emerald-700 font-medium">
+                    Entrada (Receita)
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2 p-3 border border-red-200 rounded-md bg-red-50">
+                  <RadioGroupItem value="saida" id="saida" />
+                  <Label htmlFor="saida" className="flex-1 cursor-pointer text-red-700 font-medium">
+                    Saída (Despesa)
+                  </Label>
+                </div>
+              </RadioGroup>
             </div>
 
             <div className="pt-4 flex justify-end gap-3">
