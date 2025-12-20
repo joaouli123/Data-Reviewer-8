@@ -6,10 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Download, Search, Filter, Trash2, Pencil, Calendar as CalendarIcon, Wallet, TrendingUp, TrendingDown, Upload } from 'lucide-react';
+import { Plus, Download, Search, Trash2, Pencil, Wallet, TrendingUp, TrendingDown, Upload } from 'lucide-react';
 import { format, parseISO, startOfMonth, endOfMonth, isWithinInterval, isBefore, parse, subDays, startOfDay, endOfDay, isAfter } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import TransactionForm from '../components/transactions/TransactionForm';
@@ -18,8 +16,6 @@ import BankReconciliation from '../components/transactions/BankReconciliation';
 import PeriodFilter from '../components/dashboard/PeriodFilter';
 import { toast } from 'sonner';
 import { cn } from "@/lib/utils";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ChevronDown } from 'lucide-react';
 
 export default function TransactionsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -265,47 +261,6 @@ export default function TransactionsPage() {
             </div>
             
             <div className="flex flex-wrap gap-2 w-full lg:w-auto">
-                 {/* Date Range Picker */}
-                <div className="grid gap-2">
-                    <Popover>
-                        <PopoverTrigger asChild>
-                        <Button
-                            id="date"
-                            variant={"outline"}
-                            className={cn(
-                            "w-[260px] justify-start text-left font-normal",
-                            !dateRange && "text-muted-foreground"
-                            )}
-                        >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {dateRange?.from ? (
-                            dateRange.to ? (
-                                <>
-                                {format(dateRange.from, "dd/MM/y", { locale: ptBR })} -{" "}
-                                {format(dateRange.to, "dd/MM/y", { locale: ptBR })}
-                                </>
-                            ) : (
-                                format(dateRange.from, "dd/MM/y", { locale: ptBR })
-                            )
-                            ) : (
-                            <span>Selecione o período</span>
-                            )}
-                        </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="end">
-                        <Calendar
-                            initialFocus
-                            mode="range"
-                            defaultMonth={dateRange?.from}
-                            selected={dateRange}
-                            onSelect={setDateRange}
-                            numberOfMonths={2}
-                            locale={ptBR}
-                        />
-                        </PopoverContent>
-                    </Popover>
-                </div>
-
                 <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                     <SelectTrigger className="w-[160px]">
                         <SelectValue placeholder="Categoria" />
@@ -348,7 +303,7 @@ export default function TransactionsPage() {
                         filteredTransactions.map((t) => (
                             <TableRow key={t.id} className="hover:bg-slate-50/50 group">
                                 <TableCell className="font-medium text-slate-600">
-                                    {format(parseISO(t.date), "d MMM, yyyy", { locale: ptBR })}
+                                    {format(new Date(t.date), "dd/MM/yyyy", { locale: ptBR })}
                                 </TableCell>
                                 <TableCell className="font-medium text-slate-900">{t.description}</TableCell>
                                 <TableCell>
