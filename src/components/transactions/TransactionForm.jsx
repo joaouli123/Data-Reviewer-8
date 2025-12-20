@@ -10,7 +10,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarIcon, Plus, Sparkles, Loader2 } from "lucide-react";
+import { CalendarIcon, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -189,21 +189,6 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
                             ))}
                         </SelectContent>
                     </Select>
-                    <Button 
-                        type="button" 
-                        variant="outline" 
-                        size="icon" 
-                        onClick={suggestCategory}
-                        disabled={isSuggestingCategory}
-                        title="Sugerir com IA"
-                        className="bg-indigo-50 hover:bg-indigo-100"
-                    >
-                        {isSuggestingCategory ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <Sparkles className="w-4 h-4 text-primary" />
-                        )}
-                    </Button>
                     <Button 
                         type="button" 
                         variant="outline" 

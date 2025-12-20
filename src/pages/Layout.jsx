@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Receipt, Users, Settings, Menu, X, Brain, Building2, TrendingUp } from 'lucide-react';
+import { LayoutDashboard, Receipt, Users, Settings, Menu, X, Brain, Building2, TrendingUp, Tag } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import LogoHUA from '@assets/Logo_HUA_1766187037233.png';
@@ -15,6 +15,7 @@ export default function Layout({ children }) {
     { name: 'Transações', icon: Receipt, path: '/transactions' },
     { name: 'Clientes', icon: Users, path: '/customers' },
     { name: 'Fornecedores', icon: Building2, path: '/suppliers' },
+    { name: 'Categorias', icon: Tag, path: '/categories' },
     { name: 'Fluxo de Caixa', icon: TrendingUp, path: '/cashflowforecast' },
     { name: 'IA Analista', icon: Brain, path: '/reports' },
     { name: 'Calc. Preços', icon: Settings, path: '/pricingcalculator' },
