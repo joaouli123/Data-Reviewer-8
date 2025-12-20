@@ -1,4 +1,3 @@
-import { formatCurrencySimple } from '@/utils/formatters';
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -69,27 +68,27 @@ export default function RevenueGrowthReport({ strategies, transactions, customer
               <span className="text-xs text-emerald-600 font-medium">Receita Total</span>
             </div>
             <p className="text-xl font-bold text-emerald-700">
-              R$ {formatCurrencySimple(totalRevenue}
+              R$ {totalRevenue.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
             </p>
           </div>
 
-          <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
+          <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-100">
             <div className="flex items-center gap-2 mb-1">
-              <TrendingUp className="w-4 h-4 text-blue-600" />
-              <span className="text-xs text-blue-600 font-medium">Crescimento</span>
+              <TrendingUp className="w-4 h-4 text-indigo-600" />
+              <span className="text-xs text-indigo-600 font-medium">Crescimento</span>
             </div>
             <p className={`text-xl font-bold ${growthRate >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
               {growthRate >= 0 ? '+' : ''}{growthRate.toFixed(1)}%
             </p>
           </div>
 
-          <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
+          <div className="p-4 bg-purple-50 rounded-lg border border-purple-100">
             <div className="flex items-center gap-2 mb-1">
-              <Target className="w-4 h-4 text-blue-600" />
-              <span className="text-xs text-blue-600 font-medium">Ticket Médio</span>
+              <Target className="w-4 h-4 text-purple-600" />
+              <span className="text-xs text-purple-600 font-medium">Ticket Médio</span>
             </div>
-            <p className="text-xl font-bold text-blue-700">
-              R$ {formatCurrencySimple(avgTicket}
+            <p className="text-xl font-bold text-purple-700">
+              R$ {avgTicket.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
             </p>
           </div>
 
@@ -127,7 +126,7 @@ export default function RevenueGrowthReport({ strategies, transactions, customer
                 tickFormatter={(value) => `R$${(value/1000).toFixed(0)}k`}
               />
               <Tooltip 
-                formatter={(value) => [`R$ ${value}`, 'Receita']}
+                formatter={(value) => [`R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 'Receita']}
                 contentStyle={{ 
                   backgroundColor: '#fff', 
                   borderRadius: '8px', 
@@ -158,13 +157,13 @@ export default function RevenueGrowthReport({ strategies, transactions, customer
               return (
                 <div key={customerId} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
+                    <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm">
                       {idx + 1}
                     </div>
                     <span className="font-medium text-slate-900">{customer?.name || 'Cliente'}</span>
                   </div>
                   <span className="font-bold text-emerald-600">
-                    R$ {formatCurrencySimple(revenue}
+                    R$ {revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
               );

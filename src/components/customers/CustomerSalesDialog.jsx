@@ -10,7 +10,6 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CheckCircle2, Clock, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
-import { formatCurrencySimple } from '@/utils/formatters';
 
 export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
   const queryClient = useQueryClient();
@@ -95,19 +94,19 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
           <div className="p-4 rounded-lg bg-slate-50 border">
             <p className="text-xs text-slate-500 mb-1">Total em Vendas</p>
             <p className="text-lg font-bold text-slate-900">
-              {formatCurrencySimple(sales.reduce((acc, s) => acc + s.total_amount, 0))}
+              R$ {sales.reduce((acc, s) => acc + s.total_amount, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </p>
           </div>
           <div className="p-4 rounded-lg bg-emerald-50 border border-emerald-100">
             <p className="text-xs text-emerald-600 mb-1">Recebido</p>
             <p className="text-lg font-bold text-emerald-700">
-              {formatCurrencySimple(getTotalReceived())}
+              R$ {getTotalReceived().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </p>
           </div>
           <div className="p-4 rounded-lg bg-amber-50 border border-amber-100">
             <p className="text-xs text-amber-600 mb-1">A Receber</p>
             <p className="text-lg font-bold text-amber-700">
-              {formatCurrencySimple(getTotalPending())}
+              R$ {getTotalPending().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </p>
           </div>
         </div>
@@ -135,7 +134,7 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
                       </div>
                       <div className="text-right">
                         <p className="text-lg font-bold text-slate-900">
-                          R$ {formatCurrencySimple(sale.total_amount}
+                          R$ {sale.total_amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </p>
                         <Badge variant={sale.status === 'completed' ? 'default' : sale.status === 'partial' ? 'secondary' : 'outline'} 
                           className={sale.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : sale.status === 'partial' ? 'bg-amber-100 text-amber-700' : ''}>
@@ -163,7 +162,7 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
                           </div>
                           <div className="flex items-center gap-3">
                             <span className="font-semibold text-slate-900">
-                              R$ {formatCurrencySimple(inst.amount}
+                              R$ {inst.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                             </span>
                             {!inst.paid && (
                               <Button 
@@ -215,7 +214,7 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
                         <TableCell>{inst.installment_number}/{sale?.installments}</TableCell>
                         <TableCell>{format(parseISO(inst.due_date), "dd/MM/yyyy")}</TableCell>
                         <TableCell className="text-right font-semibold">
-                          R$ {formatCurrencySimple(inst.amount}
+                          R$ {inst.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </TableCell>
                         <TableCell>
                           {!inst.paid && (

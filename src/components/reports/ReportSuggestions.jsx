@@ -71,10 +71,10 @@ Sugira 4-5 relatórios mais relevantes que devem ser gerados, com justificativa 
   };
 
   return (
-    <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-white">
+    <Card className="border-indigo-200 bg-gradient-to-br from-indigo-50 to-white">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-blue-700">
+          <CardTitle className="flex items-center gap-2 text-indigo-700">
             <Sparkles className="w-5 h-5" />
             Sugestões de Relatórios
           </CardTitle>
@@ -83,7 +83,7 @@ Sugira 4-5 relatórios mais relevantes que devem ser gerados, com justificativa 
             disabled={isGenerating}
             variant="outline"
             size="sm"
-            className="border-blue-300 hover:bg-blue-100"
+            className="border-indigo-300 hover:bg-indigo-100"
           >
             {isGenerating ? (
               <>
@@ -126,9 +126,9 @@ Sugira 4-5 relatórios mais relevantes que devem ser gerados, com justificativa 
                     </Badge>
                   </div>
                   <p className="text-sm text-slate-600 mb-2">{report.reason}</p>
-                  <div className="flex items-start gap-2 p-2 bg-blue-50 rounded border border-blue-100">
-                    <TrendingUp className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                    <p className="text-xs text-blue-700">
+                  <div className="flex items-start gap-2 p-2 bg-indigo-50 rounded border border-indigo-100">
+                    <TrendingUp className="w-4 h-4 text-indigo-600 mt-0.5 flex-shrink-0" />
+                    <p className="text-xs text-indigo-700">
                       <strong>Insight:</strong> {report.key_insight}
                     </p>
                   </div>
@@ -137,7 +137,7 @@ Sugira 4-5 relatórios mais relevantes que devem ser gerados, com justificativa 
             })}
             <Button 
               onClick={onGenerateAnalysis}
-              className="w-full bg-blue-600 hover:bg-blue-700 mt-4"
+              className="w-full bg-indigo-600 hover:bg-indigo-700 mt-4"
             >
               <BarChart3 className="w-4 h-4 mr-2" />
               Gerar Análise Completa

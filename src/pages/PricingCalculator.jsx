@@ -1,5 +1,4 @@
 import { InvokeLLM, UploadFile, ExtractDataFromUploadedFile } from '@/api/integrations';
-import { formatCurrencySimple } from '@/utils/formatters';
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -101,7 +100,7 @@ Forneça recomendações estratégicas de precificação.`;
     <div className="space-y-6 max-w-5xl mx-auto">
       <div>
         <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-2">
-          <Calculator className="w-8 h-8 text-blue-600" />
+          <Calculator className="w-8 h-8 text-indigo-600" />
           Calculadora de Preços
         </h1>
         <p className="text-slate-500 mt-1">
@@ -176,7 +175,7 @@ Forneça recomendações estratégicas de precificação.`;
 
             <Button
               onClick={calculatePrice}
-              className="w-full bg-blue-600 hover:bg-blue-700"
+              className="w-full bg-indigo-600 hover:bg-indigo-700"
             >
               <Calculator className="w-4 h-4 mr-2" />
               Calcular Preço
@@ -188,25 +187,25 @@ Forneça recomendações estratégicas de precificação.`;
         <div className="space-y-6">
           {results && (
             <>
-              <Card className="bg-gradient-to-br from-blue-50 to-white border-blue-200">
+              <Card className="bg-gradient-to-br from-indigo-50 to-white border-indigo-200">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-blue-700">
+                  <CardTitle className="flex items-center gap-2 text-indigo-700">
                     <DollarSign className="w-5 h-5" />
                     Preço Sugerido
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-center">
-                    <p className="text-5xl font-bold text-blue-600 mb-2">
-                      R$ {formatCurrencySimple(results.suggestedPrice.toFixed(2)}
+                    <p className="text-5xl font-bold text-indigo-600 mb-2">
+                      R$ {results.suggestedPrice.toFixed(2)}
                     </p>
                     <p className="text-sm text-slate-600 mb-4">
-                      Lucro: R$ {formatCurrencySimple(results.profitAmount.toFixed(2)} ({formData.desiredMargin}%)
+                      Lucro: R$ {results.profitAmount.toFixed(2)} ({formData.desiredMargin}%)
                     </p>
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       <div className="p-2 bg-white rounded border">
                         <p className="text-slate-500">Custo Total</p>
-                        <p className="font-semibold">R$ {formatCurrencySimple(results.totalCost.toFixed(2)}</p>
+                        <p className="font-semibold">R$ {results.totalCost.toFixed(2)}</p>
                       </div>
                       <div className="p-2 bg-white rounded border">
                         <p className="text-slate-500">Markup</p>
@@ -228,7 +227,7 @@ Forneça recomendações estratégicas de precificação.`;
                       <p className="text-xs text-slate-500">Margem de 30%</p>
                     </div>
                     <p className="text-lg font-bold text-emerald-700">
-                      R$ {formatCurrencySimple(results.alternatives.competitivePrice.toFixed(2)}
+                      R$ {results.alternatives.competitivePrice.toFixed(2)}
                     </p>
                   </div>
 
@@ -238,17 +237,17 @@ Forneça recomendações estratégicas de precificação.`;
                       <p className="text-xs text-slate-500">Margem de 50%</p>
                     </div>
                     <p className="text-lg font-bold text-blue-700">
-                      R$ {formatCurrencySimple(results.alternatives.costPlus.toFixed(2)}
+                      R$ {results.alternatives.costPlus.toFixed(2)}
                     </p>
                   </div>
 
-                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg border border-purple-200">
                     <div>
                       <p className="text-sm font-medium text-slate-900">Premium</p>
                       <p className="text-xs text-slate-500">Margem de 100%</p>
                     </div>
-                    <p className="text-lg font-bold text-blue-700">
-                      R$ {formatCurrencySimple(results.alternatives.premiumPrice.toFixed(2)}
+                    <p className="text-lg font-bold text-purple-700">
+                      R$ {results.alternatives.premiumPrice.toFixed(2)}
                     </p>
                   </div>
                 </CardContent>
@@ -258,7 +257,7 @@ Forneça recomendações estratégicas de precificação.`;
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-base flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4 text-blue-600" />
+                      <TrendingUp className="w-4 h-4 text-indigo-600" />
                       Ponto de Equilíbrio
                     </CardTitle>
                   </CardHeader>
@@ -276,7 +275,7 @@ Forneça recomendações estratégicas de precificação.`;
               <Button
                 onClick={getAISuggestion}
                 disabled={isAnalyzing}
-                className="w-full bg-blue-600 hover:bg-blue-700"
+                className="w-full bg-indigo-600 hover:bg-indigo-700"
                 variant="outline"
               >
                 {isAnalyzing ? (
@@ -317,9 +316,9 @@ Forneça recomendações estratégicas de precificação.`;
 
       {/* AI Suggestion */}
       {aiSuggestion && (
-        <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-white">
+        <Card className="border-indigo-200 bg-gradient-to-br from-indigo-50 to-white">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-blue-700">
+            <CardTitle className="flex items-center gap-2 text-indigo-700">
               <Sparkles className="w-5 h-5" />
               Recomendações de IA
             </CardTitle>
@@ -337,14 +336,14 @@ Forneça recomendações estratégicas de precificação.`;
                   <div>
                     <p className="text-xs text-slate-500">Mínimo</p>
                     <p className="text-xl font-bold text-slate-900">
-                      R$ {formatCurrencySimple(aiSuggestion.optimal_price_range.min.toFixed(2)}
+                      R$ {aiSuggestion.optimal_price_range.min.toFixed(2)}
                     </p>
                   </div>
-                  <div className="flex-1 h-2 bg-gradient-to-r from-emerald-300 to-blue-500 rounded-full" />
+                  <div className="flex-1 h-2 bg-gradient-to-r from-emerald-300 to-indigo-500 rounded-full" />
                   <div>
                     <p className="text-xs text-slate-500">Máximo</p>
                     <p className="text-xl font-bold text-slate-900">
-                      R$ {formatCurrencySimple(aiSuggestion.optimal_price_range.max.toFixed(2)}
+                      R$ {aiSuggestion.optimal_price_range.max.toFixed(2)}
                     </p>
                   </div>
                 </div>

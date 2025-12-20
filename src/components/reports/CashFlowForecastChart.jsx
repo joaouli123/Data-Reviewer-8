@@ -2,7 +2,6 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { TrendingUp } from 'lucide-react';
-import { formatCurrencySimple } from '@/utils/formatters';
 
 export default function CashFlowForecastChart({ forecast }) {
   if (!forecast || forecast.length === 0) return null;
@@ -17,7 +16,7 @@ export default function CashFlowForecastChart({ forecast }) {
   return (
     <Card className="border-slate-200 shadow-sm">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-blue-600">
+        <CardTitle className="flex items-center gap-2 text-indigo-600">
           <TrendingUp className="w-5 h-5" />
           Previsão de Fluxo de Caixa (3 Meses)
         </CardTitle>
@@ -56,10 +55,7 @@ export default function CashFlowForecastChart({ forecast }) {
                 border: '1px solid #e2e8f0',
                 boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' 
               }}
-              formatter={(value, name) => {
-                const labels = { receita: 'Receitas', despesa: 'Despesas', lucro: 'Lucro' };
-                return [formatCurrencySimple(value), labels[name] || name];
-              }}
+              formatter={(value) => [`R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, '']}
             />
             <Legend 
               wrapperStyle={{ paddingTop: '20px' }}
@@ -77,7 +73,7 @@ export default function CashFlowForecastChart({ forecast }) {
                 <span className="font-semibold text-slate-700">{item.month}</span>
                 <span className={`font-bold ${(item.predicted_revenue - item.predicted_expense) >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                   {(item.predicted_revenue - item.predicted_expense) >= 0 ? '+' : ''}
-                  {formatCurrencySimple(item.predicted_revenue - item.predicted_expense)}
+                  R$ {(item.predicted_revenue - item.predicted_expense).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </span>
               </div>
               <p className="text-xs text-slate-600 italic">{item.reasoning}</p>

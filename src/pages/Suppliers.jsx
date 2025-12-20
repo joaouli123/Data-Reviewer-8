@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { formatCurrencySimple } from '@/utils/formatters';
 import { Supplier, Purchase } from '@/api/entities';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -92,7 +91,7 @@ export default function SuppliersPage() {
         
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-blue-600 hover:bg-blue-700">
+            <Button className="bg-indigo-600 hover:bg-indigo-700">
               <Plus className="w-4 h-4 mr-2" /> Novo Fornecedor
             </Button>
           </DialogTrigger>
@@ -132,7 +131,7 @@ export default function SuppliersPage() {
                 />
               </div>
               <div className="flex justify-end pt-4">
-                <Button type="submit" className="bg-blue-600">Salvar Fornecedor</Button>
+                <Button type="submit" className="bg-indigo-600">Salvar Fornecedor</Button>
               </div>
             </form>
           </DialogContent>
@@ -169,7 +168,7 @@ export default function SuppliersPage() {
                   <TableRow key={s.id} className="hover:bg-slate-50/50">
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-semibold">
+                        <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-semibold">
                           {s.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
@@ -192,9 +191,9 @@ export default function SuppliersPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2 text-blue-600 font-semibold">
+                      <div className="flex items-center gap-2 text-purple-600 font-semibold">
                         <Building2 className="w-4 h-4" />
-                        R$ {formatCurrencySimple(getSupplierPurchases(s.id)}
+                        R$ {getSupplierPurchases(s.id).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -202,7 +201,7 @@ export default function SuppliersPage() {
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          className="h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          className="h-8 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
                           onClick={() => openNewPurchaseDialog(s)}
                         >
                           <ShoppingCart className="w-4 h-4 mr-1" /> Compra

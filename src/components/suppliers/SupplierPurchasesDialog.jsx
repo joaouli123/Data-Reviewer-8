@@ -1,4 +1,3 @@
-import { formatCurrencySimple } from '@/utils/formatters';
 import React from 'react';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -89,19 +88,19 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
           <div className="p-4 bg-slate-50 rounded-lg border">
             <p className="text-xs text-slate-500 mb-1">Total em Compras</p>
             <p className="text-xl font-bold text-slate-900">
-              R$ {formatCurrencySimple((purchases?.reduce((acc, p) => acc + p.total_amount, 0) || 0)}
+              R$ {(purchases?.reduce((acc, p) => acc + p.total_amount, 0) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </p>
           </div>
           <div className="p-4 bg-rose-50 rounded-lg border border-rose-100">
             <p className="text-xs text-rose-600 mb-1">Pago</p>
             <p className="text-xl font-bold text-rose-700">
-              R$ {formatCurrencySimple(getTotalReceived()}
+              R$ {getTotalReceived().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </p>
           </div>
           <div className="p-4 bg-amber-50 rounded-lg border border-amber-100">
             <p className="text-xs text-amber-600 mb-1">Pendente</p>
             <p className="text-xl font-bold text-amber-700">
-              R$ {formatCurrencySimple(getTotalPending()}
+              R$ {getTotalPending().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </p>
           </div>
         </div>
@@ -126,7 +125,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                     </div>
                     <div className="text-right">
                       <p className="text-lg font-bold text-slate-900">
-                        R$ {formatCurrencySimple(purchase.total_amount}
+                        R$ {purchase.total_amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </p>
                       <Badge variant={purchase.status === 'completed' ? 'default' : purchase.status === 'partial' ? 'secondary' : 'outline'}>
                         {purchase.status === 'completed' ? 'Pago' : purchase.status === 'partial' ? 'Parcial' : 'Pendente'}
@@ -143,7 +142,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                           </div>
                           <div>
                             <p className="text-sm font-medium text-slate-900">
-                              R$ {formatCurrencySimple(inst.amount}
+                              R$ {inst.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                             </p>
                             <p className="text-xs text-slate-500">
                               Venc: {format(parseISO(inst.due_date), "dd/MM/yyyy")}
@@ -192,7 +191,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                         </span>
                         <span className="flex items-center gap-1">
                           <DollarSign className="w-3 h-3" />
-                          R$ {formatCurrencySimple(inst.amount}
+                          R$ {inst.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </span>
                       </div>
                     </div>

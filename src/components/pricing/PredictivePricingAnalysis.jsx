@@ -1,4 +1,3 @@
-import { formatCurrencySimple } from '@/utils/formatters';
 import { InvokeLLM, UploadFile, ExtractDataFromUploadedFile } from '@/api/integrations';
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -94,11 +93,11 @@ Crie uma análise preditiva incluindo:
   };
 
   return (
-    <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-white">
+    <Card className="border-indigo-200 bg-gradient-to-br from-indigo-50 to-white">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="flex items-center gap-2 text-blue-700">
+            <CardTitle className="flex items-center gap-2 text-indigo-700">
               <Sparkles className="w-5 h-5" />
               Análise Preditiva de Preços
             </CardTitle>
@@ -109,7 +108,7 @@ Crie uma análise preditiva incluindo:
           <Button
             onClick={runPredictiveAnalysis}
             disabled={isAnalyzing || !results}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="bg-indigo-600 hover:bg-indigo-700"
           >
             {isAnalyzing ? (
               <>
@@ -139,13 +138,13 @@ Crie uma análise preditiva incluindo:
               <CardContent>
                 <div className="text-center mb-4">
                   <p className="text-4xl font-bold text-emerald-600 mb-2">
-                    R$ {formatCurrencySimple(predictions.optimal_price_point.price.toFixed(2)}
+                    R$ {predictions.optimal_price_point.price.toFixed(2)}
                   </p>
                   <p className="text-sm text-slate-600 mb-1">
                     Volume Esperado: {predictions.optimal_price_point.expected_volume}
                   </p>
                   <p className="text-sm font-semibold text-emerald-700">
-                    Receita Projetada: R$ {formatCurrencySimple(predictions.optimal_price_point.expected_revenue}
+                    Receita Projetada: R$ {predictions.optimal_price_point.expected_revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </p>
                 </div>
                 <div className="p-3 bg-white rounded border">
@@ -171,7 +170,7 @@ Crie uma análise preditiva incluindo:
                       <YAxis />
                       <Tooltip 
                         formatter={(value, name) => {
-                          if (name === 'total_revenue') return `R$ ${value}`;
+                          if (name === 'total_revenue') return `R$ ${value.toLocaleString('pt-BR')}`;
                           if (name === 'profit_margin') return `${value}%`;
                           return value;
                         }}
@@ -185,7 +184,7 @@ Crie uma análise preditiva incluindo:
                   <div className="mt-4 space-y-2">
                     {predictions.demand_forecast.map((forecast, idx) => (
                       <div key={idx} className="flex items-center justify-between p-2 bg-white rounded border text-sm">
-                        <span className="font-medium">R$ {formatCurrencySimple(forecast.price_point.toFixed(2)}</span>
+                        <span className="font-medium">R$ {forecast.price_point.toFixed(2)}</span>
                         <span className="text-slate-600">{forecast.estimated_demand}</span>
                         <Badge variant="outline">
                           {forecast.profit_margin.toFixed(1)}% margem
@@ -236,8 +235,8 @@ Crie uma análise preditiva incluindo:
                             Risco {strategy.risk_level === 'low' ? 'Baixo' : strategy.risk_level === 'medium' ? 'Médio' : 'Alto'}
                           </Badge>
                         </div>
-                        <p className="text-2xl font-bold text-blue-600 mb-2">
-                          R$ {formatCurrencySimple(strategy.price.toFixed(2)}
+                        <p className="text-2xl font-bold text-indigo-600 mb-2">
+                          R$ {strategy.price.toFixed(2)}
                         </p>
                         <p className="text-sm text-slate-700">{strategy.expected_outcome}</p>
                       </div>
@@ -248,9 +247,9 @@ Crie uma análise preditiva incluindo:
             )}
 
             {/* Market Positioning */}
-            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <h4 className="font-semibold text-blue-900 mb-2">Posicionamento de Mercado</h4>
-              <p className="text-sm text-blue-700">{predictions.market_positioning}</p>
+            <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+              <h4 className="font-semibold text-indigo-900 mb-2">Posicionamento de Mercado</h4>
+              <p className="text-sm text-indigo-700">{predictions.market_positioning}</p>
             </div>
           </>
         )}

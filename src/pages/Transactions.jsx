@@ -1,32 +1,17 @@
-import { formatCurrencySimple } from '@/utils/formatters';
 import React, { useState } from 'react';
-import { formatCurrencySimple } from '@/utils/formatters';
 import { Transaction, Category } from '@/api/entities';
-import { formatCurrencySimple } from '@/utils/formatters';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { formatCurrencySimple } from '@/utils/formatters';
 import { Button } from '@/components/ui/button';
-import { formatCurrencySimple } from '@/utils/formatters';
 import { Input } from '@/components/ui/input';
-import { formatCurrencySimple } from '@/utils/formatters';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { formatCurrencySimple } from '@/utils/formatters';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { formatCurrencySimple } from '@/utils/formatters';
 import { Badge } from '@/components/ui/badge';
-import { formatCurrencySimple } from '@/utils/formatters';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { formatCurrencySimple } from '@/utils/formatters';
 import { Calendar } from "@/components/ui/calendar";
-import { formatCurrencySimple } from '@/utils/formatters';
 import { Card, CardContent } from "@/components/ui/card";
-import { formatCurrencySimple } from '@/utils/formatters';
 import { Plus, Download, Search, Filter, Trash2, Pencil, Calendar as CalendarIcon, Wallet, TrendingUp, TrendingDown, Upload } from 'lucide-react';
-import { formatCurrencySimple } from '@/utils/formatters';
 import { format, parseISO, startOfMonth, endOfMonth, isWithinInterval, isBefore, parse } from 'date-fns';
-import { formatCurrencySimple } from '@/utils/formatters';
 import { ptBR } from 'date-fns/locale';
-import { formatCurrencySimple } from '@/utils/formatters';
 import TransactionForm from '../components/transactions/TransactionForm';
 import BankStatementUpload from '../components/transactions/BankStatementUpload';
 import BankReconciliation from '../components/transactions/BankReconciliation';
@@ -193,12 +178,12 @@ export default function TransactionsPage() {
             <Button 
               onClick={() => setUploadOpen(true)} 
               variant="outline"
-              className="border-blue-200 text-blue-700 hover:bg-blue-50"
+              className="border-indigo-200 text-indigo-700 hover:bg-indigo-50"
             >
               <Upload className="w-4 h-4 mr-2" />
               Importar Extrato
             </Button>
-            <Button onClick={() => { setEditingTransaction(null); setIsFormOpen(true); }} className="bg-blue-600 hover:bg-blue-700">
+            <Button onClick={() => { setEditingTransaction(null); setIsFormOpen(true); }} className="bg-indigo-600 hover:bg-indigo-700">
                 <Plus className="w-4 h-4 mr-2" /> Nova Transação
             </Button>
         </div>
@@ -210,7 +195,7 @@ export default function TransactionsPage() {
             <CardContent className="p-4 flex items-center justify-between">
                 <div>
                     <p className="text-sm font-medium text-slate-500">Saldo Inicial</p>
-                    <h3 className="text-xl font-bold text-slate-700">R$ {formatCurrencySimple(balances.opening}</h3>
+                    <h3 className="text-xl font-bold text-slate-700">R$ {balances.opening.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
                 </div>
                 <div className="p-2 bg-slate-100 rounded-lg text-slate-600">
                     <Wallet className="w-5 h-5" />
@@ -221,7 +206,7 @@ export default function TransactionsPage() {
             <CardContent className="p-4 flex items-center justify-between">
                 <div>
                     <p className="text-sm font-medium text-emerald-600">Entradas</p>
-                    <h3 className="text-xl font-bold text-emerald-600">+ R$ {formatCurrencySimple(balances.income}</h3>
+                    <h3 className="text-xl font-bold text-emerald-600">+ R$ {balances.income.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
                 </div>
                 <div className="p-2 bg-emerald-100 rounded-lg text-emerald-600">
                     <TrendingUp className="w-5 h-5" />
@@ -232,7 +217,7 @@ export default function TransactionsPage() {
             <CardContent className="p-4 flex items-center justify-between">
                 <div>
                     <p className="text-sm font-medium text-rose-600">Saídas</p>
-                    <h3 className="text-xl font-bold text-rose-600">- R$ {formatCurrencySimple(balances.expense}</h3>
+                    <h3 className="text-xl font-bold text-rose-600">- R$ {balances.expense.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
                 </div>
                 <div className="p-2 bg-rose-100 rounded-lg text-rose-600">
                     <TrendingDown className="w-5 h-5" />
@@ -243,9 +228,9 @@ export default function TransactionsPage() {
             <CardContent className="p-4 flex items-center justify-between">
                 <div>
                     <p className="text-sm font-medium text-slate-400">Saldo Final</p>
-                    <h3 className="text-xl font-bold text-white">R$ {formatCurrencySimple(balances.closing}</h3>
+                    <h3 className="text-xl font-bold text-white">R$ {balances.closing.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
                 </div>
-                <div className="p-2 bg-blue-500 rounded-lg text-white">
+                <div className="p-2 bg-indigo-500 rounded-lg text-white">
                     <Wallet className="w-5 h-5" />
                 </div>
             </CardContent>
@@ -363,11 +348,11 @@ export default function TransactionsPage() {
                                     </span>
                                 </TableCell>
                                 <TableCell className={`text-right font-bold ${t.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                    {t.type === 'income' ? '+' : '-'} R$ {formatCurrencySimple(formatCurrencySimple(t.amount)}
+                                    {t.type === 'income' ? '+' : '-'} R$ {t.amount?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                 </TableCell>
                                 <TableCell>
                                     <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-blue-600" onClick={() => handleEdit(t)}>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-indigo-600" onClick={() => handleEdit(t)}>
                                             <Pencil className="w-4 h-4" />
                                         </Button>
                                         <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-rose-600" onClick={() => handleDelete(t.id)}>

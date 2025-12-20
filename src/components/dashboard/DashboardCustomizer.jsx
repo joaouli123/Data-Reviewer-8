@@ -23,7 +23,7 @@ export default function DashboardCustomizer({ open, onOpenChange, widgets, onTog
               return (
                 <div key={widget.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border">
                   <div className="flex items-center gap-3">
-                    {IconComponent && <IconComponent className="w-5 h-5 text-blue-600" />}
+                    {IconComponent && <IconComponent className="w-5 h-5 text-indigo-600" />}
                     <div>
                       <Label htmlFor={widget.id} className="text-sm font-medium cursor-pointer">
                         {widget.title}

@@ -151,7 +151,7 @@ export default function BankReconciliation({ open, onOpenChange, statementData, 
                       <p className="text-sm font-medium text-slate-900">{match.statement.description}</p>
                       <p className="text-xs text-slate-600">
                         {format(parseISO(match.statement.date), "dd/MM/yyyy")} - 
-                        R$ {formatCurrencySimple(Math.abs(match.statement.amount)}
+                        R$ {Math.abs(match.statement.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -178,7 +178,7 @@ export default function BankReconciliation({ open, onOpenChange, statementData, 
                       <p className="text-sm font-medium text-slate-900">{match.statement.description}</p>
                       <p className="text-xs text-slate-600">
                         {format(parseISO(match.statement.date), "dd/MM/yyyy")} - 
-                        R$ {formatCurrencySimple(Math.abs(match.statement.amount)}
+                        R$ {Math.abs(match.statement.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -204,7 +204,7 @@ export default function BankReconciliation({ open, onOpenChange, statementData, 
                 <div className="mb-4">
                   <Button
                     onClick={handleCreateAllMissing}
-                    className="w-full bg-blue-600 hover:bg-blue-700"
+                    className="w-full bg-indigo-600 hover:bg-indigo-700"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Criar Todas as {matched.unmatched.length} Transações
@@ -225,7 +225,7 @@ export default function BankReconciliation({ open, onOpenChange, statementData, 
                       <div className="flex items-center gap-3 text-xs text-slate-600 mt-1">
                         <span>{format(parseISO(item.date), "dd/MM/yyyy")}</span>
                         <span className="font-semibold">
-                          R$ {formatCurrencySimple(Math.abs(item.amount)}
+                          R$ {Math.abs(item.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </span>
                         <Badge variant={item.type === 'income' ? 'default' : 'destructive'} className="text-xs">
                           {item.type === 'income' ? 'Receita' : 'Despesa'}
@@ -236,7 +236,7 @@ export default function BankReconciliation({ open, onOpenChange, statementData, 
                   <Button
                     size="sm"
                     onClick={() => handleCreateMissing(item)}
-                    className="bg-blue-600 hover:bg-blue-700"
+                    className="bg-indigo-600 hover:bg-indigo-700"
                   >
                     <Plus className="w-4 h-4 mr-1" />
                     Criar

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { formatCurrencySimple } from '@/utils/formatters';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { DollarSign, TrendingUp, Wallet, Users, Plus } from 'lucide-react';
@@ -76,7 +75,7 @@ export default function DashboardPage() {
       const expense = monthTrans.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
 
       chartData.push({
-        name: date.toUpperCase(),
+        name: date.toLocaleString('pt-BR', { month: 'short' }).toUpperCase(),
         income,
         expense
       });
@@ -116,7 +115,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPIWidget
           title="Receita Total"
-          value={`R$ ${metrics.totalRevenue}`}
+          value={`R$ ${metrics.totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
           icon={TrendingUp}
           trend="up"
           trendValue="+12% vs período anterior"
@@ -124,13 +123,13 @@ export default function DashboardPage() {
         
         <KPIWidget
           title="Despesas"
-          value={`R$ ${metrics.totalExpenses}`}
+          value={`R$ ${metrics.totalExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
           icon={DollarSign}
         />
 
         <KPIWidget
           title="Lucro Líquido"
-          value={`R$ ${metrics.netProfit}`}
+          value={`R$ ${metrics.netProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
           icon={Wallet}
         />
 
@@ -154,21 +153,21 @@ export default function DashboardPage() {
           <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
             <p className="text-xs font-medium text-emerald-700 dark:text-emerald-400 mb-1 uppercase">Receitas Previstas</p>
             <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
-              R$ {formatCurrencySimple(metrics.futureRevenue}
+              R$ {metrics.futureRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </p>
           </div>
 
           <div className="bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 rounded-lg p-4">
             <p className="text-xs font-medium text-rose-700 dark:text-rose-400 mb-1 uppercase">Despesas Previstas</p>
             <p className="text-2xl font-bold text-rose-700 dark:text-rose-300">
-              R$ {formatCurrencySimple(metrics.futureExpenses}
+              R$ {metrics.futureExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </p>
           </div>
 
           <div className="bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800 rounded-lg p-4">
             <p className="text-xs font-medium text-sky-700 dark:text-sky-400 mb-1 uppercase">Saldo Projetado</p>
             <p className={`text-2xl font-bold ${metrics.futureRevenue - metrics.futureExpenses >= 0 ? 'text-sky-700 dark:text-sky-300' : 'text-slate-700 dark:text-slate-300'}`}>
-              {metrics.futureRevenue - metrics.futureExpenses >= 0 ? '+' : ''} R$ {formatCurrencySimple((metrics.futureRevenue - metrics.futureExpenses)}
+              {metrics.futureRevenue - metrics.futureExpenses >= 0 ? '+' : ''} R$ {(metrics.futureRevenue - metrics.futureExpenses).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </p>
           </div>
         </div>
@@ -224,7 +223,7 @@ export default function DashboardPage() {
                     }`}
                   >
                     {t.type === 'income' ? '+' : '-'} R${' '}
-                    {t.amount}
+                    {t.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
               ))

@@ -8,7 +8,6 @@ import { FileText, Sparkles, Loader2, TrendingUp, TrendingDown } from 'lucide-re
 import { toast } from 'sonner';
 import { subMonths, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { formatCurrencySimple } from '@/utils/formatters';
 
 export default function DREAnalysis({ transactions, period = 'currentYear' }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -145,7 +144,7 @@ Gere previsões para os próximos 3 meses com análise de tendências.`;
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
-              <FileText className="w-5 h-5 text-blue-600" />
+              <FileText className="w-5 h-5 text-indigo-600" />
               DRE - Demonstração do Resultado do Exercício
             </CardTitle>
             <CardDescription>Análise detalhada do desempenho financeiro</CardDescription>
@@ -153,7 +152,7 @@ Gere previsões para os próximos 3 meses com análise de tendências.`;
           <Button
             onClick={generateForecast}
             disabled={isAnalyzing}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="bg-indigo-600 hover:bg-indigo-700"
           >
             {isAnalyzing ? (
               <>
@@ -175,21 +174,21 @@ Gere previsões para os próximos 3 meses com análise de tendências.`;
           <div className="flex justify-between items-center p-3 bg-emerald-50 rounded-lg border border-emerald-200">
             <span className="font-semibold text-emerald-900">Receita Bruta</span>
             <span className="text-lg font-bold text-emerald-700">
-              R$ format
+              R$ {dre.receitaBruta.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </span>
           </div>
 
           <div className="flex justify-between items-center p-3 bg-white rounded-lg border pl-8">
             <span className="text-slate-700">(-) Custos Diretos</span>
             <span className="text-slate-900 font-semibold">
-              R$ format
+              R$ {dre.custosDiretos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </span>
           </div>
 
           <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border border-blue-200">
             <span className="font-semibold text-blue-900">= Receita Líquida</span>
             <span className="text-lg font-bold text-blue-700">
-              R$ format
+              R$ {dre.receitaLiquida.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </span>
           </div>
 
@@ -199,25 +198,25 @@ Gere previsões para os próximos 3 meses com análise de tendências.`;
               <div key={cat} className="flex justify-between items-center p-2 bg-white rounded border text-sm">
                 <span className="text-slate-600 capitalize">{cat}</span>
                 <span className="text-slate-900">
-                  R$ format
+                  R$ {val.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </span>
               </div>
             ))}
             <div className="flex justify-between items-center p-2 bg-slate-50 rounded border font-medium">
               <span className="text-slate-700">Total Despesas Operacionais</span>
               <span className="text-slate-900">
-                R$ format
+                R$ {dre.despesasOperacionais.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </span>
             </div>
           </div>
 
-          <div className="flex justify-between items-center p-4 bg-gradient-to-r from-blue-50 to-blue-50 rounded-lg border border-blue-200">
+          <div className="flex justify-between items-center p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border border-indigo-200">
             <div>
-              <span className="font-bold text-blue-900 text-lg">= Lucro Operacional</span>
-              <p className="text-xs text-blue-600 mt-1">Margem Líquida: {dre.margemLiquida.toFixed(1)}%</p>
+              <span className="font-bold text-indigo-900 text-lg">= Lucro Operacional</span>
+              <p className="text-xs text-indigo-600 mt-1">Margem Líquida: {dre.margemLiquida.toFixed(1)}%</p>
             </div>
             <span className={`text-2xl font-bold ${dre.lucroOperacional >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-              {dre.lucroOperacional >= 0 ? '+' : ''} R$ format
+              {dre.lucroOperacional >= 0 ? '+' : ''} R$ {dre.lucroOperacional.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </span>
           </div>
         </div>
@@ -226,7 +225,7 @@ Gere previsões para os próximos 3 meses com análise de tendências.`;
         {forecast && (
           <div className="space-y-6 pt-6 border-t">
             <h4 className="font-semibold text-slate-900 flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-blue-600" />
+              <TrendingUp className="w-4 h-4 text-indigo-600" />
               Previsões Futuras (Próximos 3 Meses)
             </h4>
 
@@ -246,19 +245,19 @@ Gere previsões para os próximos 3 meses com análise de tendências.`;
                     <div className="flex justify-between">
                       <span className="text-slate-600">Receita Bruta</span>
                       <span className="font-medium text-emerald-600">
-                        R$ format
+                        R$ {month.receita_bruta.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-600">Custos/Despesas</span>
                       <span className="font-medium text-rose-600">
-                        R$ format
+                        R$ {(month.custos_diretos + month.despesas_operacionais).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </span>
                     </div>
                     <div className="flex justify-between pt-2 border-t">
                       <span className="font-semibold text-slate-900">Lucro Previsto</span>
                       <span className={`font-bold ${month.lucro_previsto >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                        R$ format
+                        R$ {month.lucro_previsto.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </span>
                     </div>
                     <div className="text-xs text-slate-500">
@@ -270,9 +269,9 @@ Gere previsões para os próximos 3 meses com análise de tendências.`;
             </div>
 
             {/* Trend Analysis */}
-            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <h5 className="font-semibold text-blue-900 mb-2">Análise de Tendências</h5>
-              <p className="text-sm text-blue-700">{forecast.trend_analysis}</p>
+            <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+              <h5 className="font-semibold text-indigo-900 mb-2">Análise de Tendências</h5>
+              <p className="text-sm text-indigo-700">{forecast.trend_analysis}</p>
             </div>
 
             {/* Growth Opportunities */}
