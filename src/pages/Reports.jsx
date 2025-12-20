@@ -306,7 +306,7 @@ export default function ReportsPage() {
             <p className="text-slate-500 max-w-md mb-6">
               Clique no botão acima para que nossa IA processe suas transações e gere insights valiosos para seu negócio.
             </p>
-            <Button variant="outline" onClick={generateAnalysis}>
+            <Button className="bg-primary text-primary-foreground hover:bg-primary active:bg-primary" onClick={generateAnalysis}>
               Iniciar Análise
             </Button>
           </CardContent>
