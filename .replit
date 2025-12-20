@@ -46,3 +46,4 @@ args = "npx tsx server/index.ts"
 
 [userenv.shared]
 VITE_GOOGLE_GEMINI_API_KEY = "AIzaSyA3Rpd0u-hpinU3onQTHLihZuckbEifAws"
+DATABASE_URL = "psql 'postgresql://neondb_owner:npg_NvCa6n1hGZBo@ep-bold-surf-acxc3vye-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'"
