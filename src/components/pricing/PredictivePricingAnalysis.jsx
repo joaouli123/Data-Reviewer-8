@@ -175,7 +175,7 @@ Crie uma análise preditiva incluindo:
                         }}
                       />
                       <Legend />
-                      <Bar dataKey="total_revenue" fill="#0059A8" name="Receita Total" />
+                      <Bar dataKey="total_revenue" fill="#0065BA" name="Receita Total" />
                       <Bar dataKey="profit_margin" fill="#10b981" name="Margem %" />
                     </BarChart>
                   </ResponsiveContainer>

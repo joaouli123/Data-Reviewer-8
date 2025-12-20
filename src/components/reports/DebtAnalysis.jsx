@@ -142,7 +142,7 @@ Forneça uma análise detalhada e recomendações para gestão de endividamento.
     value: value
   }));
 
-  const COLORS = ['#ef4444', '#f59e0b', '#3b82f6', '#0059A8', '#10b981', '#ec4899'];
+  const COLORS = ['#ef4444', '#f59e0b', '#3b82f6', '#0065BA', '#10b981', '#ec4899'];
 
   return (
     <div className="space-y-6">

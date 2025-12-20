@@ -4,27 +4,27 @@
 
 @layer base {
   :root {
-    /* Brand Colors - Blue #0059A8 */
+    /* Brand Colors - Blue #0065BA */
     --background: 0 0% 98%;
     --foreground: 0 0% 15%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 15%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 15%;
-    --primary: 210 100% 35%;
+    --primary: 210 100% 36%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 100% 35%;
+    --secondary: 210 100% 36%;
     --secondary-foreground: 0 0% 100%;
     --muted: 0 0% 85%;
     --muted-foreground: 0 0% 45%;
-    --accent: 210 100% 35%;
+    --accent: 210 100% 36%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 0 0% 90%;
     --input: 0 0% 92%;
-    --ring: 210 100% 35%;
-    --chart-1: 210 100% 35%;
+    --ring: 210 100% 36%;
+    --chart-1: 210 100% 36%;
     --chart-2: 210 100% 50%;
     --radius: 0.5rem;
     --sidebar-background: 0 0% 95%;
@@ -43,20 +43,20 @@
     --card-foreground: 0 0% 95%;
     --popover: 0 0% 15%;
     --popover-foreground: 0 0% 95%;
-    --primary: 210 100% 48%;
+    --primary: 210 100% 49%;
     --primary-foreground: 0 0% 5%;
-    --secondary: 210 100% 48%;
+    --secondary: 210 100% 49%;
     --secondary-foreground: 0 0% 5%;
     --muted: 0 0% 25%;
     --muted-foreground: 0 0% 55%;
-    --accent: 210 100% 48%;
+    --accent: 210 100% 49%;
     --accent-foreground: 0 0% 5%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
     --border: 0 0% 20%;
     --input: 0 0% 25%;
-    --ring: 210 100% 48%;
-    --chart-1: 210 100% 48%;
+    --ring: 210 100% 49%;
+    --chart-1: 210 100% 49%;
     --chart-2: 210 100% 60%;
     --sidebar-background: 0 0% 10%;
     --sidebar-foreground: 0 0% 95%;

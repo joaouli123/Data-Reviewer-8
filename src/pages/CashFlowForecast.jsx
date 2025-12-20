@@ -289,10 +289,10 @@ export default function CashFlowForecastPage() {
                 <Line 
                   type="monotone" 
                   dataKey="saldoAcumulado" 
-                  stroke="#0059A8" 
+                  stroke="#0065BA" 
                   strokeWidth={3}
                   name="Saldo Acumulado"
-                  dot={{ fill: '#0059A8', r: 4 }}
+                  dot={{ fill: '#0065BA', r: 4 }}
                 />
               </LineChart>
             </ResponsiveContainer>

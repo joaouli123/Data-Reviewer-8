@@ -4,7 +4,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recha
 import { AlertTriangle, TrendingDown, Scissors } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
-const COLORS = ['#ef4444', '#f59e0b', '#f97316', '#ec4899', '#0059A8', '#0059A8', '#3b82f6'];
+const COLORS = ['#ef4444', '#f59e0b', '#f97316', '#ec4899', '#0065BA', '#0065BA', '#3b82f6'];
 
 export default function ExpensesBreakdown({ opportunities, transactions }) {
   if (!opportunities || opportunities.length === 0) return null;

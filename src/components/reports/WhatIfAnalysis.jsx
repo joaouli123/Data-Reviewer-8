@@ -274,7 +274,7 @@ Forneça análise detalhada e recomendações estratégicas.`;
                       type="monotone" 
                       data={scenarios.withChanges} 
                       dataKey="balance" 
-                      stroke="#0059A8" 
+                      stroke="#0065BA" 
                       name="Com Alterações"
                       strokeWidth={2}
                     />
