@@ -120,10 +120,43 @@ export const Supplier = {
   }
 };
 
-// Placeholder stubs for Base44-specific entities not in our database
 export const Category = {
-  async list() { return []; },
-  async get() { return null; }
+  async list() {
+    try {
+      const response = await fetch('/api/categories');
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      return [];
+    }
+  },
+
+  async get(id) {
+    try {
+      const response = await fetch(`/api/categories/${id}`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching category:', error);
+      return null;
+    }
+  },
+
+  async create(data) {
+    try {
+      const response = await fetch('/api/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error('Error creating category:', error);
+      throw error;
+    }
+  }
 };
 
 export const Sale = {

@@ -26,7 +26,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
     description: '',
     amount: '',
     type: 'income',
-    category: '',
+    categoryId: '',
     date: new Date(),
     status: 'completed'
   });
@@ -42,7 +42,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
     mutationFn: (data) => Category.create(data),
     onSuccess: (newCat) => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
-      setFormData({ ...formData, category: newCat.name });
+      setFormData({ ...formData, categoryId: newCat.id });
       setIsNewCategoryMode(false);
       setNewCategoryName('');
       toast.success('Categoria criada!');
@@ -61,7 +61,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
         description: '',
         amount: '',
         type: 'income',
-        category: '',
+        categoryId: '',
         date: new Date(),
         status: 'completed'
       });
@@ -78,7 +78,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
         toast.error('Digite um valor válido');
         return;
     }
-    if (!formData.category) {
+    if (!formData.categoryId) {
         toast.error('Selecione uma categoria');
         return;
     }
@@ -183,16 +183,16 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
               {!isNewCategoryMode ? (
                 <div className="flex gap-2">
                     <Select 
-                        value={formData.category} 
-                        onValueChange={(v) => setFormData({...formData, category: v})}
+                        value={formData.categoryId} 
+                        onValueChange={(v) => setFormData({...formData, categoryId: v})}
                     >
                         <SelectTrigger className="w-full">
                         <SelectValue placeholder="Selecione..." />
                         </SelectTrigger>
                         <SelectContent>
                             {categories.map((cat) => (
-                                <SelectItem key={cat.id} value={cat.name}>
-                                    {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
+                                <SelectItem key={cat.id} value={cat.id}>
+                                    {cat.name}
                                 </SelectItem>
                             ))}
                         </SelectContent>

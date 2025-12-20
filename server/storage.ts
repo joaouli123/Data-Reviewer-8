@@ -2,14 +2,17 @@ import { db } from "./db";
 import {
   customers,
   suppliers,
+  categories,
   transactions,
   cashFlow,
   type InsertCustomer,
   type InsertSupplier,
+  type InsertCategory,
   type InsertTransaction,
   type InsertCashFlow,
   type Customer,
   type Supplier,
+  type Category,
   type Transaction,
   type CashFlow,
 } from "../shared/schema";
@@ -28,6 +31,13 @@ export interface IStorage {
   getSupplier(id: string): Promise<Supplier | undefined>;
   updateSupplier(id: string, data: Partial<InsertSupplier>): Promise<Supplier>;
   deleteSupplier(id: string): Promise<void>;
+
+  // Category operations
+  createCategory(data: InsertCategory): Promise<Category>;
+  getCategories(): Promise<Category[]>;
+  getCategory(id: string): Promise<Category | undefined>;
+  updateCategory(id: string, data: Partial<InsertCategory>): Promise<Category>;
+  deleteCategory(id: string): Promise<void>;
 
   // Transaction operations
   createTransaction(data: InsertTransaction): Promise<Transaction>;
@@ -128,6 +138,42 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(suppliers)
       .where((s) => s.id === id);
+  }
+
+  // Category operations
+  async createCategory(data: InsertCategory): Promise<Category> {
+    const result = await db.insert(categories).values(data).returning();
+    return result[0];
+  }
+
+  async getCategories(): Promise<Category[]> {
+    return await db.select().from(categories);
+  }
+
+  async getCategory(id: string): Promise<Category | undefined> {
+    const result = await db
+      .select()
+      .from(categories)
+      .where((c) => c.id === id);
+    return result[0];
+  }
+
+  async updateCategory(
+    id: string,
+    data: Partial<InsertCategory>
+  ): Promise<Category> {
+    const result = await db
+      .update(categories)
+      .set(data)
+      .where((c) => c.id === id)
+      .returning();
+    return result[0];
+  }
+
+  async deleteCategory(id: string): Promise<void> {
+    await db
+      .delete(categories)
+      .where((c) => c.id === id);
   }
 
   // Transaction operations

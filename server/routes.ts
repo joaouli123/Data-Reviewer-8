@@ -4,8 +4,10 @@ import { storage } from "./storage";
 import {
   insertCustomerSchema,
   insertSupplierSchema,
+  insertCategorySchema,
   insertTransactionSchema,
   insertCashFlowSchema,
+  DEFAULT_CATEGORIES,
 } from "../shared/schema";
 
 export function registerRoutes(
@@ -17,6 +19,83 @@ export function registerRoutes(
   // Test route to verify API works
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
+  });
+
+  // Initialize with sample data
+  app.post("/api/init", async (req, res) => {
+    try {
+      // Get or create categories
+      let categories = await storage.getCategories();
+      if (categories.length === 0) {
+        for (const cat of DEFAULT_CATEGORIES) {
+          try {
+            await storage.createCategory(cat);
+          } catch (e) {
+            // Category might already exist
+          }
+        }
+        categories = await storage.getCategories();
+      }
+
+      // Add sample transactions if none exist
+      const existingTransactions = await storage.getTransactions();
+      if (existingTransactions.length === 0) {
+        const vendasCat = categories.find(c => c.name === "Vendas");
+        const comprasCat = categories.find(c => c.name === "Compras");
+        
+        if (vendasCat && comprasCat) {
+          const now = new Date();
+          // Add some sample transactions
+          const samples = [
+            {
+              categoryId: vendasCat.id,
+              type: "venda",
+              amount: "1500.00",
+              description: "Venda de Produtos",
+              date: now,
+              shift: "manhã",
+              status: "concluído"
+            },
+            {
+              categoryId: comprasCat.id,
+              type: "compra",
+              amount: "800.00",
+              description: "Compra de Insumos",
+              date: now,
+              shift: "tarde",
+              status: "concluído"
+            },
+            {
+              categoryId: vendasCat.id,
+              type: "venda",
+              amount: "2200.00",
+              description: "Venda de Serviços",
+              date: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000),
+              shift: "manhã",
+              status: "concluído"
+            },
+            {
+              categoryId: comprasCat.id,
+              type: "compra",
+              amount: "500.00",
+              description: "Pagamento de Fornecedor",
+              date: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
+              shift: "noite",
+              status: "concluído"
+            }
+          ];
+
+          for (const sample of samples) {
+            await storage.createTransaction(sample);
+          }
+        }
+      }
+
+      res.json({ status: "initialized", timestamp: new Date().toISOString() });
+    } catch (error) {
+      console.error("[/api/init] Error:", error);
+      res.status(500).json({ error: "Failed to initialize" });
+    }
   });
 
   // Customer routes
@@ -48,6 +127,40 @@ export function registerRoutes(
       res.status(201).json(customer);
     } catch (error) {
       res.status(400).json({ error: "Invalid customer data" });
+    }
+  });
+
+  // Category routes
+  app.get("/api/categories", async (req, res) => {
+    try {
+      const existingCategories = await storage.getCategories();
+      
+      // If no categories exist, create default ones
+      if (existingCategories.length === 0) {
+        for (const cat of DEFAULT_CATEGORIES) {
+          try {
+            await storage.createCategory(cat);
+          } catch (e) {
+            // Category might already exist, continue
+          }
+        }
+        const categories = await storage.getCategories();
+        return res.json(categories);
+      }
+      
+      res.json(existingCategories);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch categories" });
+    }
+  });
+
+  app.post("/api/categories", async (req, res) => {
+    try {
+      const data = insertCategorySchema.parse(req.body);
+      const category = await storage.createCategory(data);
+      res.status(201).json(category);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid category data" });
     }
   });
 
