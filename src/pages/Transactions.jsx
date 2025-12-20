@@ -294,7 +294,7 @@ export default function TransactionsPage() {
         </div>
 
         <div className="overflow-x-auto">
-            <Table className="pl-6">
+            <Table>
                 <TableHeader className="bg-slate-50">
                     <TableRow>
                         <TableHead className="pl-6">Data</TableHead>
@@ -309,21 +309,21 @@ export default function TransactionsPage() {
                     {paginatedTransactions.length > 0 ? (
                         paginatedTransactions.map((t) => (
                             <TableRow key={t.id} className="hover:bg-slate-50/50 group">
-                                <TableCell className="font-medium text-slate-600">
+                                <TableCell className="font-medium text-slate-600 pl-6">
                                     {format(new Date(t.date), "dd/MM/yyyy", { locale: ptBR })}
                                 </TableCell>
-                                <TableCell className="font-medium text-slate-900">{t.description}</TableCell>
-                                <TableCell>
+                                <TableCell className="font-medium text-slate-900 pl-6">{t.description}</TableCell>
+                                <TableCell className="pl-6">
                                     <Badge variant="secondary" className="capitalize font-normal bg-slate-100 text-slate-600 hover:bg-slate-200">
                                         {t.category}
                                     </Badge>
                                 </TableCell>
-                                <TableCell>
+                                <TableCell className="pl-6">
                                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">
                                         Concluído
                                     </span>
                                 </TableCell>
-                                <TableCell className={`text-right font-bold ${t.type === 'venda' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                <TableCell className={`text-right font-bold pl-6 ${t.type === 'venda' ? 'text-emerald-600' : 'text-rose-600'}`}>
                                     {t.type === 'venda' ? '+' : '-'} R$ {parseFloat(t.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                 </TableCell>
                                 <TableCell>
