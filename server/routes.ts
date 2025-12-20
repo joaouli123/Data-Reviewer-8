@@ -219,7 +219,12 @@ export function registerRoutes(
 
   app.post("/api/transactions", async (req, res) => {
     try {
-      const data = insertTransactionSchema.parse(req.body);
+      // Pre-process date: convert string to Date if needed
+      const body = req.body;
+      if (typeof body.date === 'string') {
+        body.date = new Date(body.date);
+      }
+      const data = insertTransactionSchema.parse(body);
       const transaction = await storage.createTransaction(data);
       res.status(201).json(transaction);
     } catch (error) {
