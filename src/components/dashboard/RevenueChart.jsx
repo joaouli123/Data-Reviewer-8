@@ -37,7 +37,10 @@ export default function RevenueChart({ data }) {
             boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
             color: 'hsl(var(--foreground))'
           }}
-          formatter={(value) => [`R$ ${value.toLocaleString('pt-BR')}`, '']}
+          formatter={(value, name) => {
+            const label = name === 'income' ? 'Receita' : 'Despesa';
+            return [`R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, label];
+          }}
         />
         <Area 
           type="monotone" 
