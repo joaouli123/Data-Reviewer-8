@@ -25,10 +25,10 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
   const [formData, setFormData] = React.useState({
     description: '',
     amount: '',
-    type: 'income',
+    type: 'venda',
     categoryId: '',
     date: new Date(),
-    status: 'completed'
+    status: 'concluído'
   });
 
   // Fetch Categories
@@ -42,7 +42,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
     mutationFn: (data) => Category.create(data),
     onSuccess: (newCat) => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
-      setFormData({ ...formData, categoryId: newCat.id });
+      setFormData((prev) => ({ ...prev, categoryId: newCat.id }));
       setIsNewCategoryMode(false);
       setNewCategoryName('');
       toast.success('Categoria criada!');
@@ -60,10 +60,10 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
       setFormData({
         description: '',
         amount: '',
-        type: 'income',
+        type: 'venda',
         categoryId: '',
         date: new Date(),
-        status: 'completed'
+        status: 'concluído'
       });
     }
   }, [initialData, open]);
@@ -95,7 +95,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
     if (!newCategoryName.trim()) return;
     createCategoryMutation.mutate({
         name: newCategoryName.toLowerCase(),
-        type: formData.type === 'income' ? 'entrada' : 'saida'
+        type: formData.type === 'venda' ? 'entrada' : 'saida'
     });
   };
 
@@ -108,7 +108,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
     setIsSuggestingCategory(true);
     try {
       const categoryNames = categories.map(c => c.name).join(', ');
-      const prompt = `Baseado na descrição "${formData.description}" e no tipo "${formData.type === 'income' ? 'receita' : 'despesa'}", 
+      const prompt = `Baseado na descrição "${formData.description}" e no tipo "${formData.type === 'venda' ? 'receita' : 'despesa'}", 
       sugira a categoria mais apropriada dentre as seguintes: ${categoryNames}.
       Retorne apenas o nome exato da categoria, nada mais.`;
 
@@ -149,8 +149,8 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="income">Receita</SelectItem>
-                  <SelectItem value="expense">Despesa</SelectItem>
+                  <SelectItem value="venda">Receita</SelectItem>
+                  <SelectItem value="compra">Despesa</SelectItem>
                 </SelectContent>
               </Select>
             </div>
