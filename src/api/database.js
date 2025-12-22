@@ -6,23 +6,19 @@ const getMockData = () => ({
     { id: '1', date: new Date().toISOString(), description: 'Venda de Produto A', amount: 1500, type: 'venda', status: 'completed', customerId: '1', categoryId: '1' },
     { id: '2', date: new Date(Date.now() - 86400000).toISOString(), description: 'Compra de Material', amount: 500, type: 'compra', status: 'completed', supplierId: '1', categoryId: '2' }
   ],
-  customers: [
-    { id: '1', name: 'Cliente A', email: 'cliente@email.com', phone: '11999999999', address: 'Rua A, 123' }
-  ],
+  customers: [{ id: '1', name: 'Cliente A', email: 'cliente@email.com', phone: '11999999999', address: 'Rua A, 123' }],
   categories: [
     { id: '1', name: 'Vendas', type: 'entrada' },
     { id: '2', name: 'Matéria Prima', type: 'saida' },
     { id: '3', name: 'Utilidades', type: 'saida' }
   ],
-  suppliers: [
-    { id: '1', name: 'Fornecedor A', email: 'fornecedor@email.com', phone: '1133333333', address: 'Rua B, 456' }
-  ],
+  suppliers: [{ id: '1', name: 'Fornecedor A', email: 'fornecedor@email.com', phone: '1133333333', address: 'Rua B, 456' }],
   sales: [],
   purchases: [],
   installments: []
 });
 
-const getStorageData = (key) => {
+const getStorageData = () => {
   try {
     const data = localStorage.getItem(STORAGE_KEY);
     return data ? JSON.parse(data) : getMockData();
@@ -39,40 +35,45 @@ const setStorageData = (data) => {
   }
 };
 
+const fetchWithTimeout = (url, options = {}) => {
+  const timeout = options.timeout || 2000;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  
+  return fetch(url, { ...options, signal: controller.signal })
+    .finally(() => clearTimeout(timeoutId));
+};
+
 export const Transaction = {
   async list() {
     try {
-      const response = await fetch('/api/transactions', { signal: AbortSignal.timeout(2000) });
+      const response = await fetchWithTimeout('/api/transactions');
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const data = await response.json();
-      return data || [];
+      return await response.json() || [];
     } catch (error) {
       const data = getStorageData();
       return data.transactions || [];
     }
   },
-
   async get(id) {
     try {
-      const response = await fetch(`/api/transactions/${id}`);
+      const response = await fetchWithTimeout(`/api/transactions/${id}`);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.json();
     } catch (error) {
-      return null;
+      const data = getStorageData();
+      return data.transactions.find(t => t.id === id) || null;
     }
   },
-
   async create(data) {
     try {
-      const response = await fetch('/api/transactions', {
+      const response = await fetchWithTimeout('/api/transactions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-        signal: AbortSignal.timeout(2000)
+        body: JSON.stringify(data)
       });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.details || result.error || `HTTP ${response.status}`);
-      return result;
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json();
     } catch (error) {
       const id = Date.now().toString();
       const newTransaction = { id, ...data };
@@ -82,33 +83,36 @@ export const Transaction = {
       return newTransaction;
     }
   },
-
   async update(id, data) {
     try {
-      const response = await fetch(`/api/transactions/${id}`, {
+      const response = await fetchWithTimeout(`/api/transactions/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
       });
-      const result = await response.json();
-      if (!response.ok) {
-        throw new Error(result.details || result.error || `HTTP ${response.status}`);
-      }
-      return result;
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json();
     } catch (error) {
+      const storage = getStorageData();
+      const idx = storage.transactions.findIndex(t => t.id === id);
+      if (idx !== -1) {
+        storage.transactions[idx] = { ...storage.transactions[idx], ...data };
+        setStorageData(storage);
+        return storage.transactions[idx];
+      }
       throw error;
     }
   },
-
   async delete(id) {
     try {
-      const response = await fetch(`/api/transactions/${id}`, {
-        method: 'DELETE'
-      });
+      const response = await fetchWithTimeout(`/api/transactions/${id}`, { method: 'DELETE' });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return true;
     } catch (error) {
-      throw error;
+      const storage = getStorageData();
+      storage.transactions = storage.transactions.filter(t => t.id !== id);
+      setStorageData(storage);
+      return true;
     }
   }
 };
@@ -116,29 +120,26 @@ export const Transaction = {
 export const Customer = {
   async list() {
     try {
-      const response = await fetch('/api/customers', { signal: AbortSignal.timeout(2000) });
+      const response = await fetchWithTimeout('/api/customers');
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       return Array.isArray(data) ? data : [];
     } catch (error) {
-      const data = getStorageData();
-      return data.customers || [];
+      return getStorageData().customers || [];
     }
   },
-
   async get(id) {
     try {
-      const response = await fetch(`/api/customers/${id}`);
+      const response = await fetchWithTimeout(`/api/customers/${id}`);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.json();
     } catch (error) {
-      return null;
+      return getStorageData().customers.find(c => c.id === id) || null;
     }
   },
-
   async create(data) {
     try {
-      const response = await fetch('/api/customers', {
+      const response = await fetchWithTimeout('/api/customers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -146,13 +147,17 @@ export const Customer = {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.json();
     } catch (error) {
-      throw error;
+      const id = Date.now().toString();
+      const newCustomer = { id, ...data };
+      const storage = getStorageData();
+      storage.customers.push(newCustomer);
+      setStorageData(storage);
+      return newCustomer;
     }
   },
-
   async update(id, data) {
     try {
-      const response = await fetch(`/api/customers/${id}`, {
+      const response = await fetchWithTimeout(`/api/customers/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -160,19 +165,26 @@ export const Customer = {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.json();
     } catch (error) {
+      const storage = getStorageData();
+      const idx = storage.customers.findIndex(c => c.id === id);
+      if (idx !== -1) {
+        storage.customers[idx] = { ...storage.customers[idx], ...data };
+        setStorageData(storage);
+        return storage.customers[idx];
+      }
       throw error;
     }
   },
-
   async delete(id) {
     try {
-      const response = await fetch(`/api/customers/${id}`, {
-        method: 'DELETE'
-      });
+      const response = await fetchWithTimeout(`/api/customers/${id}`, { method: 'DELETE' });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return true;
     } catch (error) {
-      throw error;
+      const storage = getStorageData();
+      storage.customers = storage.customers.filter(c => c.id !== id);
+      setStorageData(storage);
+      return true;
     }
   }
 };
@@ -180,31 +192,25 @@ export const Customer = {
 export const Supplier = {
   async list() {
     try {
-      const response = await fetch('/api/suppliers');
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(`HTTP ${response.status}: ${text}`);
-      }
-      const data = await response.json();
-      return Array.isArray(data) ? data : [];
+      const response = await fetchWithTimeout('/api/suppliers');
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json() || [];
     } catch (error) {
-      return [];
+      return getStorageData().suppliers || [];
     }
   },
-
   async get(id) {
     try {
-      const response = await fetch(`/api/suppliers/${id}`);
+      const response = await fetchWithTimeout(`/api/suppliers/${id}`);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.json();
     } catch (error) {
-      return null;
+      return getStorageData().suppliers.find(s => s.id === id) || null;
     }
   },
-
   async create(data) {
     try {
-      const response = await fetch('/api/suppliers', {
+      const response = await fetchWithTimeout('/api/suppliers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -212,13 +218,17 @@ export const Supplier = {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.json();
     } catch (error) {
-      throw error;
+      const id = Date.now().toString();
+      const newSupplier = { id, ...data };
+      const storage = getStorageData();
+      storage.suppliers.push(newSupplier);
+      setStorageData(storage);
+      return newSupplier;
     }
   },
-
   async update(id, data) {
     try {
-      const response = await fetch(`/api/suppliers/${id}`, {
+      const response = await fetchWithTimeout(`/api/suppliers/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -226,19 +236,26 @@ export const Supplier = {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.json();
     } catch (error) {
+      const storage = getStorageData();
+      const idx = storage.suppliers.findIndex(s => s.id === id);
+      if (idx !== -1) {
+        storage.suppliers[idx] = { ...storage.suppliers[idx], ...data };
+        setStorageData(storage);
+        return storage.suppliers[idx];
+      }
       throw error;
     }
   },
-
   async delete(id) {
     try {
-      const response = await fetch(`/api/suppliers/${id}`, {
-        method: 'DELETE'
-      });
+      const response = await fetchWithTimeout(`/api/suppliers/${id}`, { method: 'DELETE' });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return true;
     } catch (error) {
-      throw error;
+      const storage = getStorageData();
+      storage.suppliers = storage.suppliers.filter(s => s.id !== id);
+      setStorageData(storage);
+      return true;
     }
   }
 };
@@ -246,59 +263,43 @@ export const Supplier = {
 export const Category = {
   async list() {
     try {
-      const response = await fetch('/api/categories');
+      const response = await fetchWithTimeout('/api/categories');
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return await response.json();
+      return await response.json() || [];
     } catch (error) {
-      return [];
+      return getStorageData().categories || [];
     }
   },
-
   async get(id) {
     try {
-      const response = await fetch(`/api/categories/${id}`);
+      const response = await fetchWithTimeout(`/api/categories/${id}`);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.json();
     } catch (error) {
-      return null;
+      return getStorageData().categories.find(c => c.id === id) || null;
     }
   },
-
   async create(data) {
     try {
-      const payload = {
-        name: String(data.name || '').trim(),
-        type: String(data.type || 'entrada')
-      };
-      
-      const response = await fetch('/api/categories', {
+      const response = await fetchWithTimeout('/api/categories', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(data)
       });
-      
-      const contentType = response.headers.get("content-type");
-      let result;
-      if (contentType && contentType.includes("application/json")) {
-        result = await response.json();
-      } else {
-        const text = await response.text();
-        throw new Error(`Resposta inválida do servidor: ${text.substring(0, 100)}`);
-      }
-
-      if (!response.ok) {
-        throw new Error(result.error || result.details || `Erro do servidor (${response.status})`);
-      }
-      
-      return result;
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json();
     } catch (error) {
-      throw new Error(error.message || 'Erro inesperado ao criar categoria');
+      const id = Date.now().toString();
+      const newCategory = { id, ...data };
+      const storage = getStorageData();
+      storage.categories.push(newCategory);
+      setStorageData(storage);
+      return newCategory;
     }
   },
-
   async update(id, data) {
     try {
-      const response = await fetch(`/api/categories/${id}`, {
+      const response = await fetchWithTimeout(`/api/categories/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -306,19 +307,26 @@ export const Category = {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.json();
     } catch (error) {
+      const storage = getStorageData();
+      const idx = storage.categories.findIndex(c => c.id === id);
+      if (idx !== -1) {
+        storage.categories[idx] = { ...storage.categories[idx], ...data };
+        setStorageData(storage);
+        return storage.categories[idx];
+      }
       throw error;
     }
   },
-
   async delete(id) {
     try {
-      const response = await fetch(`/api/categories/${id}`, {
-        method: 'DELETE'
-      });
+      const response = await fetchWithTimeout(`/api/categories/${id}`, { method: 'DELETE' });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return true;
     } catch (error) {
-      throw error;
+      const storage = getStorageData();
+      storage.categories = storage.categories.filter(c => c.id !== id);
+      setStorageData(storage);
+      return true;
     }
   }
 };
@@ -326,94 +334,16 @@ export const Category = {
 export const Sale = {
   async list() {
     try {
-      const response = await fetch('/api/transactions?type=venda');
+      const response = await fetchWithTimeout('/api/sales');
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return await response.json();
+      return await response.json() || [];
     } catch (error) {
-      return [];
+      return getStorageData().sales || [];
     }
   },
-
-  async get(id) {
-    try {
-      const response = await fetch(`/api/transactions/${id}`);
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return await response.json();
-    } catch (error) {
-      return null;
-    }
-  },
-
   async create(data) {
     try {
-      // Find category ID if category name is provided
-      let categoryId = data.categoryId;
-      if (!categoryId && data.category) {
-        const categories = await Category.list();
-        const cat = categories.find(c => c.name === data.category);
-        if (cat) {
-          categoryId = cat.id;
-        } else {
-          // If not found by name, it might be an ID already
-          const catById = categories.find(c => c.id === data.category);
-          if (catById) categoryId = catById.id;
-        }
-      }
-
-      const payload = {
-        customerId: data.customer_id || data.customerId,
-        supplierId: data.supplier_id || data.supplierId,
-        categoryId: categoryId,
-        type: 'venda',
-        date: new Date(data.sale_date || data.date || new Date()).toISOString(),
-        shift: 'manhã',
-        amount: String(data.total_amount || data.amount),
-        description: data.description || 'Venda registrada'
-      };
-      
-      const response = await fetch('/api/transactions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      
-      const result = await response.json();
-      if (!response.ok) {
-        throw new Error(result.error || `HTTP ${response.status}`);
-      }
-      return result;
-    } catch (error) {
-      throw error;
-    }
-  }
-};
-
-export const Installment = {
-  async list() {
-    try {
-      const response = await fetch('/api/sale-installments');
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(`HTTP ${response.status}: ${text}`);
-      }
-      const data = await response.json();
-      return Array.isArray(data) ? data : [];
-    } catch (error) {
-      return [];
-    }
-  },
-  async get(id) {
-    try {
-      const response = await fetch(`/api/sale-installments/${id}`);
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return await response.json();
-    } catch (error) {
-      return null;
-    }
-  },
-  async create(data) { 
-    try {
-      const response = await fetch('/api/sale-installments', {
+      const response = await fetchWithTimeout('/api/sales', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -421,7 +351,12 @@ export const Installment = {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.json();
     } catch (error) {
-      throw error;
+      const id = Date.now().toString();
+      const newSale = { id, ...data };
+      const storage = getStorageData();
+      storage.sales.push(newSale);
+      setStorageData(storage);
+      return newSale;
     }
   }
 };
@@ -429,94 +364,16 @@ export const Installment = {
 export const Purchase = {
   async list() {
     try {
-      const response = await fetch('/api/transactions?type=compra');
+      const response = await fetchWithTimeout('/api/purchases');
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return await response.json();
+      return await response.json() || [];
     } catch (error) {
-      return [];
-    }
-  },
-
-  async get(id) {
-    try {
-      const response = await fetch(`/api/transactions/${id}`);
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return await response.json();
-    } catch (error) {
-      return null;
-    }
-  },
-
-  async create(data) {
-    try {
-      // Find category ID if category name is provided
-      let categoryId = data.categoryId;
-      if (!categoryId && data.category) {
-        const categories = await Category.list();
-        const cat = categories.find(c => c.name === data.category);
-        if (cat) {
-          categoryId = cat.id;
-        } else {
-          // If not found by name, it might be an ID already
-          const catById = categories.find(c => c.id === data.category);
-          if (catById) categoryId = catById.id;
-        }
-      }
-
-      const payload = {
-        customerId: data.customer_id || data.customerId,
-        supplierId: data.supplier_id || data.supplierId,
-        categoryId: categoryId,
-        type: 'compra',
-        date: new Date(data.purchase_date || data.date || new Date()).toISOString(),
-        shift: 'manhã',
-        amount: String(data.total_amount || data.amount),
-        description: data.description || 'Compra registrada'
-      };
-      
-      const response = await fetch('/api/transactions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      
-      const result = await response.json();
-      if (!response.ok) {
-        throw new Error(result.error || `HTTP ${response.status}`);
-      }
-      return result;
-    } catch (error) {
-      throw error;
-    }
-  }
-};
-
-export const PurchaseInstallment = {
-  async list() {
-    try {
-      const response = await fetch('/api/purchase-installments');
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(`HTTP ${response.status}: ${text}`);
-      }
-      const data = await response.json();
-      return Array.isArray(data) ? data : [];
-    } catch (error) {
-      return [];
-    }
-  },
-  async get(id) {
-    try {
-      const response = await fetch(`/api/purchase-installments/${id}`);
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return await response.json();
-    } catch (error) {
-      return null;
+      return getStorageData().purchases || [];
     }
   },
   async create(data) {
     try {
-      const response = await fetch('/api/purchase-installments', {
+      const response = await fetchWithTimeout('/api/purchases', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -524,7 +381,67 @@ export const PurchaseInstallment = {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.json();
     } catch (error) {
-      throw error;
+      const id = Date.now().toString();
+      const newPurchase = { id, ...data };
+      const storage = getStorageData();
+      storage.purchases.push(newPurchase);
+      setStorageData(storage);
+      return newPurchase;
+    }
+  }
+};
+
+export const Installment = {
+  async list() {
+    try {
+      const response = await fetchWithTimeout('/api/installments');
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json() || [];
+    } catch (error) {
+      return getStorageData().installments || [];
+    }
+  },
+  async create(data) {
+    try {
+      const response = await fetchWithTimeout('/api/installments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      const id = Date.now().toString();
+      const newInstallment = { id, ...data };
+      const storage = getStorageData();
+      storage.installments.push(newInstallment);
+      setStorageData(storage);
+      return newInstallment;
+    }
+  }
+};
+
+export const PurchaseInstallment = {
+  async list() {
+    try {
+      const response = await fetchWithTimeout('/api/purchase-installments');
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json() || [];
+    } catch (error) {
+      return [];
+    }
+  },
+  async create(data) {
+    try {
+      const response = await fetchWithTimeout('/api/purchase-installments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      return { id: Date.now().toString(), ...data };
     }
   }
 };
