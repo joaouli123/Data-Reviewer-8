@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Download, Search, Trash2, Pencil, Wallet, TrendingUp, TrendingDown, Upload, ChevronRight } from 'lucide-react';
+import { Plus, Download, Search, Trash2, Pencil, Wallet, TrendingUp, TrendingDown, Upload, ChevronRight, Check } from 'lucide-react';
 import { format, parseISO, startOfMonth, endOfMonth, isWithinInterval, isBefore, parse, subDays, startOfDay, endOfDay, isAfter } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import TransactionForm from '../components/transactions/TransactionForm';
@@ -88,6 +88,10 @@ export default function TransactionsPage() {
   const handleEdit = (item) => {
     setEditingTransaction(item);
     setIsFormOpen(true);
+  };
+
+  const handleComplete = (id) => {
+    updateMutation.mutate({ id, data: { status: 'concluído' } });
   };
 
   const handleDelete = (id) => {
@@ -338,6 +342,17 @@ export default function TransactionsPage() {
                                 </TableCell>
                                 <TableCell>
                                     <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        {!(t.status === 'completed' || t.status === 'pago' || t.status === 'concluído') && (
+                                            <Button 
+                                                variant="ghost" 
+                                                size="icon" 
+                                                className="h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50" 
+                                                onClick={() => handleComplete(t.id)}
+                                                title="Concluir Transação"
+                                            >
+                                                <Check className="w-4 h-4" />
+                                            </Button>
+                                        )}
                                         <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary" onClick={() => handleEdit(t)}>
                                             <Pencil className="w-4 h-4" />
                                         </Button>
