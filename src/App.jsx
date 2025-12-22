@@ -17,7 +17,7 @@ function App() {
   return (
     <>
       <Pages />
-      <Toaster position="top-right" richColors />
+      <Toaster position="bottom-center" richColors />
     </>
   )
 }
