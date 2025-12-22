@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput, formatCurrency, parseCurrency } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -196,15 +197,17 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
           </div>
           
           <div className="space-y-2">
-            <Label>Valor Total (R$)</Label>
-            <Input 
-              type="number" 
-              step="0.01" 
-              placeholder="0.00"
-              value={formData.total_amount}
-              onChange={(e) => setFormData({...formData, total_amount: e.target.value})}
-              required
-            />
+            <Label>Valor Total</Label>
+            <div className="flex items-center gap-2">
+              <span className="text-slate-600">R$</span>
+              <CurrencyInput 
+                placeholder="0,00"
+                value={formData.total_amount}
+                onChange={(e) => setFormData({...formData, total_amount: e.target.value})}
+                className="flex-1"
+                required
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -220,13 +223,15 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
             {Number(formData.installments) > 1 && (
               <div className="space-y-2">
                 <Label>Valor da Parcela (opcional)</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={formData.installment_amount}
-                  onChange={(e) => setFormData({ ...formData, installment_amount: e.target.value })}
-                  placeholder={`R$ ${(parseFloat(formData.total_amount || 0) / Number(formData.installments || 1)).toFixed(2)}`}
-                />
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-600">R$</span>
+                  <CurrencyInput
+                    value={formData.installment_amount}
+                    onChange={(e) => setFormData({ ...formData, installment_amount: e.target.value })}
+                    placeholder={formatCurrency((parseFloat(formData.total_amount || 0) / Number(formData.installments || 1)))}
+                    className="flex-1"
+                  />
+                </div>
               </div>
             )}
           </div>
@@ -235,8 +240,8 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
             <div className="p-3 bg-slate-50 rounded-lg text-sm text-slate-600">
               <p>
                 {formData.installment_amount && !isNaN(parseFloat(formData.installment_amount))
-                  ? `${formData.installments}x de R$ ${parseFloat(formData.installment_amount).toFixed(2)}`
-                  : `${formData.installments}x de R$ ${(parseFloat(formData.total_amount || 0) / Number(formData.installments || 1)).toFixed(2)}`
+                  ? `${formData.installments}x de R$ ${formatCurrency(formData.installment_amount)}`
+                  : `${formData.installments}x de R$ ${formatCurrency((parseFloat(formData.total_amount || 0) / Number(formData.installments || 1)))}`
                 }
               </p>
             </div>
@@ -262,9 +267,7 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
                     <div className="text-sm font-medium text-slate-600">
                       Parcela {idx + 1}
                     </div>
-                    <Input
-                      type="number"
-                      step="0.01"
+                    <CurrencyInput
                       placeholder="Valor"
                       value={inst.amount}
                       onChange={(e) => updateCustomInstallment(idx, 'amount', e.target.value)}

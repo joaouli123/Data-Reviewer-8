@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput, formatCurrency, parseCurrency } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Category, Purchase, PurchaseInstallment } from '@/api/entities';
@@ -162,14 +163,16 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Valor Total</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={formData.total_amount}
-                onChange={(e) => setFormData({ ...formData, total_amount: e.target.value })}
-                placeholder="0.00"
-                required
-              />
+              <div className="flex items-center gap-2">
+                <span className="text-slate-600">R$</span>
+                <CurrencyInput
+                  value={formData.total_amount}
+                  onChange={(e) => setFormData({ ...formData, total_amount: e.target.value })}
+                  placeholder="0,00"
+                  className="flex-1"
+                  required
+                />
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Data da Compra</Label>
@@ -231,13 +234,15 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
             {formData.installments > 1 && (
               <div className="space-y-2">
                 <Label>Valor da Parcela (opcional)</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={formData.installment_amount}
-                  onChange={(e) => setFormData({ ...formData, installment_amount: e.target.value })}
-                  placeholder={`R$ ${(parseFloat(formData.total_amount || 0) / formData.installments).toFixed(2)}`}
-                />
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-600">R$</span>
+                  <CurrencyInput
+                    value={formData.installment_amount}
+                    onChange={(e) => setFormData({ ...formData, installment_amount: e.target.value })}
+                    placeholder={formatCurrency((parseFloat(formData.total_amount || 0) / formData.installments))}
+                    className="flex-1"
+                  />
+                </div>
               </div>
             )}
           </div>
@@ -246,8 +251,8 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
             <div className="p-3 bg-slate-50 rounded-lg text-sm text-slate-600">
               <p>
                 {formData.installment_amount 
-                  ? `${formData.installments}x de R$ ${parseFloat(formData.installment_amount).toFixed(2)}`
-                  : `${formData.installments}x de R$ ${(parseFloat(formData.total_amount || 0) / formData.installments).toFixed(2)}`
+                  ? `${formData.installments}x de R$ ${formatCurrency(formData.installment_amount)}`
+                  : `${formData.installments}x de R$ ${formatCurrency((parseFloat(formData.total_amount || 0) / formData.installments))}`
                 }
               </p>
             </div>

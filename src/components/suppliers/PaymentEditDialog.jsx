@@ -1,14 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { CurrencyInput, formatCurrency, parseCurrency } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { toast } from 'sonner';
 import { AlertCircle } from 'lucide-react';
 
 export default function PaymentEditDialog({ isOpen, onClose, transaction, onConfirm, isLoading }) {
-  const [paidAmount, setPaidAmount] = useState(transaction?.paidAmount ? parseFloat(transaction.paidAmount) : parseFloat(transaction?.amount || 0));
-  const [interest, setInterest] = useState(transaction?.interest ? parseFloat(transaction.interest) : 0);
+  const [paidAmount, setPaidAmount] = useState(0);
+  const [interest, setInterest] = useState(0);
+
+  // Reset values when transaction changes or dialog opens
+  useEffect(() => {
+    if (transaction) {
+      setPaidAmount(transaction.paidAmount ? parseFloat(transaction.paidAmount) : parseFloat(transaction.amount || 0));
+      setInterest(transaction.interest ? parseFloat(transaction.interest) : 0);
+    }
+  }, [transaction]);
 
   const originalAmount = parseFloat(transaction?.amount || 0);
   const total = paidAmount + interest;
@@ -50,14 +58,11 @@ export default function PaymentEditDialog({ isOpen, onClose, transaction, onConf
             <Label htmlFor="paidAmount">Valor Pago</Label>
             <div className="flex items-center gap-2">
               <span className="text-slate-600">R$</span>
-              <Input
+              <CurrencyInput
                 id="paidAmount"
-                type="number"
-                step="0.01"
-                min="0"
                 value={paidAmount}
-                onChange={(e) => setPaidAmount(parseFloat(e.target.value) || 0)}
-                placeholder="0.00"
+                onChange={(e) => setPaidAmount(e.target.value)}
+                placeholder="0,00"
                 className="flex-1"
                 data-testid="input-paid-amount"
               />
@@ -68,14 +73,11 @@ export default function PaymentEditDialog({ isOpen, onClose, transaction, onConf
             <Label htmlFor="interest">Juros / Adicional</Label>
             <div className="flex items-center gap-2">
               <span className="text-slate-600">R$</span>
-              <Input
+              <CurrencyInput
                 id="interest"
-                type="number"
-                step="0.01"
-                min="0"
                 value={interest}
-                onChange={(e) => setInterest(parseFloat(e.target.value) || 0)}
-                placeholder="0.00"
+                onChange={(e) => setInterest(e.target.value)}
+                placeholder="0,00"
                 className="flex-1"
                 data-testid="input-interest"
               />
