@@ -51,11 +51,9 @@ const CurrencyInput = forwardRef(({
 
   // Update whenever value prop changes
   useEffect(() => {
-    console.log('💵 CurrencyInput value changed:', value);
     if (value !== undefined && value !== null && value !== '') {
       const numValue = typeof value === 'number' ? value : parseCurrency(value);
       const formatted = numValue > 0 ? formatCurrency(numValue) : '';
-      console.log('💵 Formatting to:', formatted);
       setDisplayValue(formatted);
     } else {
       setDisplayValue('');

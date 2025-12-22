@@ -55,9 +55,6 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
   React.useEffect(() => {
     if (open) {
       if (initialData) {
-        console.log('📋 Loading transaction:', initialData);
-        console.log('💰 Amount value:', initialData.amount, 'Type:', typeof initialData.amount);
-        
         // First try to use categoryId directly, then find by name
         let categoryId = initialData.categoryId;
         let selectedCategory = categories.find(c => c.id === categoryId);
@@ -76,7 +73,6 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
         // Try to get amount from either amount or paidAmount (fallback)
         let amountValue = parseFloat(initialData.amount) || parseFloat(initialData.paidAmount) || 0;
         amountValue = Math.abs(amountValue);
-        console.log('✅ Final amount for form:', amountValue.toString());
         
         setFormData({
           ...initialData,
