@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CheckCircle2, Clock, X } from 'lucide-react';
+import { CheckCircle2, Clock, X, ChevronDown, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import PaymentEditDialog from '../suppliers/PaymentEditDialog';
 
@@ -13,6 +13,18 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
   const queryClient = useQueryClient();
   const [paymentEditOpen, setPaymentEditOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [expandedGroups, setExpandedGroups] = useState({});
+
+  const toggleGroup = (groupId) => {
+    setExpandedGroups(prev => ({
+      ...prev,
+      [groupId]: !prev[groupId]
+    }));
+  };
+
+  const isGroupExpanded = (groupId) => {
+    return expandedGroups[groupId] !== false;
+  };
 
   const { data: transactions = [] } = useQuery({
     queryKey: ['transactions'],
@@ -163,26 +175,39 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
           {groupedSales.length > 0 ? (
               groupedSales.map((group) => (
                 <div key={group.main.id} className="bg-white border border-slate-200 rounded-lg overflow-hidden">
-                  {/* Header da venda */}
-                  <div className="flex items-start justify-between gap-4 p-5 border-b border-slate-100">
-                    <div>
-                      <h4 className="font-semibold text-base text-slate-900">{group.main.description || 'Venda'}</h4>
-                      <p className="text-sm text-slate-500 mt-0.5">
-                        {group.main.date ? format(parseISO(group.main.date), "dd 'de' MMMM, yyyy", { locale: ptBR }) : '-'}
-                      </p>
+                  {/* Header da venda - clicável para expandir/recolher */}
+                  <div 
+                    className="flex items-center justify-between gap-4 p-5 cursor-pointer hover:bg-slate-50 transition-colors"
+                    onClick={() => toggleGroup(group.main.id)}
+                    data-testid={`toggle-sale-${group.main.id}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      {isGroupExpanded(group.main.id) ? (
+                        <ChevronDown className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                      ) : (
+                        <ChevronRight className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                      )}
+                      <div>
+                        <h4 className="font-semibold text-base text-slate-900">{group.main.description || 'Venda'}</h4>
+                        <p className="text-sm text-slate-500 mt-0.5">
+                          {group.main.date ? format(parseISO(group.main.date), "dd 'de' MMMM, yyyy", { locale: ptBR }) : '-'}
+                          <span className="ml-2 text-slate-400">({group.installments.length} parcela{group.installments.length > 1 ? 's' : ''})</span>
+                        </p>
+                      </div>
                     </div>
                     <div className="text-right flex-shrink-0">
                       <p className="text-lg font-bold text-slate-900">
                         R$ {group.main.totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </p>
-                      <p className="text-xs text-slate-500 mt-0.5">
+                      <Badge className={`${group.main.isPaid ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-amber-50 text-amber-600 border-amber-200'} shadow-none font-medium text-xs`}>
                         {group.main.isPaid ? 'Pago' : 'Parcial'}
-                      </p>
+                      </Badge>
                     </div>
                   </div>
                   
-                  {/* Lista de parcelas */}
-                  <div className="divide-y divide-slate-100">
+                  {/* Lista de parcelas - recolhível */}
+                  {isGroupExpanded(group.main.id) && (
+                  <div className="divide-y divide-slate-100 border-t border-slate-100">
                     {group.installments.map((installment, idx) => (
                       <div key={installment.id} className="flex items-center justify-between gap-4 px-5 py-4">
                         <div className="flex items-center gap-4">
@@ -249,6 +274,7 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
                       </div>
                     ))}
                   </div>
+                  )}
                 </div>
               ))
             ) : (
