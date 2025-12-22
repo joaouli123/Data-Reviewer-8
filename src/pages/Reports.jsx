@@ -232,8 +232,8 @@ export default function ReportsPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="space-y-2 flex-1">
               <label className="text-sm font-medium text-slate-700">Período</label>
               <PeriodFilter 
                 onPeriodChange={setDateRange}
@@ -241,10 +241,10 @@ export default function ReportsPage() {
                 defaultPeriod="today"
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 flex-1">
               <label className="text-sm font-medium text-slate-700">Categoria</label>
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
