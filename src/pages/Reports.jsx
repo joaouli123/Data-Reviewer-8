@@ -294,12 +294,25 @@ export default function ReportsPage() {
 
       {/* Report Suggestions and Results */}
       {!analysisResult && !isAnalyzing ? (
-        <ReportSuggestions 
-          transactions={filteredTransactions}
-          saleInstallments={saleInstallments}
-          purchaseInstallments={purchaseInstallments}
-          onGenerateAnalysis={handleStartAnalysis}
-        />
+        <div className="space-y-6">
+          <ReportSuggestions 
+            transactions={filteredTransactions}
+            saleInstallments={saleInstallments}
+            purchaseInstallments={purchaseInstallments}
+            onGenerateAnalysis={handleStartAnalysis}
+          />
+          <Card className="bg-slate-50 border-dashed border-2 border-slate-200">
+            <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                <FileText className="w-8 h-8 text-blue-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-slate-900 mb-2">Nenhuma análise gerada ainda</h3>
+              <p className="text-slate-500 max-w-md mb-6">
+                Clique no botão "Gerar Nova Análise" acima para que nossa IA processe suas transações e gere insights valiosos para seu negócio.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       ) : analysisResult ? (
         <div className="space-y-6 animate-in fade-in duration-500">
           {/* Executive Summary with KPIs */}
