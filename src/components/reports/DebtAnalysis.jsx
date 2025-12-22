@@ -17,10 +17,18 @@ export default function DebtAnalysis({ transactions, purchases, purchaseInstallm
     const now = new Date();
     const threeMonthsAgo = addMonths(now, -3);
 
-    // Total outstanding debt
-    const totalDebt = purchaseInstallments
-      .filter(i => !i.paid)
-      .reduce((sum, i) => sum + i.amount, 0);
+    // Total outstanding debt - with fallback to transactions
+    let totalDebt = 0;
+    if (purchaseInstallments && purchaseInstallments.length > 0) {
+      totalDebt = purchaseInstallments
+        .filter(i => !i.paid)
+        .reduce((sum, i) => sum + i.amount, 0);
+    } else {
+      // Fallback: calculate from pending purchase transactions
+      totalDebt = transactions
+        .filter(t => t.type === 'compra' && t.status === 'pendente')
+        .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+    }
 
     // Revenue (last 3 months)
     const revenue = transactions
@@ -35,35 +43,61 @@ export default function DebtAnalysis({ transactions, purchases, purchaseInstallm
 
     // Short-term debt (due in next 3 months)
     const threeMonthsLater = addMonths(now, 3);
-    const shortTermDebt = purchaseInstallments
-      .filter(i => !i.paid && new Date(i.due_date) <= threeMonthsLater)
-      .reduce((sum, i) => sum + i.amount, 0);
+    let shortTermDebt = 0;
+    if (purchaseInstallments && purchaseInstallments.length > 0) {
+      shortTermDebt = purchaseInstallments
+        .filter(i => !i.paid && new Date(i.due_date) <= threeMonthsLater)
+        .reduce((sum, i) => sum + i.amount, 0);
+    } else {
+      // Fallback: calculate from recent pending purchases
+      shortTermDebt = transactions
+        .filter(t => t.type === 'compra' && t.status === 'pendente' && new Date(t.date) >= now)
+        .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+    }
 
     // Long-term debt (due after 3 months)
     const longTermDebt = totalDebt - shortTermDebt;
 
     // Monthly debt payment
-    const monthlyDebtPayment = purchaseInstallments
-      .filter(i => !i.paid && new Date(i.due_date) <= addMonths(now, 1))
-      .reduce((sum, i) => sum + i.amount, 0);
+    let monthlyDebtPayment = 0;
+    if (purchaseInstallments && purchaseInstallments.length > 0) {
+      monthlyDebtPayment = purchaseInstallments
+        .filter(i => !i.paid && new Date(i.due_date) <= addMonths(now, 1))
+        .reduce((sum, i) => sum + i.amount, 0);
+    } else {
+      // Fallback: use portion of total debt divided by 3 months average
+      monthlyDebtPayment = totalDebt > 0 ? totalDebt / 3 : 0;
+    }
 
     // Debt service ratio (monthly payment / monthly revenue)
     const debtServiceRatio = avgMonthlyRevenue > 0 ? (monthlyDebtPayment / avgMonthlyRevenue) * 100 : 0;
 
     // Debt by category
     const debtByCategory = {};
-    purchases.forEach(p => {
-      const purchaseDebt = purchaseInstallments
-        .filter(i => i.purchase_id === p.id && !i.paid)
-        .reduce((sum, i) => sum + i.amount, 0);
-      
-      if (purchaseDebt > 0) {
-        if (!debtByCategory[p.category || 'Outros']) {
-          debtByCategory[p.category || 'Outros'] = 0;
+    if (purchases && purchases.length > 0 && purchaseInstallments && purchaseInstallments.length > 0) {
+      purchases.forEach(p => {
+        const purchaseDebt = purchaseInstallments
+          .filter(i => i.purchase_id === p.id && !i.paid)
+          .reduce((sum, i) => sum + i.amount, 0);
+        
+        if (purchaseDebt > 0) {
+          if (!debtByCategory[p.category || 'Outros']) {
+            debtByCategory[p.category || 'Outros'] = 0;
+          }
+          debtByCategory[p.category || 'Outros'] += purchaseDebt;
         }
-        debtByCategory[p.category || 'Outros'] += purchaseDebt;
-      }
-    });
+      });
+    } else {
+      // Fallback: calculate from transaction categories
+      const compras = transactions.filter(t => t.type === 'compra' && t.status === 'pendente');
+      compras.forEach(t => {
+        const category = t.category || 'Outros';
+        if (!debtByCategory[category]) {
+          debtByCategory[category] = 0;
+        }
+        debtByCategory[category] += parseFloat(t.amount || 0);
+      });
+    }
 
     return {
       totalDebt,
