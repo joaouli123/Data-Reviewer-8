@@ -9,6 +9,75 @@ const generateMockAnalysis = (responseJsonSchema) => {
   }
   
   // Detectar tipo de análise baseado no schema
+  if (responseJsonSchema.properties?.optimal_price_point) {
+    return {
+      optimal_price_point: {
+        price: 149.99,
+        expected_volume: "150-200 unidades/mês",
+        expected_revenue: 22498.50,
+        reasoning: "Baseado na elasticidade de preço estimada e histórico de demanda, este é o ponto ótimo que maximiza margem e volume. Oferece melhor equilíbrio entre competitividade e lucratividade."
+      },
+      demand_forecast: [
+        {
+          price_point: 99.99,
+          estimated_demand: "300-350 un/mês",
+          total_revenue: 29997,
+          profit_margin: 15.5
+        },
+        {
+          price_point: 124.99,
+          estimated_demand: "220-260 un/mês",
+          total_revenue: 27498,
+          profit_margin: 22.3
+        },
+        {
+          price_point: 149.99,
+          estimated_demand: "150-200 un/mês",
+          total_revenue: 22498,
+          profit_margin: 28.7
+        },
+        {
+          price_point: 174.99,
+          estimated_demand: "80-120 un/mês",
+          total_revenue: 13999,
+          profit_margin: 35.2
+        },
+        {
+          price_point: 199.99,
+          estimated_demand: "40-60 un/mês",
+          total_revenue: 7999,
+          profit_margin: 41.5
+        }
+      ],
+      price_elasticity: {
+        classification: "elastic",
+        sensitivity: "Demanda sensível a mudanças de preço. A cada 10% de aumento no preço, espera-se redução de ~12-15% na demanda.",
+        recommendations: "Considere estratégias de diferenciação de produto para reduzir sensibilidade de preço e aumentar inelasticidade."
+      },
+      pricing_strategies: [
+        {
+          strategy: "Precificação Competitiva",
+          price: 124.99,
+          expected_outcome: "Posiciona produto em faixa média-baixa, atrai alto volume de vendas (220-260 un/mês) com margem de 22.3%.",
+          risk_level: "low"
+        },
+        {
+          strategy: "Precificação Premium",
+          price: 174.99,
+          expected_outcome: "Posiciona como produto premium, volume menor (80-120 un/mês) mas margem maior (35.2%). Requer diferenciação clara.",
+          risk_level: "medium"
+        },
+        {
+          strategy: "Penetração de Mercado",
+          price: 99.99,
+          expected_outcome: "Preço agressivo para capturar market share rapidamente. Alta demanda (300-350 un/mês) mas margem reduzida (15.5%).",
+          risk_level: "high"
+        }
+      ],
+      market_positioning: "Produto se posiciona melhor na faixa de R$ 124.99-149.99, onde oferece bom equilíbrio entre competitividade e rentabilidade. Evite preços acima de R$ 199.99 sem diferenciação significativa de produto."
+    };
+  }
+  
   if (responseJsonSchema.properties?.suggested_reports) {
     return {
       suggested_reports: [
