@@ -92,7 +92,9 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
     
     // If category is "saida" (expense), make amount negative
     if (selectedCategory && selectedCategory.type === 'saida') {
-      amount = (-Number(amount)).toFixed(2);
+      amount = (-Math.abs(Number(amount))).toFixed(2);
+    } else {
+      amount = Math.abs(Number(amount)).toFixed(2);
     }
     
     onSubmit({
@@ -123,7 +125,8 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
       const matchingCategory = categories.find(c => c.name.toLowerCase() === suggestedCategory);
       
       if (matchingCategory) {
-        setFormData({ ...formData, category: matchingCategory.name });
+        const newType = matchingCategory.type === 'entrada' ? 'venda' : 'compra';
+        setFormData({ ...formData, categoryId: matchingCategory.id, type: newType });
         toast.success('Categoria sugerida aplicada!');
       } else {
         toast.error('Não foi possível sugerir uma categoria apropriada');
