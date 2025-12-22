@@ -190,7 +190,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
               <Label>Categoria</Label>
               <div className="flex gap-2">
                 <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
-                  <SelectTrigger className="flex-1">
+                  <SelectTrigger className="flex-1" required>
                     <SelectValue placeholder="Selecione a categoria" />
                   </SelectTrigger>
                   <SelectContent>
