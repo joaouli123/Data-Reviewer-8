@@ -29,9 +29,9 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 export default function CashFlowForecastPage() {
   const [dateRange, setDateRange] = useState({
-    startDate: startOfDay(new Date()),
-    endDate: endOfDay(new Date()),
-    label: 'Hoje'
+    startDate: startOfMonth(new Date()),
+    endDate: endOfMonth(new Date()),
+    label: 'Últimos 6 Meses'
   });
   const [expandedMonths, setExpandedMonths] = useState({});
 
@@ -173,8 +173,8 @@ export default function CashFlowForecastPage() {
 
         <PeriodFilter 
           onPeriodChange={setDateRange}
-          mode="days"
-          defaultPeriod="today"
+          mode="months"
+          defaultPeriod="last6Months"
         />
       </div>
 
