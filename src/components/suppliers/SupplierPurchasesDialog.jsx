@@ -79,7 +79,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
         </div>
 
         <Tabs defaultValue="purchases">
-          <TabsList className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="purchases">Compras</TabsTrigger>
             <TabsTrigger value="installments">Parcelas</TabsTrigger>
           </TabsList>
