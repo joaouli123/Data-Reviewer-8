@@ -161,12 +161,12 @@ export default function ReportExporter({ reportData, reportType = 'general' }) {
   };
 
   return (
-    <div className="flex gap-2">
+    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
       <Button
         onClick={exportToPDF}
         disabled={isExporting}
         variant="outline"
-        className="gap-2"
+        className="gap-2 flex-1 sm:flex-none"
       >
         {isExporting ? (
           <Loader2 className="w-4 h-4 animate-spin" />
@@ -179,7 +179,7 @@ export default function ReportExporter({ reportData, reportType = 'general' }) {
         onClick={exportToExcel}
         disabled={isExporting}
         variant="outline"
-        className="gap-2"
+        className="gap-2 flex-1 sm:flex-none"
       >
         {isExporting ? (
           <Loader2 className="w-4 h-4 animate-spin" />

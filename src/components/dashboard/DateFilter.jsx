@@ -53,10 +53,10 @@ export default function DateFilter({ onDateRangeChange }) {
   }, [initialized, onDateRangeChange, dateRange]);
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 w-full sm:w-auto">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="gap-2 no-default-hover-elevate">
+          <Button variant="outline" className="gap-2 no-default-hover-elevate w-full sm:w-auto">
             <Calendar className="w-4 h-4" />
             {dateRange.label}
             <ChevronDown className="w-4 h-4 ml-2 opacity-50" />
