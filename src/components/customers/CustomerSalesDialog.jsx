@@ -77,8 +77,9 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
         </div>
 
         <Tabs defaultValue="sales" className="w-full">
-          <TabsList className="grid w-full grid-cols-1">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="sales">Vendas</TabsTrigger>
+            <TabsTrigger value="installments">Parcelas</TabsTrigger>
           </TabsList>
 
           <TabsContent value="sales" className="space-y-4 mt-4">
@@ -123,6 +124,62 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
               ))
             ) : (
               <p className="text-center text-slate-500 py-8">Nenhuma venda registrada.</p>
+            )}
+          </TabsContent>
+
+          <TabsContent value="installments" className="space-y-4 mt-4">
+            {sales.length > 0 ? (
+              <div className="border rounded-lg overflow-hidden">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-slate-50 text-slate-500 font-medium border-b">
+                    <tr>
+                      <th className="px-4 py-3">Data</th>
+                      <th className="px-4 py-3">Descrição</th>
+                      <th className="px-4 py-3">Valor</th>
+                      <th className="px-4 py-3 text-right">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {sales.map((sale) => (
+                      <tr key={sale.id} className="hover:bg-slate-50/50">
+                        <td className="px-4 py-3">
+                          {sale.date ? format(parseISO(sale.date), "dd/MM/yyyy") : '-'}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div>
+                            <p className="font-medium text-slate-900">{sale.description}</p>
+                            <Badge variant="outline" className={`mt-1 text-[10px] ${
+                              sale.status === 'completed' || sale.status === 'pago' 
+                                ? 'text-emerald-600 border-emerald-200' 
+                                : 'text-amber-600 border-amber-200'
+                            }`}>
+                              {sale.status === 'completed' || sale.status === 'pago' ? 'Pago' : 'Pendente'}
+                            </Badge>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 font-semibold">
+                          R$ {parseFloat(sale.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          {(sale.status !== 'completed' && sale.status !== 'pago') && (
+                            <Button 
+                              size="sm" 
+                              variant="ghost"
+                              className="text-emerald-600 hover:text-emerald-700 p-0 h-auto font-medium"
+                              onClick={() => confirmPaymentMutation.mutate(sale.id)}
+                              disabled={confirmPaymentMutation.isPending}
+                            >
+                              Confirmar
+                            </Button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-center text-slate-500 py-8">Nenhuma parcela encontrada.</p>
             )}
           </TabsContent>
         </Tabs>
