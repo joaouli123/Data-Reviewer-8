@@ -35,15 +35,25 @@ app.get('/api/transactions/:id', async (req, res) => {
 app.post('/api/transactions', async (req, res) => {
   try {
     const data = req.body;
+    console.log('📝 Received transaction data:', JSON.stringify(data));
+    
     // Convert date string to Date object if it's a string
     if (data.date && typeof data.date === 'string') {
       data.date = new Date(data.date);
     }
+    
+    // Validate required fields
+    if (!data.date || !data.shift || !data.type || !data.amount) {
+      console.error('❌ Missing required fields:', { date: !!data.date, shift: !!data.shift, type: !!data.type, amount: !!data.amount });
+      return res.status(400).json({ error: 'Missing required fields: date, shift, type, amount' });
+    }
+    
     const newItem = await storage.createTransaction(data);
+    console.log('✅ Transaction created:', newItem.id);
     res.status(201).json(newItem);
   } catch (error) {
-    console.error('Error creating transaction:', error);
-    res.status(500).json({ error: 'Failed to create transaction' });
+    console.error('❌ Error creating transaction:', error);
+    res.status(500).json({ error: String(error) });
   }
 });
 
