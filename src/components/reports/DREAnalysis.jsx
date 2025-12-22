@@ -20,7 +20,7 @@ export default function DREAnalysis({ transactions, period = 'currentYear' }) {
     
     transactions.forEach(t => {
       const amount = Math.abs(parseFloat(t.amount || 0));
-      const category = (t.category || 'Sem Categoria').trim();
+      const category = (!t.categoryId ? 'Sem Categoria' : (t.categoryId || 'Sem Categoria')).toString().trim();
       
       if (t.type === 'venda' || t.type === 'income') {
         revenues[category] = (revenues[category] || 0) + amount;

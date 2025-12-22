@@ -25,7 +25,7 @@ export default function ReportSuggestions({ transactions, saleInstallments, purc
       const pendingReceivables = saleInstallments.filter(i => !i.paid).reduce((sum, i) => sum + i.amount, 0);
       const pendingPayables = purchaseInstallments.filter(i => !i.paid).reduce((sum, i) => sum + i.amount, 0);
       
-      const categoriesCount = [...new Set(transactions.map(t => t.category))].length;
+      const categoriesCount = [...new Set(transactions.map(t => t.categoryId))].length;
 
       const prompt = `Com base nos dados financeiros dos últimos 3 meses:
 - Receita Total: R$ ${revenue.toFixed(2)}

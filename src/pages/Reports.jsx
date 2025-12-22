@@ -374,6 +374,7 @@ export default function ReportsPage() {
               <ExpensesBreakdown 
                 opportunities={analysisResult.expense_reduction_opportunities}
                 transactions={filteredTransactions}
+                categories={categories}
               />
             </TabsContent>
 

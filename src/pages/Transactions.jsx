@@ -109,12 +109,18 @@ export default function TransactionsPage() {
   const handleExport = () => {
     if (!transactions.length) return;
     
+    const categoryMap = {};
+    categories.forEach(cat => {
+      categoryMap[cat.id] = cat.name || 'Sem Categoria';
+    });
+    
     const headers = ['Data', 'Descrição', 'Tipo', 'Categoria', 'Valor'];
     const csvContent = [
       headers.join(','),
-      ...filteredTransactions.map(t => 
-        `${t.date},"${t.description}",${t.type},${t.category},${t.amount}`
-      )
+      ...filteredTransactions.map(t => {
+        const categoryName = t.categoryId ? (categoryMap[t.categoryId] || 'Sem Categoria') : 'Sem Categoria';
+        return `${t.date},"${t.description}",${t.type},${categoryName},${t.amount}`;
+      })
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });

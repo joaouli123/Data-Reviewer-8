@@ -14,6 +14,11 @@ export default function CategoryInsights({ transactions, categories }) {
 
   // Calcular dados para gráfico SEMPRE
   const calculateChartData = () => {
+    const categoryMap = {};
+    categories.forEach(cat => {
+      categoryMap[cat.id] = cat.name || 'Sem categoria';
+    });
+
     const threeMonthsAgo = subMonths(new Date(), 3);
     const recentTransactions = transactions
       .filter(t => new Date(t.date) >= threeMonthsAgo)
@@ -21,7 +26,7 @@ export default function CategoryInsights({ transactions, categories }) {
         description: t.description,
         amount: Math.abs(parseFloat(t.amount) || 0), // sempre positivo para gráfico
         type: t.type,
-        category: t.category || 'Sem categoria',
+        category: t.categoryId ? (categoryMap[t.categoryId] || 'Sem categoria') : 'Sem categoria',
         date: t.date
       }));
 
@@ -65,6 +70,11 @@ export default function CategoryInsights({ transactions, categories }) {
 
     setIsAnalyzing(true);
     try {
+      const categoryMap = {};
+      categories.forEach(cat => {
+        categoryMap[cat.id] = cat.name || 'Sem categoria';
+      });
+
       // Prepare data for last 3 months
       const threeMonthsAgo = subMonths(new Date(), 3);
       const recentTransactions = transactions
@@ -73,7 +83,7 @@ export default function CategoryInsights({ transactions, categories }) {
           description: t.description,
           amount: t.amount,
           type: t.type,
-          category: t.category,
+          category: t.categoryId ? (categoryMap[t.categoryId] || 'Sem categoria') : 'Sem categoria',
           date: t.date
         }));
 

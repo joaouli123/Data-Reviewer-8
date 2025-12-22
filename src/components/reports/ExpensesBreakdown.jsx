@@ -6,13 +6,20 @@ import { Badge } from '@/components/ui/badge';
 
 const COLORS = ['#ef4444', '#f59e0b', '#f97316', '#ec4899', '#0065BA', '#0065BA', '#3b82f6'];
 
-export default function ExpensesBreakdown({ opportunities, transactions }) {
+export default function ExpensesBreakdown({ opportunities, transactions, categories = [] }) {
+  // Create a map of categoryId to category name for quick lookup
+  const categoryMap = {};
+  categories.forEach(cat => {
+    categoryMap[cat.id] = cat.name || 'Sem Categoria';
+  });
+
   // Calculate expenses by category
   const expensesByCategory = transactions
     .filter(t => t.type === 'compra' || t.type === 'expense')
     .reduce((acc, t) => {
-      const category = t.category || 'Sem Categoria';
-      acc[category] = (acc[category] || 0) + Math.abs(parseFloat(t.amount || 0));
+      const categoryId = t.categoryId;
+      const categoryName = categoryId ? (categoryMap[categoryId] || 'Sem Categoria') : 'Sem Categoria';
+      acc[categoryName] = (acc[categoryName] || 0) + Math.abs(parseFloat(t.amount || 0));
       return acc;
     }, {});
 
