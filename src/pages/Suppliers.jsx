@@ -40,8 +40,11 @@ export default function SuppliersPage() {
     initialData: []
   });
 
-  // purchases query removed
-  const purchases = [];
+  const { data: transactions = [] } = useQuery({
+    queryKey: ['transactions'],
+    queryFn: () => fetch('/api/transactions').then(res => res.json()),
+    initialData: []
+  });
 
   const saveMutation = useMutation({
     mutationFn: (data) => {
@@ -86,9 +89,9 @@ export default function SuppliersPage() {
   };
 
   const getSupplierPurchases = (supplierId) => {
-    return purchases
-      .filter(p => p.supplier_id === supplierId)
-      .reduce((acc, p) => acc + (p.total_amount || 0), 0);
+    return transactions
+      .filter(t => t.supplierId === supplierId && t.type === 'compra')
+      .reduce((acc, t) => acc + parseFloat(t.amount || 0), 0);
   };
 
   const filteredSuppliers = suppliers.filter(s => 

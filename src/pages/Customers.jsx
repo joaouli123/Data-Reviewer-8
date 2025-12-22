@@ -40,7 +40,11 @@ export default function CustomersPage() {
     initialData: []
   });
 
-  // sales query removed - use transactions instead
+  const { data: transactions = [] } = useQuery({
+    queryKey: ['transactions'],
+    queryFn: () => fetch('/api/transactions').then(res => res.json()),
+    initialData: []
+  });
 
   const saveMutation = useMutation({
     mutationFn: (data) => {
@@ -96,8 +100,9 @@ export default function CustomersPage() {
 
   // Calculate customer sales from transactions
   const getCustomerSales = (customerId) => {
-    // Since we don't have Sales table, return 0 for now
-    return 0;
+    return transactions
+      .filter(t => t.customerId === customerId && t.type === 'venda')
+      .reduce((acc, t) => acc + parseFloat(t.amount || 0), 0);
   };
 
   const filteredCustomers = customers.filter(c => 
