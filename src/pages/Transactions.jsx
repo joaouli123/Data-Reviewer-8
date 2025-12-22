@@ -311,7 +311,7 @@ export default function TransactionsPage() {
                         <TableHead>Categoria</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="text-right">Valor</TableHead>
-                        <TableHead className="w-[100px]"></TableHead>
+                        <TableHead className="text-right pr-6">Ações</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -350,8 +350,8 @@ export default function TransactionsPage() {
                                 <TableCell className={`text-right font-bold pl-6 ${t.type === 'venda' ? 'text-emerald-600' : 'text-rose-600'}`}>
                                     {t.type === 'venda' ? '+' : '-'} R$ {Math.abs(parseFloat(t.amount || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                 </TableCell>
-                                <TableCell>
-                                    <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <TableCell className="pr-6">
+                                    <div className="flex justify-end gap-2 transition-opacity">
                                         {!(t.status === 'completed' || t.status === 'pago' || t.status === 'concluído') && (
                                             <Button 
                                                 variant="ghost" 
