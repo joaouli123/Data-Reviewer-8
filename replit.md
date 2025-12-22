@@ -4,9 +4,9 @@
 
 Sistema de dashboard financeiro completo com interface moderna, dark mode e componentes Shadcn UI. Integrado com API Base44 e IA Gemini para análises preditivas.
 
-**Status**: ✅ Atualizado com Novos Commits  
-**Data Última Atualização**: 20 de Dezembro de 2025
-**Commits Recentes**: Padronização de cores azul e formatação brasileira
+**Status**: ✅ Atualizado com Melhorias UX/UI  
+**Data Última Atualização**: 22 de Dezembro de 2025
+**Commits Recentes**: Refactor de abas por compra e edição de pagamentos
 
 ---
 
@@ -88,6 +88,13 @@ Sistema de dashboard financeiro completo com interface moderna, dark mode e comp
 - ✅ Gerenciamento de clientes com histórico de vendas
 - ✅ Gerenciamento de fornecedores com histórico de compras
 
+### Gestão de Pagamentos de Fornecedores
+- ✅ **Nova UX**: Cada compra em sua própria aba
+- ✅ **Parcelas Organizadas**: Instalações em ordem crescente (1 → N) dentro de cada aba
+- ✅ Edição de valor pago com suporte a juros/taxas
+- ✅ Cancelamento de pagamentos confirmados
+- ✅ Exibição de "Pago" e "Juros" em cada parcela
+
 ### Relatórios Avançados
 - ✅ Análise DRE (Demonstração de Resultado)
 - ✅ Análise de Fluxo de Caixa e Previsões
@@ -159,62 +166,55 @@ src/components/
 
 ---
 
-## 📝 Atualizações Recentes (20/Dez/2025)
+## 📝 Atualizações Recentes
 
-### 🎯 Sistema de Categorias e Transações - IMPLEMENTADO
-**Data**: 20 de Dezembro de 2025
+### 🎯 Sistema de Pagamentos de Fornecedores - MELHORIAS UX/UI
+**Data**: 22 de Dezembro de 2025
 
-#### Funcionalidades Principais
-1. **Página de Categorias Completa**
-   - ✅ Nova página em `src/pages/Categories.jsx`
-   - ✅ Tabela de categorias com coluna "Tipo" (Entrada/Saída)
-   - ✅ Badges coloridas: 🟢 Verde para Entrada, 🔴 Vermelho para Saída
-   - ✅ Modal de criar/editar categorias com seleção de tipo
-   - ✅ Validação e mensagens de sucesso/erro
+#### Melhorias Implementadas
+1. **Nova Interface de Abas por Compra**
+   - ✅ Cada compra agrupada é uma aba separada
+   - ✅ Nome descritivo + quantidade de parcelas na aba
+   - ✅ Navegação intuitiva entre compras
+   - ✅ Aba "Todas Parcelas" para visão consolidada
 
-2. **Categorização de Transações**
-   - ✅ Cada categoria tem tipo definido: "entrada" ou "saida"
-   - ✅ Automaticamente determina se é receita (+) ou despesa (-)
-   - ✅ Valores negativos para despesas, positivos para receitas
-   - ✅ Edição de transações com amount absoluto
+2. **Organização de Parcelas em Ordem Crescente**
+   - ✅ Parcelas exibidas de 1 até a última (1, 2, 3, ..., N)
+   - ✅ Ordem respeitada mesmo após edição de pagamentos
+   - ✅ Identificadores visuais com números de parcela
 
-3. **Modal de Nova Categoria**
-   - ✅ Componente dedicado: `src/components/transactions/CreateCategoryModal.jsx`
-   - ✅ Criação de categoria sem sair do formulário de transação
-   - ✅ Seleção de tipo com radio buttons e cores visuais
-   - ✅ Auto-seleção da categoria após criação
+3. **Funcionalidades de Pagamento**
+   - ✅ Modal `PaymentEditDialog` para editar valor pago
+   - ✅ Suporte a juros e taxas adicionais
+   - ✅ Exibição de "Pago: R$X" e "Juros: R$Y" após confirmação
+   - ✅ Botão X para cancelar pagamento confirmado
+   - ✅ Feedback visual com badges de status
 
-4. **Formulário de Transação Melhorado**
-   - ✅ Tipo (Receita/Despesa) agora é automático via categoria
-   - ✅ Campo tipo exibido como badge (não editável, apenas informativo)
-   - ✅ Data e Status lado a lado (grid 2 colunas)
-   - ✅ Suporta edição de transações existentes
-
-#### Arquivos Criados/Modificados
-- **Criado**: `src/components/transactions/CreateCategoryModal.jsx` (novo componente)
-- **Modificado**: `src/pages/Categories.jsx` (adicionado tipo com badges)
-- **Modificado**: `src/components/transactions/TransactionForm.jsx` (integração categoria/tipo)
+#### Arquivos Modificados
+- **Modificado**: `src/components/suppliers/SupplierPurchasesDialog.jsx` (refactor de abas)
+- **Criado**: `src/components/suppliers/PaymentEditDialog.jsx` (modal de edição)
+- **Modificado**: `shared/schema.ts` (adicionados campos paidAmount e interest)
+- **Modificado**: `server/routes.ts` (PATCH endpoint com suporte a juros)
 
 #### Commits Associados
 ```
-3bf271a - Arrange transaction date and status fields side by side
-90d15b5 - Update category badges to use green for income and red for expenses
-5282f35 - Update categories page to include income and expense types
-a0505e1 - Add ability to categorize income and expenses on a dedicated page
-b7ea275 - Add a separate modal for creating new categories within transactions
-8669a63 - Make transaction amounts reflect category type automatically
+08336670 - Organize purchases into individual tabs with sequential installments
+9e56c6f - Add fields for paid amount and interest to transactions
 ```
 
 #### Fluxo de Uso
-1. Acesse "Categorias" → Crie/edite categorias definindo tipo
-2. Crie transação → Selecione categoria → Tipo aparece automático
-3. Salve → Valor é negativo (despesa) ou positivo (receita) conforme tipo
+1. Abra um fornecedor → Clique "Ver Compras"
+2. Cada aba representa uma compra com suas parcelas
+3. Dentro de cada aba, parcelas estão em ordem crescente (1 → N)
+4. Clique "Confirmar Pagamento" em uma parcela
+5. No modal, defina valor pago e juros
+6. Confirme ou cancele com o botão X ao lado de "Pago"
 
-### Anterior (19/Dez/2025) - Limpeza Realizada
-- ✅ Removidos configs duplicados (vite.config.js único)
-- ✅ Removidos arquivos obsoletos
-- ✅ Estrutura padronizada em src/
-- ✅ Aliases corrigidos (@, @assets, @shared)
+---
+
+### Anterior (20/Dez/2025) - Sistema de Categorias e Transações
+
+Consulte histórico anterior para detalhes do sistema de categorização e transações.
 
 ---
 
@@ -225,15 +225,17 @@ b7ea275 - Add a separate modal for creating new categories within transactions
 - **Alias @shared** → `shared/` (tipos compartilhados)
 - **Servidor**: Vite em PORT 5000
 - **Dark Mode**: Suportado
+- **Database**: Postgres com Drizzle ORM
 
 ---
 
 ## 🎨 Paleta de Cores
 
-Gerenciada via Tailwind CSS com variáveis CSS customizadas em `src/index.css`
+Gerenciada via Tailwind CSS com variáveis CSS customizadas em `src/index.css`. Temas light/dark automáticos.
 
 ---
 
-**Última atualização**: 20/Dez/2025 (14h30)  
+**Última atualização**: 22/Dez/2025 (14h45)  
 **Sistema**: 🟢 Pronto para desenvolvimento  
-**Status do Sistema de Transações**: ✅ Completo e Funcional
+**Status UX/UI**: ✅ Melhorias de Abas Implementadas  
+**Status Pagamentos**: ✅ Edição, Juros e Cancelamento Funcionais
