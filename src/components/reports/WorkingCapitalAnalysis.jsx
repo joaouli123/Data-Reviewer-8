@@ -16,15 +16,33 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
     const now = new Date();
     const next30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-    // Current Assets (Receivables)
-    const currentReceivables = saleInstallments
-      .filter(i => !i.paid && new Date(i.due_date) <= next30Days)
-      .reduce((sum, i) => sum + i.amount, 0);
+    // Fallback: Calculate from transactions if installments are empty
+    let currentReceivables = 0;
+    let currentPayables = 0;
+    
+    if (saleInstallments && saleInstallments.length > 0) {
+      // Current Assets (Receivables)
+      currentReceivables = saleInstallments
+        .filter(i => !i.paid && new Date(i.due_date) <= next30Days)
+        .reduce((sum, i) => sum + i.amount, 0);
+    } else {
+      // Calculate from transactions with sale type and pending status
+      currentReceivables = transactions
+        .filter(t => t.type === 'venda' && t.status === 'pendente' && new Date(t.date) <= next30Days)
+        .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+    }
 
-    // Current Liabilities (Payables)
-    const currentPayables = purchaseInstallments
-      .filter(i => !i.paid && new Date(i.due_date) <= next30Days)
-      .reduce((sum, i) => sum + i.amount, 0);
+    if (purchaseInstallments && purchaseInstallments.length > 0) {
+      // Current Liabilities (Payables)
+      currentPayables = purchaseInstallments
+        .filter(i => !i.paid && new Date(i.due_date) <= next30Days)
+        .reduce((sum, i) => sum + i.amount, 0);
+    } else {
+      // Calculate from transactions with purchase type and pending status
+      currentPayables = transactions
+        .filter(t => t.type === 'compra' && t.status === 'pendente' && new Date(t.date) <= next30Days)
+        .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+    }
 
     // Working Capital
     const workingCapital = currentReceivables - currentPayables;
