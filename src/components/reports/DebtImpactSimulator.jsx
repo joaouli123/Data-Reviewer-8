@@ -41,6 +41,8 @@ export default function DebtImpactSimulator({ currentMetrics }) {
     }
 
     setIsAnalyzing(true);
+    setSimulation(null);
+    
     try {
       // Calculate monthly payment with interest
       const monthlyRate = interestRate / 12;
@@ -53,7 +55,7 @@ export default function DebtImpactSimulator({ currentMetrics }) {
 
       // Project impact over time
       const projections = [];
-      let cumulativeDebt = currentMetrics.totalDebt + debtAmount;
+      let cumulativeDebt = metrics.totalDebt + debtAmount;
       
       for (let i = 0; i <= installments; i++) {
         const monthsFromNow = i;
@@ -62,10 +64,10 @@ export default function DebtImpactSimulator({ currentMetrics }) {
         
         projections.push({
           month: `Mês ${i}`,
-          currentDebt: currentMetrics.totalDebt,
-          projectedDebt: currentMetrics.totalDebt + Math.max(0, remainingDebt),
+          currentDebt: metrics.totalDebt,
+          projectedDebt: metrics.totalDebt + Math.max(0, remainingDebt),
           monthlyPayment: i > 0 && i <= installments ? monthlyPayment : 0,
-          debtServiceRatio: ((currentMetrics.monthlyDebtPayment + (i > 0 && i <= installments ? monthlyPayment : 0)) / currentMetrics.avgMonthlyRevenue * 100)
+          debtServiceRatio: ((metrics.monthlyDebtPayment + (i > 0 && i <= installments ? monthlyPayment : 0)) / metrics.avgMonthlyRevenue * 100)
         });
       }
 
@@ -73,10 +75,10 @@ export default function DebtImpactSimulator({ currentMetrics }) {
       const prompt = `Analise o impacto de uma nova dívida:
 
 Situação Atual:
-- Dívida Total: R$ ${currentMetrics.totalDebt.toFixed(2)}
-- Receita Mensal Média: R$ ${currentMetrics.avgMonthlyRevenue.toFixed(2)}
-- Pagamento Mensal de Dívidas: R$ ${currentMetrics.monthlyDebtPayment.toFixed(2)}
-- Índice de Cobertura: ${currentMetrics.debtServiceRatio.toFixed(1)}%
+- Dívida Total: R$ ${metrics.totalDebt.toFixed(2)}
+- Receita Mensal Média: R$ ${metrics.avgMonthlyRevenue.toFixed(2)}
+- Pagamento Mensal de Dívidas: R$ ${metrics.monthlyDebtPayment.toFixed(2)}
+- Índice de Cobertura: ${metrics.debtServiceRatio.toFixed(1)}%
 
 Nova Dívida Proposta:
 - Valor: R$ ${debtAmount.toFixed(2)}
@@ -87,7 +89,7 @@ Nova Dívida Proposta:
 - Total em Juros: R$ ${totalInterest.toFixed(2)}
 - Propósito: ${newDebtInputs.purposeDescription || 'Não especificado'}
 
-Novo Índice de Cobertura: ${((currentMetrics.monthlyDebtPayment + monthlyPayment) / currentMetrics.avgMonthlyRevenue * 100).toFixed(1)}%
+Novo Índice de Cobertura: ${((metrics.monthlyDebtPayment + monthlyPayment) / metrics.avgMonthlyRevenue * 100).toFixed(1)}%
 
 Forneça análise detalhada do impacto e recomendações.`;
 
@@ -128,6 +130,11 @@ Forneça análise detalhada do impacto e recomendações.`;
         }
       });
 
+      if (!response) {
+        toast.error('Erro ao obter análise da IA');
+        return;
+      }
+
       setSimulation({
         inputs: {
           debtAmount,
@@ -143,8 +150,8 @@ Forneça análise detalhada do impacto e recomendações.`;
 
       toast.success('Simulação concluída!');
     } catch (error) {
-      console.error(error);
-      toast.error('Erro ao simular impacto');
+      console.error('Simulation error:', error);
+      toast.error('Erro ao simular impacto: ' + (error.message || 'Desconhecido'));
     } finally {
       setIsAnalyzing(false);
     }
@@ -242,7 +249,7 @@ Forneça análise detalhada do impacto e recomendações.`;
         </Button>
 
         {/* Results */}
-        {simulation && (
+        {simulation && simulation.analysis && (
           <div className="space-y-6">
             {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -267,75 +274,81 @@ Forneça análise detalhada do impacto e recomendações.`;
             </div>
 
             {/* Viability Assessment */}
-            <Card className={
-              simulation.analysis.viability_assessment.recommendation === 'recommended' 
-                ? 'bg-emerald-50 border-emerald-200' 
-                : simulation.analysis.viability_assessment.recommendation === 'caution'
-                ? 'bg-amber-50 border-amber-200'
-                : 'bg-rose-50 border-rose-200'
-            }>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center justify-between">
-                  <span>Avaliação de Viabilidade</span>
-                  <Badge className={
-                    simulation.analysis.viability_assessment.recommendation === 'recommended'
-                      ? 'bg-emerald-600'
-                      : simulation.analysis.viability_assessment.recommendation === 'caution'
-                      ? 'bg-amber-600'
-                      : 'bg-rose-600'
-                  }>
-                    Score: {simulation.analysis.viability_assessment.score}/100
-                  </Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm">
-                  {simulation.analysis.viability_assessment.reasoning}
-                </p>
-              </CardContent>
-            </Card>
+            {simulation.analysis.viability_assessment && (
+              <Card className={
+                simulation.analysis.viability_assessment.recommendation === 'recommended' 
+                  ? 'bg-emerald-50 border-emerald-200' 
+                  : simulation.analysis.viability_assessment.recommendation === 'caution'
+                  ? 'bg-amber-50 border-amber-200'
+                  : 'bg-rose-50 border-rose-200'
+              }>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center justify-between">
+                    <span>Avaliação de Viabilidade</span>
+                    <Badge className={
+                      simulation.analysis.viability_assessment.recommendation === 'recommended'
+                        ? 'bg-emerald-600'
+                        : simulation.analysis.viability_assessment.recommendation === 'caution'
+                        ? 'bg-amber-600'
+                        : 'bg-rose-600'
+                    }>
+                      Score: {simulation.analysis.viability_assessment.score}/100
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm">
+                    {simulation.analysis.viability_assessment.reasoning}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Projection Chart */}
-            <Card className="bg-slate-50">
-              <CardHeader>
-                <CardTitle className="text-base">Projeção de Endividamento</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={simulation.projections}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis tickFormatter={(value) => `R$${(value/1000).toFixed(0)}k`} />
-                    <Tooltip formatter={(value) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} />
-                    <Legend />
-                    <Line type="monotone" dataKey="currentDebt" stroke="#64748b" name="Dívida Atual" strokeWidth={2} />
-                    <Line type="monotone" dataKey="projectedDebt" stroke="#ef4444" name="Dívida Projetada" strokeWidth={2} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
+            {simulation.projections && simulation.projections.length > 0 && (
+              <Card className="bg-slate-50">
+                <CardHeader>
+                  <CardTitle className="text-base">Projeção de Endividamento</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={simulation.projections}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis tickFormatter={(value) => `R$${(value/1000).toFixed(0)}k`} />
+                      <Tooltip formatter={(value) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} />
+                      <Legend />
+                      <Line type="monotone" dataKey="currentDebt" stroke="#64748b" name="Dívida Atual" strokeWidth={2} />
+                      <Line type="monotone" dataKey="projectedDebt" stroke="#ef4444" name="Dívida Projetada" strokeWidth={2} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Financial Impact */}
-            <div className="space-y-3">
-              <h4 className="font-semibold text-slate-900">Impacto Financeiro</h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div className="p-3 bg-white rounded-lg border">
-                  <p className="text-xs font-medium text-slate-600 mb-1">Fluxo de Caixa</p>
-                  <p className="text-sm text-slate-700">{simulation.analysis.financial_impact.cash_flow_impact}</p>
-                </div>
-                <div className="p-3 bg-white rounded-lg border">
-                  <p className="text-xs font-medium text-slate-600 mb-1">Liquidez</p>
-                  <p className="text-sm text-slate-700">{simulation.analysis.financial_impact.liquidity_impact}</p>
-                </div>
-                <div className="p-3 bg-white rounded-lg border">
-                  <p className="text-xs font-medium text-slate-600 mb-1">Alavancagem</p>
-                  <p className="text-sm text-slate-700">{simulation.analysis.financial_impact.leverage_impact}</p>
+            {simulation.analysis.financial_impact && (
+              <div className="space-y-3">
+                <h4 className="font-semibold text-slate-900">Impacto Financeiro</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="p-3 bg-white rounded-lg border">
+                    <p className="text-xs font-medium text-slate-600 mb-1">Fluxo de Caixa</p>
+                    <p className="text-sm text-slate-700">{simulation.analysis.financial_impact.cash_flow_impact}</p>
+                  </div>
+                  <div className="p-3 bg-white rounded-lg border">
+                    <p className="text-xs font-medium text-slate-600 mb-1">Liquidez</p>
+                    <p className="text-sm text-slate-700">{simulation.analysis.financial_impact.liquidity_impact}</p>
+                  </div>
+                  <div className="p-3 bg-white rounded-lg border">
+                    <p className="text-xs font-medium text-slate-600 mb-1">Alavancagem</p>
+                    <p className="text-sm text-slate-700">{simulation.analysis.financial_impact.leverage_impact}</p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Risk Analysis */}
-            {simulation.analysis.risk_analysis?.length > 0 && (
+            {simulation.analysis.risk_analysis && simulation.analysis.risk_analysis.length > 0 && (
               <div>
                 <h4 className="font-semibold text-slate-900 mb-3">Análise de Riscos</h4>
                 <div className="space-y-2">
@@ -360,12 +373,12 @@ Forneça análise detalhada do impacto e recomendações.`;
             )}
 
             {/* Alternative Suggestions */}
-            {simulation.analysis.alternative_suggestions?.length > 0 && (
+            {simulation.analysis.alternative_suggestions && simulation.analysis.alternative_suggestions.length > 0 && (
               <div className="p-4 bg-indigo-50 rounded-lg border border-blue-200">
                 <h4 className="font-semibold text-indigo-900 mb-2">Alternativas Sugeridas</h4>
                 <ul className="space-y-1">
                   {simulation.analysis.alternative_suggestions.map((suggestion, idx) => (
-                    <li key={idx} className="text-sm text-primary flex items-start gap-2">
+                    <li key={idx} className="text-sm text-indigo-900 flex items-start gap-2">
                       <span className="text-primary font-bold mt-0.5">•</span>
                       {suggestion}
                     </li>
@@ -375,14 +388,25 @@ Forneça análise detalhada do impacto e recomendações.`;
             )}
 
             {/* Break Even */}
-            <div className="p-4 bg-slate-50 rounded-lg border">
-              <h4 className="font-semibold text-slate-900 mb-2">Análise de Ponto de Equilíbrio</h4>
-              <p className="text-sm text-slate-700">{simulation.analysis.break_even_analysis}</p>
+            {simulation.analysis.break_even_analysis && (
+              <div className="p-4 bg-slate-50 rounded-lg border">
+                <h4 className="font-semibold text-slate-900 mb-2">Análise de Ponto de Equilíbrio</h4>
+                <p className="text-sm text-slate-700">{simulation.analysis.break_even_analysis}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {isAnalyzing && (
+          <div className="flex items-center justify-center py-8">
+            <div className="text-center">
+              <Loader2 className="w-8 h-8 animate-spin text-rose-600 mx-auto mb-3" />
+              <p className="text-sm text-slate-600">Analisando impacto financeiro...</p>
             </div>
           </div>
         )}
 
-        {!simulation && (
+        {!simulation && !isAnalyzing && (
           <div className="text-center py-8 text-slate-500">
             <p className="text-sm">Configure os dados da nova dívida e simule o impacto no seu negócio</p>
           </div>
