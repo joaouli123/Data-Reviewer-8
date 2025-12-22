@@ -264,22 +264,27 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
               </div>
               <div className="max-h-60 overflow-y-auto space-y-2 border rounded-lg p-3 bg-slate-50">
                 {customInstallments.map((inst, idx) => (
-                  <div key={idx} className="grid grid-cols-3 gap-2 items-center bg-white p-2 rounded border">
-                    <div className="text-sm font-medium text-slate-600">
-                      Parcela {idx + 1}
+                  <div key={idx} className="grid grid-cols-2 gap-2 items-center bg-white p-2 rounded border">
+                    <div className="space-y-2">
+                      <div className="text-sm font-medium text-slate-600">
+                        Parcela {idx + 1}
+                      </div>
+                      <CurrencyInput
+                        placeholder="Valor"
+                        value={inst.amount}
+                        onChange={(e) => updateCustomInstallment(idx, 'amount', e.target.value)}
+                        className="text-sm"
+                      />
                     </div>
-                    <CurrencyInput
-                      placeholder="Valor"
-                      value={inst.amount}
-                      onChange={(e) => updateCustomInstallment(idx, 'amount', e.target.value)}
-                      className="text-sm"
-                    />
-                    <Input
-                      type="date"
-                      value={inst.due_date}
-                      onChange={(e) => updateCustomInstallment(idx, 'due_date', e.target.value)}
-                      className="text-sm"
-                    />
+                    <div className="space-y-2">
+                      <Label className="text-xs text-slate-500">Vencimento</Label>
+                      <Input
+                        type="date"
+                        value={inst.due_date}
+                        onChange={(e) => updateCustomInstallment(idx, 'due_date', e.target.value)}
+                        className="text-sm"
+                      />
+                    </div>
                   </div>
                 ))}
                 <div className="pt-2 border-t mt-2">
