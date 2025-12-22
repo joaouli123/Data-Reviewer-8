@@ -218,14 +218,14 @@ export default function ReportsPage() {
   };
 
   return (
-    <div className="space-y-8 max-w-6xl mx-auto">
+    <div className="space-y-8 max-w-6xl mx-auto p-4 sm:p-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-2">
-            <Brain className="w-8 h-8 text-blue-600" />
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-2 flex-wrap">
+            <Brain className="w-6 sm:w-8 h-6 sm:h-8 text-blue-600" />
             IA Analista Financeiro
           </h1>
-          <p className="text-slate-500 mt-1">Insights inteligentes para o seu negócio baseados em dados reais.</p>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">Insights inteligentes para o seu negócio baseados em dados reais.</p>
         </div>
         <div className="flex gap-3">
           <ReportExporter 
