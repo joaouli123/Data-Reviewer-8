@@ -10,6 +10,10 @@ export default function Layout({ children }) {
   const location = useLocation();
   const [isMobileOpen, setIsMobileOpen] = React.useState(false);
 
+  const closeMobileMenu = () => {
+    setIsMobileOpen(false);
+  };
+
   const navigation = [
     { name: 'Visão Geral', icon: LayoutDashboard, path: '/' },
     { name: 'Transações', icon: Receipt, path: '/transactions' },
@@ -21,7 +25,7 @@ export default function Layout({ children }) {
     { name: 'Calc. Preços', icon: Settings, path: '/pricingcalculator' },
   ];
 
-  const NavContent = () => (
+  const NavContent = ({ onNavigate }) => (
     <div className="flex flex-col h-full py-3 px-4 text-white" style={{ backgroundColor: '#040303' }}>
       <div className="flex items-center pt-3 pb-2 mb-2">
         <img 
@@ -36,7 +40,7 @@ export default function Layout({ children }) {
         {navigation.map((item) => {
             const isActive = location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path));
             return (
-                <Link key={item.name} to={item.path}>
+                <Link key={item.name} to={item.path} onClick={onNavigate}>
                 <div
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${
                     isActive 
@@ -71,7 +75,7 @@ export default function Layout({ children }) {
     <div className="min-h-screen bg-slate-50 font-sans">
       {/* Desktop Sidebar */}
       <div className="hidden md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col">
-        <NavContent />
+        <NavContent onNavigate={() => {}} />
       </div>
 
       {/* Mobile Header */}
@@ -79,17 +83,17 @@ export default function Layout({ children }) {
         <img 
           src={LogoHUA} 
           alt="HUA Logo" 
-          className="w-12 h-12 object-contain"
+          className="w-16 h-16 object-contain"
           title="HUA - Consultoria e Análise"
         />
         <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" className="text-white hover:bg-white/10">
-              <Menu className="w-6 h-6" />
+              <Menu className="w-8 h-8" />
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="p-0 border-r-slate-800 w-64" style={{ backgroundColor: '#040303' }}>
-            <NavContent />
+            <NavContent onNavigate={closeMobileMenu} />
           </SheetContent>
         </Sheet>
       </div>
