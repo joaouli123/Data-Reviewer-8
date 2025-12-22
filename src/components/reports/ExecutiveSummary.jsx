@@ -22,13 +22,19 @@ export default function ExecutiveSummary({ summary, transactions, saleInstallmen
   const netProfit = currentRevenue - currentExpenses;
   const profitMargin = currentRevenue > 0 ? (netProfit / currentRevenue * 100) : 0;
 
-  // Calculate pending amounts using the actual installments data
+  // Calculate pending amounts using the actual installments data (no period filter for installments)
   const pendingSalesInstallments = (saleInstallments || []).filter(i => 
-    i.status === 'pendente' || i.status === 'pending' || i.paid === false
+    !i.paid || i.status === 'pendente' || i.status === 'pending'
   );
   const pendingPurchaseInstallments = (purchaseInstallments || []).filter(i => 
-    i.status === 'pendente' || i.status === 'pending' || i.paid === false
+    !i.paid || i.status === 'pendente' || i.status === 'pending'
   );
+
+  // Debug logging
+  console.log('ExecutiveSummary - saleInstallments:', saleInstallments);
+  console.log('ExecutiveSummary - purchaseInstallments:', purchaseInstallments);
+  console.log('ExecutiveSummary - pendingSalesInstallments:', pendingSalesInstallments);
+  console.log('ExecutiveSummary - pendingPurchaseInstallments:', pendingPurchaseInstallments);
 
   const pendingReceivables = pendingSalesInstallments.reduce((sum, i) => sum + parseFloat(i.amount || 0), 0);
   const pendingPayables = pendingPurchaseInstallments.reduce((sum, i) => sum + parseFloat(i.amount || 0), 0);
