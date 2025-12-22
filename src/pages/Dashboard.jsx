@@ -51,11 +51,11 @@ export default function DashboardPage() {
     });
 
     const totalRevenue = filteredTransactions
-      .filter(t => t.type === 'venda')
+      .filter(t => t.type === 'venda' && (t.status === 'completed' || t.status === 'pago' || t.status === 'concluído'))
       .reduce((acc, curr) => acc + Math.abs(parseFloat(curr.amount || 0)), 0);
     
     const totalExpenses = filteredTransactions
-      .filter(t => t.type === 'compra')
+      .filter(t => t.type === 'compra' && (t.status === 'completed' || t.status === 'pago' || t.status === 'concluído'))
       .reduce((acc, curr) => acc + Math.abs(parseFloat(curr.amount || 0)), 0);
 
     const netProfit = totalRevenue - totalExpenses;

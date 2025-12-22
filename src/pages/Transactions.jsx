@@ -153,7 +153,10 @@ export default function TransactionsPage() {
     transactions.forEach(t => {
       const tDate = parseISO(t.date);
       const amount = parseFloat(t.amount) || 0;
+      const isPaid = (t.status === 'completed' || t.status === 'pago' || t.status === 'concluído');
       
+      if (!isPaid) return; // Only count paid transactions for cash flow
+
       if (tDate < dateRange.startDate) {
         // Transaction is before the selected period -> contributes to opening balance
         if (t.type === 'venda') openingBalance += amount;
@@ -321,8 +324,13 @@ export default function TransactionsPage() {
                                     </Badge>
                                 </TableCell>
                                 <TableCell className="pl-6">
-                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">
-                                        Concluído
+                                    <span className={cn(
+                                        "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium",
+                                        (t.status === 'completed' || t.status === 'pago' || t.status === 'concluído') 
+                                            ? "bg-emerald-50 text-emerald-700" 
+                                            : "bg-amber-50 text-amber-700"
+                                    )}>
+                                        {(t.status === 'completed' || t.status === 'pago' || t.status === 'concluído') ? 'Pago' : 'Pendente'}
                                     </span>
                                 </TableCell>
                                 <TableCell className={`text-right font-bold pl-6 ${t.type === 'venda' ? 'text-emerald-600' : 'text-rose-600'}`}>
