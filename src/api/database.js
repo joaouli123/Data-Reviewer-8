@@ -79,9 +79,12 @@ export const Customer = {
   async list() {
     try {
       const response = await fetch('/api/customers');
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`HTTP ${response.status}: ${text}`);
+      }
       const data = await response.json();
-      return data || [];
+      return Array.isArray(data) ? data : [];
     } catch (error) {
       console.error('Error fetching customers:', error);
       return [];
@@ -147,9 +150,12 @@ export const Supplier = {
   async list() {
     try {
       const response = await fetch('/api/suppliers');
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`HTTP ${response.status}: ${text}`);
+      }
       const data = await response.json();
-      return data || [];
+      return Array.isArray(data) ? data : [];
     } catch (error) {
       console.error('Error fetching suppliers:', error);
       return [];
@@ -325,12 +331,29 @@ export const Sale = {
 
   async create(data) {
     try {
+      // Find category ID if category name is provided
+      let categoryId = data.categoryId;
+      if (!categoryId && data.category) {
+        const categories = await Category.list();
+        const cat = categories.find(c => c.name === data.category);
+        if (cat) {
+          categoryId = cat.id;
+        } else {
+          // If not found by name, it might be an ID already
+          const catById = categories.find(c => c.id === data.category);
+          if (catById) categoryId = catById.id;
+        }
+      }
+
       const payload = {
-        ...data,
+        customerId: data.customer_id || data.customerId,
+        supplierId: data.supplier_id || data.supplierId,
+        categoryId: categoryId,
         type: 'venda',
-        date: data.sale_date || data.date,
-        shift: 'manhã', // Default shift
-        amount: String(data.total_amount || data.amount)
+        date: new Date(data.sale_date || data.date || new Date()).toISOString(),
+        shift: 'manhã',
+        amount: String(data.total_amount || data.amount),
+        description: data.description || 'Venda registrada'
       };
       
       const response = await fetch('/api/transactions', {
@@ -341,7 +364,7 @@ export const Sale = {
       
       const result = await response.json();
       if (!response.ok) {
-        throw new Error(result.details || result.error || `HTTP ${response.status}`);
+        throw new Error(result.error || `HTTP ${response.status}`);
       }
       return result;
     } catch (error) {
@@ -386,12 +409,29 @@ export const Purchase = {
 
   async create(data) {
     try {
+      // Find category ID if category name is provided
+      let categoryId = data.categoryId;
+      if (!categoryId && data.category) {
+        const categories = await Category.list();
+        const cat = categories.find(c => c.name === data.category);
+        if (cat) {
+          categoryId = cat.id;
+        } else {
+          // If not found by name, it might be an ID already
+          const catById = categories.find(c => c.id === data.category);
+          if (catById) categoryId = catById.id;
+        }
+      }
+
       const payload = {
-        ...data,
+        customerId: data.customer_id || data.customerId,
+        supplierId: data.supplier_id || data.supplierId,
+        categoryId: categoryId,
         type: 'compra',
-        date: data.purchase_date || data.date,
-        shift: 'manhã', // Default shift
-        amount: String(data.total_amount || data.amount)
+        date: new Date(data.purchase_date || data.date || new Date()).toISOString(),
+        shift: 'manhã',
+        amount: String(data.total_amount || data.amount),
+        description: data.description || 'Compra registrada'
       };
       
       const response = await fetch('/api/transactions', {
@@ -402,7 +442,7 @@ export const Purchase = {
       
       const result = await response.json();
       if (!response.ok) {
-        throw new Error(result.details || result.error || `HTTP ${response.status}`);
+        throw new Error(result.error || `HTTP ${response.status}`);
       }
       return result;
     } catch (error) {

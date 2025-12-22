@@ -101,8 +101,8 @@ export function registerRoutes(
   // Customer routes
   app.get("/api/customers", async (req, res) => {
     try {
-      const customers = await storage.getCustomers();
-      res.json(customers);
+      const allCustomers = await storage.getCustomers();
+      res.json(allCustomers);
     } catch (error: any) {
       console.error("Error fetching customers:", error);
       res.status(500).json({ error: "Failed to fetch customers", details: error.message });
@@ -225,8 +225,8 @@ export function registerRoutes(
   // Supplier routes
   app.get("/api/suppliers", async (req, res) => {
     try {
-      const suppliers = await storage.getSuppliers();
-      res.json(suppliers);
+      const allSuppliers = await storage.getSuppliers();
+      res.json(allSuppliers);
     } catch (error: any) {
       console.error("Error fetching suppliers:", error);
       res.status(500).json({ error: "Failed to fetch suppliers", details: error.message });
