@@ -18,7 +18,7 @@ export default function QuickActionsWidget() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       setTransactionFormOpen(false);
-      toast.success('Transação criada!');
+      toast.success('Transação criada!', { duration: 5000 });
     }
   });
 
@@ -27,7 +27,7 @@ export default function QuickActionsWidget() {
   };
 
   const handleStatementExtracted = (data) => {
-    toast.success(`${data.length} transações extraídas!`);
+    toast.success(`${data.length} transações extraídas!`, { duration: 5000 });
     setUploadOpen(false);
   };
 

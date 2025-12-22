@@ -58,7 +58,7 @@ export default function CustomersPage() {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       setIsFormDialogOpen(false);
       setSelectedCustomer(null);
-      toast.success(selectedCustomer ? 'Cliente atualizado!' : 'Cliente adicionado!');
+      toast.success(selectedCustomer ? 'Cliente atualizado!' : 'Cliente adicionado!', { duration: 5000 });
     }
   });
 
@@ -68,7 +68,7 @@ export default function CustomersPage() {
     mutationFn: (id) => Customer.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
-      toast.success('Cliente removido.');
+      toast.success('Cliente removido.', { duration: 5000 });
     }
   });
 

@@ -57,7 +57,7 @@ export default function TransactionsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       setIsFormOpen(false);
-      toast.success('Transação criada com sucesso!');
+      toast.success('Transação criada com sucesso!', { duration: 5000 });
     }
   });
 
@@ -67,7 +67,7 @@ export default function TransactionsPage() {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       setIsFormOpen(false);
       setEditingTransaction(null);
-      toast.success('Transação atualizada!');
+      toast.success('Transação atualizada!', { duration: 5000 });
     }
   });
 
@@ -75,7 +75,7 @@ export default function TransactionsPage() {
     mutationFn: (id) => Transaction.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      toast.success('Transação removida.');
+      toast.success('Transação removida.', { duration: 5000 });
     }
   });
 

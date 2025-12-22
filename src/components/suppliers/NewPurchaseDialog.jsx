@@ -60,10 +60,10 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       setFormData((prev) => ({ ...prev, category: newCat.name }));
       setIsCreateCategoryModalOpen(false);
-      toast.success('Categoria criada!');
+      toast.success('Categoria criada!', { duration: 5000 });
     },
     onError: (error) => {
-      toast.error(error.message || 'Erro ao criar categoria');
+      toast.error(error.message || 'Erro ao criar categoria', { duration: 5000 });
     }
   });
 

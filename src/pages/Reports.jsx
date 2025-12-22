@@ -106,7 +106,7 @@ export default function ReportsPage() {
 
   const generateAllAnalysesQuick = async () => {
     if (filteredTransactions.length === 0) {
-      toast.error("Não há dados suficientes para análise.");
+      toast.error("Não há dados suficientes para análise.", { duration: 5000 });
       return;
     }
 
@@ -198,10 +198,10 @@ export default function ReportsPage() {
       });
 
       setAnalysisResult(response);
-      toast.success("Análise completa gerada com sucesso! ✨");
+      toast.success("Análise completa gerada com sucesso!", { duration: 5000 });
     } catch (error) {
       console.error(error);
-      toast.error("Erro ao gerar análise. Tente novamente.");
+      toast.error("Erro ao gerar análise. Tente novamente.", { duration: 5000 });
     } finally {
       setIsAnalyzing(false);
     }

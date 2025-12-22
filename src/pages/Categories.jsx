@@ -33,12 +33,12 @@ export default function CategoriesPage() {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       setIsFormOpen(false);
       setFormData({ name: '', type: 'entrada' });
-      toast.success('Categoria criada com sucesso!');
+      toast.success('Categoria criada com sucesso!', { duration: 5000 });
     },
     onError: (error) => {
       console.error('Error creating category:', error);
       const message = error.message || 'Erro desconhecido';
-      toast.error(message.includes('HTTP') ? 'Erro ao criar categoria' : message);
+      toast.error(message.includes('HTTP') ? 'Erro ao criar categoria' : message, { duration: 5000 });
     }
   });
 
@@ -49,24 +49,24 @@ export default function CategoriesPage() {
       setIsFormOpen(false);
       setEditingCategory(null);
       setFormData({ name: '' });
-      toast.success('Categoria atualizada!');
+      toast.success('Categoria atualizada!', { duration: 5000 });
     },
-    onError: () => toast.error('Erro ao atualizar categoria')
+    onError: () => toast.error('Erro ao atualizar categoria', { duration: 5000 })
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id) => Category.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
-      toast.success('Categoria removida!');
+      toast.success('Categoria removida!', { duration: 5000 });
     },
-    onError: () => toast.error('Erro ao remover categoria')
+    onError: () => toast.error('Erro ao remover categoria', { duration: 5000 })
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.name.trim()) {
-      toast.error('Nome da categoria é obrigatório');
+      toast.error('Nome da categoria é obrigatório', { duration: 5000 });
       return;
     }
 

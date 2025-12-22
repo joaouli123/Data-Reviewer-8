@@ -58,7 +58,7 @@ export default function SuppliersPage() {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
       setIsFormDialogOpen(false);
       setSelectedSupplier(null);
-      toast.success(selectedSupplier ? 'Fornecedor atualizado!' : 'Fornecedor adicionado!');
+      toast.success(selectedSupplier ? 'Fornecedor atualizado!' : 'Fornecedor adicionado!', { duration: 5000 });
     }
   });
 
@@ -66,7 +66,7 @@ export default function SuppliersPage() {
     mutationFn: (id) => Supplier.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
-      toast.success('Fornecedor removido.');
+      toast.success('Fornecedor removido.', { duration: 5000 });
     }
   });
 

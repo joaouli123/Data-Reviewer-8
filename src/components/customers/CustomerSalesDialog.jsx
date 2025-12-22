@@ -159,11 +159,11 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
       queryClient.invalidateQueries({ queryKey: ['/api/cash-flow'] });
       setPaymentEditOpen(false);
       setSelectedTransaction(null);
-      toast.success('Pagamento confirmado!');
+      toast.success('Pagamento confirmado!', { duration: 5000 });
     },
     onError: (error) => {
       console.error('Mutation error:', error);
-      toast.error(error.message);
+      toast.error(error.message, { duration: 5000 });
     }
   });
 
@@ -206,11 +206,11 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/cash-flow'] });
-      toast.success('Pagamento cancelado!');
+      toast.success('Pagamento cancelado!', { duration: 5000 });
     },
     onError: (error) => {
       console.error('Cancel mutation error:', error);
-      toast.error(error.message);
+      toast.error(error.message, { duration: 5000 });
     }
   });
 

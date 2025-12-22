@@ -14,7 +14,7 @@ export default function PredictivePricingAnalysis({ productData, results }) {
 
   const runPredictiveAnalysis = async () => {
     if (!productData.productName || !results) {
-      toast.error('Calcule o preço primeiro');
+      toast.error('Calcule o preço primeiro', { duration: 5000 });
       return;
     }
 
@@ -83,10 +83,10 @@ Crie uma análise preditiva incluindo:
       });
 
       setPredictions(response);
-      toast.success('Análise preditiva concluída!');
+      toast.success('Análise preditiva concluída!', { duration: 5000 });
     } catch (error) {
       console.error(error);
-      toast.error('Erro ao gerar análise preditiva');
+      toast.error('Erro ao gerar análise preditiva', { duration: 5000 });
     } finally {
       setIsAnalyzing(false);
     }
