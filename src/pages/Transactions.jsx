@@ -16,7 +16,7 @@ import BankReconciliation from '../components/transactions/BankReconciliation';
 import PeriodFilter from '../components/dashboard/PeriodFilter';
 import Pagination from '../components/Pagination';
 import { toast } from 'sonner';
-import { cn } from "@/lib/utils";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 export default function TransactionsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -321,7 +321,7 @@ export default function TransactionsPage() {
                                 <TableCell className="font-medium text-slate-600 pl-6">
                                     {format(new Date(t.date), "dd/MM/yyyy", { locale: ptBR })}
                                 </TableCell>
-                                <TableCell className="font-medium text-slate-900 pl-6">{t.description}</TableCell>
+                                <TableCell className="font-medium text-slate-900">{t.description}</TableCell>
                                 <TableCell className="pl-6">
                                     <Badge variant="secondary" className="capitalize font-normal bg-slate-100 text-slate-600 hover:bg-slate-200">
                                         {categories.find(c => c.id === t.categoryId)?.name || t.category}
@@ -351,24 +351,36 @@ export default function TransactionsPage() {
                                     {t.type === 'venda' ? '+' : '-'} R$ {Math.abs(parseFloat(t.amount || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                 </TableCell>
                                 <TableCell className="pr-6">
-                                    <div className="flex justify-end gap-2 transition-opacity">
-                                        {!(t.status === 'completed' || t.status === 'pago' || t.status === 'concluído') && (
-                                            <Button 
-                                                variant="ghost" 
-                                                size="icon" 
-                                                className="h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50" 
-                                                onClick={() => handleComplete(t.id)}
-                                                title="Concluir Transação"
-                                            >
-                                                <Check className="w-4 h-4" />
-                                            </Button>
-                                        )}
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary" onClick={() => handleEdit(t)}>
-                                            <Pencil className="w-4 h-4" />
-                                        </Button>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-rose-600" onClick={() => handleDelete(t.id)}>
-                                            <Trash2 className="w-4 h-4" />
-                                        </Button>
+                                    <div className="flex justify-end">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-slate-100">
+                                                    <MoreHorizontal className="w-4 h-4 text-slate-500" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="w-40">
+                                                {!(t.status === 'completed' || t.status === 'pago' || t.status === 'concluído') && (
+                                                    <DropdownMenuItem 
+                                                        className="text-emerald-600 focus:text-emerald-700 focus:bg-emerald-50 cursor-pointer"
+                                                        onClick={() => handleComplete(t.id)}
+                                                    >
+                                                        <Check className="w-4 h-4 mr-2" /> Concluir
+                                                    </DropdownMenuItem>
+                                                )}
+                                                <DropdownMenuItem 
+                                                    className="cursor-pointer"
+                                                    onClick={() => handleEdit(t)}
+                                                >
+                                                    <Pencil className="w-4 h-4 mr-2" /> Editar
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem 
+                                                    className="text-rose-600 focus:text-rose-700 focus:bg-rose-50 cursor-pointer"
+                                                    onClick={() => handleDelete(t.id)}
+                                                >
+                                                    <Trash2 className="w-4 h-4 mr-2" /> Remover
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
                                     </div>
                                 </TableCell>
                             </TableRow>

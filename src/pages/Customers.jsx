@@ -181,39 +181,36 @@ export default function CustomersPage() {
                                     {c.join_date ? format(parseISO(c.join_date), "MMM yyyy", { locale: ptBR }) : '-'}
                                 </TableCell>
                                 <TableCell className="pr-6">
-                                    <div className="flex justify-end gap-1">
-                                        <Button 
-                                            variant="ghost" 
-                                            size="sm" 
-                                            className="h-8 text-slate-600 hover:text-slate-700 hover:bg-slate-100"
-                                            onClick={() => openFormDialog(c)}
-                                        >
-                                            <Edit className="w-4 h-4 mr-1" /> Editar
-                                        </Button>
-                                        <Button 
-                                            variant="ghost" 
-                                            size="sm" 
-                                            className="h-8 text-primary hover:text-primary hover:bg-primary/5"
-                                            onClick={() => openNewSaleDialog(c)}
-                                        >
-                                            <TrendingUp className="w-4 h-4 mr-1" /> Venda
-                                        </Button>
-                                        <Button 
-                                            variant="ghost" 
-                                            size="sm" 
-                                            className="h-8 text-slate-600 hover:text-slate-700 hover:bg-slate-50"
-                                            onClick={() => openSalesViewDialog(c)}
-                                        >
-                                            <Eye className="w-4 h-4 mr-1" /> Ver
-                                        </Button>
+                                    <div className="flex justify-end">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                    <MoreHorizontal className="w-4 h-4 text-slate-400" />
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-slate-100">
+                                                    <MoreHorizontal className="w-4 h-4 text-slate-500" />
                                                 </Button>
                                             </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                <DropdownMenuItem className="text-rose-600" onClick={() => deleteMutation.mutate(c.id)}>
+                                            <DropdownMenuContent align="end" className="w-48">
+                                                <DropdownMenuItem 
+                                                    className="cursor-pointer"
+                                                    onClick={() => openFormDialog(c)}
+                                                >
+                                                    <Edit className="w-4 h-4 mr-2" /> Editar Cliente
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem 
+                                                    className="text-primary focus:text-primary focus:bg-primary/5 cursor-pointer"
+                                                    onClick={() => openNewSaleDialog(c)}
+                                                >
+                                                    <TrendingUp className="w-4 h-4 mr-2" /> Nova Venda
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem 
+                                                    className="cursor-pointer"
+                                                    onClick={() => openSalesViewDialog(c)}
+                                                >
+                                                    <Eye className="w-4 h-4 mr-2" /> Ver Histórico
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem 
+                                                    className="text-rose-600 focus:text-rose-700 focus:bg-rose-50 cursor-pointer"
+                                                    onClick={() => deleteMutation.mutate(c.id)}
+                                                >
                                                     <Trash2 className="w-4 h-4 mr-2" /> Remover
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
