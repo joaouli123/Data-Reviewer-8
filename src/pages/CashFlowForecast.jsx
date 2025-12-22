@@ -73,10 +73,10 @@ export default function CashFlowForecastPage() {
           const tDate = parseISO(t.date);
           if (isWithinInterval(tDate, { start: dStart, end: dEnd })) {
             const amount = parseFloat(t.amount) || 0;
-            if (t.type === 'venda') {
+            if (t.type === 'venda' && amount >= 0) {
               revenue += amount;
               revenueDetails.push({ description: t.description, amount, date: t.date, category: t.type });
-            } else if (t.type === 'compra') {
+            } else if (t.type === 'compra' && amount >= 0) {
               expense += amount;
               expenseDetails.push({ description: t.description, amount, date: t.date, category: t.type });
             }
@@ -86,8 +86,8 @@ export default function CashFlowForecastPage() {
         return {
           month: format(day, 'dd/MM', { locale: ptBR }),
           monthKey: format(day, 'yyyy-MM-dd'),
-          receita: revenue,
-          despesa: expense,
+          receita: Math.max(0, revenue),
+          despesa: Math.max(0, expense),
           saldo: revenue - expense,
           isHistorical,
           revenueDetails,
@@ -115,7 +115,7 @@ export default function CashFlowForecastPage() {
           const tDate = parseISO(t.date);
           if (isWithinInterval(tDate, { start: monthStart, end: monthEnd })) {
             const amount = parseFloat(t.amount) || 0;
-            if (t.type === 'venda') {
+            if (t.type === 'venda' && amount >= 0) {
               revenue += amount;
               revenueDetails.push({
                 description: t.description,
@@ -123,7 +123,7 @@ export default function CashFlowForecastPage() {
                 date: t.date,
                 category: t.type
               });
-            } else if (t.type === 'compra') {
+            } else if (t.type === 'compra' && amount >= 0) {
               expense += amount;
               expenseDetails.push({
                 description: t.description,
@@ -172,8 +172,8 @@ export default function CashFlowForecastPage() {
       return {
         month: format(month, 'MMM/yy', { locale: ptBR }),
         monthKey,
-        receita: revenue,
-        despesa: expense,
+        receita: Math.max(0, revenue),
+        despesa: Math.max(0, expense),
         saldo: revenue - expense,
         isHistorical,
         revenueDetails,
