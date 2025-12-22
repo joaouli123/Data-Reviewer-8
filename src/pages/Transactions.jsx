@@ -258,8 +258,8 @@ export default function TransactionsPage() {
 
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         {/* Filters */}
-        <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex flex-col md:flex-row gap-4">
-            <div className="relative flex-1">
+        <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex flex-col md:flex-row gap-4 justify-start">
+            <div className="relative w-full md:w-[300px]">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <Input 
                     placeholder="Buscar transações..." 
@@ -269,9 +269,9 @@ export default function TransactionsPage() {
                 />
             </div>
             
-            <div className="flex gap-2 flex-1">
+            <div className="flex gap-2 w-full md:w-auto">
                 <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                    <SelectTrigger className="flex-1">
+                    <SelectTrigger className="w-full md:w-[180px]">
                         <SelectValue placeholder="Categoria" />
                     </SelectTrigger>
                     <SelectContent>
@@ -283,7 +283,7 @@ export default function TransactionsPage() {
                 </Select>
 
                 <Select value={typeFilter} onValueChange={setTypeFilter}>
-                    <SelectTrigger className="flex-1">
+                    <SelectTrigger className="w-full md:w-[140px]">
                         <SelectValue placeholder="Tipo" />
                     </SelectTrigger>
                     <SelectContent>
