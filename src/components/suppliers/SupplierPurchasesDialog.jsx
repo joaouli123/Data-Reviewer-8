@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
   const queryClient = useQueryClient();
   const [paymentEditOpen, setPaymentEditOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [activeTab, setActiveTab] = useState(null);
 
   const { data: transactions = [] } = useQuery({
     queryKey: ['transactions'],
@@ -123,9 +124,17 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
     }
   });
 
-  if (!supplier) return null;
+  useEffect(() => {
+    if (activeTab === null) {
+      if (groupedPurchases.length > 0) {
+        setActiveTab(groupedPurchases[0].main.id);
+      } else {
+        setActiveTab('todas-parcelas');
+      }
+    }
+  }, [groupedPurchases, activeTab]);
 
-  const [activeTab, setActiveTab] = useState(groupedPurchases.length > 0 ? groupedPurchases[0].main.id : 'todas-parcelas');
+  if (!supplier) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -155,7 +164,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
           </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={activeTab || 'todas-parcelas'} onValueChange={setActiveTab}>
           <TabsList className="grid w-full auto-cols-max overflow-x-auto">
             {groupedPurchases.map((group) => (
               <TabsTrigger key={group.main.id} value={group.main.id} className="text-sm whitespace-nowrap">
