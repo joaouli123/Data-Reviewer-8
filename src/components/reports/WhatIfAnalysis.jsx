@@ -30,15 +30,19 @@ export default function WhatIfAnalysis({ transactions, saleInstallments, purchas
     const threeMonthsAgo = addMonths(now, -3);
     const recentTransactions = transactions.filter(t => new Date(t.date) >= threeMonthsAgo);
     
-    const avgRevenue = recentTransactions
-      .filter(t => t.type === 'income')
-      .reduce((sum, t) => sum + t.amount, 0) / 3;
+    // Corrigido: usar tipos corretos 'venda' e 'compra'
+    const totalRevenue = recentTransactions
+      .filter(t => t.type === 'venda' || t.type === 'income')
+      .reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
     
-    const avgExpense = recentTransactions
-      .filter(t => t.type === 'expense')
-      .reduce((sum, t) => sum + t.amount, 0) / 3;
+    const totalExpense = recentTransactions
+      .filter(t => t.type === 'compra' || t.type === 'expense')
+      .reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
 
-    let balance = 0;
+    const avgRevenue = totalRevenue / 3 || 0;
+    const avgExpense = totalExpense / 3 || 0;
+
+    let cumulativeBalance = 0;
 
     for (let i = 1; i <= monthsToProject; i++) {
       const monthDate = addMonths(now, i);
@@ -48,24 +52,30 @@ export default function WhatIfAnalysis({ transactions, saleInstallments, purchas
       const monthStart = addMonths(now, i - 1);
       const monthEnd = addMonths(now, i);
       
-      const futureReceivables = saleInstallments
-        .filter(inst => !inst.paid && new Date(inst.due_date) >= monthStart && new Date(inst.due_date) < monthEnd)
-        .reduce((sum, inst) => sum + inst.amount, 0);
+      const futureReceivables = saleInstallments && Array.isArray(saleInstallments)
+        ? saleInstallments
+            .filter(inst => inst && !inst.paid && inst.due_date && new Date(inst.due_date) >= monthStart && new Date(inst.due_date) < monthEnd)
+            .reduce((sum, inst) => sum + (inst.amount || 0), 0)
+        : 0;
       
-      const futurePayables = purchaseInstallments
-        .filter(inst => !inst.paid && new Date(inst.due_date) >= monthStart && new Date(inst.due_date) < monthEnd)
-        .reduce((sum, inst) => sum + inst.amount, 0);
+      const futurePayables = purchaseInstallments && Array.isArray(purchaseInstallments)
+        ? purchaseInstallments
+            .filter(inst => inst && !inst.paid && inst.due_date && new Date(inst.due_date) >= monthStart && new Date(inst.due_date) < monthEnd)
+            .reduce((sum, inst) => sum + (inst.amount || 0), 0)
+        : 0;
 
-      const revenue = futureReceivables > 0 ? futureReceivables : avgRevenue;
-      const expense = futurePayables > 0 ? futurePayables : avgExpense;
+      const monthRevenue = futureReceivables > 0 ? futureReceivables : avgRevenue;
+      const monthExpense = futurePayables > 0 ? futurePayables : avgExpense;
       
-      balance = revenue - expense;
+      const monthBalance = monthRevenue - monthExpense;
+      cumulativeBalance += monthBalance;
       
       baseline.push({
         month: monthKey,
-        revenue,
-        expense,
-        balance
+        revenue: monthRevenue,
+        expense: monthExpense,
+        balance: monthBalance,
+        cumulativeBalance
       });
     }
 
@@ -82,30 +92,32 @@ export default function WhatIfAnalysis({ transactions, saleInstallments, purchas
       const receivableDelay = parseInt(scenarioInputs.receivableDelay) || 0;
       const payableDelay = parseInt(scenarioInputs.payableDelay) || 0;
 
-      // Generate scenario data
-      const optimistic = baseline.map(m => ({
-        month: m.month,
-        revenue: m.revenue * (1 + Math.abs(revenueChange)),
-        expense: m.expense * (1 - Math.abs(expenseChange) * 0.5),
-        balance: 0
-      }));
-      optimistic.forEach(m => m.balance = m.revenue - m.expense);
+      // Generate scenario data with cumulative balance
+      let cumulativeOpt = 0, cumulativePess = 0, cumulativeWith = 0;
+      
+      const optimistic = baseline.map(m => {
+        const revenue = m.revenue * (1 + Math.abs(revenueChange));
+        const expense = m.expense * (1 - Math.abs(expenseChange) * 0.5);
+        const balance = revenue - expense;
+        cumulativeOpt += balance;
+        return { month: m.month, revenue, expense, balance, cumulativeBalance: cumulativeOpt };
+      });
 
-      const pessimistic = baseline.map(m => ({
-        month: m.month,
-        revenue: m.revenue * (1 - Math.abs(revenueChange) * 0.5),
-        expense: m.expense * (1 + Math.abs(expenseChange)),
-        balance: 0
-      }));
-      pessimistic.forEach(m => m.balance = m.revenue - m.expense);
+      const pessimistic = baseline.map(m => {
+        const revenue = m.revenue * (1 - Math.abs(revenueChange) * 0.5);
+        const expense = m.expense * (1 + Math.abs(expenseChange));
+        const balance = revenue - expense;
+        cumulativePess += balance;
+        return { month: m.month, revenue, expense, balance, cumulativeBalance: cumulativePess };
+      });
 
-      const withChanges = baseline.map(m => ({
-        month: m.month,
-        revenue: m.revenue * (1 + revenueChange),
-        expense: m.expense * (1 + expenseChange),
-        balance: 0
-      }));
-      withChanges.forEach(m => m.balance = m.revenue - m.expense);
+      const withChanges = baseline.map(m => {
+        const revenue = m.revenue * (1 + revenueChange);
+        const expense = m.expense * (1 + expenseChange);
+        const balance = revenue - expense;
+        cumulativeWith += balance;
+        return { month: m.month, revenue, expense, balance, cumulativeBalance: cumulativeWith };
+      });
 
       // Use AI to analyze scenarios
       const prompt = `Analise os seguintes cenários de fluxo de caixa para os próximos 6 meses:
@@ -256,7 +268,7 @@ Forneça análise detalhada e recomendações estratégicas.`;
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={350}>
-                  <LineChart>
+                  <LineChart data={scenarios.baseline}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
                     <YAxis tickFormatter={(value) => `R$${(value/1000).toFixed(0)}k`} />
@@ -264,40 +276,43 @@ Forneça análise detalhada e recomendações estratégicas.`;
                     <Legend />
                     <Line 
                       type="monotone" 
-                      data={scenarios.baseline} 
-                      dataKey="balance" 
+                      dataKey="cumulativeBalance" 
                       stroke="#64748b" 
-                      name="Base"
+                      name="Base (Acumulado)"
                       strokeWidth={2}
-                    />
-                    <Line 
-                      type="monotone" 
-                      data={scenarios.withChanges} 
-                      dataKey="balance" 
-                      stroke="#0065BA" 
-                      name="Com Alterações"
-                      strokeWidth={2}
-                    />
-                    <Line 
-                      type="monotone" 
-                      data={scenarios.optimistic} 
-                      dataKey="balance" 
-                      stroke="#10b981" 
-                      name="Otimista"
-                      strokeWidth={2}
-                      strokeDasharray="5 5"
-                    />
-                    <Line 
-                      type="monotone" 
-                      data={scenarios.pessimistic} 
-                      dataKey="balance" 
-                      stroke="#ef4444" 
-                      name="Pessimista"
-                      strokeWidth={2}
-                      strokeDasharray="5 5"
                     />
                   </LineChart>
                 </ResponsiveContainer>
+                
+                <div className="mt-4 space-y-3">
+                  <div className="text-sm font-medium text-slate-700">Resumo dos Cenários (Último Mês):</div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <div className="p-2 bg-slate-50 rounded border text-xs">
+                      <p className="text-slate-600">Base</p>
+                      <p className="font-bold text-slate-900">
+                        R$ {(scenarios.baseline[scenarios.baseline.length - 1]?.cumulativeBalance || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                    <div className="p-2 bg-indigo-50 rounded border text-xs">
+                      <p className="text-indigo-600">Com Alterações</p>
+                      <p className="font-bold text-indigo-900">
+                        R$ {(scenarios.withChanges[scenarios.withChanges.length - 1]?.cumulativeBalance || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                    <div className="p-2 bg-emerald-50 rounded border text-xs">
+                      <p className="text-emerald-600">Otimista</p>
+                      <p className="font-bold text-emerald-900">
+                        R$ {(scenarios.optimistic[scenarios.optimistic.length - 1]?.cumulativeBalance || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                    <div className="p-2 bg-rose-50 rounded border text-xs">
+                      <p className="text-rose-600">Pessimista</p>
+                      <p className="font-bold text-rose-900">
+                        R$ {(scenarios.pessimistic[scenarios.pessimistic.length - 1]?.cumulativeBalance || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
