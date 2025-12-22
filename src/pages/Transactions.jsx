@@ -133,7 +133,8 @@ export default function TransactionsPage() {
       // Match by category name or ID since t.category might be either
       const matchesCategory = categoryFilter === 'all' || 
                              t.category === categoryFilter || 
-                             categories.find(c => c.id === t.categoryId)?.name === categoryFilter;
+                             categories.find(c => c.id === t.categoryId)?.name === categoryFilter ||
+                             categories.find(c => c.name === t.category)?.id === categoryFilter;
 
       const matchesSearch = t.description.toLowerCase().includes(searchTerm.toLowerCase()) || 
                             (t.category && t.category.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -316,7 +317,7 @@ export default function TransactionsPage() {
                                 <TableCell className="font-medium text-slate-900 pl-6">{t.description}</TableCell>
                                 <TableCell className="pl-6">
                                     <Badge variant="secondary" className="capitalize font-normal bg-slate-100 text-slate-600 hover:bg-slate-200">
-                                        {t.category}
+                                        {categories.find(c => c.id === t.categoryId)?.name || t.category}
                                     </Badge>
                                 </TableCell>
                                 <TableCell className="pl-6">
@@ -325,7 +326,7 @@ export default function TransactionsPage() {
                                     </span>
                                 </TableCell>
                                 <TableCell className={`text-right font-bold pl-6 ${t.type === 'venda' ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                    {t.type === 'venda' ? '+' : '-'} R$ {parseFloat(t.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                    {t.type === 'venda' ? '+' : '-'} R$ {Math.abs(parseFloat(t.amount || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                 </TableCell>
                                 <TableCell>
                                     <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">

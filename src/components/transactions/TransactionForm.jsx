@@ -99,6 +99,8 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
     
     onSubmit({
       ...formData,
+      categoryId: formData.categoryId,
+      category: selectedCategory?.name || '',
       amount: amount,
       date: formData.date.toISOString(),
       shift: 'turno1'
