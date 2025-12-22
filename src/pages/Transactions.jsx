@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Download, Search, Trash2, Pencil, Wallet, TrendingUp, TrendingDown, Upload, ChevronRight, Check } from 'lucide-react';
+import { Plus, Download, Search, Trash2, Pencil, Wallet, TrendingUp, TrendingDown, Upload, ChevronRight, Check, Clock, CheckCircle2 } from 'lucide-react';
 import { format, parseISO, startOfMonth, endOfMonth, isWithinInterval, isBefore, parse, subDays, startOfDay, endOfDay, isAfter } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import TransactionForm from '../components/transactions/TransactionForm';
@@ -329,12 +329,22 @@ export default function TransactionsPage() {
                                 </TableCell>
                                 <TableCell className="pl-6">
                                     <span className={cn(
-                                        "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium",
+                                        "inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium",
                                         (t.status === 'completed' || t.status === 'pago' || t.status === 'concluído') 
                                             ? "bg-emerald-50 text-emerald-700" 
                                             : "bg-amber-50 text-amber-700"
                                     )}>
-                                        {(t.status === 'completed' || t.status === 'pago' || t.status === 'concluído') ? 'Concluído' : 'Pendente'}
+                                        {(t.status === 'completed' || t.status === 'pago' || t.status === 'concluído') ? (
+                                            <>
+                                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                                Concluído
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Clock className="w-3.5 h-3.5" />
+                                                Pendente
+                                            </>
+                                        )}
                                     </span>
                                 </TableCell>
                                 <TableCell className={`text-right font-bold pl-6 ${t.type === 'venda' ? 'text-emerald-600' : 'text-rose-600'}`}>
