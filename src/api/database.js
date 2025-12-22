@@ -41,6 +41,37 @@ export const Transaction = {
       console.error('Error creating transaction:', error);
       throw error;
     }
+  },
+
+  async update(id, data) {
+    try {
+      const response = await fetch(`/api/transactions/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.details || result.error || `HTTP ${response.status}`);
+      }
+      return result;
+    } catch (error) {
+      console.error('Error updating transaction:', error);
+      throw error;
+    }
+  },
+
+  async delete(id) {
+    try {
+      const response = await fetch(`/api/transactions/${id}`, {
+        method: 'DELETE'
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return true;
+    } catch (error) {
+      console.error('Error deleting transaction:', error);
+      throw error;
+    }
   }
 };
 

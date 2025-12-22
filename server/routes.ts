@@ -233,6 +233,54 @@ export function registerRoutes(
     }
   });
 
+  app.patch("/api/transactions/:id", async (req, res) => {
+    try {
+      const body = req.body;
+      if (typeof body.date === 'string') {
+        body.date = new Date(body.date);
+      }
+      const data = insertTransactionSchema.partial().parse(body);
+      const transaction = await storage.updateTransaction(req.params.id, data);
+      res.json(transaction);
+    } catch (error) {
+      console.error("[PATCH /api/transactions/:id] Error:", error);
+      res.status(400).json({ error: "Invalid transaction data", details: error instanceof Error ? error.message : "Unknown error" });
+    }
+  });
+
+  app.delete("/api/transactions/:id", async (req, res) => {
+    try {
+      await storage.deleteTransaction(req.params.id);
+      res.status(204).end();
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete transaction" });
+    }
+  });
+
+  app.patch("/api/transactions/:id", async (req, res) => {
+    try {
+      const body = req.body;
+      if (typeof body.date === 'string') {
+        body.date = new Date(body.date);
+      }
+      const data = insertTransactionSchema.partial().parse(body);
+      const transaction = await storage.updateTransaction(req.params.id, data);
+      res.json(transaction);
+    } catch (error) {
+      console.error("[PATCH /api/transactions/:id] Error:", error);
+      res.status(400).json({ error: "Invalid transaction data", details: error instanceof Error ? error.message : "Unknown error" });
+    }
+  });
+
+  app.delete("/api/transactions/:id", async (req, res) => {
+    try {
+      await storage.deleteTransaction(req.params.id);
+      res.status(204).end();
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete transaction" });
+    }
+  });
+
   app.get("/api/transactions/by-shift/:shift", async (req, res) => {
     try {
       const transactions = await storage.getTransactionsByShift(
