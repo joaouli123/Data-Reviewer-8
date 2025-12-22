@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { eq, and, gte, lte } from "drizzle-orm";
+import { eq, and, gte, lte, sql } from "drizzle-orm";
 import {
   customers,
   suppliers,
