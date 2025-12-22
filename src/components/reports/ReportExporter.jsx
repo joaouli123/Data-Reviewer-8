@@ -9,6 +9,16 @@ import { formatDateUTC3, formatDateTimeUTC3, getDateNowUTC3 } from '@/utils/form
 export default function ReportExporter({ reportData, reportType = 'general', analysisResult }) {
   const [isExporting, setIsExporting] = useState(false);
 
+  const addSectionDivider = (pdf, margin, pageWidth, yPosition, pageHeight) => {
+    if (yPosition > pageHeight - 20) {
+      pdf.addPage();
+      return margin;
+    }
+    pdf.setDrawColor(200, 200, 200);
+    pdf.line(margin, yPosition + 2, pageWidth - margin, yPosition + 2);
+    return yPosition + 8;
+  };
+
   const exportToPDF = async () => {
     setIsExporting(true);
     try {
@@ -22,10 +32,10 @@ export default function ReportExporter({ reportData, reportType = 'general', ana
       const contentWidth = pageWidth - (margin * 2);
       let yPosition = margin;
 
-      // Title
+      // PÁGINA 1: Title & Executive Summary
       pdf.setFontSize(18);
       pdf.setTextColor(79, 70, 229);
-      pdf.text('Relatório Financeiro', margin, yPosition);
+      pdf.text('Relatório Financeiro Completo', margin, yPosition);
       
       yPosition += 8;
       pdf.setFontSize(9);
@@ -39,13 +49,14 @@ export default function ReportExporter({ reportData, reportType = 'general', ana
 
       // Executive Summary
       if (reportData?.summary) {
-        pdf.setFontSize(12);
-        pdf.setTextColor(0, 0, 0);
+        pdf.setFontSize(13);
+        pdf.setTextColor(79, 70, 229);
         pdf.setFont('helvetica', 'bold');
-        pdf.text('Resumo Executivo', margin, yPosition);
-        yPosition += 8;
+        pdf.text('RESUMO EXECUTIVO', margin, yPosition);
+        yPosition += 10;
         pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(9);
+        pdf.setFontSize(10);
+        pdf.setTextColor(0, 0, 0);
 
         Object.entries(reportData.summary).forEach(([key, value]) => {
           if (value === undefined || value === null) return;
@@ -66,48 +77,46 @@ export default function ReportExporter({ reportData, reportType = 'general', ana
           
           if (valueStr) {
             pdf.text(`${label}: ${valueStr}`, margin, yPosition);
-            yPosition += 6;
+            yPosition += 7;
           }
         });
-        yPosition += 8;
+        yPosition += 10;
       }
 
-      // Transactions Table
+      // PÁGINA 2: Transactions
+      pdf.addPage();
+      yPosition = margin;
+
       if (reportData?.transactions && reportData.transactions.length > 0) {
-        if (yPosition > pageHeight - 50) {
-          pdf.addPage();
-          yPosition = margin;
-        }
-
-        pdf.setFontSize(12);
-        pdf.setTextColor(0, 0, 0);
+        pdf.setFontSize(13);
+        pdf.setTextColor(79, 70, 229);
         pdf.setFont('helvetica', 'bold');
-        pdf.text('Transações Detalhadas', margin, yPosition);
-        yPosition += 8;
-        pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(8);
+        pdf.text('TRANSACOES DETALHADAS', margin, yPosition);
+        yPosition += 10;
 
-        // Table header
         const tableMargin = margin + 2;
         const col1 = tableMargin;
-        const col2 = tableMargin + 20;
-        const col3 = tableMargin + 50;
-        const col4 = tableMargin + 85;
+        const col2 = tableMargin + 18;
+        const col3 = tableMargin + 48;
+        const col4 = tableMargin + 80;
         const col5 = tableMargin + 115;
 
         pdf.setFont('helvetica', 'bold');
-        pdf.setFillColor(240, 240, 240);
-        pdf.rect(col1 - 1, yPosition - 5, contentWidth, 6, 'F');
+        pdf.setFillColor(79, 70, 229);
+        pdf.setTextColor(255, 255, 255);
+        pdf.rect(col1 - 2, yPosition - 5, contentWidth + 4, 7, 'F');
         pdf.text('Data', col1, yPosition);
         pdf.text('Descrição', col2, yPosition);
         pdf.text('Tipo', col3, yPosition);
         pdf.text('Categoria', col4, yPosition);
         pdf.text('Valor', col5, yPosition);
-        yPosition += 8;
+        yPosition += 10;
 
         pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFontSize(8);
         
-        reportData.transactions.slice(0, 30).forEach((t, idx) => {
+        reportData.transactions.slice(0, 25).forEach((t, idx) => {
           if (yPosition > pageHeight - 15) {
             pdf.addPage();
             yPosition = margin;
@@ -118,41 +127,46 @@ export default function ReportExporter({ reportData, reportType = 'general', ana
           const formattedAmount = amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
           const typeLabel = t.type === 'venda' ? 'Receita' : t.type === 'compra' ? 'Despesa' : t.type;
           const category = t.category || 'Sem Categoria';
-          const description = (t.description || '').substring(0, 20);
+          const description = (t.description || '').substring(0, 18);
+
+          // Alternate row colors
+          if (idx % 2 === 0) {
+            pdf.setFillColor(245, 245, 245);
+            pdf.rect(col1 - 2, yPosition - 4, contentWidth + 4, 5, 'F');
+          }
 
           pdf.text(dateStr, col1, yPosition);
           pdf.text(description, col2, yPosition);
           pdf.text(typeLabel, col3, yPosition);
-          pdf.text(category.substring(0, 15), col4, yPosition);
+          pdf.text(category.substring(0, 12), col4, yPosition);
           pdf.text(formattedAmount, col5, yPosition);
-          yPosition += 6;
+          yPosition += 5;
         });
 
-        if (reportData.transactions.length > 30) {
+        if (reportData.transactions.length > 25) {
           yPosition += 4;
           pdf.setFontSize(8);
           pdf.setTextColor(100, 100, 100);
-          pdf.text(`... e mais ${reportData.transactions.length - 30} transações`, margin, yPosition);
+          pdf.text(`... e mais ${reportData.transactions.length - 25} transações`, margin, yPosition);
         }
       }
 
-      // Cash Flow Forecast
-      if (analysisResult?.cash_flow_forecast && analysisResult.cash_flow_forecast.length > 0) {
-        if (yPosition > pageHeight - 50) {
-          pdf.addPage();
-          yPosition = margin;
-        }
+      // PÁGINA 3: Cash Flow + Expenses
+      pdf.addPage();
+      yPosition = margin;
 
-        pdf.setFontSize(12);
-        pdf.setTextColor(0, 0, 0);
+      if (analysisResult?.cash_flow_forecast && analysisResult.cash_flow_forecast.length > 0) {
+        pdf.setFontSize(13);
+        pdf.setTextColor(79, 70, 229);
         pdf.setFont('helvetica', 'bold');
-        pdf.text('Previsão de Fluxo de Caixa', margin, yPosition);
-        yPosition += 8;
+        pdf.text('PREVISAO DE FLUXO DE CAIXA', margin, yPosition);
+        yPosition += 10;
         pdf.setFont('helvetica', 'normal');
         pdf.setFontSize(9);
+        pdf.setTextColor(0, 0, 0);
 
         analysisResult.cash_flow_forecast.slice(0, 6).forEach(forecast => {
-          if (yPosition > pageHeight - 15) {
+          if (yPosition > pageHeight - 20) {
             pdf.addPage();
             yPosition = margin;
           }
@@ -160,104 +174,131 @@ export default function ReportExporter({ reportData, reportType = 'general', ana
           const month = forecast.month || 'Mês';
           const revenue = parseFloat(forecast.revenue || 0);
           const expense = parseFloat(forecast.expense || 0);
+          const profit = revenue - expense;
           const formattedRevenue = revenue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
           const formattedExpense = expense.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+          const formattedProfit = profit.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-          pdf.text(`${month}: Receita ${formattedRevenue} | Despesa ${formattedExpense}`, margin, yPosition);
+          pdf.text(`${month}`, margin, yPosition);
+          pdf.setTextColor(76, 175, 80);
+          pdf.text(`Receita: ${formattedRevenue}`, margin + 50, yPosition);
+          pdf.setTextColor(244, 67, 54);
+          pdf.text(`Despesa: ${formattedExpense}`, margin + 100, yPosition);
           yPosition += 6;
+          pdf.setTextColor(33, 150, 243);
+          pdf.text(`Lucro: ${formattedProfit}`, margin + 50, yPosition);
+          pdf.setTextColor(0, 0, 0);
+          yPosition += 8;
         });
+        yPosition += 8;
       }
 
-      // Expense Analysis
-      if (analysisResult?.expense_reduction_opportunities && analysisResult.expense_reduction_opportunities.length > 0) {
-        if (yPosition > pageHeight - 50) {
-          pdf.addPage();
-          yPosition = margin;
-        }
+      // Expense Reduction
+      yPosition = addSectionDivider(pdf, margin, pageWidth, yPosition, pageHeight);
 
-        pdf.setFontSize(12);
-        pdf.setTextColor(0, 0, 0);
+      if (analysisResult?.expense_reduction_opportunities && analysisResult.expense_reduction_opportunities.length > 0) {
+        pdf.setFontSize(13);
+        pdf.setTextColor(79, 70, 229);
         pdf.setFont('helvetica', 'bold');
-        pdf.text('Oportunidades de Redução de Custos', margin, yPosition);
-        yPosition += 8;
+        pdf.text('OPORTUNIDADES DE REDUCAO DE CUSTOS', margin, yPosition);
+        yPosition += 10;
         pdf.setFont('helvetica', 'normal');
         pdf.setFontSize(9);
+        pdf.setTextColor(0, 0, 0);
 
-        analysisResult.expense_reduction_opportunities.slice(0, 5).forEach(opp => {
-          if (yPosition > pageHeight - 15) {
+        analysisResult.expense_reduction_opportunities.slice(0, 4).forEach(opp => {
+          if (yPosition > pageHeight - 20) {
             pdf.addPage();
             yPosition = margin;
           }
 
           const category = opp.category || 'Categoria';
-          const suggestion = (opp.suggestion || '').substring(0, 60);
+          const suggestion = (opp.suggestion || '').substring(0, 70);
           const savings = opp.potential_savings || '0%';
 
-          pdf.text(`${category}: ${suggestion}`, margin, yPosition);
+          pdf.setFont('helvetica', 'bold');
+          pdf.text(`${category}`, margin, yPosition);
+          pdf.setFont('helvetica', 'normal');
+          yPosition += 6;
           pdf.setFontSize(8);
-          pdf.setTextColor(100, 100, 100);
-          pdf.text(`Economia Potencial: ${savings}`, margin + 5, yPosition + 5);
+          pdf.text(`${suggestion}`, margin + 5, yPosition);
+          yPosition += 4;
+          pdf.setTextColor(76, 175, 80);
+          pdf.text(`Economia Potencial: ${savings}`, margin + 5, yPosition);
           pdf.setTextColor(0, 0, 0);
-          pdf.setFontSize(9);
-          yPosition += 12;
+          yPosition += 8;
         });
       }
 
-      // Revenue Growth
-      if (analysisResult?.revenue_growth_suggestions && analysisResult.revenue_growth_suggestions.length > 0) {
-        if (yPosition > pageHeight - 50) {
-          pdf.addPage();
-          yPosition = margin;
-        }
+      // PÁGINA 4: Revenue Growth + Debt
+      pdf.addPage();
+      yPosition = margin;
 
-        pdf.setFontSize(12);
-        pdf.setTextColor(0, 0, 0);
+      if (analysisResult?.revenue_growth_suggestions && analysisResult.revenue_growth_suggestions.length > 0) {
+        pdf.setFontSize(13);
+        pdf.setTextColor(79, 70, 229);
         pdf.setFont('helvetica', 'bold');
-        pdf.text('Estratégias de Crescimento de Receita', margin, yPosition);
-        yPosition += 8;
+        pdf.text('ESTRATEGIAS DE CRESCIMENTO DE RECEITA', margin, yPosition);
+        yPosition += 10;
         pdf.setFont('helvetica', 'normal');
         pdf.setFontSize(9);
+        pdf.setTextColor(0, 0, 0);
 
         analysisResult.revenue_growth_suggestions.slice(0, 4).forEach(strategy => {
-          if (yPosition > pageHeight - 15) {
+          if (yPosition > pageHeight - 20) {
             pdf.addPage();
             yPosition = margin;
           }
 
-          const strat = (strategy.strategy || '').substring(0, 50);
-          const target = (strategy.target_customer_segment || '').substring(0, 30);
+          const strat = (strategy.strategy || '').substring(0, 60);
+          const rationale = (strategy.rationale || '').substring(0, 50);
+          const target = (strategy.target_customer_segment || '').substring(0, 35);
 
+          pdf.setFont('helvetica', 'bold');
           pdf.text(`${strat}`, margin, yPosition);
+          pdf.setFont('helvetica', 'normal');
+          yPosition += 5;
           pdf.setFontSize(8);
-          pdf.setTextColor(100, 100, 100);
-          pdf.text(`Alvo: ${target || 'Geral'}`, margin + 5, yPosition + 5);
+          pdf.text(`Fundamentação: ${rationale}`, margin + 5, yPosition);
+          yPosition += 4;
+          pdf.setTextColor(33, 150, 243);
+          pdf.text(`Alvo: ${target || 'Geral'}`, margin + 5, yPosition);
           pdf.setTextColor(0, 0, 0);
-          pdf.setFontSize(9);
-          yPosition += 12;
+          yPosition += 8;
         });
+        yPosition += 8;
       }
 
-      // Debt Summary
-      if (analysisResult?.cash_flow_forecast) {
-        if (yPosition > pageHeight - 40) {
-          pdf.addPage();
-          yPosition = margin;
-        }
+      // Debt Analysis
+      yPosition = addSectionDivider(pdf, margin, pageWidth, yPosition, pageHeight);
 
-        pdf.setFontSize(12);
-        pdf.setTextColor(0, 0, 0);
+      pdf.setFontSize(13);
+      pdf.setTextColor(79, 70, 229);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('ANALISE DE ENDIVIDAMENTO', margin, yPosition);
+      yPosition += 10;
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+      pdf.setTextColor(0, 0, 0);
+
+      if (reportData?.summary?.despesas_total && reportData?.summary?.receita_total) {
+        const receita = reportData.summary.receita_total;
+        const despesa = reportData.summary.despesas_total;
+        const debtRatio = (despesa / receita * 100) || 0;
+        const lucro = receita - despesa;
+
+        pdf.text(`Receita Total: ${receita.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`, margin, yPosition);
+        yPosition += 6;
+        pdf.text(`Despesa Total: ${despesa.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`, margin, yPosition);
+        yPosition += 6;
+        pdf.text(`Lucro Líquido: ${lucro.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`, margin, yPosition);
+        yPosition += 6;
+        pdf.setTextColor(79, 70, 229);
         pdf.setFont('helvetica', 'bold');
-        pdf.text('Análise de Endividamento', margin, yPosition);
-        yPosition += 8;
-        pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(9);
-
-        if (reportData?.summary?.despesas_total) {
-          const debtRatio = ((reportData.summary.despesas_total / reportData.summary.receita_total) * 100) || 0;
-          pdf.text(`Índice Despesa/Receita: ${debtRatio.toFixed(1)}%`, margin, yPosition);
-          yPosition += 6;
-          pdf.text(`Status: ${debtRatio < 50 ? 'Saudável' : 'Atenção Necessária'}`, margin, yPosition);
-        }
+        pdf.text(`Índice Despesa/Receita: ${debtRatio.toFixed(1)}%`, margin, yPosition);
+        yPosition += 6;
+        pdf.setTextColor(76, 175, 80);
+        pdf.text(`Status: ${debtRatio < 50 ? '✓ Saudável' : debtRatio < 80 ? '⚠ Atenção' : '✗ Crítico'}`, margin, yPosition);
       }
 
       pdf.save(`relatorio-financeiro-${formatDateUTC3()}.pdf`);
