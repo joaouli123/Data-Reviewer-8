@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Purchase, PurchaseInstallment, Transaction } from '@/api/entities';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -15,14 +16,14 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
 
   const { data: purchases } = useQuery({
     queryKey: ['purchases', supplier?.id],
-    queryFn: () => entities.Purchase.list(),
+    queryFn: () => Purchase.list(),
     enabled: !!supplier,
     select: (data) => data.filter(p => p.supplier_id === supplier?.id)
   });
 
   const { data: allInstallments } = useQuery({
     queryKey: ['purchaseInstallments'],
-    queryFn: () => entities.PurchaseInstallment.list(),
+    queryFn: () => PurchaseInstallment.list(),
     enabled: !!supplier,
     initialData: []
   });
@@ -42,7 +43,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
         status: 'completed'
       });
 
-      await entities.PurchaseInstallment.update(installment.id, {
+      await PurchaseInstallment.update(installment.id, {
         paid: true,
         paid_date: format(new Date(), 'yyyy-MM-dd'),
         transaction_id: transaction.id
@@ -53,7 +54,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
       const newStatus = paidCount === purchaseInstallments.length ? 'completed' : 
                         paidCount > 0 ? 'partial' : 'pending';
 
-      await entities.Purchase.update(purchase.id, { status: newStatus });
+      await Purchase.update(purchase.id, { status: newStatus });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['purchases'] });
