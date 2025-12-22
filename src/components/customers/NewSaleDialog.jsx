@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-
+import { Category, Sale, Installment } from '@/api/entities';
 import { format, addMonths } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -275,7 +275,7 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
                   <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.filter(cat => cat.type === 'income' || cat.type === 'both').map((cat) => (
+                  {categories.map((cat) => (
                     <SelectItem key={cat.id} value={cat.name}>
                       {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
                     </SelectItem>
