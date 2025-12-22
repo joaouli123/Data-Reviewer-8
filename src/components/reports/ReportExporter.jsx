@@ -114,18 +114,33 @@ export default function ReportExporter({ reportData, reportType = 'general' }) {
         pdf.setFontSize(9);
 
         Object.entries(reportData.summary).forEach(([key, value]) => {
+          // Skip undefined values
+          if (value === undefined || value === null) return;
+          
           if (yPosition > pageHeight - 15) {
             pdf.addPage();
             yPosition = margin;
           }
           
           const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-          const valueStr = typeof value === 'number' 
-            ? `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-            : String(value);
+          let valueStr;
           
-          pdf.text(`${label}: ${valueStr}`, margin, yPosition);
-          yPosition += 6;
+          if (typeof value === 'number') {
+            // Format numbers as Brazilian currency (R$)
+            valueStr = `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+          } else if (typeof value === 'string' && !isNaN(Date.parse(value))) {
+            // Format dates as DD/MM/YYYY
+            const date = new Date(value);
+            valueStr = date.toLocaleDateString('pt-BR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+          } else {
+            // Keep string values as is
+            valueStr = String(value || '');
+          }
+          
+          if (valueStr) {
+            pdf.text(`${label}: ${valueStr}`, margin, yPosition);
+            yPosition += 6;
+          }
         });
       }
 
@@ -162,7 +177,19 @@ export default function ReportExporter({ reportData, reportType = 'general' }) {
         csvContent += 'Transações\n';
         csvContent += 'Data,Descrição,Tipo,Categoria,Valor\n';
         reportData.transactions.forEach(t => {
-          csvContent += `${t.date},"${t.description}",${t.type},${t.category},${t.amount}\n`;
+          // Format date as DD/MM/YYYY
+          const dateStr = t.date ? new Date(t.date).toLocaleDateString('pt-BR', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '';
+          
+          // Format amount as R$ with Brazilian currency
+          const amount = parseFloat(t.amount || 0);
+          const formattedAmount = amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+          
+          // Ensure no undefined values
+          const description = t.description || '';
+          const type = t.type || '';
+          const category = t.category || 'Sem Categoria';
+          
+          csvContent += `${dateStr},"${description}",${type},${category},${formattedAmount}\n`;
         });
       }
 
@@ -170,7 +197,13 @@ export default function ReportExporter({ reportData, reportType = 'general' }) {
         csvContent += '\nPrevisões\n';
         csvContent += 'Mês,Receita Prevista,Despesas Previstas,Lucro Previsto\n';
         reportData.forecast.forEach(f => {
-          csvContent += `${f.month},${f.revenue},${f.expense},${f.profit}\n`;
+          // Format forecast values as R$
+          const formatValue = (val) => {
+            const num = parseFloat(val || 0);
+            return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+          };
+          
+          csvContent += `${f.month || ''},${formatValue(f.revenue)},${formatValue(f.expense)},${formatValue(f.profit)}\n`;
         });
       }
 
