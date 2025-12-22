@@ -49,3 +49,23 @@ export function formatRelativeTime(date: Date | string): string {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
   return formatDistanceToNow(dateObj, { locale: ptBR, addSuffix: true });
 }
+
+export function formatDateUTC3(date: Date | string = new Date(), formatStr: string = 'dd/MM/yyyy'): string {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  const spTime = getSaoPauloTime();
+  const offset = dateObj.getTime() - new Date().getTime();
+  const adjustedTime = new Date(spTime.getTime() + offset);
+  return dateFnsFormat(adjustedTime, formatStr, { locale: ptBR });
+}
+
+export function formatDateTimeUTC3(date: Date | string = new Date(), formatStr: string = 'dd/MM/yyyy HH:mm:ss'): string {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  const spTime = getSaoPauloTime();
+  const offset = dateObj.getTime() - new Date().getTime();
+  const adjustedTime = new Date(spTime.getTime() + offset);
+  return dateFnsFormat(adjustedTime, formatStr, { locale: ptBR });
+}
+
+export function getDateNowUTC3(): Date {
+  return getSaoPauloTime();
+}

@@ -4,6 +4,7 @@ import { Download, FileText, FileSpreadsheet, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { formatDateUTC3, formatDateTimeUTC3, getDateNowUTC3 } from '@/utils/formatters';
 
 export default function ReportExporter({ reportData, reportType = 'general' }) {
   const [isExporting, setIsExporting] = useState(false);
@@ -29,7 +30,7 @@ export default function ReportExporter({ reportData, reportType = 'general' }) {
       yPosition += 5;
       pdf.setFontSize(10);
       pdf.setTextColor(100, 100, 100);
-      pdf.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 20, yPosition);
+      pdf.text(`Gerado em: ${formatDateTimeUTC3()} (UTC-3)`, 20, yPosition);
       
       yPosition += 15;
 
@@ -88,7 +89,7 @@ export default function ReportExporter({ reportData, reportType = 'general' }) {
         });
       }
 
-      pdf.save(`relatorio-${reportType}-${new Date().toISOString().split('T')[0]}.pdf`);
+      pdf.save(`relatorio-${reportType}-${formatDateUTC3()}.pdf`);
       toast.success('PDF exportado com sucesso!');
     } catch (error) {
       console.error(error);
@@ -103,7 +104,7 @@ export default function ReportExporter({ reportData, reportType = 'general' }) {
     try {
       // Create CSV content
       let csvContent = `Relatório ${reportType === 'dre' ? 'DRE' : 'Financeiro'}\n`;
-      csvContent += `Gerado em: ${new Date().toLocaleDateString('pt-BR')}\n\n`;
+      csvContent += `Gerado em: ${formatDateTimeUTC3()} (UTC-3)\n\n`;
 
       if (reportData?.summary) {
         csvContent += 'Resumo Financeiro\n';
@@ -137,7 +138,7 @@ export default function ReportExporter({ reportData, reportType = 'general' }) {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.setAttribute('href', url);
-      link.setAttribute('download', `relatorio-${reportType}-${new Date().toISOString().split('T')[0]}.csv`);
+      link.setAttribute('download', `relatorio-${reportType}-${formatDateUTC3()}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
