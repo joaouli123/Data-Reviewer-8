@@ -433,8 +433,12 @@ export default function TransactionsPage() {
       </div>
 
       <TransactionForm 
+        key={editingTransaction?.id || 'new'}
         open={isFormOpen} 
-        onOpenChange={setIsFormOpen}
+        onOpenChange={(open) => {
+          setIsFormOpen(open);
+          if (!open) setEditingTransaction(null);
+        }}
         onSubmit={handleSubmit}
         initialData={editingTransaction}
       />
