@@ -9,7 +9,7 @@ const app = express();
 const PORT = parseInt(process.env.PORT || '5000', 10);
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, '..', 'dist', 'public')));
 
 // Mock data for API endpoints
 const mockData = {
@@ -71,7 +71,7 @@ app.post('/api/suppliers', (req: any, res: any) => {
 
 // SPA fallback - serve index.html for all other routes
 app.get('*', (_req: any, res: any) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, '..', 'dist', 'public', 'index.html'));
 });
 
 app.listen(PORT, '0.0.0.0', () => {
