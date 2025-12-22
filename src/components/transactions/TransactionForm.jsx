@@ -12,6 +12,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarIcon, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { CurrencyInput, parseCurrency } from "@/components/ui/currency-input";
 import CreateCategoryModal from './CreateCategoryModal';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -169,10 +170,8 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
           
           <div className="space-y-2">
             <Label>Valor (R$)</Label>
-            <Input 
-              type="number" 
-              step="0.01" 
-              placeholder="0.00"
+            <CurrencyInput 
+              placeholder="0,00"
               value={formData.amount}
               onChange={(e) => setFormData({...formData, amount: e.target.value})}
               required
