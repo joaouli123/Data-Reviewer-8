@@ -297,35 +297,46 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Categoria</Label>
+              <Label>Categoria</Label>
+              <div className="flex gap-2">
+                <Select 
+                  value={formData.category} 
+                  onValueChange={(v) => setFormData({...formData, category: v})}
+                >
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.name}>
+                        {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <Button 
                   type="button" 
                   size="icon" 
-                  variant="ghost" 
+                  variant="outline" 
                   onClick={() => setIsCreateCategoryModalOpen(true)}
-                  className="h-5 w-5"
+                  title="Nova Categoria"
                 >
-                  <Plus className="h-3 w-3" />
+                  <Plus className="w-4 h-4" />
                 </Button>
               </div>
-              <Select 
-                value={formData.category} 
-                onValueChange={(v) => setFormData({...formData, category: v})}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.name}>
-                      {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
 
+            <div className="space-y-2">
+              <Label>Tipo</Label>
+              <div className={`px-3 py-2 rounded-md border border-slate-200 text-sm font-medium flex items-center ${
+                'bg-emerald-50 text-emerald-700'
+              }`}>
+                + Receita
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Data da Venda</Label>
               <Input 

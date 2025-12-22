@@ -163,31 +163,40 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
               <Label>Categoria</Label>
-              <Button 
-                type="button" 
-                size="icon" 
-                variant="ghost" 
-                onClick={() => setIsCreateCategoryModalOpen(true)}
-                className="h-5 w-5"
-              >
-                <Plus className="h-3 w-3" />
-              </Button>
+              <div className="flex gap-2">
+                <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Selecione a categoria" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {expenseCategories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.name}>
+                        {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button 
+                  type="button" 
+                  size="icon" 
+                  variant="outline" 
+                  onClick={() => setIsCreateCategoryModalOpen(true)}
+                  title="Nova Categoria"
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
-            <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione a categoria" />
-              </SelectTrigger>
-              <SelectContent>
-                {expenseCategories.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.name}>
-                    {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+
+            <div className="space-y-2">
+              <Label>Tipo</Label>
+              <div className={`px-3 py-2 rounded-md border border-slate-200 text-sm font-medium flex items-center bg-rose-50 text-rose-700`}>
+                - Despesa
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
