@@ -169,7 +169,7 @@ export default function DashboardPage() {
         />
         
         <KPIWidget
-          title="Despesa Total (Fornecedores)"
+          title="Despesa Total"
           value={`R$ ${metrics.totalExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
           icon={DollarSign}
           trend="down"
