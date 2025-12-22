@@ -145,6 +145,76 @@ const generateMockAnalysis = (responseJsonSchema) => {
       ]
     };
   }
+
+  // Análise de Endividamento (DebtAnalysis)
+  if (responseJsonSchema.properties?.overall_assessment) {
+    return {
+      overall_assessment: "A empresa apresenta um nível de endividamento moderado com índice de cobertura adequado. Recomenda-se manter vigilância sobre a dívida de curto prazo e explorar oportunidades de refinanciamento para reduzir custos.",
+      health_score: "good",
+      key_concerns: [
+        "Dívida de curto prazo (3 meses) requer atenção para gestão de fluxo de caixa",
+        "Índice dívida/receita apresenta tendência de crescimento",
+        "Concentração de vencimentos pode gerar picos de pagamento"
+      ],
+      recommendations: [
+        {
+          strategy: "Negociar prazos de pagamento",
+          timeline: "Próximos 30 dias",
+          expected_impact: "Redução de 10-15% na pressão de pagamentos"
+        },
+        {
+          strategy: "Buscar refinanciamento de dívidas antigas",
+          timeline: "60-90 dias",
+          expected_impact: "Redução de taxa de juros em 2-3%"
+        },
+        {
+          strategy: "Aumentar receita operacional",
+          timeline: "Contínuo",
+          expected_impact: "Melhoria no índice dívida/receita"
+        },
+        {
+          strategy: "Criar cronograma de pagamentos",
+          timeline: "Imediato",
+          expected_impact: "Melhor previsibilidade de fluxo de caixa"
+        }
+      ]
+    };
+  }
+
+  // Análise de Capital de Giro (WorkingCapitalAnalysis)
+  if (responseJsonSchema.properties?.assessment) {
+    return {
+      assessment: "O capital de giro atual está abaixo do recomendado. A empresa deve focar em melhorar o ciclo de conversão de caixa e considerar estratégias de aumento de receita para fortalecer a posição de liquidez.",
+      recommendations: [
+        {
+          action: "Acelerar cobrança de clientes",
+          impact: "Redução de 5-10 dias no ciclo de conversão de caixa",
+          priority: "high"
+        },
+        {
+          action: "Negociar prazos maiores com fornecedores",
+          impact: "Aumento de 10-15 dias de prazo médio de pagamento",
+          priority: "high"
+        },
+        {
+          action: "Reduzir nível de estoque",
+          impact: "Liberar capital imobilizado em estoque (5-10%)",
+          priority: "medium"
+        },
+        {
+          action: "Aumentar margem operacional",
+          impact: "Geração adicional de caixa nas operações",
+          priority: "medium"
+        },
+        {
+          action: "Considerar linha de crédito adicional",
+          impact: "Buffer de liquidez para períodos sazonais",
+          priority: "low"
+        }
+      ],
+      risk_level: "medium"
+    };
+  }
   
   // Fallback genérico
   return { result: "Análise gerada com sucesso" };
