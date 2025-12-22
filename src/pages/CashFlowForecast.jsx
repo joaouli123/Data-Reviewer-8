@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarIcon, TrendingUp, TrendingDown, Wallet, ChevronDown, ChevronRight } from 'lucide-react';
-import { format, parseISO, isWithinInterval, addMonths, startOfMonth, endOfMonth, eachMonthOfInterval, startOfDay, endOfDay } from 'date-fns';
+import { format, parseISO, isWithinInterval, startOfMonth, endOfMonth, eachMonthOfInterval, startOfDay, endOfDay, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import CashFlowPeriodFilter from '../components/dashboard/CashFlowPeriodFilter';
@@ -28,18 +28,12 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 export default function CashFlowForecastPage() {
-  // Initialize with last 6 months
-  const getLast6Months = () => {
-    const end = endOfMonth(new Date());
-    const start = startOfMonth(addMonths(new Date(), -5));
-    return {
-      startDate: start,
-      endDate: end,
-      label: 'Últimos 6 meses'
-    };
-  };
-
-  const [dateRange, setDateRange] = useState(getLast6Months());
+  // Initialize with last 30 days - will be set by CashFlowPeriodFilter
+  const [dateRange, setDateRange] = useState({
+    startDate: startOfDay(subDays(new Date(), 29)),
+    endDate: endOfDay(new Date()),
+    label: 'Últimos 30 dias'
+  });
   const [expandedMonths, setExpandedMonths] = useState({});
 
   const { data: transactions } = useQuery({
