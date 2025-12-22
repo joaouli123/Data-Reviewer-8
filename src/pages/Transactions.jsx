@@ -90,7 +90,6 @@ export default function TransactionsPage() {
   const handleEdit = (item) => {
     // Ensure we have a copy with all data intact
     const transactionToEdit = { ...item };
-    console.log('🖊️ EDIT - Transaction amount:', transactionToEdit.amount);
     setEditingTransaction(transactionToEdit);
     setIsFormOpen(true);
   };
