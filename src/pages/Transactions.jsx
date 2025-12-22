@@ -330,7 +330,7 @@ export default function TransactionsPage() {
                                             ? "bg-emerald-50 text-emerald-700" 
                                             : "bg-amber-50 text-amber-700"
                                     )}>
-                                        {(t.status === 'completed' || t.status === 'pago' || t.status === 'concluído') ? 'Pago' : 'Pendente'}
+                                        {(t.status === 'completed' || t.status === 'pago' || t.status === 'concluído') ? 'Concluído' : 'Pendente'}
                                     </span>
                                 </TableCell>
                                 <TableCell className={`text-right font-bold pl-6 ${t.type === 'venda' ? 'text-emerald-600' : 'text-rose-600'}`}>
