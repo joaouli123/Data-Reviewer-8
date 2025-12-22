@@ -22,8 +22,14 @@ export default function ReportSuggestions({ transactions, saleInstallments, purc
       const revenue = recentTransactions.filter(t => t.type === 'venda' || t.type === 'income').reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
       const expenses = recentTransactions.filter(t => t.type === 'compra' || t.type === 'expense').reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
       
-      const pendingReceivables = saleInstallments.filter(i => !i.paid).reduce((sum, i) => sum + i.amount, 0);
-      const pendingPayables = purchaseInstallments.filter(i => !i.paid).reduce((sum, i) => sum + i.amount, 0);
+      const pendingReceivables = saleInstallments.filter(i => !i.paid).reduce((sum, i) => {
+        const amount = typeof i.amount === 'string' ? parseFloat(i.amount) : i.amount;
+        return sum + (isNaN(amount) ? 0 : amount);
+      }, 0);
+      const pendingPayables = purchaseInstallments.filter(i => !i.paid).reduce((sum, i) => {
+        const amount = typeof i.amount === 'string' ? parseFloat(i.amount) : i.amount;
+        return sum + (isNaN(amount) ? 0 : amount);
+      }, 0);
       
       const categoriesCount = [...new Set(transactions.map(t => t.categoryId))].length;
 
