@@ -7,7 +7,7 @@ import { InvokeLLM } from '@/api/integrations';
 import { toast } from 'sonner';
 import { subMonths } from 'date-fns';
 
-export default function ReportSuggestions({ transactions, saleInstallments, purchaseInstallments, onGenerateAnalysis }) {
+export default function ReportSuggestions({ transactions, saleInstallments, purchaseInstallments, onGenerateAnalysis, hideActionButton }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [suggestions, setSuggestions] = useState(null);
 
@@ -134,13 +134,15 @@ Sugira 4-5 relatórios mais relevantes que devem ser gerados, com justificativa 
                 </div>
               );
             })}
-            <Button 
-              onClick={onGenerateAnalysis}
-              className="w-full bg-primary hover:bg-primary mt-4"
-            >
-              <BarChart3 className="w-4 h-4 mr-2" />
-              Gerar Análise Completa
-            </Button>
+            {!hideActionButton && (
+              <Button 
+                onClick={onGenerateAnalysis}
+                className="w-full bg-primary hover:bg-primary mt-4"
+              >
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Gerar Análise Completa
+              </Button>
+            )}
           </div>
         )}
       </CardContent>

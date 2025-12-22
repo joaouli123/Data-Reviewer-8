@@ -321,6 +321,7 @@ export default function ReportsPage() {
             saleInstallments={saleInstallments}
             purchaseInstallments={purchaseInstallments}
             onGenerateAnalysis={handleStartAnalysis}
+            hideActionButton={!!analysisResult}
           />
           <Card className="bg-slate-50 border-dashed border-2 border-slate-200">
             <CardContent className="flex flex-col items-center justify-center py-16 text-center">
@@ -349,6 +350,7 @@ export default function ReportsPage() {
             saleInstallments={saleInstallments}
             purchaseInstallments={purchaseInstallments}
             onGenerateAnalysis={handleStartAnalysis}
+            hideActionButton={!!analysisResult}
           />
 
           <Tabs defaultValue="cashflow" className="w-full">
