@@ -52,11 +52,11 @@ export default function DashboardPage() {
 
     const totalRevenue = filteredTransactions
       .filter(t => t.type === 'venda')
-      .reduce((acc, curr) => acc + parseFloat(curr.amount || 0), 0);
+      .reduce((acc, curr) => acc + Math.abs(parseFloat(curr.amount || 0)), 0);
     
     const totalExpenses = filteredTransactions
       .filter(t => t.type === 'compra')
-      .reduce((acc, curr) => acc + parseFloat(curr.amount || 0), 0);
+      .reduce((acc, curr) => acc + Math.abs(parseFloat(curr.amount || 0)), 0);
 
     const netProfit = totalRevenue - totalExpenses;
 
@@ -71,7 +71,7 @@ export default function DashboardPage() {
         tDate.setHours(0, 0, 0, 0);
         return t.type === 'venda' && tDate >= now && tDate <= next30Days;
       })
-      .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+      .reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
     
     const futureExpenses = transactions
       .filter(t => {
@@ -79,7 +79,7 @@ export default function DashboardPage() {
         tDate.setHours(0, 0, 0, 0);
         return t.type === 'compra' && tDate >= now && tDate <= next30Days;
       })
-      .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+      .reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
 
     // Chart data - últimos 6 meses
     const chartData = [];
@@ -91,8 +91,8 @@ export default function DashboardPage() {
         return tDate.startsWith(monthKey);
       });
       
-      const income = monthTrans.filter(t => t.type === 'venda').reduce((acc, t) => acc + parseFloat(t.amount || 0), 0);
-      const expense = monthTrans.filter(t => t.type === 'compra').reduce((acc, t) => acc + parseFloat(t.amount || 0), 0);
+      const income = monthTrans.filter(t => t.type === 'venda').reduce((acc, t) => acc + Math.abs(parseFloat(t.amount || 0)), 0);
+      const expense = monthTrans.filter(t => t.type === 'compra').reduce((acc, t) => acc + Math.abs(parseFloat(t.amount || 0)), 0);
 
       chartData.push({
         name: date.toLocaleString('pt-BR', { month: 'short' }).toUpperCase(),
@@ -245,7 +245,7 @@ export default function DashboardPage() {
                         }`}
                       >
                         {t.type === 'venda' ? '+' : '-'} R${' '}
-                        {t.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        {Math.abs(parseFloat(t.amount || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </span>
                     </div>
                   ))}

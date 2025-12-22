@@ -47,8 +47,11 @@ export default function ReportsPage() {
     initialData: []
   });
 
-  // Queries removed - use transactions instead
-  const categories = [];
+  const { data: categories } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => Category.list(),
+    initialData: []
+  });
   const saleInstallments = [];
   const purchaseInstallments = [];
   const purchases = [];
@@ -65,7 +68,7 @@ export default function ReportsPage() {
     
     // Category filter
     if (categoryFilter !== 'all') {
-      filtered = filtered.filter(t => t.category === categoryFilter);
+      filtered = filtered.filter(t => t.category === categoryFilter || t.categoryId === categoryFilter);
     }
     
     return filtered;
@@ -190,8 +193,8 @@ export default function ReportsPage() {
           <ReportExporter 
             reportData={{
               summary: analysisResult ? {
-                receita_total: filteredTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0),
-                despesas_total: filteredTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0),
+                receita_total: filteredTransactions.filter(t => t.type === 'venda').reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0),
+                despesas_total: filteredTransactions.filter(t => t.type === 'compra').reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0),
                 periodo: dateRange.label
               } : null,
               transactions: filteredTransactions,
@@ -304,7 +307,7 @@ export default function ReportsPage() {
             </TabsList>
 
             <TabsContent value="dre" className="space-y-6 mt-6">
-              <DREAnalysis transactions={filteredTransactions} period={periodFilter} />
+              <DREAnalysis transactions={filteredTransactions} period={dateRange.label} />
             </TabsContent>
 
             <TabsContent value="cashflow" className="space-y-6 mt-6">
