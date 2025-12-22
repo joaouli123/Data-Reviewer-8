@@ -6,6 +6,7 @@ import {
   integer,
   decimal,
   timestamp,
+  boolean,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -82,6 +83,44 @@ export const cashFlow = pgTable("cash_flow", {
   shift: text("shift").notNull(),
 });
 
+export const sales = pgTable("sales", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  customerId: varchar("customer_id").references(() => customers.id),
+  saleDate: timestamp("sale_date").notNull(),
+  totalAmount: decimal("total_amount", { precision: 15, scale: 2 }).notNull(),
+  paidAmount: decimal("paid_amount", { precision: 15, scale: 2 }).default("0"),
+  installmentCount: integer("installment_count").default(1),
+  status: text("status").notNull().default("pendente"),
+});
+
+export const purchases = pgTable("purchases", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  supplierId: varchar("supplier_id").references(() => suppliers.id),
+  purchaseDate: timestamp("purchase_date").notNull(),
+  totalAmount: decimal("total_amount", { precision: 15, scale: 2 }).notNull(),
+  paidAmount: decimal("paid_amount", { precision: 15, scale: 2 }).default("0"),
+  installmentCount: integer("installment_count").default(1),
+  status: text("status").notNull().default("pendente"),
+});
+
+export const installments = pgTable("installments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  saleId: varchar("sale_id").references(() => sales.id),
+  amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
+  dueDate: timestamp("due_date").notNull(),
+  paid: boolean("paid").default(false),
+  paidDate: timestamp("paid_date"),
+});
+
+export const purchaseInstallments = pgTable("purchase_installments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  purchaseId: varchar("purchase_id").references(() => purchases.id),
+  amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
+  dueDate: timestamp("due_date").notNull(),
+  paid: boolean("paid").default(false),
+  paidDate: timestamp("paid_date"),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -110,6 +149,22 @@ export const insertCashFlowSchema = createInsertSchema(cashFlow).omit({
   id: true,
 });
 
+export const insertSaleSchema = createInsertSchema(sales).omit({
+  id: true,
+});
+
+export const insertPurchaseSchema = createInsertSchema(purchases).omit({
+  id: true,
+});
+
+export const insertInstallmentSchema = createInsertSchema(installments).omit({
+  id: true,
+});
+
+export const insertPurchaseInstallmentSchema = createInsertSchema(purchaseInstallments).omit({
+  id: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
@@ -127,3 +182,15 @@ export type Transaction = typeof transactions.$inferSelect;
 
 export type InsertCashFlow = z.infer<typeof insertCashFlowSchema>;
 export type CashFlow = typeof cashFlow.$inferSelect;
+
+export type InsertSale = z.infer<typeof insertSaleSchema>;
+export type Sale = typeof sales.$inferSelect;
+
+export type InsertPurchase = z.infer<typeof insertPurchaseSchema>;
+export type Purchase = typeof purchases.$inferSelect;
+
+export type InsertInstallment = z.infer<typeof insertInstallmentSchema>;
+export type Installment = typeof installments.$inferSelect;
+
+export type InsertPurchaseInstallment = z.infer<typeof insertPurchaseInstallmentSchema>;
+export type PurchaseInstallment = typeof purchaseInstallments.$inferSelect;
