@@ -8,6 +8,7 @@ import { format, parseISO, isWithinInterval, startOfMonth, endOfMonth, eachMonth
 import { ptBR } from 'date-fns/locale';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import CashFlowPeriodFilter from '../components/dashboard/CashFlowPeriodFilter';
+import Pagination from '../components/Pagination';
 
 // Custom Tooltip Component
 const CustomTooltip = ({ active, payload, label }) => {
@@ -35,6 +36,8 @@ export default function CashFlowForecastPage() {
     label: 'Últimos 30 dias'
   });
   const [expandedMonths, setExpandedMonths] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
 
   const { data: transactions } = useQuery({
     queryKey: ['transactions'],
@@ -207,6 +210,11 @@ export default function CashFlowForecastPage() {
   const netCashFlow = totalRevenue - totalExpense;
   const finalBalance = openingBalance + netCashFlow;
 
+  // Pagination
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedCashFlow = cashFlowWithBalance.slice(startIndex, endIndex);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -337,7 +345,7 @@ export default function CashFlowForecastPage() {
               </tr>
             </thead>
             <tbody>
-              {cashFlowWithBalance.map((item, idx) => {
+              {paginatedCashFlow.map((item, idx) => {
                 const isExpanded = expandedMonths[item.monthKey];
                 const hasDetails = item.revenueDetails.length > 0 || item.expenseDetails.length > 0;
                 
@@ -443,6 +451,16 @@ export default function CashFlowForecastPage() {
             </tbody>
           </table>
         </div>
+        <Pagination 
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalItems={cashFlowWithBalance.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(newSize) => {
+            setPageSize(newSize);
+            setCurrentPage(1);
+          }}
+        />
       </div>
     </div>
   );
