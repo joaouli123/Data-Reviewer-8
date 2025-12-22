@@ -36,15 +36,12 @@ export default function TransactionsPage() {
   const [pageSize, setPageSize] = useState(20);
 
 
-  // Categories not implemented, use static list
-  const categories = [
-    { id: 'venda', name: 'Venda' },
-    { id: 'compra', name: 'Compra' },
-    { id: 'devolucao', name: 'Devolução' },
-    { id: 'ajuste', name: 'Ajuste' },
-    { id: 'pagamento', name: 'Pagamento' }
-  ];
-  
+  const { data: categories } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => Category.list(),
+    initialData: []
+  });
+
   const queryClient = useQueryClient();
 
   const { data: transactions, isLoading } = useQuery({
@@ -132,9 +129,14 @@ export default function TransactionsPage() {
       const typeMap = { 'income': 'venda', 'expense': 'compra', 'all': 'all' };
       const mappedType = typeMap[typeFilter] || typeFilter;
       const matchesType = mappedType === 'all' || t.type === mappedType;
-      const matchesCategory = categoryFilter === 'all' || t.category === categoryFilter;
+      
+      // Match by category name or ID since t.category might be either
+      const matchesCategory = categoryFilter === 'all' || 
+                             t.category === categoryFilter || 
+                             categories.find(c => c.id === t.categoryId)?.name === categoryFilter;
+
       const matchesSearch = t.description.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                            t.category.toLowerCase().includes(searchTerm.toLowerCase());
+                            (t.category && t.category.toLowerCase().includes(searchTerm.toLowerCase()));
       const matchesDate = tDate >= dateRange.startDate && tDate <= dateRange.endDate;
 
       return matchesType && matchesCategory && matchesSearch && matchesDate;
