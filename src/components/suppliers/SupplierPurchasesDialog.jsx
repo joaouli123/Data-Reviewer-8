@@ -165,13 +165,12 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
         </div>
 
         <Tabs value={activeTab || 'todas-parcelas'} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full auto-cols-max overflow-x-auto">
+          <TabsList className="flex w-full overflow-x-auto bg-slate-100 p-1 rounded-lg gap-1">
             {groupedPurchases.map((group) => (
               <TabsTrigger key={group.main.id} value={group.main.id} className="text-sm whitespace-nowrap">
                 {group.main.description ? group.main.description.substring(0, 20) : 'Compra'} ({group.installments.length})
               </TabsTrigger>
             ))}
-            {groupedPurchases.length > 0 && <div className="w-px bg-slate-200" />}
             <TabsTrigger value="todas-parcelas" className="text-sm">Todas Parcelas</TabsTrigger>
           </TabsList>
 
