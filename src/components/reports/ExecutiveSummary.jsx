@@ -22,16 +22,16 @@ export default function ExecutiveSummary({ summary, transactions, saleInstallmen
   const netProfit = currentRevenue - currentExpenses;
   const profitMargin = currentRevenue > 0 ? (netProfit / currentRevenue * 100) : 0;
 
-  // Calculate pending amounts and installment counts with fallback
-  const pendingSalesInstallments = transactions.filter(t => 
-    t.type === 'venda' && t.installmentGroup && (t.status === 'pendente' || t.status === 'pending')
+  // Calculate pending amounts using the actual installments data
+  const pendingSalesInstallments = (saleInstallments || []).filter(i => 
+    i.status === 'pendente' || i.status === 'pending' || i.paid === false
   );
-  const pendingPurchaseInstallments = transactions.filter(t => 
-    t.type === 'compra' && t.installmentGroup && (t.status === 'pendente' || t.status === 'pending')
+  const pendingPurchaseInstallments = (purchaseInstallments || []).filter(i => 
+    i.status === 'pendente' || i.status === 'pending' || i.paid === false
   );
 
-  const pendingReceivables = pendingSalesInstallments.reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
-  const pendingPayables = pendingPurchaseInstallments.reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+  const pendingReceivables = pendingSalesInstallments.reduce((sum, i) => sum + parseFloat(i.amount || 0), 0);
+  const pendingPayables = pendingPurchaseInstallments.reduce((sum, i) => sum + parseFloat(i.amount || 0), 0);
 
   const kpis = [
     {
