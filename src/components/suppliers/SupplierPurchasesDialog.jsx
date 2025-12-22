@@ -115,7 +115,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                       <p className="text-xl font-bold text-slate-900">
                         R$ {group.installments.reduce((acc, p) => acc + parseFloat(p.amount || 0), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </p>
-                      <Badge variant="secondary" className="text-[10px] h-5 uppercase tracking-wider mt-1 px-2">
+                      <Badge variant="secondary" className="bg-slate-100 text-slate-600 border-none shadow-none text-[10px] h-5 uppercase tracking-wider mt-1 px-2">
                         {group.installments.every(s => s.status === 'completed' || s.status === 'pago') ? 'Pago' : 'Parcial'}
                       </Badge>
                     </div>
@@ -123,9 +123,9 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                   
                   <div className="space-y-3">
                     {group.installments.map((installment, idx) => (
-                      <div key={installment.id} className="flex items-center justify-between p-4 bg-slate-50/50 rounded-xl border border-slate-100/50 hover:bg-slate-50 transition-colors">
+                      <div key={installment.id} className="flex items-center justify-between p-4 bg-slate-50/30 rounded-xl border border-slate-100/50 hover:bg-slate-50 transition-colors">
                         <div className="flex items-center gap-5">
-                          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 text-blue-700 text-base font-bold flex-shrink-0">
+                          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 text-slate-500 text-base font-bold flex-shrink-0">
                             {idx + 1}
                           </div>
                           <div>
@@ -139,8 +139,8 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                         </div>
                         <div className="flex items-center">
                           {installment.status === 'completed' || installment.status === 'pago' ? (
-                            <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none shadow-none font-medium flex items-center gap-2 px-4 py-1.5 text-sm rounded-lg">
-                              <CheckCircle2 className="w-4 h-4" /> Pago
+                            <Badge className="bg-emerald-50 text-emerald-600 hover:bg-emerald-50 border-none shadow-none font-medium flex items-center gap-2 px-4 py-1.5 text-sm rounded-lg">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Pago
                             </Badge>
                           ) : (
                             <Button
