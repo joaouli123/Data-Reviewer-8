@@ -161,7 +161,7 @@ export default function CustomersPage() {
                             <TableRow key={c.id} className="hover:bg-slate-50/50">
                                 <TableCell>
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-semibold">
+                                        <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold">
                                             {c.name.charAt(0).toUpperCase()}
                                         </div>
                                         <span className="font-medium text-slate-900">{c.name}</span>
@@ -201,7 +201,7 @@ export default function CustomersPage() {
                                         <Button 
                                             variant="ghost" 
                                             size="sm" 
-                                            className="h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                            className="h-8 text-primary hover:text-primary hover:bg-primary/5"
                                             onClick={() => openNewSaleDialog(c)}
                                         >
                                             <TrendingUp className="w-4 h-4 mr-1" /> Venda
