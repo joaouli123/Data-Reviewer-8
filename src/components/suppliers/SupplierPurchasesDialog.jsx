@@ -131,20 +131,20 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-2">
                           {installment.status === 'completed' || installment.status === 'pago' ? (
-                            <Badge className="bg-emerald-100 text-emerald-700 text-xs py-0 px-1">
+                            <Badge className="bg-emerald-100 text-emerald-700 text-xs py-1 px-2">
                               Pago
                             </Badge>
                           ) : (
                             <>
-                              <Badge variant="outline" className="text-amber-600 border-amber-300 text-xs py-0 px-1">
+                              <Badge variant="outline" className="text-amber-600 border-amber-300 text-xs py-1 px-2">
                                 Pendente
                               </Badge>
                               <Button
                                 size="sm"
                                 onClick={() => confirmPaymentMutation.mutate(installment.id)}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-xs px-2 py-0 h-auto"
+                                className="bg-emerald-600 hover:bg-emerald-700 text-xs px-3 py-1"
                                 disabled={confirmPaymentMutation.isPending}
                               >
                                 Confirmar
@@ -183,14 +183,14 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                         R$ {parseFloat(purchase.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </p>
                       {purchase.status === 'completed' || purchase.status === 'pago' ? (
-                        <Badge className="bg-emerald-100 text-emerald-700 text-xs py-0 px-1">
+                        <Badge className="bg-emerald-100 text-emerald-700 text-xs py-1 px-2">
                           Pago
                         </Badge>
                       ) : (
                         <Button
                           size="sm"
                           onClick={() => confirmPaymentMutation.mutate(purchase.id)}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-xs px-2 py-0 h-auto"
+                          className="bg-emerald-600 hover:bg-emerald-700 text-xs px-3 py-1"
                           disabled={confirmPaymentMutation.isPending}
                         >
                           Confirmar
