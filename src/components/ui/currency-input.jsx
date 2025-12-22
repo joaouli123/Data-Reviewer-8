@@ -40,25 +40,24 @@ const CurrencyInput = forwardRef(({
   className = "",
   ...props 
 }, ref) => {
-  const [displayValue, setDisplayValue] = useState('');
-
-  // Initialize display value from prop value
-  useEffect(() => {
+  const [displayValue, setDisplayValue] = useState(() => {
+    // Initialize with formatted value
     if (value !== undefined && value !== null && value !== '') {
       const numValue = typeof value === 'number' ? value : parseCurrency(value);
-      if (numValue > 0) {
-        setDisplayValue(formatCurrency(numValue));
-      } else {
-        setDisplayValue('');
-      }
-    } else {
-      setDisplayValue('');
+      return numValue > 0 ? formatCurrency(numValue) : '';
     }
-  }, [value]);
+    return '';
+  });
 
-  // Update display when value prop changes externally (e.g., form reset)
+  // Update whenever value prop changes
   useEffect(() => {
-    if (value === '' || value === null || value === undefined) {
+    console.log('💵 CurrencyInput value changed:', value);
+    if (value !== undefined && value !== null && value !== '') {
+      const numValue = typeof value === 'number' ? value : parseCurrency(value);
+      const formatted = numValue > 0 ? formatCurrency(numValue) : '';
+      console.log('💵 Formatting to:', formatted);
+      setDisplayValue(formatted);
+    } else {
       setDisplayValue('');
     }
   }, [value]);

@@ -177,10 +177,14 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
           
           <div className="space-y-2">
             <Label>Valor (R$)</Label>
-            <CurrencyInput 
+            <Input 
+              type="text"
               placeholder="0,00"
-              value={formData.amount}
-              onChange={(e) => setFormData({...formData, amount: e.target.value})}
+              value={formData.amount ? parseFloat(formData.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ''}
+              onChange={(e) => {
+                const numValue = parseFloat(e.target.value.replace(/\./g, '').replace(',', '.'));
+                setFormData({...formData, amount: isNaN(numValue) ? '' : numValue.toString()})
+              }}
               required
             />
           </div>
