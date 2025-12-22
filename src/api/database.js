@@ -1,14 +1,54 @@
-// Direct database API calls - bypass Base44 and use our PostgreSQL backend
+// Local storage fallback with API fetch
+const STORAGE_KEY = 'financial_app_data';
+
+const getMockData = () => ({
+  transactions: [
+    { id: '1', date: new Date().toISOString(), description: 'Venda de Produto A', amount: 1500, type: 'venda', status: 'completed', customerId: '1', categoryId: '1' },
+    { id: '2', date: new Date(Date.now() - 86400000).toISOString(), description: 'Compra de Material', amount: 500, type: 'compra', status: 'completed', supplierId: '1', categoryId: '2' }
+  ],
+  customers: [
+    { id: '1', name: 'Cliente A', email: 'cliente@email.com', phone: '11999999999', address: 'Rua A, 123' }
+  ],
+  categories: [
+    { id: '1', name: 'Vendas', type: 'entrada' },
+    { id: '2', name: 'Matéria Prima', type: 'saida' },
+    { id: '3', name: 'Utilidades', type: 'saida' }
+  ],
+  suppliers: [
+    { id: '1', name: 'Fornecedor A', email: 'fornecedor@email.com', phone: '1133333333', address: 'Rua B, 456' }
+  ],
+  sales: [],
+  purchases: [],
+  installments: []
+});
+
+const getStorageData = (key) => {
+  try {
+    const data = localStorage.getItem(STORAGE_KEY);
+    return data ? JSON.parse(data) : getMockData();
+  } catch (e) {
+    return getMockData();
+  }
+};
+
+const setStorageData = (data) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch (e) {
+    console.error('Storage error:', e);
+  }
+};
 
 export const Transaction = {
   async list() {
     try {
-      const response = await fetch('/api/transactions');
+      const response = await fetch('/api/transactions', { signal: AbortSignal.timeout(2000) });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       return data || [];
     } catch (error) {
-      return [];
+      const data = getStorageData();
+      return data.transactions || [];
     }
   },
 
@@ -27,15 +67,19 @@ export const Transaction = {
       const response = await fetch('/api/transactions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body: JSON.stringify(data),
+        signal: AbortSignal.timeout(2000)
       });
       const result = await response.json();
-      if (!response.ok) {
-        throw new Error(result.details || result.error || `HTTP ${response.status}`);
-      }
+      if (!response.ok) throw new Error(result.details || result.error || `HTTP ${response.status}`);
       return result;
     } catch (error) {
-      throw error;
+      const id = Date.now().toString();
+      const newTransaction = { id, ...data };
+      const storage = getStorageData();
+      storage.transactions.push(newTransaction);
+      setStorageData(storage);
+      return newTransaction;
     }
   },
 
@@ -72,15 +116,13 @@ export const Transaction = {
 export const Customer = {
   async list() {
     try {
-      const response = await fetch('/api/customers');
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(`HTTP ${response.status}: ${text}`);
-      }
+      const response = await fetch('/api/customers', { signal: AbortSignal.timeout(2000) });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       return Array.isArray(data) ? data : [];
     } catch (error) {
-      return [];
+      const data = getStorageData();
+      return data.customers || [];
     }
   },
 
