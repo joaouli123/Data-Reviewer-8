@@ -170,39 +170,36 @@ export default function SuppliersPage() {
                       </div>
                     </TableCell>
                     <TableCell className="pr-6">
-                      <div className="flex justify-end gap-1">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-8 text-slate-600 hover:text-slate-700 hover:bg-slate-100"
-                          onClick={() => openFormDialog(s)}
-                        >
-                          <Edit className="w-4 h-4 mr-1" /> Editar
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-8 text-primary600 hover:text-primary700 hover:bg-blue-50"
-                          onClick={() => openNewPurchaseDialog(s)}
-                        >
-                          <ShoppingCart className="w-4 h-4 mr-1" /> Compra
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-8 text-slate-600 hover:text-slate-700 hover:bg-slate-50"
-                          onClick={() => openPurchasesViewDialog(s)}
-                        >
-                          <Eye className="w-4 h-4 mr-1" /> Ver
-                        </Button>
+                      <div className="flex justify-end">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreHorizontal className="w-4 h-4 text-slate-400" />
+                            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-slate-100">
+                              <MoreHorizontal className="w-4 h-4 text-slate-500" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem className="text-rose-600" onClick={() => deleteMutation.mutate(s.id)}>
+                          <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem 
+                              className="cursor-pointer"
+                              onClick={() => openFormDialog(s)}
+                            >
+                              <Edit className="w-4 h-4 mr-2" /> Editar Fornecedor
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="text-primary focus:text-primary focus:bg-blue-50 cursor-pointer"
+                              onClick={() => openNewPurchaseDialog(s)}
+                            >
+                              <ShoppingCart className="w-4 h-4 mr-2" /> Nova Compra
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="cursor-pointer"
+                              onClick={() => openPurchasesViewDialog(s)}
+                            >
+                              <Eye className="w-4 h-4 mr-2" /> Ver Histórico
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="text-rose-600 focus:text-rose-700 focus:bg-rose-50 cursor-pointer"
+                              onClick={() => deleteMutation.mutate(s.id)}
+                            >
                               <Trash2 className="w-4 h-4 mr-2" /> Remover
                             </DropdownMenuItem>
                           </DropdownMenuContent>
