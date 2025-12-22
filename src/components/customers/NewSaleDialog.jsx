@@ -305,7 +305,7 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
                   value={formData.category} 
                   onValueChange={(v) => setFormData({...formData, category: v})}
                 >
-                  <SelectTrigger className="flex-1">
+                  <SelectTrigger className="flex-1" required>
                     <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
                   <SelectContent>
