@@ -101,33 +101,33 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
           <TabsContent value="por-venda" className="space-y-4 mt-4">
             {groupedSales.length > 0 ? (
               groupedSales.map((group) => (
-                <div key={group.main.id} className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-                  <div className="p-4 border-b border-slate-100 flex items-start justify-between bg-slate-50/30">
+                <div key={group.main.id} className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden p-6">
+                  <div className="flex items-start justify-between mb-6">
                     <div>
-                      <h4 className="font-bold text-base text-slate-900">{group.main.description || 'Venda'}</h4>
-                      <p className="text-sm text-slate-500">
+                      <h4 className="font-bold text-xl text-slate-900 leading-tight">{group.main.description || 'Venda'}</h4>
+                      <p className="text-sm text-slate-500 mt-1">
                         {group.main.date ? format(parseISO(group.main.date), "dd 'de' MMMM, yyyy", { locale: ptBR }) : '-'}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-lg font-bold text-slate-900">
+                      <p className="text-xl font-bold text-slate-900">
                         R$ {group.installments.reduce((acc, s) => acc + parseFloat(s.amount || 0), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </p>
-                      <Badge variant="secondary" className="text-[10px] h-5 uppercase tracking-wider">
+                      <Badge variant="secondary" className="text-[10px] h-5 uppercase tracking-wider mt-1 px-2">
                         {group.installments.every(s => s.status === 'completed' || s.status === 'pago') ? 'Pago' : 'Parcial'}
                       </Badge>
                     </div>
                   </div>
                   
-                  <div className="p-3 space-y-2 bg-white">
+                  <div className="space-y-3">
                     {group.installments.map((installment, idx) => (
-                      <div key={installment.id} className="flex items-center justify-between p-3 bg-slate-50/50 rounded-lg border border-slate-100/50 ml-4">
-                        <div className="flex items-center gap-4">
-                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 text-sm font-bold">
+                      <div key={installment.id} className="flex items-center justify-between p-4 bg-slate-50/50 rounded-xl border border-slate-100/50 hover:bg-slate-50 transition-colors">
+                        <div className="flex items-center gap-5">
+                          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 text-base font-bold flex-shrink-0">
                             {idx + 1}
                           </div>
                           <div>
-                            <p className="font-bold text-slate-900">
+                            <p className="font-bold text-slate-900 text-lg">
                               R$ {parseFloat(installment.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                             </p>
                             <p className="text-xs text-slate-500">
@@ -135,16 +135,16 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center">
                           {installment.status === 'completed' || installment.status === 'pago' ? (
-                            <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none shadow-none font-medium flex items-center gap-1 px-3">
-                              <CheckCircle2 className="w-3 h-3" /> Pago
+                            <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none shadow-none font-medium flex items-center gap-2 px-4 py-1.5 text-sm rounded-lg">
+                              <CheckCircle2 className="w-4 h-4" /> Pago
                             </Badge>
                           ) : (
                             <Button
                               size="sm"
                               onClick={() => confirmPaymentMutation.mutate(installment.id)}
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 shadow-sm"
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-2 h-10 rounded-lg shadow-sm text-sm"
                               disabled={confirmPaymentMutation.isPending}
                             >
                               Confirmar Pagamento
