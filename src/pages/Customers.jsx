@@ -4,29 +4,25 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
+import { DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Mail, Phone, User, MoreHorizontal, Trash2, TrendingUp, Eye } from 'lucide-react';
+import { Plus, Search, Mail, Phone, User, MoreHorizontal, Trash2, TrendingUp, Eye, Edit } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import CustomerSalesDialog from '../components/customers/CustomerSalesDialog';
 import NewSaleDialog from '../components/customers/NewSaleDialog';
-import CreateCategoryModal from '../components/transactions/CreateCategoryModal';
+import CustomerFormDialog from '../components/customers/CustomerFormDialog';
 import Pagination from '../components/Pagination';
 import { formatPhoneNumber } from '@/utils/masks';
 
 export default function CustomersPage() {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
   const [isNewSaleDialogOpen, setIsNewSaleDialogOpen] = useState(false);
   const [isSalesViewDialogOpen, setIsSalesViewDialogOpen] = useState(false);
-  const [isCreateCategoryModalOpen, setIsCreateCategoryModalOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [newCustomer, setNewCustomer] = useState({ name: '', email: '', phone: '', category: '', status: 'active' });
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   
@@ -46,13 +42,18 @@ export default function CustomersPage() {
 
   // sales query removed - use transactions instead
 
-  const createMutation = useMutation({
-    mutationFn: (data) => Customer.create(data),
+  const saveMutation = useMutation({
+    mutationFn: (data) => {
+      if (selectedCustomer) {
+        return Customer.update(selectedCustomer.id, data);
+      }
+      return Customer.create(data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
-      setIsDialogOpen(false);
-      setNewCustomer({ name: '', email: '', phone: '', category: '', status: 'active' });
-      toast.success('Cliente adicionado!');
+      setIsFormDialogOpen(false);
+      setSelectedCustomer(null);
+      toast.success(selectedCustomer ? 'Cliente atualizado!' : 'Cliente adicionado!');
     }
   });
 
@@ -66,13 +67,21 @@ export default function CustomersPage() {
     }
   });
 
-  const handleCreate = (e) => {
-    e.preventDefault();
-    createMutation.mutate({
-        ...newCustomer,
+  const handleFormSubmit = (data) => {
+    if (selectedCustomer) {
+      saveMutation.mutate(data);
+    } else {
+      saveMutation.mutate({
+        ...data,
         join_date: format(new Date(), 'yyyy-MM-dd'),
         ltv: 0
-    });
+      });
+    }
+  };
+
+  const openFormDialog = (customer = null) => {
+    setSelectedCustomer(customer);
+    setIsFormDialogOpen(true);
   };
 
   const openNewSaleDialog = (customer) => {
@@ -108,89 +117,12 @@ export default function CustomersPage() {
             <p className="text-slate-500">Gerencie sua base de clientes e contatos.</p>
         </div>
         
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-                <Button className="bg-primary hover:bg-primary">
-                    <Plus className="w-4 h-4 mr-2" /> Novo Cliente
-                </Button>
-            </DialogTrigger>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Adicionar Cliente</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleCreate} className="space-y-4 mt-4">
-                    <div className="space-y-2">
-                        <Label>Nome Completo</Label>
-                        <Input 
-                            value={newCustomer.name} 
-                            onChange={e => setNewCustomer({...newCustomer, name: e.target.value})} 
-                            required 
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label>Email</Label>
-                        <Input 
-                            type="email" 
-                            value={newCustomer.email} 
-                            onChange={e => setNewCustomer({...newCustomer, email: e.target.value})}
-                            placeholder="exemplo@email.com"
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label>Telefone</Label>
-                        <Input 
-                            value={newCustomer.phone} 
-                            onChange={e => setNewCustomer({...newCustomer, phone: formatPhoneNumber(e.target.value)})}
-                            maxLength="15"
-                            placeholder="(XX) XXXXX-XXXX"
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Categoria</Label>
-                        <div className="flex gap-2">
-                          <Select 
-                            value={newCustomer.category} 
-                            onValueChange={(v) => setNewCustomer({...newCustomer, category: v})}
-                          >
-                            <SelectTrigger className="flex-1">
-                              <SelectValue placeholder="Selecione..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {categories.map((cat) => (
-                                <SelectItem key={cat.id} value={cat.name}>
-                                  {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <Button 
-                            type="button" 
-                            size="icon" 
-                            variant="outline" 
-                            onClick={() => setIsCreateCategoryModalOpen(true)}
-                            title="Nova Categoria"
-                          >
-                            <Plus className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>Tipo</Label>
-                        <div className={`px-3 py-2 rounded-md border border-slate-200 text-sm font-medium flex items-center bg-emerald-50 text-emerald-700`}>
-                          + Receita
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end pt-4">
-                        <Button type="submit" className="bg-primary">Salvar Cliente</Button>
-                    </div>
-                </form>
-            </DialogContent>
-        </Dialog>
+        <Button 
+          className="bg-primary hover:bg-primary"
+          onClick={() => openFormDialog()}
+        >
+          <Plus className="w-4 h-4 mr-2" /> Novo Cliente
+        </Button>
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
@@ -256,6 +188,14 @@ export default function CustomersPage() {
                                         <Button 
                                             variant="ghost" 
                                             size="sm" 
+                                            className="h-8 text-slate-600 hover:text-slate-700 hover:bg-slate-100"
+                                            onClick={() => openFormDialog(c)}
+                                        >
+                                            <Edit className="w-4 h-4 mr-1" /> Editar
+                                        </Button>
+                                        <Button 
+                                            variant="ghost" 
+                                            size="sm" 
                                             className="h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                                             onClick={() => openNewSaleDialog(c)}
                                         >
@@ -307,6 +247,15 @@ export default function CustomersPage() {
         />
       </div>
 
+      <CustomerFormDialog
+        open={isFormDialogOpen}
+        onOpenChange={setIsFormDialogOpen}
+        customer={selectedCustomer}
+        onSubmit={handleFormSubmit}
+        isLoading={saveMutation.isPending}
+        categories={categories}
+      />
+
       <NewSaleDialog 
         customer={selectedCustomer}
         open={isNewSaleDialogOpen}
@@ -317,12 +266,6 @@ export default function CustomersPage() {
         customer={selectedCustomer}
         open={isSalesViewDialogOpen}
         onOpenChange={setIsSalesViewDialogOpen}
-      />
-
-      <CreateCategoryModal
-        open={isCreateCategoryModalOpen}
-        onOpenChange={setIsCreateCategoryModalOpen}
-        onSubmit={() => queryClient.invalidateQueries({ queryKey: ['categories'] })}
       />
     </div>
   );

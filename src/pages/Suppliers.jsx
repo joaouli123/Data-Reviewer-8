@@ -4,29 +4,25 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
+import { DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Mail, Phone, Building2, MoreHorizontal, Trash2, ShoppingCart, Eye } from 'lucide-react';
+import { Plus, Search, Mail, Phone, Building2, MoreHorizontal, Trash2, ShoppingCart, Eye, Edit } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import NewPurchaseDialog from '../components/suppliers/NewPurchaseDialog';
 import SupplierPurchasesDialog from '../components/suppliers/SupplierPurchasesDialog';
-import CreateCategoryModal from '../components/transactions/CreateCategoryModal';
+import SupplierFormDialog from '../components/suppliers/SupplierFormDialog';
 import Pagination from '../components/Pagination';
 import { formatPhoneNumber, formatCNPJ } from '@/utils/masks';
 
 export default function SuppliersPage() {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
   const [isNewPurchaseDialogOpen, setIsNewPurchaseDialogOpen] = useState(false);
   const [isPurchasesViewDialogOpen, setIsPurchasesViewDialogOpen] = useState(false);
-  const [isCreateCategoryModalOpen, setIsCreateCategoryModalOpen] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [newSupplier, setNewSupplier] = useState({ name: '', email: '', phone: '', cnpj: '', category: '', status: 'active' });
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   
@@ -47,13 +43,18 @@ export default function SuppliersPage() {
   // purchases query removed
   const purchases = [];
 
-  const createMutation = useMutation({
-    mutationFn: (data) => Supplier.create(data),
+  const saveMutation = useMutation({
+    mutationFn: (data) => {
+      if (selectedSupplier) {
+        return Supplier.update(selectedSupplier.id, data);
+      }
+      return Supplier.create(data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
-      setIsDialogOpen(false);
-      setNewSupplier({ name: '', email: '', phone: '', cnpj: '', category: '', status: 'active' });
-      toast.success('Fornecedor adicionado!');
+      setIsFormDialogOpen(false);
+      setSelectedSupplier(null);
+      toast.success(selectedSupplier ? 'Fornecedor atualizado!' : 'Fornecedor adicionado!');
     }
   });
 
@@ -65,9 +66,13 @@ export default function SuppliersPage() {
     }
   });
 
-  const handleCreate = (e) => {
-    e.preventDefault();
-    createMutation.mutate(newSupplier);
+  const handleFormSubmit = (data) => {
+    saveMutation.mutate(data);
+  };
+
+  const openFormDialog = (supplier = null) => {
+    setSelectedSupplier(supplier);
+    setIsFormDialogOpen(true);
   };
 
   const openNewPurchaseDialog = (supplier) => {
@@ -103,98 +108,12 @@ export default function SuppliersPage() {
           <p className="text-slate-500">Gerencie seus fornecedores e compras.</p>
         </div>
         
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary">
-              <Plus className="w-4 h-4 mr-2" /> Novo Fornecedor
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Adicionar Fornecedor</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleCreate} className="space-y-4 mt-4">
-              <div className="space-y-2">
-                <Label>Nome/Razão Social</Label>
-                <Input 
-                  value={newSupplier.name} 
-                  onChange={e => setNewSupplier({...newSupplier, name: e.target.value})} 
-                  required 
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>CNPJ</Label>
-                <Input 
-                  value={newSupplier.cnpj} 
-                  onChange={e => setNewSupplier({...newSupplier, cnpj: formatCNPJ(e.target.value)})}
-                  maxLength="18"
-                  placeholder="XX.XXX.XXX/XXXX-XX"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <Input 
-                  type="email" 
-                  value={newSupplier.email} 
-                  onChange={e => setNewSupplier({...newSupplier, email: e.target.value})} 
-                  placeholder="exemplo@email.com"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Telefone</Label>
-                <Input 
-                  value={newSupplier.phone} 
-                  onChange={e => setNewSupplier({...newSupplier, phone: formatPhoneNumber(e.target.value)})}
-                  maxLength="15"
-                  placeholder="(XX) XXXXX-XXXX"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Categoria</Label>
-                  <div className="flex gap-2">
-                    <Select 
-                      value={newSupplier.category} 
-                      onValueChange={(v) => setNewSupplier({...newSupplier, category: v})}
-                    >
-                      <SelectTrigger className="flex-1">
-                        <SelectValue placeholder="Selecione..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {expenseCategories.map((cat) => (
-                          <SelectItem key={cat.id} value={cat.name}>
-                            {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Button 
-                      type="button" 
-                      size="icon" 
-                      variant="outline" 
-                      onClick={() => setIsCreateCategoryModalOpen(true)}
-                      title="Nova Categoria"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Tipo</Label>
-                  <div className={`px-3 py-2 rounded-md border border-slate-200 text-sm font-medium flex items-center bg-rose-50 text-rose-700`}>
-                    - Despesa
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end pt-4">
-                <Button type="submit" className="bg-primary">Salvar Fornecedor</Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <Button 
+          className="bg-primary hover:bg-primary"
+          onClick={() => openFormDialog()}
+        >
+          <Plus className="w-4 h-4 mr-2" /> Novo Fornecedor
+        </Button>
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
@@ -260,6 +179,14 @@ export default function SuppliersPage() {
                         <Button 
                           variant="ghost" 
                           size="sm" 
+                          className="h-8 text-slate-600 hover:text-slate-700 hover:bg-slate-100"
+                          onClick={() => openFormDialog(s)}
+                        >
+                          <Edit className="w-4 h-4 mr-1" /> Editar
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
                           className="h-8 text-primary600 hover:text-primary700 hover:bg-blue-50"
                           onClick={() => openNewPurchaseDialog(s)}
                         >
@@ -311,6 +238,15 @@ export default function SuppliersPage() {
         />
       </div>
 
+      <SupplierFormDialog
+        open={isFormDialogOpen}
+        onOpenChange={setIsFormDialogOpen}
+        supplier={selectedSupplier}
+        onSubmit={handleFormSubmit}
+        isLoading={saveMutation.isPending}
+        categories={expenseCategories}
+      />
+
       <NewPurchaseDialog 
         supplier={selectedSupplier}
         open={isNewPurchaseDialogOpen}
@@ -321,12 +257,6 @@ export default function SuppliersPage() {
         supplier={selectedSupplier}
         open={isPurchasesViewDialogOpen}
         onOpenChange={setIsPurchasesViewDialogOpen}
-      />
-
-      <CreateCategoryModal
-        open={isCreateCategoryModalOpen}
-        onOpenChange={setIsCreateCategoryModalOpen}
-        onSubmit={() => queryClient.invalidateQueries({ queryKey: ['categories'] })}
       />
     </div>
   );
