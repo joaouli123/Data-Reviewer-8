@@ -274,8 +274,8 @@ export default function ReportsPage() {
                 <SelectContent>
                   <SelectItem value="all">Todas as Categorias</SelectItem>
                   {categories.map(cat => (
-                    <SelectItem key={cat.id} value={cat.name}>
-                      {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
+                    <SelectItem key={cat.id} value={cat.name || 'uncategorized'}>
+                      {(cat.name || 'Sem Categoria').charAt(0).toUpperCase() + (cat.name || 'Sem Categoria').slice(1)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -293,7 +293,14 @@ export default function ReportsPage() {
       </Dialog>
 
       {/* Report Suggestions and Results */}
-      {analysisResult ? (
+      {!analysisResult && !isAnalyzing ? (
+        <ReportSuggestions 
+          transactions={filteredTransactions}
+          saleInstallments={saleInstallments}
+          purchaseInstallments={purchaseInstallments}
+          onGenerateAnalysis={handleStartAnalysis}
+        />
+      ) : analysisResult ? (
         <div className="space-y-6 animate-in fade-in duration-500">
           {/* Executive Summary with KPIs */}
           <ExecutiveSummary 

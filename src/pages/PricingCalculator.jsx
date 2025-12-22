@@ -304,13 +304,12 @@ Forneça recomendações estratégicas de precificação.`;
         </div>
       </div>
 
-      {/* Predictive Analysis */}
-      {results && (
-        <PredictivePricingAnalysis 
-          productData={formData}
-          results={results}
-        />
-      )}
+          <div className="grid grid-cols-1 gap-6">
+            <PredictivePricingAnalysis 
+              productData={formData}
+              results={results}
+            />
+          </div>
 
       {/* AI Suggestion */}
       {aiSuggestion && (
