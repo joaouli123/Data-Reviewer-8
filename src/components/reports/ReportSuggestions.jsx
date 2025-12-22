@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,15 +7,9 @@ import { InvokeLLM } from '@/api/integrations';
 import { toast } from 'sonner';
 import { subMonths } from 'date-fns';
 
-export default function ReportSuggestions({ transactions, saleInstallments, purchaseInstallments, onGenerateAnalysis, autoGenerate = false }) {
+export default function ReportSuggestions({ transactions, saleInstallments, purchaseInstallments, onGenerateAnalysis }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [suggestions, setSuggestions] = useState(null);
-
-  useEffect(() => {
-    if (autoGenerate && !suggestions && !isGenerating && transactions.length > 0) {
-      generateSuggestions();
-    }
-  }, [autoGenerate, transactions]);
 
   const generateSuggestions = async () => {
     setIsGenerating(true);
