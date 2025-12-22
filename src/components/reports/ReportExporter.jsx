@@ -6,7 +6,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { formatDateUTC3, formatDateTimeUTC3, getDateNowUTC3 } from '@/utils/formatters';
 
-export default function ReportExporter({ reportData, reportType = 'general' }) {
+export default function ReportExporter({ reportData, reportType = 'general', analysisResult }) {
   const [isExporting, setIsExporting] = useState(false);
 
   const exportToPDF = async () => {
@@ -133,6 +133,130 @@ export default function ReportExporter({ reportData, reportType = 'general' }) {
           pdf.setFontSize(8);
           pdf.setTextColor(100, 100, 100);
           pdf.text(`... e mais ${reportData.transactions.length - 30} transações`, margin, yPosition);
+        }
+      }
+
+      // Cash Flow Forecast
+      if (analysisResult?.cash_flow_forecast && analysisResult.cash_flow_forecast.length > 0) {
+        if (yPosition > pageHeight - 50) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+
+        pdf.setFontSize(12);
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Previsão de Fluxo de Caixa', margin, yPosition);
+        yPosition += 8;
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(9);
+
+        analysisResult.cash_flow_forecast.slice(0, 6).forEach(forecast => {
+          if (yPosition > pageHeight - 15) {
+            pdf.addPage();
+            yPosition = margin;
+          }
+
+          const month = forecast.month || 'Mês';
+          const revenue = parseFloat(forecast.revenue || 0);
+          const expense = parseFloat(forecast.expense || 0);
+          const formattedRevenue = revenue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+          const formattedExpense = expense.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+          pdf.text(`${month}: Receita ${formattedRevenue} | Despesa ${formattedExpense}`, margin, yPosition);
+          yPosition += 6;
+        });
+      }
+
+      // Expense Analysis
+      if (analysisResult?.expense_reduction_opportunities && analysisResult.expense_reduction_opportunities.length > 0) {
+        if (yPosition > pageHeight - 50) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+
+        pdf.setFontSize(12);
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Oportunidades de Redução de Custos', margin, yPosition);
+        yPosition += 8;
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(9);
+
+        analysisResult.expense_reduction_opportunities.slice(0, 5).forEach(opp => {
+          if (yPosition > pageHeight - 15) {
+            pdf.addPage();
+            yPosition = margin;
+          }
+
+          const category = opp.category || 'Categoria';
+          const suggestion = (opp.suggestion || '').substring(0, 60);
+          const savings = opp.potential_savings || '0%';
+
+          pdf.text(`${category}: ${suggestion}`, margin, yPosition);
+          pdf.setFontSize(8);
+          pdf.setTextColor(100, 100, 100);
+          pdf.text(`Economia Potencial: ${savings}`, margin + 5, yPosition + 5);
+          pdf.setTextColor(0, 0, 0);
+          pdf.setFontSize(9);
+          yPosition += 12;
+        });
+      }
+
+      // Revenue Growth
+      if (analysisResult?.revenue_growth_suggestions && analysisResult.revenue_growth_suggestions.length > 0) {
+        if (yPosition > pageHeight - 50) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+
+        pdf.setFontSize(12);
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Estratégias de Crescimento de Receita', margin, yPosition);
+        yPosition += 8;
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(9);
+
+        analysisResult.revenue_growth_suggestions.slice(0, 4).forEach(strategy => {
+          if (yPosition > pageHeight - 15) {
+            pdf.addPage();
+            yPosition = margin;
+          }
+
+          const strat = (strategy.strategy || '').substring(0, 50);
+          const target = (strategy.target_customer_segment || '').substring(0, 30);
+
+          pdf.text(`${strat}`, margin, yPosition);
+          pdf.setFontSize(8);
+          pdf.setTextColor(100, 100, 100);
+          pdf.text(`Alvo: ${target || 'Geral'}`, margin + 5, yPosition + 5);
+          pdf.setTextColor(0, 0, 0);
+          pdf.setFontSize(9);
+          yPosition += 12;
+        });
+      }
+
+      // Debt Summary
+      if (analysisResult?.cash_flow_forecast) {
+        if (yPosition > pageHeight - 40) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+
+        pdf.setFontSize(12);
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Análise de Endividamento', margin, yPosition);
+        yPosition += 8;
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(9);
+
+        if (reportData?.summary?.despesas_total) {
+          const debtRatio = ((reportData.summary.despesas_total / reportData.summary.receita_total) * 100) || 0;
+          pdf.text(`Índice Despesa/Receita: ${debtRatio.toFixed(1)}%`, margin, yPosition);
+          yPosition += 6;
+          pdf.text(`Status: ${debtRatio < 50 ? 'Saudável' : 'Atenção Necessária'}`, margin, yPosition);
         }
       }
 

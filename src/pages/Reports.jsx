@@ -246,8 +246,13 @@ export default function ReportsPage() {
                 periodo: dateRange.label
               } : null,
               transactions: transactionsWithCategories,
-              forecast: analysisResult?.cash_flow_forecast
+              forecast: analysisResult?.cash_flow_forecast,
+              expenses: analysisResult?.expense_reduction_opportunities,
+              revenue: analysisResult?.revenue_growth_suggestions,
+              debt: analysisResult?.debt_metrics,
+              working_capital: analysisResult?.working_capital_metrics
             }}
+            analysisResult={analysisResult}
             reportType="general"
             className="flex-1 sm:flex-none"
           />
