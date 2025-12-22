@@ -67,33 +67,49 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
 
   const createSaleMutation = useMutation({
     mutationFn: async (data) => {
-      // Create sale transaction directly
       const categories = await Category.list();
       const cat = categories.find(c => c.name === data.category);
       
-      const payload = {
-        customerId: customer.id,
-        categoryId: cat?.id,
-        type: 'venda',
-        date: new Date(data.sale_date).toISOString(),
-        shift: 'manhã',
-        amount: String(data.total_amount),
-        description: data.description,
-        status: 'pendente'
-      };
+      const installmentCount = parseInt(data.installments) || 1;
+      const totalAmount = parseFloat(data.total_amount);
+      const installmentAmount = parseFloat(data.installment_amount) || (totalAmount / installmentCount);
       
-      const response = await fetch('/api/transactions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+      const installmentGroupId = `group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const baseDate = new Date(data.sale_date);
       
-      if (!response.ok) {
-        const result = await response.json();
-        throw new Error(result.error || `HTTP ${response.status}`);
+      const promises = [];
+      
+      for (let i = 0; i < installmentCount; i++) {
+        const dueDate = new Date(baseDate);
+        dueDate.setMonth(dueDate.getMonth() + i);
+        
+        const payload = {
+          customerId: customer.id,
+          categoryId: cat?.id,
+          type: 'venda',
+          date: dueDate.toISOString(),
+          shift: 'manhã',
+          amount: String(installmentAmount.toFixed(2)),
+          description: `${data.description}${installmentCount > 1 ? ` (${i + 1}/${installmentCount})` : ''}`,
+          status: 'pendente',
+          installmentGroup: installmentGroupId,
+          installmentNumber: i + 1,
+          installmentTotal: installmentCount
+        };
+        
+        const promise = fetch('/api/transactions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        }).then(res => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        });
+        
+        promises.push(promise);
       }
       
-      return response.json();
+      return Promise.all(promises);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
