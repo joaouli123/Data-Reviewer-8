@@ -122,7 +122,19 @@ export default function TransactionsPage() {
       headers.join(','),
       ...filteredTransactions.map(t => {
         const categoryName = t.categoryId ? (categoryMap[t.categoryId] || 'Sem Categoria') : 'Sem Categoria';
-        return `${t.date},"${t.description}",${t.type},${categoryName},${t.amount}`;
+        
+        // Format date as DD/MM/YYYY (extract from ISO format YYYY-MM-DD)
+        const dateStr = t.date ? new Date(t.date).toLocaleDateString('pt-BR', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '';
+        
+        // Format amount as R$ with proper Brazilian format
+        const amount = parseFloat(t.amount || 0);
+        const formattedAmount = amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        
+        // Ensure no undefined values
+        const description = t.description || '';
+        const type = t.type || '';
+        
+        return `${dateStr},"${description}",${type},${categoryName},${formattedAmount}`;
       })
     ].join('\n');
 
