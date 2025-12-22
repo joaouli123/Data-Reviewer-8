@@ -307,10 +307,10 @@ export default function TransactionsPage() {
             <Table>
                 <TableHeader className="bg-slate-50">
                     <TableRow>
-                        <TableHead className="pl-6">Data</TableHead>
-                        <TableHead>Descrição</TableHead>
-                        <TableHead>Categoria</TableHead>
-                        <TableHead>Status</TableHead>
+                        <TableHead className="pl-6 text-left">Data</TableHead>
+                        <TableHead className="text-left">Descrição</TableHead>
+                        <TableHead className="text-left">Categoria</TableHead>
+                        <TableHead className="text-left">Status</TableHead>
                         <TableHead className="text-right">Valor</TableHead>
                         <TableHead className="text-right pr-6">Ações</TableHead>
                     </TableRow>
@@ -319,16 +319,16 @@ export default function TransactionsPage() {
                     {paginatedTransactions.length > 0 ? (
                         paginatedTransactions.map((t) => (
                             <TableRow key={t.id} className="hover:bg-slate-50/50 group">
-                                <TableCell className="font-medium text-slate-600 pl-6">
+                                <TableCell className="font-medium text-slate-600 pl-6 text-left">
                                     {format(new Date(t.date), "dd/MM/yyyy", { locale: ptBR })}
                                 </TableCell>
-                                <TableCell className="font-medium text-slate-900">{t.description}</TableCell>
-                                <TableCell className="pl-6">
+                                <TableCell className="font-medium text-slate-900 text-left">{t.description}</TableCell>
+                                <TableCell className="text-left">
                                     <Badge variant="secondary" className="capitalize font-normal bg-slate-100 text-slate-600 hover:bg-slate-200">
                                         {categories.find(c => c.id === t.categoryId)?.name || t.category}
                                     </Badge>
                                 </TableCell>
-                                <TableCell className="pl-6">
+                                <TableCell className="text-left">
                                     <span className={cn(
                                         "inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium",
                                         (t.status === 'completed' || t.status === 'pago' || t.status === 'concluído') 
@@ -348,10 +348,10 @@ export default function TransactionsPage() {
                                         )}
                                     </span>
                                 </TableCell>
-                                <TableCell className={`text-right font-bold pl-6 ${t.type === 'venda' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                <TableCell className={`text-right font-bold ${t.type === 'venda' ? 'text-emerald-600' : 'text-rose-600'}`}>
                                     {t.type === 'venda' ? '+' : '-'} R$ {Math.abs(parseFloat(t.amount || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                 </TableCell>
-                                <TableCell className="pr-6">
+                                <TableCell className="text-right pr-6">
                                     <div className="flex justify-end">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
