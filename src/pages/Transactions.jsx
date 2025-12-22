@@ -25,9 +25,9 @@ export default function TransactionsPage() {
   const [typeFilter, setTypeFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [dateRange, setDateRange] = useState({
-    startDate: startOfDay(subDays(new Date(), 30)),
+    startDate: startOfDay(new Date()),
     endDate: endOfDay(new Date()),
-    label: 'Últimos 30 dias'
+    label: 'Hoje'
   });
   const [uploadOpen, setUploadOpen] = useState(false);
   const [reconciliationOpen, setReconciliationOpen] = useState(false);
