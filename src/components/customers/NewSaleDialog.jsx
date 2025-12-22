@@ -161,7 +161,8 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
     // Initialize custom installments array
     const numInstallments = parseInt(numValue);
     if (numInstallments > 1) {
-      const defaultAmount = formData.total_amount ? (parseFloat(formData.total_amount) / numInstallments).toFixed(2) : '';
+      const totalAmount = parseFloat(formData.total_amount) || 0;
+      const defaultAmount = totalAmount > 0 ? totalAmount / numInstallments : '';
       const newCustomInstallments = Array.from({ length: numInstallments }, (_, i) => ({
         amount: defaultAmount,
         due_date: format(addMonths(new Date(formData.sale_date), i), 'yyyy-MM-dd')
