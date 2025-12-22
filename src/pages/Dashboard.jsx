@@ -93,6 +93,15 @@ export default function DashboardPage() {
     
     const futureExpenses = futureExpensesTransactions.reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
 
+    // Count pending installments (parcelas)
+    const pendingSaleInstallments = transactions.filter(t => 
+      t.type === 'venda' && t.installmentGroup && (t.status === 'pendente' || t.status === 'pending')
+    ).length;
+    
+    const pendingPurchaseInstallments = transactions.filter(t => 
+      t.type === 'compra' && t.installmentGroup && (t.status === 'pendente' || t.status === 'pending')
+    ).length;
+
     // Chart data - últimos 6 meses
     const chartData = [];
     for (let i = 5; i >= 0; i--) {
@@ -119,8 +128,8 @@ export default function DashboardPage() {
       netProfit,
       futureRevenue,
       futureExpenses,
-      futureRevenueCount: futureRevenueTransactions.length,
-      futureExpensesCount: futureExpensesTransactions.length,
+      futureRevenueCount: futureRevenueTransactions.length + pendingSaleInstallments,
+      futureExpensesCount: futureExpensesTransactions.length + pendingPurchaseInstallments,
       chartData,
       filteredTransactions
     };

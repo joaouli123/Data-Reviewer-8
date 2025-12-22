@@ -22,8 +22,16 @@ export default function ExecutiveSummary({ summary, transactions, saleInstallmen
   const netProfit = currentRevenue - currentExpenses;
   const profitMargin = currentRevenue > 0 ? (netProfit / currentRevenue * 100) : 0;
 
-  const pendingReceivables = saleInstallments.filter(i => !i.paid).reduce((sum, i) => sum + i.amount, 0);
-  const pendingPayables = purchaseInstallments.filter(i => !i.paid).reduce((sum, i) => sum + i.amount, 0);
+  // Calculate pending amounts and installment counts with fallback
+  const pendingSalesInstallments = transactions.filter(t => 
+    t.type === 'venda' && t.installmentGroup && (t.status === 'pendente' || t.status === 'pending')
+  );
+  const pendingPurchaseInstallments = transactions.filter(t => 
+    t.type === 'compra' && t.installmentGroup && (t.status === 'pendente' || t.status === 'pending')
+  );
+
+  const pendingReceivables = pendingSalesInstallments.reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+  const pendingPayables = pendingPurchaseInstallments.reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
 
   const kpis = [
     {
@@ -43,14 +51,14 @@ export default function ExecutiveSummary({ summary, transactions, saleInstallmen
     {
       title: 'Contas a Receber',
       value: `R$ ${pendingReceivables.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-      change: `${saleInstallments.filter(i => !i.paid).length} parcelas`,
+      change: `${pendingSalesInstallments.length} parcelas`,
       positive: true,
       icon: Calendar
     },
     {
       title: 'Contas a Pagar',
       value: `R$ ${pendingPayables.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-      change: `${purchaseInstallments.filter(i => !i.paid).length} parcelas`,
+      change: `${pendingPurchaseInstallments.length} parcelas`,
       positive: false,
       icon: Calendar
     }
