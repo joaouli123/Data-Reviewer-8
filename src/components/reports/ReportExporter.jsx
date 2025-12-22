@@ -184,12 +184,14 @@ export default function ReportExporter({ reportData, reportType = 'general' }) {
           const amount = parseFloat(t.amount || 0);
           const formattedAmount = amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
           
+          // Map transaction type to Receita/Despesa
+          const typeLabel = t.type === 'venda' ? 'Receita' : t.type === 'compra' ? 'Despesa' : t.type;
+          
           // Ensure no undefined values
           const description = t.description || '';
-          const type = t.type || '';
           const category = t.category || 'Sem Categoria';
           
-          csvContent += `${dateStr},"${description}",${type},${category},${formattedAmount}\n`;
+          csvContent += `${dateStr},"${description}",${typeLabel},${category},${formattedAmount}\n`;
         });
       }
 
