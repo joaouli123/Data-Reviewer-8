@@ -86,6 +86,8 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
   const confirmPaymentMutation = useMutation({
     mutationFn: async ({ purchaseId, paidAmount, interest }) => {
       console.log('Confirming purchase payment for:', purchaseId, { paidAmount, interest });
+      
+      // First update the transaction
       const response = await fetch(`/api/transactions/${purchaseId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -100,12 +102,34 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
         console.error('Purchase payment confirmation failed:', errorData);
         throw new Error(errorData.error || 'Falha ao confirmar pagamento');
       }
-      return response.json();
+      const transaction = await response.json();
+      
+      // Then create corresponding cash flow entry (outflow for purchases)
+      const totalPaid = parseFloat(paidAmount || 0) + parseFloat(interest || 0);
+      const cashFlowResponse = await fetch('/api/cash-flow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          date: new Date(transaction.date),
+          inflow: '0',
+          outflow: totalPaid.toFixed(2),
+          balance: (-totalPaid).toFixed(2),
+          description: `Pagamento de compra: ${transaction.description}`,
+          shift: transaction.shift || 'manhã'
+        })
+      });
+      
+      if (!cashFlowResponse.ok) {
+        console.warn('Failed to create cash flow entry, but transaction was updated');
+      }
+      
+      return transaction;
     },
     onSuccess: (data) => {
       console.log('Purchase payment confirmed successfully:', data);
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/cash-flow'] });
       setPaymentEditOpen(false);
       setSelectedTransaction(null);
       toast.success('Pagamento confirmado!');
@@ -119,6 +143,12 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
   const cancelPaymentMutation = useMutation({
     mutationFn: async (purchaseId) => {
       console.log('Canceling payment for:', purchaseId);
+      
+      // Get the transaction to know the amount to reverse
+      const transactionRes = await fetch(`/api/transactions/${purchaseId}`);
+      const transaction = await transactionRes.json();
+      
+      // Revert the transaction status
       const response = await fetch(`/api/transactions/${purchaseId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -129,12 +159,26 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
         console.error('Cancel payment failed:', errorData);
         throw new Error(errorData.error || 'Falha ao cancelar pagamento');
       }
+      
+      // Delete corresponding cash flow entry
+      try {
+        const cashFlowsRes = await fetch('/api/cash-flow');
+        const cashFlows = await cashFlowsRes.json();
+        const relatedCashFlow = cashFlows.find(cf => cf.description?.includes(transaction.description));
+        if (relatedCashFlow) {
+          await fetch(`/api/cash-flow/${relatedCashFlow.id}`, { method: 'DELETE' });
+        }
+      } catch (err) {
+        console.warn('Failed to delete cash flow entry, but transaction was reverted');
+      }
+      
       return response.json();
     },
     onSuccess: () => {
       console.log('Payment canceled successfully');
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/cash-flow'] });
       toast.success('Pagamento cancelado!');
     },
     onError: (error) => {
