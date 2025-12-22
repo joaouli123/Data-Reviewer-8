@@ -106,18 +106,18 @@ Forneça recomendações estratégicas de precificação.`;
   };
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-6 max-w-5xl mx-auto p-4 sm:p-6">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-2">
-          <Calculator className="w-8 h-8 text-primary" />
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-2 flex-wrap">
+          <Calculator className="w-6 sm:w-8 h-6 sm:h-8 text-primary" />
           Calculadora de Preços
         </h1>
-        <p className="text-slate-500 mt-1">
+        <p className="text-xs sm:text-sm text-slate-500 mt-1">
           Calcule o preço ideal para seus produtos com base em custos e margem desejada
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Input Form */}
         <Card>
           <CardHeader>
@@ -202,13 +202,13 @@ Forneça recomendações estratégicas de precificação.`;
                 </CardHeader>
                 <CardContent>
                   <div className="text-center">
-                    <p className="text-5xl font-bold text-primary mb-2">
+                    <p className="text-3xl sm:text-5xl font-bold text-primary mb-2 break-words">
                       R$ {results.suggestedPrice.toFixed(2)}
                     </p>
-                    <p className="text-sm text-slate-600 mb-4">
+                    <p className="text-xs sm:text-sm text-slate-600 mb-4">
                       Lucro: R$ {results.profitAmount.toFixed(2)} ({formData.desiredMargin}%)
                     </p>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="grid grid-cols-2 gap-2 text-xs sm:text-sm">
                       <div className="p-2 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
                         <p className="text-slate-500">Custo Total</p>
                         <p className="font-semibold">R$ {results.totalCost.toFixed(2)}</p>

@@ -131,15 +131,15 @@ export default function CustomersPage() {
   const paginatedCustomers = filteredCustomers.slice(startIndex, endIndex);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4 sm:p-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-            <h1 className="text-3xl font-bold text-slate-900">Clientes</h1>
-            <p className="text-slate-500">Gerencie sua base de clientes e contatos.</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Clientes</h1>
+            <p className="text-xs sm:text-sm text-slate-500">Gerencie sua base de clientes e contatos.</p>
         </div>
         
         <Button 
-          className="bg-primary hover:bg-primary"
+          className="bg-primary hover:bg-primary w-full sm:w-auto"
           onClick={() => openFormDialog()}
         >
           <Plus className="w-4 h-4 mr-2" /> Novo Cliente

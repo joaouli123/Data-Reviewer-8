@@ -201,11 +201,11 @@ export default function TransactionsPage() {
   const paginatedTransactions = filteredTransactions.slice(startIndex, endIndex);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4 sm:p-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-            <h1 className="text-3xl font-bold text-slate-900">Transações</h1>
-            <p className="text-slate-500">Gerencie suas receitas e despesas.</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Transações</h1>
+            <p className="text-xs sm:text-sm text-slate-500">Gerencie suas receitas e despesas.</p>
         </div>
         <div className="flex gap-2 flex-wrap">
             <PeriodFilter 

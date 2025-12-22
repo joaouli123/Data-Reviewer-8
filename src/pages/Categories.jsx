@@ -100,13 +100,13 @@ export default function CategoriesPage() {
   const paginatedCategories = categories.slice(startIndex, endIndex);
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6 p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Categorias</h1>
-          <p className="text-slate-500">Gerencie as categorias de transações.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Categorias</h1>
+          <p className="text-xs sm:text-sm text-slate-500">Gerencie as categorias de transações.</p>
         </div>
-        <Button onClick={() => setIsFormOpen(true)} className="bg-primary hover:bg-primary">
+        <Button onClick={() => setIsFormOpen(true)} className="bg-primary hover:bg-primary w-full sm:w-auto">
           <Plus className="w-4 h-4 mr-2" /> Nova Categoria
         </Button>
       </div>

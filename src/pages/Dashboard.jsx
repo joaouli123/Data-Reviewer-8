@@ -138,18 +138,18 @@ export default function DashboardPage() {
   const metrics = calculateMetrics();
 
   return (
-    <div className="space-y-6 p-8">
+    <div className="space-y-6 p-4 sm:p-6 md:p-8">
       {/* Header com Filtro de Data */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Visão Geral</h1>
-          <p className="text-sm text-muted-foreground mt-1">Bem-vindo de volta ao seu painel financeiro.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Visão Geral</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">Bem-vindo de volta ao seu painel financeiro.</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
           <DateFilter onDateRangeChange={setDateRange} />
           <Button 
             onClick={() => setIsFormOpen(true)}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 w-full sm:w-auto"
           >
             <Plus className="w-4 h-4" />
             Nova Transação
