@@ -17,8 +17,17 @@ export default function ExpensesBreakdown({ opportunities, transactions, categor
   const expensesByCategory = transactions
     .filter(t => t.type === 'compra' || t.type === 'expense')
     .reduce((acc, t) => {
-      const categoryId = t.categoryId;
-      const categoryName = categoryId ? (categoryMap[categoryId] || 'Sem Categoria') : 'Sem Categoria';
+      let categoryName = 'Sem Categoria';
+      
+      // Try to map by categoryId first
+      if (t.categoryId && categoryMap[t.categoryId]) {
+        categoryName = categoryMap[t.categoryId];
+      }
+      // Fallback to category string if available
+      else if (t.category) {
+        categoryName = t.category;
+      }
+      
       acc[categoryName] = (acc[categoryName] || 0) + Math.abs(parseFloat(t.amount || 0));
       return acc;
     }, {});
