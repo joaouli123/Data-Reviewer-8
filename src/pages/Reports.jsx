@@ -62,9 +62,24 @@ export default function ReportsPage() {
     queryFn: () => Category.list(),
     initialData: []
   });
-  const saleInstallments = [];
-  const purchaseInstallments = [];
-  const purchases = [];
+
+  const { data: saleInstallments } = useQuery({
+    queryKey: ['sale-installments'],
+    queryFn: () => Installment.list(),
+    initialData: []
+  });
+
+  const { data: purchaseInstallments } = useQuery({
+    queryKey: ['purchase-installments'],
+    queryFn: () => PurchaseInstallment.list(),
+    initialData: []
+  });
+
+  const { data: purchases } = useQuery({
+    queryKey: ['purchases'],
+    queryFn: () => Purchase.list(),
+    initialData: []
+  });
 
   // Filter transactions based on period and category
   const getFilteredTransactions = () => {
