@@ -222,6 +222,16 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
             </div>
           </div>
 
+          <div className="space-y-2">
+            <Label>Número de Parcelas</Label>
+            <Input
+              type="number"
+              min="1"
+              value={formData.installments}
+              onChange={(e) => handleInstallmentsChange(e.target.value)}
+            />
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Categoria</Label>
@@ -258,31 +268,20 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          {formData.installments > 1 && (
             <div className="space-y-2">
-              <Label>Número de Parcelas</Label>
-              <Input
-                type="number"
-                min="1"
-                value={formData.installments}
-                onChange={(e) => handleInstallmentsChange(e.target.value)}
-              />
-            </div>
-            {formData.installments > 1 && (
-              <div className="space-y-2">
-                <Label>Valor da Parcela (opcional)</Label>
-                <div className="flex items-center gap-2">
-                  <span className="text-slate-600">R$</span>
-                  <CurrencyInput
-                    value={formData.installment_amount}
-                    onChange={(e) => setFormData({ ...formData, installment_amount: e.target.value })}
-                    placeholder={formatCurrency((parseFloat(formData.total_amount || 0) / formData.installments))}
-                    className="flex-1"
-                  />
-                </div>
+              <Label>Valor da Parcela (opcional)</Label>
+              <div className="flex items-center gap-2">
+                <span className="text-slate-600">R$</span>
+                <CurrencyInput
+                  value={formData.installment_amount}
+                  onChange={(e) => setFormData({ ...formData, installment_amount: e.target.value })}
+                  placeholder={formatCurrency((parseFloat(formData.total_amount || 0) / formData.installments))}
+                  className="flex-1"
+                />
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {Number(formData.installments) > 1 && customInstallments.length === 0 && (
             <div className="p-3 bg-slate-50 rounded-lg text-sm text-slate-600 mt-6">
