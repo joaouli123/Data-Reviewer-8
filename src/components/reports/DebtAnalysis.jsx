@@ -24,8 +24,8 @@ export default function DebtAnalysis({ transactions, purchases, purchaseInstallm
 
     // Revenue (last 3 months)
     const revenue = transactions
-      .filter(t => t.type === 'income' && new Date(t.date) >= threeMonthsAgo)
-      .reduce((sum, t) => sum + t.amount, 0);
+      .filter(t => (t.type === 'venda' || t.type === 'income') && new Date(t.date) >= threeMonthsAgo)
+      .reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
 
     // Average monthly revenue
     const avgMonthlyRevenue = revenue / 3;

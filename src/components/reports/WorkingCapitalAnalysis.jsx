@@ -32,8 +32,8 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
     // Average monthly expenses (last 3 months)
     const threeMonthsAgo = addMonths(now, -3);
     const recentExpenses = transactions
-      .filter(t => t.type === 'expense' && new Date(t.date) >= threeMonthsAgo)
-      .reduce((sum, t) => sum + t.amount, 0);
+      .filter(t => (t.type === 'compra' || t.type === 'expense') && new Date(t.date) >= threeMonthsAgo)
+      .reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
     const avgMonthlyExpenses = recentExpenses / 3;
 
     // Recommended working capital (2 months of expenses)
