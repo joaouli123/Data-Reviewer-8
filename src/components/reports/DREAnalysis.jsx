@@ -19,10 +19,11 @@ export default function DREAnalysis({ transactions, period = 'currentYear' }) {
     const expenses = {};
     
     transactions.forEach(t => {
-      if (t.type === 'income') {
-        revenues[t.category] = (revenues[t.category] || 0) + t.amount;
-      } else {
-        expenses[t.category] = (expenses[t.category] || 0) + t.amount;
+      const amount = Math.abs(parseFloat(t.amount || 0));
+      if (t.type === 'venda' || t.type === 'income') {
+        revenues[t.category] = (revenues[t.category] || 0) + amount;
+      } else if (t.type === 'compra' || t.type === 'expense') {
+        expenses[t.category] = (expenses[t.category] || 0) + amount;
       }
     });
 

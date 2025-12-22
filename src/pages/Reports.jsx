@@ -292,34 +292,8 @@ export default function ReportsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Report Suggestions */}
-      {!analysisResult && !isAnalyzing && (
-        <ReportSuggestions 
-          transactions={filteredTransactions}
-          saleInstallments={saleInstallments}
-          purchaseInstallments={purchaseInstallments}
-          onGenerateAnalysis={handleStartAnalysis}
-        />
-      )}
-
-      {!analysisResult && !isAnalyzing && (
-        <Card className="bg-slate-50 border-dashed border-2 border-slate-200">
-          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-              <FileText className="w-8 h-8 text-blue-600" />
-            </div>
-            <h3 className="text-xl font-semibold text-slate-900 mb-2">Nenhuma análise gerada ainda</h3>
-            <p className="text-slate-500 max-w-md mb-6">
-              Clique no botão acima para que nossa IA processe suas transações e gere insights valiosos para seu negócio.
-            </p>
-            <Button className="bg-primary text-primary-foreground hover:bg-primary active:bg-primary" onClick={generateAnalysis}>
-              Iniciar Análise
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {analysisResult && (
+      {/* Report Suggestions and Results */}
+      {analysisResult ? (
         <div className="space-y-6 animate-in fade-in duration-500">
           {/* Executive Summary with KPIs */}
           <ExecutiveSummary 
@@ -327,6 +301,13 @@ export default function ReportsPage() {
             transactions={filteredTransactions}
             saleInstallments={saleInstallments}
             purchaseInstallments={purchaseInstallments}
+          />
+
+          <ReportSuggestions 
+            transactions={filteredTransactions}
+            saleInstallments={saleInstallments}
+            purchaseInstallments={purchaseInstallments}
+            onGenerateAnalysis={handleStartAnalysis}
           />
 
           <Tabs defaultValue="dre" className="w-full">
