@@ -163,7 +163,10 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
     // Initialize custom installments array
     const numInstallments = parseInt(numValue);
     if (numInstallments > 1) {
-      const defaultAmount = formData.total_amount ? (parseFloat(formData.total_amount) / numInstallments).toFixed(2) : '';
+      const totalAmount = typeof formData.total_amount === 'string' 
+        ? parseFloat(formData.total_amount.replace(/\./g, '').replace(',', '.'))
+        : parseFloat(formData.total_amount);
+      const defaultAmount = totalAmount / numInstallments;
       const newCustomInstallments = Array.from({ length: numInstallments }, (_, i) => ({
         amount: defaultAmount,
         due_date: format(addMonths(new Date(formData.purchase_date), i), 'yyyy-MM-dd')
@@ -288,7 +291,13 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
               <p>
                 {formData.installment_amount && !isNaN(parseFloat(formData.installment_amount))
                   ? `${formData.installments}x de R$ ${formatCurrency(formData.installment_amount)}`
-                  : `${formData.installments}x de R$ ${formatCurrency((parseFloat(formData.total_amount || 0) / Number(formData.installments || 1)))}`
+                  : (() => {
+                      const total = typeof formData.total_amount === 'string' 
+                        ? parseFloat(formData.total_amount.replace(/\./g, '').replace(',', '.'))
+                        : parseFloat(formData.total_amount || 0);
+                      const perInstallment = total / Number(formData.installments || 1);
+                      return `${formData.installments}x de R$ ${formatCurrency(perInstallment)}`;
+                    })()
                 }
               </p>
             </div>
