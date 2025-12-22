@@ -106,6 +106,21 @@ export default function CustomersPage() {
       .reduce((acc, t) => acc + parseFloat(t.amount || 0), 0);
   };
 
+  // Get customer join date - use join_date if available, otherwise use first transaction date
+  const getCustomerJoinDate = (customer) => {
+    if (customer.join_date) {
+      return format(parseISO(customer.join_date), "MMM yyyy", { locale: ptBR });
+    }
+    
+    const customerTransactions = transactions.filter(t => t.customerId === customer.id);
+    if (customerTransactions.length > 0) {
+      const earliestDate = new Date(Math.min(...customerTransactions.map(t => new Date(t.date))));
+      return format(earliestDate, "MMM yyyy", { locale: ptBR });
+    }
+    
+    return '-';
+  };
+
   const filteredCustomers = customers.filter(c => 
     c.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
     c.email?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -179,7 +194,7 @@ export default function CustomersPage() {
                                     </div>
                                 </TableCell>
                                 <TableCell className="text-slate-500 text-sm">
-                                    {c.join_date ? format(parseISO(c.join_date), "MMM yyyy", { locale: ptBR }) : '-'}
+                                    {getCustomerJoinDate(c)}
                                 </TableCell>
                                 <TableCell className="pr-6">
                                     <div className="flex justify-end">
