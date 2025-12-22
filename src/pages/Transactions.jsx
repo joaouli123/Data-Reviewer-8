@@ -25,6 +25,7 @@ export default function TransactionsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [dateRange, setDateRange] = useState({
     startDate: startOfDay(subDays(new Date(), 29)),
     endDate: endOfDay(new Date()),
@@ -150,8 +151,14 @@ export default function TransactionsPage() {
       const matchesSearch = t.description.toLowerCase().includes(searchTerm.toLowerCase()) || 
                             (t.category && t.category.toLowerCase().includes(searchTerm.toLowerCase()));
       const matchesDate = tDate >= dateRange.startDate && tDate <= dateRange.endDate;
+      
+      // Match by status
+      const isPaid = (t.status === 'completed' || t.status === 'pago' || t.status === 'concluído');
+      const matchesStatus = statusFilter === 'all' || 
+                           (statusFilter === 'completed' && isPaid) || 
+                           (statusFilter === 'pending' && !isPaid);
 
-      return matchesType && matchesCategory && matchesSearch && matchesDate;
+      return matchesType && matchesCategory && matchesSearch && matchesDate && matchesStatus;
     })
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 
@@ -283,7 +290,7 @@ export default function TransactionsPage() {
                 />
             </div>
             
-            <div className="flex gap-2 w-full md:w-auto">
+            <div className="flex gap-2 w-full md:w-auto flex-wrap">
                 <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                     <SelectTrigger className="w-full md:w-[180px]">
                         <SelectValue placeholder="Categoria" />
@@ -304,6 +311,17 @@ export default function TransactionsPage() {
                         <SelectItem value="all">Todos</SelectItem>
                         <SelectItem value="income">Receitas</SelectItem>
                         <SelectItem value="expense">Despesas</SelectItem>
+                    </SelectContent>
+                </Select>
+
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-full md:w-[160px]">
+                        <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">Todos</SelectItem>
+                        <SelectItem value="pending">Pendentes</SelectItem>
+                        <SelectItem value="completed">Concluídas</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
