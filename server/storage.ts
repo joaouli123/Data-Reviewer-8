@@ -1,4 +1,5 @@
 import { db } from "./db";
+import { eq, and, gte, lte } from "drizzle-orm";
 import {
   customers,
   suppliers,
@@ -82,7 +83,7 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .select()
       .from(customers)
-      .where((c) => c.id === id);
+      .where(eq(customers.id, id));
     return result[0];
   }
 
@@ -93,7 +94,7 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .update(customers)
       .set(data)
-      .where((c) => c.id === id)
+      .where(eq(customers.id, id))
       .returning();
     return result[0];
   }
@@ -101,7 +102,7 @@ export class DatabaseStorage implements IStorage {
   async deleteCustomer(id: string): Promise<void> {
     await db
       .delete(customers)
-      .where((c) => c.id === id);
+      .where(eq(customers.id, id));
   }
 
   // Supplier operations
@@ -118,7 +119,7 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .select()
       .from(suppliers)
-      .where((s) => s.id === id);
+      .where(eq(suppliers.id, id));
     return result[0];
   }
 
@@ -129,7 +130,7 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .update(suppliers)
       .set(data)
-      .where((s) => s.id === id)
+      .where(eq(suppliers.id, id))
       .returning();
     return result[0];
   }
@@ -137,7 +138,7 @@ export class DatabaseStorage implements IStorage {
   async deleteSupplier(id: string): Promise<void> {
     await db
       .delete(suppliers)
-      .where((s) => s.id === id);
+      .where(eq(suppliers.id, id));
   }
 
   // Category operations
@@ -154,7 +155,7 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .select()
       .from(categories)
-      .where((c) => c.id === id);
+      .where(eq(categories.id, id));
     return result[0];
   }
 
@@ -165,7 +166,7 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .update(categories)
       .set(data)
-      .where((c) => c.id === id)
+      .where(eq(categories.id, id))
       .returning();
     return result[0];
   }
@@ -173,7 +174,7 @@ export class DatabaseStorage implements IStorage {
   async deleteCategory(id: string): Promise<void> {
     await db
       .delete(categories)
-      .where((c) => c.id === id);
+      .where(eq(categories.id, id));
   }
 
   // Transaction operations
@@ -190,7 +191,7 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .select()
       .from(transactions)
-      .where((t) => t.id === id);
+      .where(eq(transactions.id, id));
     return result[0];
   }
 
@@ -201,7 +202,7 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .update(transactions)
       .set(data)
-      .where((t) => t.id === id)
+      .where(eq(transactions.id, id))
       .returning();
     return result[0];
   }
@@ -209,7 +210,7 @@ export class DatabaseStorage implements IStorage {
   async deleteTransaction(id: string): Promise<void> {
     await db
       .delete(transactions)
-      .where((t) => t.id === id);
+      .where(eq(transactions.id, id));
   }
 
   async getTransactionsByDateRange(
@@ -219,14 +220,14 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(transactions)
-      .where((t) => t.date >= startDate && t.date <= endDate);
+      .where(and(gte(transactions.date, startDate), lte(transactions.date, endDate)));
   }
 
   async getTransactionsByShift(shift: string): Promise<Transaction[]> {
     return await db
       .select()
       .from(transactions)
-      .where((t) => t.shift === shift);
+      .where(eq(transactions.shift, shift));
   }
 
   // Cash Flow operations
@@ -243,7 +244,7 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .select()
       .from(cashFlow)
-      .where((cf) => cf.id === id);
+      .where(eq(cashFlow.id, id));
     return result[0];
   }
 
@@ -254,7 +255,7 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .update(cashFlow)
       .set(data)
-      .where((cf) => cf.id === id)
+      .where(eq(cashFlow.id, id))
       .returning();
     return result[0];
   }
@@ -262,7 +263,7 @@ export class DatabaseStorage implements IStorage {
   async deleteCashFlow(id: string): Promise<void> {
     await db
       .delete(cashFlow)
-      .where((cf) => cf.id === id);
+      .where(eq(cashFlow.id, id));
   }
 
   async getCashFlowsByDateRange(
@@ -272,14 +273,14 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(cashFlow)
-      .where((cf) => cf.date >= startDate && cf.date <= endDate);
+      .where(and(gte(cashFlow.date, startDate), lte(cashFlow.date, endDate)));
   }
 
   async getCashFlowsByShift(shift: string): Promise<CashFlow[]> {
     return await db
       .select()
       .from(cashFlow)
-      .where((cf) => cf.shift === shift);
+      .where(eq(cashFlow.shift, shift));
   }
 }
 
