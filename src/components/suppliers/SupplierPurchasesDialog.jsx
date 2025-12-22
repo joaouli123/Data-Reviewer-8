@@ -125,6 +125,8 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
 
   if (!supplier) return null;
 
+  const [activeTab, setActiveTab] = useState(groupedPurchases.length > 0 ? groupedPurchases[0].main.id : 'todas-parcelas');
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -153,35 +155,39 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
           </div>
         </div>
 
-        <Tabs defaultValue="por-compra">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="por-compra">Por Compra</TabsTrigger>
-            <TabsTrigger value="todas-parcelas">Todas Parcelas</TabsTrigger>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full auto-cols-max overflow-x-auto">
+            {groupedPurchases.map((group) => (
+              <TabsTrigger key={group.main.id} value={group.main.id} className="text-sm whitespace-nowrap">
+                {group.main.description ? group.main.description.substring(0, 20) : 'Compra'} ({group.installments.length})
+              </TabsTrigger>
+            ))}
+            {groupedPurchases.length > 0 && <div className="w-px bg-slate-200" />}
+            <TabsTrigger value="todas-parcelas" className="text-sm">Todas Parcelas</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="por-compra" className="space-y-4 mt-4">
-            {groupedPurchases.length > 0 ? (
-              groupedPurchases.map((group) => (
-                <div key={group.main.id} className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden p-6">
-                  <div className="flex items-start justify-between mb-6">
-                    <div>
-                      <h4 className="font-bold text-xl text-slate-900 leading-tight">{group.main.description || 'Compra'}</h4>
-                      <p className="text-sm text-slate-500 mt-1">
-                        {group.main.date ? format(parseISO(group.main.date), "dd 'de' MMMM, yyyy", { locale: ptBR }) : '-'}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xl font-bold text-slate-900">
-                        R$ {group.main.totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </p>
-                      <Badge variant="secondary" className="bg-slate-100 text-slate-600 border-none shadow-none text-[10px] h-5 uppercase tracking-wider mt-1 px-2">
-                        {group.main.isPaid ? 'Pago' : 'Parcial'}
-                      </Badge>
-                    </div>
+          {groupedPurchases.map((group) => (
+            <TabsContent key={group.main.id} value={group.main.id} className="space-y-4 mt-4">
+              <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden p-6">
+                <div className="flex items-start justify-between mb-6">
+                  <div>
+                    <h4 className="font-bold text-xl text-slate-900 leading-tight">{group.main.description || 'Compra'}</h4>
+                    <p className="text-sm text-slate-500 mt-1">
+                      {group.main.date ? format(parseISO(group.main.date), "dd 'de' MMMM, yyyy", { locale: ptBR }) : '-'}
+                    </p>
                   </div>
-                  
-                  <div className="space-y-3">
-                    {group.installments.map((installment, idx) => (
+                  <div className="text-right">
+                    <p className="text-xl font-bold text-slate-900">
+                      R$ {group.main.totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </p>
+                    <Badge variant="secondary" className="bg-slate-100 text-slate-600 border-none shadow-none text-[10px] h-5 uppercase tracking-wider mt-1 px-2">
+                      {group.main.isPaid ? 'Pago' : 'Parcial'}
+                    </Badge>
+                  </div>
+                </div>
+                
+                <div className="space-y-3">
+                  {group.installments.map((installment, idx) => (
                       <div key={installment.id} className="flex items-center justify-between p-4 bg-slate-50/30 rounded-xl border border-slate-100/50 hover:bg-slate-50 transition-colors">
                         <div className="flex items-center gap-5">
                           <div className="flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 text-slate-500 text-base font-bold flex-shrink-0">
@@ -248,15 +254,10 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                         </div>
                       </div>
                     ))}
-                  </div>
                 </div>
-              ))
-            ) : (
-              <div className="text-center py-12 border-2 border-dashed rounded-xl border-slate-200">
-                <p className="text-slate-500">Nenhuma compra registrada para este fornecedor.</p>
               </div>
-            )}
-          </TabsContent>
+            </TabsContent>
+          ))}
 
           <TabsContent value="todas-parcelas" className="space-y-3 mt-4">
             {purchases.length > 0 ? (
