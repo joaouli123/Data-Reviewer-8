@@ -62,18 +62,28 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
 
   const confirmPaymentMutation = useMutation({
     mutationFn: async (purchaseId) => {
+      console.log('Confirming purchase payment for:', purchaseId);
       const response = await fetch(`/api/transactions/${purchaseId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'pago' })
       });
-      if (!response.ok) throw new Error('Falha ao confirmar pagamento');
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Purchase payment confirmation failed:', errorData);
+        throw new Error(errorData.error || 'Falha ao confirmar pagamento');
+      }
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+    onSuccess: (data) => {
+      console.log('Purchase payment confirmed successfully:', data);
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
       toast.success('Pagamento confirmado!');
+    },
+    onError: (error) => {
+      console.error('Mutation error:', error);
+      toast.error(error.message);
     }
   });
 
@@ -151,18 +161,21 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                           </div>
                         </div>
                         <div className="flex items-center">
-                          {installment.status === 'completed' || installment.status === 'pago' ? (
+                          {(installment.status === 'completed' || installment.status === 'pago') ? (
                             <Badge className="bg-emerald-50 text-emerald-600 hover:bg-emerald-50 border-none shadow-none font-medium flex items-center gap-2 px-4 py-1.5 text-sm rounded-lg">
                               <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Pago
                             </Badge>
                           ) : (
                             <Button
                               size="sm"
-                              onClick={() => confirmPaymentMutation.mutate(installment.id)}
+                              onClick={() => {
+                                console.log('Button clicked for purchase installment:', installment.id);
+                                confirmPaymentMutation.mutate(installment.id);
+                              }}
                               className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-2 h-10 rounded-lg shadow-sm text-sm"
                               disabled={confirmPaymentMutation.isPending}
                             >
-                              Confirmar Pagamento
+                              {confirmPaymentMutation.isPending && confirmPaymentMutation.variables === installment.id ? 'Processando...' : 'Confirmar Pagamento'}
                             </Button>
                           )}
                         </div>
