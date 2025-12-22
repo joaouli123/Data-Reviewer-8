@@ -65,12 +65,13 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
       const response = await fetch(`/api/transactions/${purchaseId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'completed' })
+        body: JSON.stringify({ status: 'pago' })
       });
       if (!response.ok) throw new Error('Falha ao confirmar pagamento');
       return response.json();
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       toast.success('Pagamento confirmado!');
     }
