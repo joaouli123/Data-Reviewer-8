@@ -140,7 +140,7 @@ export default function SuppliersPage() {
                 <TableHead>Contato</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Total em Compras</TableHead>
-                <TableHead className="w-[100px]"></TableHead>
+                <TableHead className="text-right pr-6">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -177,8 +177,8 @@ export default function SuppliersPage() {
                         R$ {getSupplierPurchases(s.id).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
+                    <TableCell className="pr-6">
+                      <div className="flex justify-end gap-1">
                         <Button 
                           variant="ghost" 
                           size="sm" 

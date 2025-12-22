@@ -152,7 +152,7 @@ export default function CustomersPage() {
                         <TableHead>Status</TableHead>
                         <TableHead>Total em Vendas</TableHead>
                         <TableHead>Desde</TableHead>
-                        <TableHead className="w-[100px]"></TableHead>
+                        <TableHead className="text-right pr-6">Ações</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -188,8 +188,8 @@ export default function CustomersPage() {
                                 <TableCell className="text-slate-500 text-sm">
                                     {c.join_date ? format(parseISO(c.join_date), "MMM yyyy", { locale: ptBR }) : '-'}
                                 </TableCell>
-                                <TableCell>
-                                    <div className="flex gap-1">
+                                <TableCell className="pr-6">
+                                    <div className="flex justify-end gap-1">
                                         <Button 
                                             variant="ghost" 
                                             size="sm" 
