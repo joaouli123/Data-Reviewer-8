@@ -232,10 +232,11 @@ Forneça recomendações específicas para melhorar a gestão do capital de giro
                 <p className="text-sm text-slate-700">{analysis.assessment || 'Análise concluída'}</p>
               </div>
 
+              {Array.isArray(analysis.recommendations) && analysis.recommendations.length > 0 && (
               <div>
                 <h4 className="font-semibold text-slate-900 mb-3">Recomendações</h4>
                 <div className="space-y-3">
-                  {Array.isArray(analysis.recommendations) && analysis.recommendations.map((rec, idx) => (
+                  {analysis.recommendations.map((rec, idx) => (
                     <div key={idx} className="p-3 bg-white rounded-lg border">
                       <div className="flex items-start justify-between mb-2">
                         <p className="font-medium text-slate-900">{rec.action}</p>
@@ -248,6 +249,7 @@ Forneça recomendações específicas para melhorar a gestão do capital de giro
                   ))}
                 </div>
               </div>
+              )}
             </div>
           )}
         </CardContent>

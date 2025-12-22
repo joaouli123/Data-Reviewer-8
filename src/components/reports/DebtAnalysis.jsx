@@ -329,6 +329,7 @@ Forneça uma análise detalhada e recomendações para gestão de endividamento.
                 </div>
               )}
 
+              {Array.isArray(analysis.recommendations) && (
               <div>
                 <h4 className="font-semibold text-slate-900 mb-3">Estratégias de Gestão</h4>
                 <div className="space-y-3">
@@ -346,6 +347,7 @@ Forneça uma análise detalhada e recomendações para gestão de endividamento.
                   ))}
                 </div>
               </div>
+              )}
             </div>
           )}
         </CardContent>

@@ -1,6 +1,6 @@
 // Google Gemini AI Integration
 const API_KEY = import.meta.env.VITE_GOOGLE_GEMINI_API_KEY;
-const API_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent';
+const API_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent';
 
 // Mock response para quando API key não está configurada
 const generateMockAnalysis = (responseJsonSchema) => {
