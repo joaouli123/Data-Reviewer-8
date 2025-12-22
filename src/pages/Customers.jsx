@@ -25,7 +25,7 @@ export default function CustomersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [newCustomer, setNewCustomer] = useState({ name: '', email: '', phone: '', status: 'active' });
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(15);
+  const [pageSize, setPageSize] = useState(20);
   
   const queryClient = useQueryClient();
 

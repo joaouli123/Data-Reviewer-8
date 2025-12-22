@@ -25,7 +25,7 @@ export default function SuppliersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [newSupplier, setNewSupplier] = useState({ name: '', email: '', phone: '', cnpj: '', status: 'active' });
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(15);
+  const [pageSize, setPageSize] = useState(20);
   
   const queryClient = useQueryClient();
 
