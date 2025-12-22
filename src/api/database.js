@@ -236,16 +236,38 @@ export const Category = {
 
   async create(data) {
     try {
+      console.log('API Request - Creating category:', data);
+      const payload = {
+        name: String(data.name || '').trim(),
+        type: String(data.type || 'entrada')
+      };
+      
       const response = await fetch('/api/categories', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body: JSON.stringify(payload)
       });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return await response.json();
+      
+      const contentType = response.headers.get("content-type");
+      let result;
+      if (contentType && contentType.includes("application/json")) {
+        result = await response.json();
+      } else {
+        const text = await response.text();
+        console.error('API Response - Non-JSON received:', text);
+        throw new Error(`Resposta inválida do servidor: ${text.substring(0, 100)}`);
+      }
+
+      if (!response.ok) {
+        console.error('API Error Response:', result);
+        throw new Error(result.error || result.details || `Erro do servidor (${response.status})`);
+      }
+      
+      console.log('API Success - Category created:', result);
+      return result;
     } catch (error) {
-      console.error('Error creating category:', error);
-      throw error;
+      console.error('API Creation Exception:', error);
+      throw new Error(error.message || 'Erro inesperado ao criar categoria');
     }
   },
 

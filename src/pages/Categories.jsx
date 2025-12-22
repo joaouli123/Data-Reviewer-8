@@ -32,10 +32,14 @@ export default function CategoriesPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       setIsFormOpen(false);
-      setFormData({ name: '' });
+      setFormData({ name: '', type: 'entrada' });
       toast.success('Categoria criada com sucesso!');
     },
-    onError: () => toast.error('Erro ao criar categoria')
+    onError: (error) => {
+      console.error('Error creating category:', error);
+      const message = error.message || 'Erro desconhecido';
+      toast.error(message.includes('HTTP') ? 'Erro ao criar categoria' : message);
+    }
   });
 
   const updateMutation = useMutation({
@@ -67,9 +71,14 @@ export default function CategoriesPage() {
     }
 
     if (editingCategory) {
-      updateMutation.mutate({ id: editingCategory.id, data: formData });
+      updateMutation.mutate({ id: editingCategory.id, data: { name: formData.name.trim(), type: formData.type } });
     } else {
-      createMutation.mutate(formData);
+      const payload = { 
+        name: formData.name.trim(), 
+        type: formData.type 
+      };
+      console.log('Attempting to create category:', payload);
+      createMutation.mutate(payload);
     }
   };
 

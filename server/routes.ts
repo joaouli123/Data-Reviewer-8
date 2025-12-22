@@ -9,6 +9,7 @@ import {
   insertCashFlowSchema,
   DEFAULT_CATEGORIES,
 } from "../shared/schema";
+import { z } from "zod";
 
 export function registerRoutes(
   httpServer: Server,
@@ -174,11 +175,37 @@ export function registerRoutes(
 
   app.post("/api/categories", async (req, res) => {
     try {
-      const data = insertCategorySchema.parse(req.body);
-      const category = await storage.createCategory(data);
+      console.log("[POST /api/categories] Payload received:", req.body);
+      
+      const name = String(req.body.name || '').trim();
+      const type = String(req.body.type || 'entrada');
+      
+      if (!name) {
+        return res.status(400).json({ error: "Nome da categoria é obrigatório" });
+      }
+
+      // Check if category already exists manually
+      const existing = await storage.getCategories();
+      if (existing.some(c => c.name.toLowerCase() === name.toLowerCase())) {
+        return res.status(400).json({ error: "Já existe uma categoria com este nome" });
+      }
+
+      // Explicitly construct the insert object to avoid any extra fields
+      const insertData = {
+        name,
+        type
+      };
+
+      console.log("[POST /api/categories] Inserting:", insertData);
+      const category = await storage.createCategory(insertData);
+      console.log("[POST /api/categories] Success:", category);
       res.status(201).json(category);
-    } catch (error) {
-      res.status(400).json({ error: "Invalid category data" });
+    } catch (error: any) {
+      console.error("[POST /api/categories] Server Error:", error);
+      res.status(500).json({ 
+        error: "Erro interno ao processar categoria", 
+        details: error.message || "Erro desconhecido"
+      });
     }
   });
 

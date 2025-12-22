@@ -143,8 +143,17 @@ export class DatabaseStorage implements IStorage {
 
   // Category operations
   async createCategory(data: InsertCategory): Promise<Category> {
-    const result = await db.insert(categories).values(data).returning();
-    return result[0];
+    try {
+      console.log("Database Insert - Category Data:", data);
+      const [newCategory] = await db.insert(categories).values(data).returning();
+      if (!newCategory) {
+        throw new Error("Falha ao inserir categoria: nenhum registro retornado");
+      }
+      return newCategory;
+    } catch (error) {
+      console.error("Database Insert Error (createCategory):", error);
+      throw error;
+    }
   }
 
   async getCategories(): Promise<Category[]> {

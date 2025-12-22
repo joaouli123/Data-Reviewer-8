@@ -18,12 +18,12 @@ export default function CreateCategoryModal({ open, onOpenChange, onSubmit, isLo
     }
     
     onSubmit({
-      name: categoryName.toLowerCase(),
+      name: categoryName.trim(),
       type: categoryType
     });
     
-    setCategoryName('');
-    setCategoryType('entrada');
+    // The modal is closed by the parent component (Transactions.jsx or Categories.jsx)
+    // or by the onSuccess handler in the mutation
   };
 
   const handleOpenChange = (newOpen) => {
