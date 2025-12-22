@@ -98,7 +98,6 @@ Forneça recomendações estratégicas de precificação.`;
       setAiSuggestion(response);
       toast.success('Análise concluída!', { duration: 5000 });
     } catch (error) {
-      console.error(error);
       toast.error('Erro ao gerar sugestão', { duration: 5000 });
     } finally {
       setIsAnalyzing(false);

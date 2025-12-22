@@ -150,7 +150,6 @@ Forneça análise detalhada do impacto e recomendações.`;
 
       toast.success('Simulação concluída!');
     } catch (error) {
-      console.error('Simulation error:', error);
       toast.error('Erro ao simular impacto: ' + (error.message || 'Desconhecido'));
     } finally {
       setIsAnalyzing(false);

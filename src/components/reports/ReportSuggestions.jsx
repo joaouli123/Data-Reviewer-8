@@ -57,7 +57,6 @@ Sugira 4-5 relatórios mais relevantes que devem ser gerados, com justificativa 
       setSuggestions(response.suggested_reports);
       toast.success('Sugestões geradas!');
     } catch (error) {
-      console.error(error);
       toast.error('Erro ao gerar sugestões');
     } finally {
       setIsGenerating(false);

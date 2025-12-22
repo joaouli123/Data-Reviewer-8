@@ -85,7 +85,6 @@ Crie uma análise preditiva incluindo:
       setPredictions(response);
       toast.success('Análise preditiva concluída!', { duration: 5000 });
     } catch (error) {
-      console.error(error);
       toast.error('Erro ao gerar análise preditiva', { duration: 5000 });
     } finally {
       setIsAnalyzing(false);

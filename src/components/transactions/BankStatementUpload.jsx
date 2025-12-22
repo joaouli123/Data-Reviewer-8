@@ -85,7 +85,6 @@ export default function BankStatementUpload({ open, onOpenChange, onExtracted })
         toast.error(extractionResult.details || 'Erro ao extrair dados do arquivo');
       }
     } catch (error) {
-      console.error(error);
       toast.error('Erro ao processar arquivo');
     } finally {
       setIsUploading(false);

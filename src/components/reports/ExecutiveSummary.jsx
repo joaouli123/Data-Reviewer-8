@@ -34,10 +34,6 @@ export default function ExecutiveSummary({ summary, transactions, saleInstallmen
   );
 
   // Debug logging
-  console.log('ExecutiveSummary - saleInstallments:', saleInstallments);
-  console.log('ExecutiveSummary - purchaseInstallments:', purchaseInstallments);
-  console.log('ExecutiveSummary - pendingSalesInstallments:', pendingSalesInstallments);
-  console.log('ExecutiveSummary - pendingPurchaseInstallments:', pendingPurchaseInstallments);
 
   const pendingReceivables = pendingSalesInstallments.reduce((sum, i) => sum + parseFloat(i.amount || 0), 0);
   const pendingPayables = pendingPurchaseInstallments.reduce((sum, i) => sum + parseFloat(i.amount || 0), 0);

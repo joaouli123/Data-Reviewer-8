@@ -200,7 +200,6 @@ export default function ReportsPage() {
       setAnalysisResult(response);
       toast.success("Análise completa gerada com sucesso!", { duration: 5000 });
     } catch (error) {
-      console.error(error);
       toast.error("Erro ao gerar análise. Tente novamente.", { duration: 5000 });
     } finally {
       setIsAnalyzing(false);

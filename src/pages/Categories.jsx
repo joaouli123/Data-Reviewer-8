@@ -36,7 +36,6 @@ export default function CategoriesPage() {
       toast.success('Categoria criada com sucesso!', { duration: 5000 });
     },
     onError: (error) => {
-      console.error('Error creating category:', error);
       const message = error.message || 'Erro desconhecido';
       toast.error(message.includes('HTTP') ? 'Erro ao criar categoria' : message, { duration: 5000 });
     }
@@ -78,7 +77,6 @@ export default function CategoriesPage() {
     if (editingCategory) {
       updateMutation.mutate({ id: editingCategory.id, data: payload });
     } else {
-      console.log('Dispatching createMutation with:', payload);
       createMutation.mutate(payload);
     }
   };
