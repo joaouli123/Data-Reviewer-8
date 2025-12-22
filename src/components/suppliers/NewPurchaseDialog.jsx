@@ -22,6 +22,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
     installments: 1,
     installment_amount: ''
   });
+  const [customInstallments, setCustomInstallments] = useState([]);
   const [isCreateCategoryModalOpen, setIsCreateCategoryModalOpen] = useState(false);
 
   // Reset form when dialog closes
@@ -41,6 +42,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
         installments: 1,
         installment_amount: ''
       });
+      setCustomInstallments([]);
     }
   }, [open, supplier]);
 
@@ -136,11 +138,46 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
       toast.error('Preencha todos os campos obrigatórios');
       return;
     }
-    createPurchaseMutation.mutate(formData);
+    
+    // Validate custom installments if provided
+    if (customInstallments.length > 0) {
+      const totalCustom = customInstallments.reduce((sum, inst) => sum + parseFloat(inst.amount || 0), 0);
+      if (Math.abs(totalCustom - Number(formData.total_amount)) > 0.01) {
+        toast.error('A soma das parcelas deve ser igual ao valor total');
+        return;
+      }
+    }
+    
+    createPurchaseMutation.mutate({
+      ...formData,
+      total_amount: Number(formData.total_amount),
+      installments: Number(formData.installments),
+      customInstallments: customInstallments.length > 0 ? customInstallments : null
+    });
   };
 
   const handleInstallmentsChange = (value) => {
-    setFormData({ ...formData, installments: value, installment_amount: '' });
+    const numValue = value === '' ? '1' : value;
+    setFormData({ ...formData, installments: numValue, installment_amount: '' });
+    
+    // Initialize custom installments array
+    const numInstallments = parseInt(numValue);
+    if (numInstallments > 1) {
+      const defaultAmount = formData.total_amount ? (parseFloat(formData.total_amount) / numInstallments).toFixed(2) : '';
+      const newCustomInstallments = Array.from({ length: numInstallments }, (_, i) => ({
+        amount: defaultAmount,
+        due_date: format(addMonths(new Date(formData.purchase_date), i), 'yyyy-MM-dd')
+      }));
+      setCustomInstallments(newCustomInstallments);
+    } else {
+      setCustomInstallments([]);
+    }
+  };
+
+  const updateCustomInstallment = (index, field, value) => {
+    const updated = [...customInstallments];
+    updated[index] = { ...updated[index], [field]: value };
+    setCustomInstallments(updated);
   };
 
   return (
@@ -247,14 +284,64 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
             )}
           </div>
 
-          {formData.installments > 1 && (
+          {Number(formData.installments) > 1 && customInstallments.length === 0 && (
             <div className="p-3 bg-slate-50 rounded-lg text-sm text-slate-600">
               <p>
-                {formData.installment_amount 
+                {formData.installment_amount && !isNaN(parseFloat(formData.installment_amount))
                   ? `${formData.installments}x de R$ ${formatCurrency(formData.installment_amount)}`
-                  : `${formData.installments}x de R$ ${formatCurrency((parseFloat(formData.total_amount || 0) / formData.installments))}`
+                  : `${formData.installments}x de R$ ${formatCurrency((parseFloat(formData.total_amount || 0) / Number(formData.installments || 1)))}`
                 }
               </p>
+            </div>
+          )}
+
+          {customInstallments.length > 1 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium">Detalhamento das Parcelas</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setCustomInstallments([])}
+                  className="text-xs"
+                >
+                  Usar valor padrão
+                </Button>
+              </div>
+              <div className="max-h-60 overflow-y-auto space-y-2 border rounded-lg p-3 bg-slate-50">
+                {customInstallments.map((inst, idx) => (
+                  <div key={idx} className="grid grid-cols-3 gap-2 items-center bg-white p-2 rounded border">
+                    <div className="text-sm font-medium text-slate-600">
+                      Parcela {idx + 1}
+                    </div>
+                    <CurrencyInput
+                      placeholder="Valor"
+                      value={inst.amount}
+                      onChange={(e) => updateCustomInstallment(idx, 'amount', e.target.value)}
+                      className="text-sm"
+                    />
+                    <Input
+                      type="date"
+                      value={inst.due_date}
+                      onChange={(e) => updateCustomInstallment(idx, 'due_date', e.target.value)}
+                      className="text-sm"
+                    />
+                  </div>
+                ))}
+                <div className="pt-2 border-t mt-2">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="font-medium">Total das Parcelas:</span>
+                    <span className={`font-bold ${
+                      Math.abs(customInstallments.reduce((sum, inst) => sum + parseFloat(inst.amount || 0), 0) - parseFloat(formData.total_amount || 0)) < 0.01
+                        ? 'text-emerald-600'
+                        : 'text-rose-600'
+                    }`}>
+                      R$ {customInstallments.reduce((sum, inst) => sum + parseFloat(inst.amount || 0), 0).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
