@@ -25,9 +25,19 @@ import DebtImpactSimulator from '../components/reports/DebtImpactSimulator';
 import DREAnalysis from '../components/reports/DREAnalysis';
 import ReportExporter from '../components/reports/ReportExporter';
 
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+
 export default function ReportsPage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [tempDateRange, setTempDateRange] = useState({
+    startDate: startOfDay(new Date()),
+    endDate: endOfDay(new Date()),
+    label: 'Hoje'
+  });
+  const [tempCategory, setTempCategory] = useState('all');
+
   const [dateRange, setDateRange] = useState({
     startDate: startOfDay(new Date()),
     endDate: endOfDay(new Date()),
@@ -76,8 +86,17 @@ export default function ReportsPage() {
 
   const filteredTransactions = getFilteredTransactions();
 
+  const handleStartAnalysis = () => {
+    setModalOpen(true);
+  };
+
   const generateAnalysis = async () => {
-    if (filteredTransactions.length === 0) {
+    // Apply temporary filters to the actual state
+    setDateRange(tempDateRange);
+    setCategoryFilter(tempCategory);
+    setModalOpen(false);
+
+    if (getFilteredTransactions().length === 0) {
       toast.error("Não há dados suficientes para análise.");
       return;
     }
@@ -203,7 +222,7 @@ export default function ReportsPage() {
             reportType="general"
           />
           <Button 
-            onClick={generateAnalysis} 
+            onClick={handleStartAnalysis} 
             disabled={isAnalyzing}
             className="bg-primary hover:bg-primary text-white px-6"
             size="lg"
@@ -223,29 +242,34 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Filter className="w-5 h-5 text-blue-600" />
-            Filtros de Análise
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col md:flex-row gap-4 justify-start">
-            <div className="space-y-2 w-full md:w-[200px]">
-              <label className="text-sm font-medium text-slate-700">Período</label>
+      {/* Modal de Configuração da Análise */}
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-blue-600" />
+              Configurar Nova Análise
+            </DialogTitle>
+            <DialogDescription>
+              Selecione o período e a categoria para que nossa IA gere os insights.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-6 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700">Período de Análise</label>
               <PeriodFilter 
-                onPeriodChange={setDateRange}
+                onPeriodChange={setTempDateRange}
                 mode="days"
-                defaultPeriod="today"
+                defaultPeriod="last30Days"
               />
             </div>
-            <div className="space-y-2 w-full md:w-[300px]">
-              <label className="text-sm font-medium text-slate-700">Categoria</label>
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700">Filtrar por Categoria (Opcional)</label>
+              <Select value={tempCategory} onValueChange={setTempCategory}>
                 <SelectTrigger className="w-full">
-                  <SelectValue />
+                  <SelectValue placeholder="Todas as Categorias" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todas as Categorias</SelectItem>
@@ -258,16 +282,25 @@ export default function ReportsPage() {
               </Select>
             </div>
           </div>
-        </CardContent>
-      </Card>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button>
+            <Button onClick={generateAnalysis} className="bg-primary">
+              Iniciar Análise IA
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Report Suggestions */}
-      <ReportSuggestions 
-        transactions={filteredTransactions}
-        saleInstallments={saleInstallments}
-        purchaseInstallments={purchaseInstallments}
-        onGenerateAnalysis={generateAnalysis}
-      />
+      {!analysisResult && !isAnalyzing && (
+        <ReportSuggestions 
+          transactions={filteredTransactions}
+          saleInstallments={saleInstallments}
+          purchaseInstallments={purchaseInstallments}
+          onGenerateAnalysis={handleStartAnalysis}
+        />
+      )}
 
       {!analysisResult && !isAnalyzing && (
         <Card className="bg-slate-50 border-dashed border-2 border-slate-200">
