@@ -24,7 +24,8 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
   const groupedPurchases = React.useMemo(() => {
     const groups = {};
     purchases.forEach(p => {
-      const groupKey = p.installmentGroup || p.id;
+      // Key: installmentGroup if exists, otherwise treat as a single purchase
+      const groupKey = p.installmentGroup || `single-${p.id}`;
       if (!groups[groupKey]) {
         groups[groupKey] = [];
       }

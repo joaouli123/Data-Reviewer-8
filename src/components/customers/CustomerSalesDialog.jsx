@@ -24,7 +24,8 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
   const groupedSales = React.useMemo(() => {
     const groups = {};
     sales.forEach(s => {
-      const groupKey = s.installmentGroup || s.id;
+      // Key: installmentGroup if exists, otherwise treat as a single sale
+      const groupKey = s.installmentGroup || `single-${s.id}`;
       if (!groups[groupKey]) {
         groups[groupKey] = [];
       }
