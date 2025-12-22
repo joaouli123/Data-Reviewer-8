@@ -227,7 +227,7 @@ export default function ReportsPage() {
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">Insights inteligentes para o seu negócio baseados em dados reais.</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
           <ReportExporter 
             reportData={{
               summary: analysisResult ? {
@@ -239,11 +239,12 @@ export default function ReportsPage() {
               forecast: analysisResult?.cash_flow_forecast
             }}
             reportType="general"
+            className="flex-1 sm:flex-none"
           />
           <Button 
             onClick={handleStartAnalysis} 
             disabled={isAnalyzing}
-            className="bg-primary hover:bg-primary text-white px-6"
+            className="bg-primary hover:bg-primary text-white px-6 w-full sm:w-auto"
             size="lg"
             data-testid="button-new-analysis"
           >
