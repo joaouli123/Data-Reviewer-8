@@ -19,12 +19,30 @@ export default function DREAnalysis({ transactions, period = 'currentYear' }) {
     const expenses = {};
     
     transactions.forEach(t => {
-      const amount = Math.abs(parseFloat(t.amount || 0));
       const category = (!t.categoryId ? 'Sem Categoria' : (t.categoryId || 'Sem Categoria')).toString().trim();
       
+      // For revenues: use paidAmount if partial, full amount if paid or pending
       if (t.type === 'venda' || t.type === 'income') {
+        let amount = 0;
+        if (t.status === 'pago' || t.status === 'completed') {
+          // Fully paid: count full amount + interest
+          amount = parseFloat(t.amount || 0) + parseFloat(t.interest || 0);
+        } else if (t.status === 'parcial') {
+          // Partially paid: count only what was paid + interest
+          amount = parseFloat(t.paidAmount || 0) + parseFloat(t.interest || 0);
+        }
+        // If pending (status === 'pendente'): don't count anything (amount = 0)
         revenues[category] = (revenues[category] || 0) + amount;
       } else if (t.type === 'compra' || t.type === 'expense') {
+        let amount = 0;
+        if (t.status === 'pago' || t.status === 'completed') {
+          // Fully paid: count full amount + interest
+          amount = parseFloat(t.amount || 0) + parseFloat(t.interest || 0);
+        } else if (t.status === 'parcial') {
+          // Partially paid: count only what was paid + interest
+          amount = parseFloat(t.paidAmount || 0) + parseFloat(t.interest || 0);
+        }
+        // If pending: don't count anything
         expenses[category] = (expenses[category] || 0) + amount;
       }
     });

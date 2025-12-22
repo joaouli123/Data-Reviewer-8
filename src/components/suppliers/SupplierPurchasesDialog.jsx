@@ -72,15 +72,29 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
   }, [purchases]);
 
   const getTotalPaid = () => {
-    return purchases
-      .filter(p => p.status === 'completed' || p.status === 'pago')
-      .reduce((acc, p) => acc + parseFloat(p.amount || 0), 0);
+    return purchases.reduce((acc, p) => {
+      if (p.status === 'completed' || p.status === 'pago') {
+        // Fully paid: add full amount + interest
+        return acc + parseFloat(p.amount || 0) + parseFloat(p.interest || 0);
+      } else if (p.status === 'parcial') {
+        // Partially paid: add only paid amount + interest
+        return acc + parseFloat(p.paidAmount || 0) + parseFloat(p.interest || 0);
+      }
+      return acc;
+    }, 0);
   };
 
   const getTotalPending = () => {
-    return purchases
-      .filter(p => p.status !== 'completed' && p.status !== 'pago')
-      .reduce((acc, p) => acc + parseFloat(p.amount || 0), 0);
+    return purchases.reduce((acc, p) => {
+      if (p.status === 'pendente') {
+        // Pending: full amount is pending
+        return acc + parseFloat(p.amount || 0);
+      } else if (p.status === 'parcial') {
+        // Partially paid: remaining amount is pending
+        return acc + (parseFloat(p.amount || 0) - parseFloat(p.paidAmount || 0));
+      }
+      return acc;
+    }, 0);
   };
 
   const confirmPaymentMutation = useMutation({
