@@ -59,16 +59,26 @@ app.post('/api/transactions', async (req, res) => {
 
 app.patch('/api/transactions/:id', async (req, res) => {
   try {
+    const id = req.params.id;
     const data = req.body;
+    console.log('🔄 Updating transaction', id, ':', JSON.stringify(data));
+    
     // Convert date string to Date object if it's a string
     if (data.date && typeof data.date === 'string') {
       data.date = new Date(data.date);
     }
-    const updated = await storage.updateTransaction(req.params.id, data);
-    updated ? res.json(updated) : res.status(404).json({ error: 'Not found' });
+    
+    const updated = await storage.updateTransaction(id, data);
+    if (updated) {
+      console.log('✅ Transaction updated:', updated.id);
+      res.json(updated);
+    } else {
+      console.error('❌ Transaction not found:', id);
+      res.status(404).json({ error: 'Not found' });
+    }
   } catch (error) {
-    console.error('Error updating transaction:', error);
-    res.status(500).json({ error: 'Failed to update transaction' });
+    console.error('❌ Error updating transaction:', error);
+    res.status(500).json({ error: String(error) });
   }
 });
 

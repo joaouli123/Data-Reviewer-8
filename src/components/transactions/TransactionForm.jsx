@@ -73,9 +73,9 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
         setFormData({
           ...initialData,
           categoryId: categoryId || initialData.categoryId || '',
-          type: selectedCategory?.type === 'entrada' ? 'venda' : 'compra',
+          type: initialData.type || (selectedCategory?.type === 'entrada' ? 'venda' : 'compra'),
           date: new Date(initialData.date),
-          amount: Math.abs(initialData.amount).toString()
+          amount: Math.abs(parseFloat(initialData.amount) || 0).toString()
         });
       } else {
         setFormData({
