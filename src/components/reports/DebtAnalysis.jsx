@@ -152,7 +152,6 @@ Forneça uma análise detalhada e recomendações para gestão de endividamento.
       setAnalysis(response);
       toast.success('Análise concluída!');
     } catch (error) {
-      console.error(error);
       toast.error('Erro ao analisar endividamento');
     } finally {
       setIsAnalyzing(false);

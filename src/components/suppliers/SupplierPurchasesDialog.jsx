@@ -99,7 +99,6 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
 
   const confirmPaymentMutation = useMutation({
     mutationFn: async ({ purchaseId, paidAmount, interest }) => {
-      console.log('Confirming purchase payment for:', purchaseId, { paidAmount, interest });
       
       // Get the transaction first to check the amount
       const getResponse = await fetch(`/api/transactions/${purchaseId}`);
@@ -126,7 +125,6 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
       });
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('Purchase payment confirmation failed:', errorData);
         throw new Error(errorData.error || 'Falha ao confirmar pagamento');
       }
       const transaction = await response.json();
@@ -146,13 +144,11 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
       });
       
       if (!cashFlowResponse.ok) {
-        console.warn('Failed to create cash flow entry, but transaction was updated');
       }
       
       return transaction;
     },
     onSuccess: (data) => {
-      console.log('Purchase payment confirmed successfully:', data);
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/cash-flow'] });
@@ -161,14 +157,12 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
       toast.success('Pagamento confirmado!');
     },
     onError: (error) => {
-      console.error('Mutation error:', error);
       toast.error(error.message);
     }
   });
 
   const cancelPaymentMutation = useMutation({
     mutationFn: async (purchaseId) => {
-      console.log('Canceling payment for:', purchaseId);
       
       // Get the transaction to know the amount to reverse
       const transactionRes = await fetch(`/api/transactions/${purchaseId}`);
@@ -182,7 +176,6 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
       });
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('Cancel payment failed:', errorData);
         throw new Error(errorData.error || 'Falha ao cancelar pagamento');
       }
       
@@ -195,20 +188,17 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
           await fetch(`/api/cash-flow/${relatedCashFlow.id}`, { method: 'DELETE' });
         }
       } catch (err) {
-        console.warn('Failed to delete cash flow entry, but transaction was reverted');
       }
       
       return response.json();
     },
     onSuccess: () => {
-      console.log('Payment canceled successfully');
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/cash-flow'] });
       toast.success('Pagamento cancelado!');
     },
     onError: (error) => {
-      console.error('Cancel mutation error:', error);
       toast.error(error.message);
     }
   });

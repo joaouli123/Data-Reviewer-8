@@ -104,7 +104,6 @@ Forneça recomendações específicas para melhorar a gestão do capital de giro
       setAnalysis(response);
       toast.success('Análise concluída!');
     } catch (error) {
-      console.error(error);
       toast.error('Erro ao analisar capital de giro');
     } finally {
       setIsAnalyzing(false);

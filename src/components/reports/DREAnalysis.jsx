@@ -154,7 +154,6 @@ Gere previsões para os próximos 3 meses com análise de tendências.`;
       setForecast(response);
       toast.success('Previsão gerada com sucesso!');
     } catch (error) {
-      console.error(error);
       toast.error('Erro ao gerar previsão');
     } finally {
       setIsAnalyzing(false);

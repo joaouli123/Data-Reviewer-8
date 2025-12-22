@@ -8,7 +8,6 @@ export const Transaction = {
       const data = await response.json();
       return data || [];
     } catch (error) {
-      console.error('Error fetching transactions:', error);
       return [];
     }
   },
@@ -19,7 +18,6 @@ export const Transaction = {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.json();
     } catch (error) {
-      console.error('Error fetching transaction:', error);
       return null;
     }
   },
@@ -33,12 +31,10 @@ export const Transaction = {
       });
       const result = await response.json();
       if (!response.ok) {
-        console.error('Transaction API error:', result);
         throw new Error(result.details || result.error || `HTTP ${response.status}`);
       }
       return result;
     } catch (error) {
-      console.error('Error creating transaction:', error);
       throw error;
     }
   },
@@ -56,7 +52,6 @@ export const Transaction = {
       }
       return result;
     } catch (error) {
-      console.error('Error updating transaction:', error);
       throw error;
     }
   },
@@ -69,7 +64,6 @@ export const Transaction = {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return true;
     } catch (error) {
-      console.error('Error deleting transaction:', error);
       throw error;
     }
   }
@@ -86,7 +80,6 @@ export const Customer = {
       const data = await response.json();
       return Array.isArray(data) ? data : [];
     } catch (error) {
-      console.error('Error fetching customers:', error);
       return [];
     }
   },
@@ -97,7 +90,6 @@ export const Customer = {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.json();
     } catch (error) {
-      console.error('Error fetching customer:', error);
       return null;
     }
   },
@@ -112,7 +104,6 @@ export const Customer = {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.json();
     } catch (error) {
-      console.error('Error creating customer:', error);
       throw error;
     }
   },
@@ -127,7 +118,6 @@ export const Customer = {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.json();
     } catch (error) {
-      console.error('Error updating customer:', error);
       throw error;
     }
   },
@@ -140,7 +130,6 @@ export const Customer = {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return true;
     } catch (error) {
-      console.error('Error deleting customer:', error);
       throw error;
     }
   }
@@ -157,7 +146,6 @@ export const Supplier = {
       const data = await response.json();
       return Array.isArray(data) ? data : [];
     } catch (error) {
-      console.error('Error fetching suppliers:', error);
       return [];
     }
   },
@@ -168,7 +156,6 @@ export const Supplier = {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.json();
     } catch (error) {
-      console.error('Error fetching supplier:', error);
       return null;
     }
   },
@@ -183,7 +170,6 @@ export const Supplier = {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.json();
     } catch (error) {
-      console.error('Error creating supplier:', error);
       throw error;
     }
   },
@@ -198,7 +184,6 @@ export const Supplier = {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.json();
     } catch (error) {
-      console.error('Error updating supplier:', error);
       throw error;
     }
   },
@@ -211,7 +196,6 @@ export const Supplier = {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return true;
     } catch (error) {
-      console.error('Error deleting supplier:', error);
       throw error;
     }
   }
@@ -224,7 +208,6 @@ export const Category = {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.json();
     } catch (error) {
-      console.error('Error fetching categories:', error);
       return [];
     }
   },
@@ -235,14 +218,12 @@ export const Category = {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.json();
     } catch (error) {
-      console.error('Error fetching category:', error);
       return null;
     }
   },
 
   async create(data) {
     try {
-      console.log('API Request - Creating category:', data);
       const payload = {
         name: String(data.name || '').trim(),
         type: String(data.type || 'entrada')
@@ -260,19 +241,15 @@ export const Category = {
         result = await response.json();
       } else {
         const text = await response.text();
-        console.error('API Response - Non-JSON received:', text);
         throw new Error(`Resposta inválida do servidor: ${text.substring(0, 100)}`);
       }
 
       if (!response.ok) {
-        console.error('API Error Response:', result);
         throw new Error(result.error || result.details || `Erro do servidor (${response.status})`);
       }
       
-      console.log('API Success - Category created:', result);
       return result;
     } catch (error) {
-      console.error('API Creation Exception:', error);
       throw new Error(error.message || 'Erro inesperado ao criar categoria');
     }
   },
@@ -287,7 +264,6 @@ export const Category = {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.json();
     } catch (error) {
-      console.error('Error updating category:', error);
       throw error;
     }
   },
@@ -300,7 +276,6 @@ export const Category = {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return true;
     } catch (error) {
-      console.error('Error deleting category:', error);
       throw error;
     }
   }
@@ -313,7 +288,6 @@ export const Sale = {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.json();
     } catch (error) {
-      console.error('Error fetching sales:', error);
       return [];
     }
   },
@@ -324,7 +298,6 @@ export const Sale = {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.json();
     } catch (error) {
-      console.error('Error fetching sale:', error);
       return null;
     }
   },
@@ -368,7 +341,6 @@ export const Sale = {
       }
       return result;
     } catch (error) {
-      console.error('Error creating sale:', error);
       throw error;
     }
   }
@@ -385,7 +357,6 @@ export const Installment = {
       const data = await response.json();
       return Array.isArray(data) ? data : [];
     } catch (error) {
-      console.error('Error fetching sale installments:', error);
       return [];
     }
   },
@@ -395,7 +366,6 @@ export const Installment = {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.json();
     } catch (error) {
-      console.error('Error fetching sale installment:', error);
       return null;
     }
   },
@@ -409,7 +379,6 @@ export const Installment = {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.json();
     } catch (error) {
-      console.error('Error creating sale installment:', error);
       throw error;
     }
   }
@@ -422,7 +391,6 @@ export const Purchase = {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.json();
     } catch (error) {
-      console.error('Error fetching purchases:', error);
       return [];
     }
   },
@@ -433,7 +401,6 @@ export const Purchase = {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.json();
     } catch (error) {
-      console.error('Error fetching purchase:', error);
       return null;
     }
   },
@@ -477,7 +444,6 @@ export const Purchase = {
       }
       return result;
     } catch (error) {
-      console.error('Error creating purchase:', error);
       throw error;
     }
   }
@@ -494,7 +460,6 @@ export const PurchaseInstallment = {
       const data = await response.json();
       return Array.isArray(data) ? data : [];
     } catch (error) {
-      console.error('Error fetching purchase installments:', error);
       return [];
     }
   },
@@ -504,7 +469,6 @@ export const PurchaseInstallment = {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.json();
     } catch (error) {
-      console.error('Error fetching purchase installment:', error);
       return null;
     }
   },
@@ -518,7 +482,6 @@ export const PurchaseInstallment = {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.json();
     } catch (error) {
-      console.error('Error creating purchase installment:', error);
       throw error;
     }
   }

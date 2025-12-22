@@ -9,7 +9,6 @@ function App() {
       try {
         await fetch('/api/init', { method: 'POST' })
       } catch (error) {
-        console.error('Error initializing data:', error)
       }
     }
     initializeData()

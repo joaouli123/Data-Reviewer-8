@@ -204,7 +204,6 @@ Identifique:
       setInsights(response);
       toast.success('Análise concluída!');
     } catch (error) {
-      console.error(error);
       toast.error('Erro ao analisar categorias');
     } finally {
       setIsAnalyzing(false);

@@ -60,7 +60,6 @@ export default function ReportExporter({ reportData, reportType = 'general' }) {
           pdf.addImage(imgData, 'PNG', 20, yPosition, imgWidth, imgHeight);
           yPosition += imgHeight + 10;
         } catch (error) {
-          console.error('Error capturing chart:', error);
         }
       }
 
@@ -96,7 +95,6 @@ export default function ReportExporter({ reportData, reportType = 'general' }) {
       pdf.save(`relatorio-${reportType}-${formatDateUTC3()}.pdf`);
       toast.success('PDF exportado com sucesso!');
     } catch (error) {
-      console.error(error);
       toast.error('Erro ao exportar PDF');
     } finally {
       setIsExporting(false);
@@ -153,7 +151,6 @@ export default function ReportExporter({ reportData, reportType = 'general' }) {
 
       toast.success('Excel exportado com sucesso!');
     } catch (error) {
-      console.error(error);
       toast.error('Erro ao exportar Excel');
     } finally {
       setIsExporting(false);

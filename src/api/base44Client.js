@@ -89,7 +89,6 @@ export const base44 = {
       name: 'Usuário',
       email: 'user@app.com'
     },
-    logout: async () => { console.log('Logout'); }
   },
   integrations: {
     Core: {

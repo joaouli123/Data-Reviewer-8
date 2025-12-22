@@ -22,7 +22,6 @@ export default function QuickActionsFAB() {
       toast.success('Transação criada!');
     },
     onError: (error) => {
-      console.error('Transaction mutation failed:', error);
       toast.error(`Erro ao criar transação: ${error.message}`);
     }
   });

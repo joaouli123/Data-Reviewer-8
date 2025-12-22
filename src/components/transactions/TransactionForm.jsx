@@ -48,7 +48,6 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
       toast.success('Categoria criada!');
     },
     onError: (error) => {
-      console.error('Error creating category in transaction form:', error);
       toast.error(error.message || 'Erro ao criar categoria');
     }
   });

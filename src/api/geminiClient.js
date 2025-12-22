@@ -224,7 +224,6 @@ export const invokeGemini = async (prompt, responseJsonSchema = null) => {
   try {
     // Se não tem API key, retorna mock
     if (!API_KEY) {
-      console.warn('VITE_GOOGLE_GEMINI_API_KEY não configurada. Usando análise fictícia de demonstração.');
       return generateMockAnalysis(responseJsonSchema);
     }
 
@@ -256,7 +255,6 @@ export const invokeGemini = async (prompt, responseJsonSchema = null) => {
 
     if (!response.ok) {
       const error = await response.json();
-      console.error('API Gemini error:', error);
       // Fallback to mock on API error
       return generateMockAnalysis(responseJsonSchema);
     }
@@ -285,7 +283,6 @@ export const invokeGemini = async (prompt, responseJsonSchema = null) => {
     
     return textContent;
   } catch (error) {
-    console.error('Erro ao chamar Gemini:', error);
     return generateMockAnalysis(responseJsonSchema);
   }
 };

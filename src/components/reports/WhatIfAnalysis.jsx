@@ -192,7 +192,6 @@ Forneça análise detalhada e recomendações estratégicas.`;
       
       toast.success('Análise de cenários concluída!');
     } catch (error) {
-      console.error(error);
       toast.error('Erro ao analisar cenários');
     } finally {
       setIsAnalyzing(false);
