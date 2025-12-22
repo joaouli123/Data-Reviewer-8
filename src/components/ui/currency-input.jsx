@@ -54,7 +54,7 @@ const CurrencyInput = forwardRef(({
     } else {
       setDisplayValue('');
     }
-  }, []);
+  }, [value]);
 
   // Update display when value prop changes externally (e.g., form reset)
   useEffect(() => {
