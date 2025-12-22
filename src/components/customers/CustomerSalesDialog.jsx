@@ -98,56 +98,57 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
             <TabsTrigger value="todas-parcelas">Todas Parcelas</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="por-venda" className="space-y-2 mt-4">
+          <TabsContent value="por-venda" className="space-y-4 mt-4">
             {groupedSales.length > 0 ? (
               groupedSales.map((group) => (
-                <div key={group.main.id} className="border rounded p-2">
-                  <div className="flex items-start justify-between mb-2">
+                <div key={group.main.id} className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                  <div className="p-4 border-b border-slate-100 flex items-start justify-between bg-slate-50/30">
                     <div>
-                      <h4 className="font-semibold text-xs text-slate-900">{group.main.description || 'Venda'}</h4>
-                      <p className="text-xs text-slate-500">
-                        {group.main.date ? format(parseISO(group.main.date), "dd/MM/yyyy") : '-'}
+                      <h4 className="font-bold text-base text-slate-900">{group.main.description || 'Venda'}</h4>
+                      <p className="text-sm text-slate-500">
+                        {group.main.date ? format(parseISO(group.main.date), "dd 'de' MMMM, yyyy", { locale: ptBR }) : '-'}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-bold text-slate-900">
+                      <p className="text-lg font-bold text-slate-900">
                         R$ {group.installments.reduce((acc, s) => acc + parseFloat(s.amount || 0), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </p>
+                      <Badge variant="secondary" className="text-[10px] h-5 uppercase tracking-wider">
+                        {group.installments.every(s => s.status === 'completed' || s.status === 'pago') ? 'Pago' : 'Parcial'}
+                      </Badge>
                     </div>
                   </div>
                   
-                  <div className="space-y-1 border-t pt-1">
+                  <div className="p-3 space-y-2 bg-white">
                     {group.installments.map((installment, idx) => (
-                      <div key={installment.id} className="flex items-center justify-between p-1 bg-slate-50 rounded text-xs">
-                        <div className="flex items-center gap-2">
-                          <div className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold">
+                      <div key={installment.id} className="flex items-center justify-between p-3 bg-slate-50/50 rounded-lg border border-slate-100/50 ml-4">
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 text-sm font-bold">
                             {idx + 1}
                           </div>
-                          <div className="flex-1">
-                            <p className="font-medium text-slate-700">
-                              R$ {parseFloat(installment.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} • Venc: {installment.date ? format(parseISO(installment.date), "dd/MM") : '-'}
+                          <div>
+                            <p className="font-bold text-slate-900">
+                              R$ {parseFloat(installment.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              Venc: {installment.date ? format(parseISO(installment.date), "dd/MM/yyyy") : '-'}
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-3">
                           {installment.status === 'completed' || installment.status === 'pago' ? (
-                            <Badge className="bg-emerald-100 text-emerald-700 text-xs py-1 px-2">
-                              Recebido
+                            <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none shadow-none font-medium flex items-center gap-1 px-3">
+                              <CheckCircle2 className="w-3 h-3" /> Pago
                             </Badge>
                           ) : (
-                            <>
-                              <Badge variant="outline" className="text-amber-600 border-amber-300 text-xs py-1 px-2">
-                                Pendente
-                              </Badge>
-                              <Button
-                                size="sm"
-                                onClick={() => confirmPaymentMutation.mutate(installment.id)}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-xs px-3 py-1"
-                                disabled={confirmPaymentMutation.isPending}
-                              >
-                                Confirmar
-                              </Button>
-                            </>
+                            <Button
+                              size="sm"
+                              onClick={() => confirmPaymentMutation.mutate(installment.id)}
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 shadow-sm"
+                              disabled={confirmPaymentMutation.isPending}
+                            >
+                              Confirmar Pagamento
+                            </Button>
                           )}
                         </div>
                       </div>
@@ -156,7 +157,9 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
                 </div>
               ))
             ) : (
-              <p className="text-center text-slate-500 py-4 text-xs">Nenhuma venda registrada.</p>
+              <div className="text-center py-12 border-2 border-dashed rounded-xl border-slate-200">
+                <p className="text-slate-500">Nenhuma venda registrada para este cliente.</p>
+              </div>
             )}
           </TabsContent>
 
