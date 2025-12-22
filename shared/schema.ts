@@ -145,26 +145,6 @@ export const insertTransactionSchema = createInsertSchema(transactions).omit({
   id: true,
 });
 
-export const insertCashFlowSchema = createInsertSchema(cashFlow).omit({
-  id: true,
-});
-
-export const insertSaleSchema = createInsertSchema(sales).omit({
-  id: true,
-});
-
-export const insertPurchaseSchema = createInsertSchema(purchases).omit({
-  id: true,
-});
-
-export const insertInstallmentSchema = createInsertSchema(installments).omit({
-  id: true,
-});
-
-export const insertPurchaseInstallmentSchema = createInsertSchema(purchaseInstallments).omit({
-  id: true,
-});
-
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
@@ -183,14 +163,14 @@ export type Transaction = typeof transactions.$inferSelect;
 export type InsertCashFlow = z.infer<typeof insertCashFlowSchema>;
 export type CashFlow = typeof cashFlow.$inferSelect;
 
-export type InsertSale = z.infer<typeof insertSaleSchema>;
+export type InsertSale = typeof sales.$inferInsert;
 export type Sale = typeof sales.$inferSelect;
 
-export type InsertPurchase = z.infer<typeof insertPurchaseSchema>;
+export type InsertPurchase = typeof purchases.$inferInsert;
 export type Purchase = typeof purchases.$inferSelect;
 
-export type InsertInstallment = z.infer<typeof insertInstallmentSchema>;
+export type InsertInstallment = typeof installments.$inferInsert;
 export type Installment = typeof installments.$inferSelect;
 
-export type InsertPurchaseInstallment = z.infer<typeof insertPurchaseInstallmentSchema>;
+export type InsertPurchaseInstallment = typeof purchaseInstallments.$inferInsert;
 export type PurchaseInstallment = typeof purchaseInstallments.$inferSelect;
