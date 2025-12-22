@@ -34,7 +34,12 @@ app.get('/api/transactions/:id', async (req, res) => {
 
 app.post('/api/transactions', async (req, res) => {
   try {
-    const newItem = await storage.createTransaction(req.body);
+    const data = req.body;
+    // Convert date string to Date object if it's a string
+    if (data.date && typeof data.date === 'string') {
+      data.date = new Date(data.date);
+    }
+    const newItem = await storage.createTransaction(data);
     res.status(201).json(newItem);
   } catch (error) {
     console.error('Error creating transaction:', error);
@@ -44,7 +49,12 @@ app.post('/api/transactions', async (req, res) => {
 
 app.patch('/api/transactions/:id', async (req, res) => {
   try {
-    const updated = await storage.updateTransaction(req.params.id, req.body);
+    const data = req.body;
+    // Convert date string to Date object if it's a string
+    if (data.date && typeof data.date === 'string') {
+      data.date = new Date(data.date);
+    }
+    const updated = await storage.updateTransaction(req.params.id, data);
     updated ? res.json(updated) : res.status(404).json({ error: 'Not found' });
   } catch (error) {
     console.error('Error updating transaction:', error);
@@ -238,7 +248,12 @@ app.get('/api/cash-flow/:id', async (req, res) => {
 
 app.post('/api/cash-flow', async (req, res) => {
   try {
-    const newItem = await storage.createCashFlow(req.body);
+    const data = req.body;
+    // Convert date string to Date object if it's a string
+    if (data.date && typeof data.date === 'string') {
+      data.date = new Date(data.date);
+    }
+    const newItem = await storage.createCashFlow(data);
     res.status(201).json(newItem);
   } catch (error) {
     console.error('Error creating cash flow:', error);
@@ -248,7 +263,12 @@ app.post('/api/cash-flow', async (req, res) => {
 
 app.patch('/api/cash-flow/:id', async (req, res) => {
   try {
-    const updated = await storage.updateCashFlow(req.params.id, req.body);
+    const data = req.body;
+    // Convert date string to Date object if it's a string
+    if (data.date && typeof data.date === 'string') {
+      data.date = new Date(data.date);
+    }
+    const updated = await storage.updateCashFlow(req.params.id, data);
     updated ? res.json(updated) : res.status(404).json({ error: 'Not found' });
   } catch (error) {
     console.error('Error updating cash flow:', error);
