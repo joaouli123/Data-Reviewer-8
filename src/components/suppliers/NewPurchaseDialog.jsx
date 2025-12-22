@@ -285,7 +285,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
           </div>
 
           {Number(formData.installments) > 1 && customInstallments.length === 0 && (
-            <div className="p-3 bg-slate-50 rounded-lg text-sm text-slate-600">
+            <div className="p-3 bg-slate-50 rounded-lg text-sm text-slate-600 mt-6">
               <p>
                 {formData.installment_amount && !isNaN(parseFloat(formData.installment_amount))
                   ? `${formData.installments}x de R$ ${formatCurrency(formData.installment_amount)}`
@@ -296,7 +296,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
           )}
 
           {customInstallments.length > 1 && (
-            <div className="space-y-2">
+            <div className="space-y-3 mt-6">
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium">Detalhamento das Parcelas</Label>
                 <Button
@@ -309,24 +309,29 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
                   Usar valor padrão
                 </Button>
               </div>
-              <div className="max-h-60 overflow-y-auto space-y-2 border rounded-lg p-3 bg-slate-50">
+              <div className="max-h-72 overflow-y-auto space-y-3 border rounded-lg p-3 bg-slate-50">
                 {customInstallments.map((inst, idx) => (
-                  <div key={idx} className="grid grid-cols-3 gap-2 items-center bg-white p-2 rounded border">
+                  <div key={idx} className="bg-white p-3 rounded border space-y-3">
                     <div className="text-sm font-medium text-slate-600">
                       Parcela {idx + 1}
                     </div>
-                    <CurrencyInput
-                      placeholder="Valor"
-                      value={inst.amount}
-                      onChange={(e) => updateCustomInstallment(idx, 'amount', e.target.value)}
-                      className="text-sm"
-                    />
-                    <Input
-                      type="date"
-                      value={inst.due_date}
-                      onChange={(e) => updateCustomInstallment(idx, 'due_date', e.target.value)}
-                      className="text-sm"
-                    />
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-600 text-sm">R$</span>
+                        <CurrencyInput
+                          placeholder="Valor"
+                          value={inst.amount}
+                          onChange={(e) => updateCustomInstallment(idx, 'amount', e.target.value)}
+                          className="text-sm flex-1"
+                        />
+                      </div>
+                      <Input
+                        type="date"
+                        value={inst.due_date}
+                        onChange={(e) => updateCustomInstallment(idx, 'due_date', e.target.value)}
+                        className="text-sm"
+                      />
+                    </div>
                   </div>
                 ))}
                 <div className="pt-2 border-t mt-2">
