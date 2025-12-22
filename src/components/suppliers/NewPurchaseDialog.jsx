@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Category, Purchase, PurchaseInstallment } from '@/api/entities';
 import { toast } from 'sonner';
 import { format, addMonths, parseISO } from 'date-fns';
 
@@ -27,11 +28,12 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
     initialData: []
   });
 
-  const expenseCategories = categories.filter(c => c.type === 'expense' || c.type === 'both');
+  // No need to filter - use all categories
+  const expenseCategories = categories;
 
   const createPurchaseMutation = useMutation({
     mutationFn: async (data) => {
-      const purchase = await entities.Purchase.create({
+      const purchase = await Purchase.create({
         supplier_id: supplier.id,
         description: data.description,
         total_amount: parseFloat(data.total_amount),
@@ -49,7 +51,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
       for (let i = 0; i < parseInt(data.installments); i++) {
         const dueDate = addMonths(parseISO(data.purchase_date), i);
         installmentPromises.push(
-          entities.PurchaseInstallment.create({
+          PurchaseInstallment.create({
             purchase_id: purchase.id,
             installment_number: i + 1,
             amount: installmentAmount,
