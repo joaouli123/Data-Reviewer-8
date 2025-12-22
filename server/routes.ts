@@ -129,6 +129,25 @@ export function registerRoutes(
     }
   });
 
+  app.patch("/api/customers/:id", async (req, res) => {
+    try {
+      const data = insertCustomerSchema.partial().parse(req.body);
+      const customer = await storage.updateCustomer(req.params.id, data);
+      res.json(customer);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid customer data" });
+    }
+  });
+
+  app.delete("/api/customers/:id", async (req, res) => {
+    try {
+      await storage.deleteCustomer(req.params.id);
+      res.status(204).end();
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete customer" });
+    }
+  });
+
   // Category routes
   app.get("/api/categories", async (req, res) => {
     try {
@@ -163,6 +182,25 @@ export function registerRoutes(
     }
   });
 
+  app.patch("/api/categories/:id", async (req, res) => {
+    try {
+      const data = insertCategorySchema.partial().parse(req.body);
+      const category = await storage.updateCategory(req.params.id, data);
+      res.json(category);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid category data" });
+    }
+  });
+
+  app.delete("/api/categories/:id", async (req, res) => {
+    try {
+      await storage.deleteCategory(req.params.id);
+      res.status(204).end();
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete category" });
+    }
+  });
+
   // Supplier routes
   app.get("/api/suppliers", async (req, res) => {
     try {
@@ -192,6 +230,25 @@ export function registerRoutes(
       res.status(201).json(supplier);
     } catch (error) {
       res.status(400).json({ error: "Invalid supplier data" });
+    }
+  });
+
+  app.patch("/api/suppliers/:id", async (req, res) => {
+    try {
+      const data = insertSupplierSchema.partial().parse(req.body);
+      const supplier = await storage.updateSupplier(req.params.id, data);
+      res.json(supplier);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid supplier data" });
+    }
+  });
+
+  app.delete("/api/suppliers/:id", async (req, res) => {
+    try {
+      await storage.deleteSupplier(req.params.id);
+      res.status(204).end();
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete supplier" });
     }
   });
 
@@ -230,30 +287,6 @@ export function registerRoutes(
     } catch (error) {
       console.error("[POST /api/transactions] Validation error:", error);
       res.status(400).json({ error: "Invalid transaction data", details: error instanceof Error ? error.message : "Unknown error" });
-    }
-  });
-
-  app.patch("/api/transactions/:id", async (req, res) => {
-    try {
-      const body = req.body;
-      if (typeof body.date === 'string') {
-        body.date = new Date(body.date);
-      }
-      const data = insertTransactionSchema.partial().parse(body);
-      const transaction = await storage.updateTransaction(req.params.id, data);
-      res.json(transaction);
-    } catch (error) {
-      console.error("[PATCH /api/transactions/:id] Error:", error);
-      res.status(400).json({ error: "Invalid transaction data", details: error instanceof Error ? error.message : "Unknown error" });
-    }
-  });
-
-  app.delete("/api/transactions/:id", async (req, res) => {
-    try {
-      await storage.deleteTransaction(req.params.id);
-      res.status(204).end();
-    } catch (error) {
-      res.status(500).json({ error: "Failed to delete transaction" });
     }
   });
 
