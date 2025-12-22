@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, addMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { CheckCircle2, Calendar, Clock } from 'lucide-react';
@@ -19,6 +19,22 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
   });
 
   const purchases = transactions.filter(t => t.supplierId === supplier?.id && t.type === 'compra');
+  
+  // Group purchases by installment group
+  const groupedPurchases = React.useMemo(() => {
+    const groups = {};
+    purchases.forEach(p => {
+      const groupKey = p.installmentGroup || p.id;
+      if (!groups[groupKey]) {
+        groups[groupKey] = [];
+      }
+      groups[groupKey].push(p);
+    });
+    return Object.values(groups).map(group => ({
+      main: group[0],
+      installments: group.sort((a, b) => (a.installmentNumber || 0) - (b.installmentNumber || 0))
+    }));
+  }, [purchases]);
 
   const getTotalPaid = () => {
     return purchases
@@ -78,106 +94,114 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
           </div>
         </div>
 
-        <Tabs defaultValue="purchases">
+        <Tabs defaultValue="por-compra">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="purchases">Compras</TabsTrigger>
-            <TabsTrigger value="installments">Parcelas</TabsTrigger>
+            <TabsTrigger value="por-compra">Por Compra</TabsTrigger>
+            <TabsTrigger value="todas-parcelas">Todas Parcelas</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="purchases" className="space-y-4 mt-4">
-            {purchases?.map((purchase) => (
-              <div key={purchase.id} className="border rounded-lg p-4">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h4 className="font-semibold text-slate-900">{purchase.description || 'Compra'}</h4>
-                    <p className="text-sm text-slate-500">
-                      {purchase.date ? format(parseISO(purchase.date), "d 'de' MMMM, yyyy", { locale: ptBR }) : '-'}
-                    </p>
-                    <div className="mt-2 flex items-center gap-2">
-                      {purchase.status === 'completed' || purchase.status === 'pago' ? (
-                        <Badge className="bg-emerald-100 text-emerald-700">
-                          <CheckCircle2 className="w-3 h-3 mr-1" /> Pago
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="text-amber-600 border-amber-300">
-                          <Clock className="w-3 h-3 mr-1" /> Pendente
-                        </Badge>
-                      )}
+          <TabsContent value="por-compra" className="space-y-4 mt-4">
+            {groupedPurchases.length > 0 ? (
+              groupedPurchases.map((group) => (
+                <div key={group.main.id} className="border rounded-lg p-4">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h4 className="font-semibold text-slate-900">{group.main.description || 'Compra'}</h4>
+                      <p className="text-sm text-slate-500">
+                        {group.main.date ? format(parseISO(group.main.date), "d 'de' MMMM, yyyy", { locale: ptBR }) : '-'}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-slate-900">
+                        R$ {group.installments.reduce((acc, p) => acc + parseFloat(p.amount || 0), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </p>
                     </div>
                   </div>
-                  <div className="text-right flex flex-col items-end gap-2">
-                    <p className="text-lg font-bold text-slate-900">
-                      R$ {parseFloat(purchase.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </p>
-                    {(purchase.status !== 'completed' && purchase.status !== 'pago') && (
-                      <Button
-                        size="sm"
-                        onClick={() => confirmPaymentMutation.mutate(purchase.id)}
-                        className="bg-emerald-600 hover:bg-emerald-700"
-                        disabled={confirmPaymentMutation.isPending}
-                      >
-                        Confirmar Pagamento
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-            {!purchases?.length && (
-              <p className="text-center text-slate-500 py-8">Nenhuma compra registrada.</p>
-            )}
-          </TabsContent>
-
-          <TabsContent value="installments" className="space-y-4 mt-4">
-            {purchases.length > 0 ? (
-              <div className="border rounded-lg overflow-hidden">
-                <table className="w-full text-sm text-left">
-                  <thead className="bg-slate-50 text-slate-500 font-medium border-b">
-                    <tr>
-                      <th className="px-4 py-3">Data</th>
-                      <th className="px-4 py-3">Descrição</th>
-                      <th className="px-4 py-3">Valor</th>
-                      <th className="px-4 py-3 text-right">Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {purchases.map((purchase) => (
-                      <tr key={purchase.id} className="hover:bg-slate-50/50">
-                        <td className="px-4 py-3">
-                          {purchase.date ? format(parseISO(purchase.date), "dd/MM/yyyy") : '-'}
-                        </td>
-                        <td className="px-4 py-3">
-                          <div>
-                            <p className="font-medium text-slate-900">{purchase.description}</p>
-                            <Badge variant="outline" className={`mt-1 text-[10px] ${
-                              purchase.status === 'completed' || purchase.status === 'pago' 
-                                ? 'text-emerald-600 border-emerald-200' 
-                                : 'text-amber-600 border-amber-200'
-                            }`}>
-                              {purchase.status === 'completed' || purchase.status === 'pago' ? 'Pago' : 'Pendente'}
-                            </Badge>
+                  
+                  <div className="space-y-2 border-t pt-3">
+                    {group.installments.map((installment, idx) => (
+                      <div key={installment.id} className="flex items-center justify-between p-2 bg-slate-50 rounded">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold">
+                            {idx + 1}
                           </div>
-                        </td>
-                        <td className="px-4 py-3 font-semibold text-rose-600">
-                          - R$ {parseFloat(purchase.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          {(purchase.status !== 'completed' && purchase.status !== 'pago') && (
-                            <Button 
-                              size="sm" 
-                              variant="ghost"
-                              className="text-emerald-600 hover:text-emerald-700 p-0 h-auto font-medium"
-                              onClick={() => confirmPaymentMutation.mutate(purchase.id)}
+                          <div>
+                            <p className="text-sm font-medium text-slate-700">
+                              R$ {parseFloat(installment.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              Venc: {installment.date ? format(parseISO(installment.date), "dd/MM/yyyy") : '-'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {installment.status === 'completed' || installment.status === 'pago' ? (
+                            <Badge className="bg-emerald-100 text-emerald-700">
+                              <CheckCircle2 className="w-3 h-3 mr-1" /> Pago
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-amber-600 border-amber-300">
+                              <Clock className="w-3 h-3 mr-1" /> Pendente
+                            </Badge>
+                          )}
+                          {(installment.status !== 'completed' && installment.status !== 'pago') && (
+                            <Button
+                              size="sm"
+                              onClick={() => confirmPaymentMutation.mutate(installment.id)}
+                              className="bg-emerald-600 hover:bg-emerald-700 text-xs"
                               disabled={confirmPaymentMutation.isPending}
                             >
                               Confirmar
                             </Button>
                           )}
-                        </td>
-                      </tr>
+                        </div>
+                      </div>
                     ))}
-                  </tbody>
-                </table>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-center text-slate-500 py-8">Nenhuma compra registrada.</p>
+            )}
+          </TabsContent>
+
+          <TabsContent value="todas-parcelas" className="space-y-4 mt-4">
+            {purchases.length > 0 ? (
+              <div className="space-y-2">
+                {purchases.map((purchase, idx) => (
+                  <div key={purchase.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-amber-100 text-amber-700 text-xs font-semibold">
+                        {purchase.installmentNumber || (idx + 1)}
+                      </div>
+                      <div>
+                        <p className="font-medium text-slate-900">{purchase.description || 'Parcela'}</p>
+                        <p className="text-xs text-slate-500">
+                          📅 {purchase.date ? format(parseISO(purchase.date), "dd/MM/yyyy") : '-'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right flex items-center gap-3">
+                      <p className="font-semibold text-rose-600">
+                        R$ {parseFloat(purchase.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </p>
+                      {purchase.status === 'completed' || purchase.status === 'pago' ? (
+                        <Badge className="bg-emerald-100 text-emerald-700">
+                          Pago
+                        </Badge>
+                      ) : (
+                        <Button
+                          size="sm"
+                          onClick={() => confirmPaymentMutation.mutate(purchase.id)}
+                          className="bg-emerald-600 hover:bg-emerald-700"
+                          disabled={confirmPaymentMutation.isPending}
+                        >
+                          Confirmar
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : (
               <p className="text-center text-slate-500 py-8">Nenhuma parcela encontrada.</p>
