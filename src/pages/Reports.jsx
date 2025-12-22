@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import PeriodFilter from '../components/dashboard/PeriodFilter';
+import AdvancedPeriodFilter from '../components/dashboard/AdvancedPeriodFilter';
 import CashFlowForecastChart from '../components/reports/CashFlowForecastChart';
 import ExpensesBreakdown from '../components/reports/ExpensesBreakdown';
 import RevenueGrowthReport from '../components/reports/RevenueGrowthReport';
@@ -232,10 +232,8 @@ export default function ReportsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-700">Período</label>
-              <PeriodFilter 
+              <AdvancedPeriodFilter 
                 onPeriodChange={setDateRange}
-                mode="days"
-                defaultPeriod="today"
               />
             </div>
             <div className="space-y-2">
