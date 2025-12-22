@@ -24,17 +24,28 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
   const groupedPurchases = React.useMemo(() => {
     const groups = {};
     purchases.forEach(p => {
-      // Key: installmentGroup if exists, otherwise treat as a single purchase
-      const groupKey = p.installmentGroup || `single-${p.id}`;
+      // Key: description + base date
+      const groupKey = p.installmentGroup || p.description || `purchase-${p.date}`;
       if (!groups[groupKey]) {
         groups[groupKey] = [];
       }
       groups[groupKey].push(p);
     });
-    return Object.values(groups).map(group => ({
-      main: group[0],
-      installments: group.sort((a, b) => (a.installmentNumber || 0) - (b.installmentNumber || 0))
-    }));
+    return Object.values(groups).map(group => {
+      const main = group[0];
+      const installments = group.sort((a, b) => (a.installmentNumber || 0) - (b.installmentNumber || 0));
+      const totalAmount = installments.reduce((acc, p) => acc + parseFloat(p.amount || 0), 0);
+      const isPaid = installments.every(p => p.status === 'completed' || p.status === 'pago');
+
+      return {
+        main: {
+          ...main,
+          totalAmount,
+          isPaid
+        },
+        installments
+      };
+    }).sort((a, b) => new Date(b.main.date).getTime() - new Date(a.main.date).getTime());
   }, [purchases]);
 
   const getTotalPaid = () => {
@@ -114,10 +125,10 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                     </div>
                     <div className="text-right">
                       <p className="text-xl font-bold text-slate-900">
-                        R$ {group.installments.reduce((acc, p) => acc + parseFloat(p.amount || 0), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        R$ {group.main.totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </p>
                       <Badge variant="secondary" className="bg-slate-100 text-slate-600 border-none shadow-none text-[10px] h-5 uppercase tracking-wider mt-1 px-2">
-                        {group.installments.every(s => s.status === 'completed' || s.status === 'pago') ? 'Pago' : 'Parcial'}
+                        {group.main.isPaid ? 'Pago' : 'Parcial'}
                       </Badge>
                     </div>
                   </div>
@@ -127,7 +138,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                       <div key={installment.id} className="flex items-center justify-between p-4 bg-slate-50/30 rounded-xl border border-slate-100/50 hover:bg-slate-50 transition-colors">
                         <div className="flex items-center gap-5">
                           <div className="flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 text-slate-500 text-base font-bold flex-shrink-0">
-                            {idx + 1}
+                            {installment.installmentNumber || (idx + 1)}
                           </div>
                           <div>
                             <p className="font-bold text-slate-900 text-lg">
