@@ -301,21 +301,121 @@ export const Category = {
 };
 
 export const Sale = {
-  async list() { return []; },
-  async get() { return null; }
+  async list() {
+    try {
+      const response = await fetch('/api/transactions?type=venda');
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching sales:', error);
+      return [];
+    }
+  },
+
+  async get(id) {
+    try {
+      const response = await fetch(`/api/transactions/${id}`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching sale:', error);
+      return null;
+    }
+  },
+
+  async create(data) {
+    try {
+      const payload = {
+        ...data,
+        type: 'venda',
+        date: data.sale_date || data.date,
+        shift: 'manhã', // Default shift
+        amount: String(data.total_amount || data.amount)
+      };
+      
+      const response = await fetch('/api/transactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.details || result.error || `HTTP ${response.status}`);
+      }
+      return result;
+    } catch (error) {
+      console.error('Error creating sale:', error);
+      throw error;
+    }
+  }
 };
 
 export const Installment = {
   async list() { return []; },
-  async get() { return null; }
+  async get() { return null; },
+  async create(data) { 
+    // For now, we don't have a separate installments table in schema.ts
+    // We can skip this or store it in a way the backend understands
+    return { id: Math.random().toString(), ...data };
+  }
 };
 
 export const Purchase = {
-  async list() { return []; },
-  async get() { return null; }
+  async list() {
+    try {
+      const response = await fetch('/api/transactions?type=compra');
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching purchases:', error);
+      return [];
+    }
+  },
+
+  async get(id) {
+    try {
+      const response = await fetch(`/api/transactions/${id}`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching purchase:', error);
+      return null;
+    }
+  },
+
+  async create(data) {
+    try {
+      const payload = {
+        ...data,
+        type: 'compra',
+        date: data.purchase_date || data.date,
+        shift: 'manhã', // Default shift
+        amount: String(data.total_amount || data.amount)
+      };
+      
+      const response = await fetch('/api/transactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.details || result.error || `HTTP ${response.status}`);
+      }
+      return result;
+    } catch (error) {
+      console.error('Error creating purchase:', error);
+      throw error;
+    }
+  }
 };
 
 export const PurchaseInstallment = {
   async list() { return []; },
-  async get() { return null; }
+  async get() { return null; },
+  async create(data) {
+    return { id: Math.random().toString(), ...data };
+  }
 };

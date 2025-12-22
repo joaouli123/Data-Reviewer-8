@@ -25,7 +25,13 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
 
   // Reset form when dialog closes
   React.useEffect(() => {
-    if (!open) {
+    if (open) {
+      setFormData(prev => ({
+        ...prev,
+        category: customer?.category || '',
+        sale_date: format(new Date(), 'yyyy-MM-dd')
+      }));
+    } else {
       setFormData({
         description: '',
         total_amount: '',
@@ -36,7 +42,7 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
       });
       setCustomInstallments([]);
     }
-  }, [open]);
+  }, [open, customer]);
 
   const queryClient = useQueryClient();
 

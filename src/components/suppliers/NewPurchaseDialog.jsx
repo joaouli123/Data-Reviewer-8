@@ -25,7 +25,13 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
 
   // Reset form when dialog closes
   React.useEffect(() => {
-    if (!open) {
+    if (open) {
+      setFormData(prev => ({
+        ...prev,
+        category: supplier?.category || '',
+        purchase_date: format(new Date(), 'yyyy-MM-dd')
+      }));
+    } else {
       setFormData({
         description: '',
         total_amount: '',
@@ -35,7 +41,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
         installment_amount: ''
       });
     }
-  }, [open]);
+  }, [open, supplier]);
 
   const queryClient = useQueryClient();
 
