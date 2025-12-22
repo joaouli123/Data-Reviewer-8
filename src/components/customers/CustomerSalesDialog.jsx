@@ -163,38 +163,38 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
             )}
           </TabsContent>
 
-          <TabsContent value="todas-parcelas" className="space-y-1 mt-4">
+          <TabsContent value="todas-parcelas" className="space-y-3 mt-4">
             {sales.length > 0 ? (
-              <div className="space-y-1">
+              <div className="space-y-2">
                 {sales.map((sale, idx) => (
-                  <div key={sale.id} className="flex items-center justify-between p-2 border rounded text-xs bg-white">
-                    <div className="flex items-center gap-2 flex-1">
-                      <div className="flex items-center justify-center w-5 h-5 rounded-full bg-amber-100 text-amber-700 text-xs font-semibold flex-shrink-0">
+                  <div key={sale.id} className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl shadow-sm">
+                    <div className="flex items-center gap-4 flex-1">
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-700 text-sm font-bold flex-shrink-0">
                         {sale.installmentNumber || (idx + 1)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-slate-900 truncate">{sale.description || 'Parcela'}</p>
+                        <p className="font-bold text-slate-900 truncate">{sale.description || 'Parcela'}</p>
                         <p className="text-xs text-slate-500">
-                          {sale.date ? format(parseISO(sale.date), "dd/MM/yyyy") : '-'}
+                          {sale.date ? format(parseISO(sale.date), "dd 'de' MMMM, yyyy", { locale: ptBR }) : '-'}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                      <p className="font-semibold text-emerald-600 whitespace-nowrap">
+                    <div className="flex items-center gap-4 flex-shrink-0 ml-4">
+                      <p className="font-bold text-slate-900 whitespace-nowrap">
                         R$ {parseFloat(sale.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </p>
                       {sale.status === 'completed' || sale.status === 'pago' ? (
-                        <Badge className="bg-emerald-100 text-emerald-700 text-xs py-1 px-2">
-                          Recebido
+                        <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none shadow-none font-medium flex items-center gap-1 px-3 py-1">
+                          <CheckCircle2 className="w-3 h-3" /> Pago
                         </Badge>
                       ) : (
                         <Button
                           size="sm"
                           onClick={() => confirmPaymentMutation.mutate(sale.id)}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-xs px-3 py-1"
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 shadow-sm"
                           disabled={confirmPaymentMutation.isPending}
                         >
-                          Confirmar
+                          Confirmar Pagamento
                         </Button>
                       )}
                     </div>
@@ -202,7 +202,9 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
                 ))}
               </div>
             ) : (
-              <p className="text-center text-slate-500 py-4 text-xs">Nenhuma parcela encontrada.</p>
+              <div className="text-center py-12 border-2 border-dashed rounded-xl border-slate-200">
+                <p className="text-slate-500">Nenhuma parcela encontrada.</p>
+              </div>
             )}
           </TabsContent>
         </Tabs>
