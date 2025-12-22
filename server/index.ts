@@ -21,6 +21,7 @@ const mockData: {
   purchases: any[];
   installments: any[];
   purchaseInstallments: any[];
+  cashFlow: any[];
 } = {
   transactions: [
     { id: '1', date: new Date().toISOString(), description: 'Venda de Produto A', amount: 1500, type: 'entrada', status: 'completed', categoryId: '1', customerId: '1' },
@@ -58,6 +59,10 @@ const mockData: {
     { id: '1', purchaseId: '1', supplierId: '1', amount: 166.67, dueDate: new Date().toISOString(), status: 'pending', paidAmount: '0', interest: '0' },
     { id: '2', purchaseId: '1', supplierId: '1', amount: 166.67, dueDate: new Date(Date.now() + 30*86400000).toISOString(), status: 'pending', paidAmount: '0', interest: '0' },
     { id: '3', purchaseId: '1', supplierId: '1', amount: 166.66, dueDate: new Date(Date.now() + 60*86400000).toISOString(), status: 'pending', paidAmount: '0', interest: '0' }
+  ],
+  cashFlow: [
+    { id: '1', date: new Date().toISOString(), inflow: '1500', outflow: '0', balance: '1500', description: 'Venda de Produto A', shift: 'manhã' },
+    { id: '2', date: new Date(Date.now() - 86400000).toISOString(), inflow: '0', outflow: '500', balance: '-500', description: 'Compra de Material', shift: 'manhã' }
   ]
 };
 
@@ -245,6 +250,27 @@ app.patch('/api/purchase-installments/:id', (req: any, res: any) => {
 });
 app.delete('/api/purchase-installments/:id', (req: any, res: any) => {
   findAndDelete(mockData.purchaseInstallments, req.params.id);
+  res.status(204).send();
+});
+
+// ============== CASH FLOW ==============
+app.get('/api/cash-flow', (_req: any, res: any) => res.json(mockData.cashFlow));
+app.get('/api/cash-flow/:id', (req: any, res: any) => {
+  const item = mockData.cashFlow.find(cf => cf.id === req.params.id);
+  item ? res.json(item) : res.status(404).json({ error: 'Not found' });
+});
+app.post('/api/cash-flow', (req: any, res: any) => {
+  const id = Date.now().toString();
+  const newItem = { id, ...req.body };
+  mockData.cashFlow.push(newItem);
+  res.status(201).json(newItem);
+});
+app.patch('/api/cash-flow/:id', (req: any, res: any) => {
+  const updated = findAndUpdate(mockData.cashFlow, req.params.id, req.body);
+  updated ? res.json(updated) : res.status(404).json({ error: 'Not found' });
+});
+app.delete('/api/cash-flow/:id', (req: any, res: any) => {
+  findAndDelete(mockData.cashFlow, req.params.id);
   res.status(204).send();
 });
 
