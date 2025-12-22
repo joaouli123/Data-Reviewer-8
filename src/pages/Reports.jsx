@@ -244,14 +244,6 @@ export default function ReportsPage() {
               </>
             )}
           </Button>
-          <Button 
-            onClick={handleStartAnalysis} 
-            disabled={isAnalyzing}
-            variant="outline"
-            size="lg"
-          >
-            Configurar Filtros
-          </Button>
         </div>
       </div>
 
