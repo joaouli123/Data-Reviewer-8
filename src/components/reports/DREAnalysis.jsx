@@ -20,19 +20,21 @@ export default function DREAnalysis({ transactions, period = 'currentYear' }) {
     
     transactions.forEach(t => {
       const amount = Math.abs(parseFloat(t.amount || 0));
+      const category = (t.category || 'Sem Categoria').trim();
+      
       if (t.type === 'venda' || t.type === 'income') {
-        revenues[t.category] = (revenues[t.category] || 0) + amount;
+        revenues[category] = (revenues[category] || 0) + amount;
       } else if (t.type === 'compra' || t.type === 'expense') {
-        expenses[t.category] = (expenses[t.category] || 0) + amount;
+        expenses[category] = (expenses[category] || 0) + amount;
       }
     });
 
     const receitaBruta = Object.values(revenues).reduce((sum, v) => sum + v, 0);
-    const custosDiretos = expenses['custos'] || 0;
+    const custosDiretos = expenses['Custos'] || expenses['custos'] || 0;
     const receitaLiquida = receitaBruta - custosDiretos;
     
     const despesasOperacionais = Object.entries(expenses)
-      .filter(([cat]) => cat !== 'custos')
+      .filter(([cat]) => cat !== 'Custos' && cat !== 'custos')
       .reduce((sum, [, val]) => sum + val, 0);
     
     const lucroOperacional = receitaLiquida - despesasOperacionais;
@@ -44,7 +46,9 @@ export default function DREAnalysis({ transactions, period = 'currentYear' }) {
       receitaLiquida,
       despesasOperacionais: {
         total: despesasOperacionais,
-        breakdown: Object.entries(expenses).filter(([cat]) => cat !== 'custos')
+        breakdown: Object.entries(expenses)
+          .filter(([cat]) => cat !== 'Custos' && cat !== 'custos')
+          .map(([cat, val]) => [cat || 'Sem Categoria', val || 0])
       },
       lucroOperacional,
       margemLiquida,

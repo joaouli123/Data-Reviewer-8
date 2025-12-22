@@ -14,11 +14,11 @@ export default function ExecutiveSummary({ summary, transactions, saleInstallmen
     new Date(t.date) >= twoMonthsAgo && new Date(t.date) < lastMonth
   );
 
-  const currentRevenue = currentMonthTrans.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
-  const previousRevenue = previousMonthTrans.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+  const currentRevenue = currentMonthTrans.filter(t => t.type === 'venda' || t.type === 'income').reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
+  const previousRevenue = previousMonthTrans.filter(t => t.type === 'venda' || t.type === 'income').reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
   const revenueGrowth = previousRevenue > 0 ? ((currentRevenue - previousRevenue) / previousRevenue * 100) : 0;
 
-  const currentExpenses = currentMonthTrans.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+  const currentExpenses = currentMonthTrans.filter(t => t.type === 'compra' || t.type === 'expense').reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
   const netProfit = currentRevenue - currentExpenses;
   const profitMargin = currentRevenue > 0 ? (netProfit / currentRevenue * 100) : 0;
 
