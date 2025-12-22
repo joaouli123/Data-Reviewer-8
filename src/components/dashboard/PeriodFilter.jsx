@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Calendar, ChevronDown } from 'lucide-react';
 import {
@@ -21,6 +21,7 @@ export default function PeriodFilter({
   const [customOpen, setCustomOpen] = useState(false);
   const [customStart, setCustomStart] = useState(null);
   const [customEnd, setCustomEnd] = useState(null);
+  const [initialized, setInitialized] = useState(false);
 
   const periodOptionsMonths = {
     last3Months: {
@@ -73,7 +74,7 @@ export default function PeriodFilter({
       label: 'Últimos 7 dias',
       getValue: () => {
         const end = endOfDay(new Date());
-        const start = startOfDay(subDays(new Date(), 7));
+        const start = startOfDay(subDays(new Date(), 6));
         return { startDate: start, endDate: end, label: 'Últimos 7 dias' };
       }
     },
@@ -81,7 +82,7 @@ export default function PeriodFilter({
       label: 'Últimos 30 dias',
       getValue: () => {
         const end = endOfDay(new Date());
-        const start = startOfDay(subDays(new Date(), 30));
+        const start = startOfDay(subDays(new Date(), 29));
         return { startDate: start, endDate: end, label: 'Últimos 30 dias' };
       }
     },
@@ -89,7 +90,7 @@ export default function PeriodFilter({
       label: 'Últimos 90 dias',
       getValue: () => {
         const end = endOfDay(new Date());
-        const start = startOfDay(subDays(new Date(), 90));
+        const start = startOfDay(subDays(new Date(), 89));
         return { startDate: start, endDate: end, label: 'Últimos 90 dias' };
       }
     }
@@ -119,6 +120,15 @@ export default function PeriodFilter({
       setCustomOpen(false);
     }
   };
+
+  // Initialize with default period on first render
+  useEffect(() => {
+    if (!initialized) {
+      const periodData = periodOptions[defaultPeriod].getValue();
+      onPeriodChange(periodData);
+      setInitialized(true);
+    }
+  }, [initialized, defaultPeriod, onPeriodChange, periodOptions]);
 
   return (
     <div className="flex items-center gap-2">
