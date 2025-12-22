@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Brain, Sparkles, TrendingUp, AlertTriangle, Lightbulb, FileText, Loader2, ArrowRight, Filter, BarChart3 } from 'lucide-react';
-import { format, subMonths, startOfMonth, endOfMonth, isAfter, isBefore, startOfDay, endOfDay } from 'date-fns';
+import { format, subMonths, startOfMonth, endOfMonth, isAfter, isBefore, startOfDay, endOfDay, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
@@ -31,16 +31,16 @@ export default function ReportsPage() {
   const [analysisResult, setAnalysisResult] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [tempDateRange, setTempDateRange] = useState({
-    startDate: startOfDay(new Date()),
+    startDate: startOfDay(subDays(new Date(), 29)),
     endDate: endOfDay(new Date()),
-    label: 'Hoje'
+    label: 'Últimos 30 dias'
   });
   const [tempCategory, setTempCategory] = useState('all');
 
   const [dateRange, setDateRange] = useState({
-    startDate: startOfDay(new Date()),
+    startDate: startOfDay(subDays(new Date(), 29)),
     endDate: endOfDay(new Date()),
-    label: 'Hoje'
+    label: 'Últimos 30 dias'
   });
   const [categoryFilter, setCategoryFilter] = useState('all');
 

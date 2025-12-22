@@ -19,8 +19,8 @@ export default function ReportSuggestions({ transactions, saleInstallments, purc
       
       // Calculate key metrics
       const recentTransactions = transactions.filter(t => new Date(t.date) >= threeMonthsAgo);
-      const revenue = recentTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
-      const expenses = recentTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+      const revenue = recentTransactions.filter(t => t.type === 'venda' || t.type === 'income').reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
+      const expenses = recentTransactions.filter(t => t.type === 'compra' || t.type === 'expense').reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
       
       const pendingReceivables = saleInstallments.filter(i => !i.paid).reduce((sum, i) => sum + i.amount, 0);
       const pendingPayables = purchaseInstallments.filter(i => !i.paid).reduce((sum, i) => sum + i.amount, 0);
