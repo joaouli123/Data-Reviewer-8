@@ -70,14 +70,15 @@ export default function CategoriesPage() {
       return;
     }
 
+    const payload = { 
+      name: formData.name.trim(), 
+      type: formData.type 
+    };
+
     if (editingCategory) {
-      updateMutation.mutate({ id: editingCategory.id, data: { name: formData.name.trim(), type: formData.type } });
+      updateMutation.mutate({ id: editingCategory.id, data: payload });
     } else {
-      const payload = { 
-        name: formData.name.trim(), 
-        type: formData.type 
-      };
-      console.log('Attempting to create category:', payload);
+      console.log('Dispatching createMutation with:', payload);
       createMutation.mutate(payload);
     }
   };

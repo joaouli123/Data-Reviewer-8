@@ -175,7 +175,7 @@ export function registerRoutes(
 
   app.post("/api/categories", async (req, res) => {
     try {
-      console.log("[POST /api/categories] Payload received:", req.body);
+      console.log("[POST /api/categories] Payload:", req.body);
       
       const name = String(req.body.name || '').trim();
       const type = String(req.body.type || 'entrada');
@@ -184,26 +184,19 @@ export function registerRoutes(
         return res.status(400).json({ error: "Nome da categoria é obrigatório" });
       }
 
-      // Check if category already exists manually
+      // Final simplified version with fixed error handling
       const existing = await storage.getCategories();
       if (existing.some(c => c.name.toLowerCase() === name.toLowerCase())) {
         return res.status(400).json({ error: "Já existe uma categoria com este nome" });
       }
 
-      // Explicitly construct the insert object to avoid any extra fields
-      const insertData = {
-        name,
-        type
-      };
-
-      console.log("[POST /api/categories] Inserting:", insertData);
-      const category = await storage.createCategory(insertData);
+      const category = await storage.createCategory({ name, type });
       console.log("[POST /api/categories] Success:", category);
       res.status(201).json(category);
     } catch (error: any) {
-      console.error("[POST /api/categories] Server Error:", error);
+      console.error("[POST /api/categories] Error:", error);
       res.status(500).json({ 
-        error: "Erro interno ao processar categoria", 
+        error: "Erro ao processar categoria", 
         details: error.message || "Erro desconhecido"
       });
     }
