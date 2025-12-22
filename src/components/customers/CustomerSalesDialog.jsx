@@ -77,7 +77,7 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
         </div>
 
         <Tabs defaultValue="sales" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="w-full">
             <TabsTrigger value="sales">Vendas</TabsTrigger>
             <TabsTrigger value="installments">Parcelas</TabsTrigger>
           </TabsList>
