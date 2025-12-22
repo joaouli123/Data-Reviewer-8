@@ -227,10 +227,11 @@ export default function ReportsPage() {
             reportType="general"
           />
           <Button 
-            onClick={generateAllAnalysesQuick} 
+            onClick={handleStartAnalysis} 
             disabled={isAnalyzing}
             className="bg-primary hover:bg-primary text-white px-6"
             size="lg"
+            data-testid="button-new-analysis"
           >
             {isAnalyzing ? (
               <>
