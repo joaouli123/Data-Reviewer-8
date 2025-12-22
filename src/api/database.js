@@ -112,6 +112,34 @@ export const Customer = {
       console.error('Error creating customer:', error);
       throw error;
     }
+  },
+
+  async update(id, data) {
+    try {
+      const response = await fetch(`/api/customers/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error('Error updating customer:', error);
+      throw error;
+    }
+  },
+
+  async delete(id) {
+    try {
+      const response = await fetch(`/api/customers/${id}`, {
+        method: 'DELETE'
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return true;
+    } catch (error) {
+      console.error('Error deleting customer:', error);
+      throw error;
+    }
   }
 };
 
@@ -152,6 +180,34 @@ export const Supplier = {
       console.error('Error creating supplier:', error);
       throw error;
     }
+  },
+
+  async update(id, data) {
+    try {
+      const response = await fetch(`/api/suppliers/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error('Error updating supplier:', error);
+      throw error;
+    }
+  },
+
+  async delete(id) {
+    try {
+      const response = await fetch(`/api/suppliers/${id}`, {
+        method: 'DELETE'
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return true;
+    } catch (error) {
+      console.error('Error deleting supplier:', error);
+      throw error;
+    }
   }
 };
 
@@ -189,6 +245,34 @@ export const Category = {
       return await response.json();
     } catch (error) {
       console.error('Error creating category:', error);
+      throw error;
+    }
+  },
+
+  async update(id, data) {
+    try {
+      const response = await fetch(`/api/categories/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error('Error updating category:', error);
+      throw error;
+    }
+  },
+
+  async delete(id) {
+    try {
+      const response = await fetch(`/api/categories/${id}`, {
+        method: 'DELETE'
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return true;
+    } catch (error) {
+      console.error('Error deleting category:', error);
       throw error;
     }
   }
