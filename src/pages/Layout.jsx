@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Receipt, Users, Settings, Menu, X, Brain, Building2, TrendingUp, Tag } from 'lucide-react';
+import { LayoutDashboard, Receipt, Users, Settings, Menu, X, Brain, Building2, TrendingUp, Tag, Globe } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import LogoHUA from '@assets/Logo_HUA_1766187037233.png';
@@ -81,7 +81,7 @@ export default function Layout({ children }) {
       {/* Mobile Header */}
       <div className="md:hidden flex items-center justify-between p-3 text-white sticky top-0 z-20" style={{ backgroundColor: '#040303' }}>
         <img 
-          src={LogoHUA} 
+          src="/logo-hua.png" 
           alt="HUA Logo" 
           className="w-16 h-16 object-contain"
           title="HUA - Consultoria e Análise"
