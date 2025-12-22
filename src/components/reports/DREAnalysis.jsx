@@ -87,8 +87,8 @@ export default function DREAnalysis({ transactions, period = 'currentYear' }) {
         const monthKey = format(date, 'yyyy-MM');
         const monthTrans = transactions.filter(t => t.date.startsWith(monthKey));
         
-        const monthRevenue = monthTrans.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
-        const monthExpense = monthTrans.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+        const monthRevenue = monthTrans.filter(t => t.type === 'venda' || t.type === 'income').reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
+        const monthExpense = monthTrans.filter(t => t.type === 'compra' || t.type === 'expense').reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
         
         historicalData.push({
           month: format(date, 'MMM/yy', { locale: ptBR }),

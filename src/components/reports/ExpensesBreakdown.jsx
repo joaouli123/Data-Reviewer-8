@@ -14,10 +14,15 @@ export default function ExpensesBreakdown({ opportunities, transactions, categor
   });
 
   // Debug: Log transactions being filtered
-  const expenseTransactions = transactions.filter(t => t.type === 'compra' || t.type === 'expense');
+  const expenseTransactions = transactions.filter(t => {
+    if (t.type === 'compra' || t.type === 'expense') return true;
+    const catId = t.categoryId;
+    const cat = categories.find(c => c.id === catId);
+    return cat && cat.type === 'saida';
+  });
   console.log('ExpensesBreakdown - Total transactions:', transactions.length);
   console.log('ExpensesBreakdown - Expense transactions:', expenseTransactions.length);
-  console.log('ExpensesBreakdown - Categories available:', categories.map(c => c.name));
+  console.log('ExpensesBreakdown - Categories available:', categories.map(c => `${c.name} (${c.type})`));
 
   // Calculate expenses by category
   const expensesByCategory = expenseTransactions
