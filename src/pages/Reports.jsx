@@ -124,10 +124,10 @@ export default function ReportsPage() {
         Atue como um consultor financeiro sênior para pequenas empresas. 
         
         Dados de Transações (últimos 6 meses):
-        ${JSON.stringify(simpleTransactions)}
+        \${JSON.stringify(simpleTransactions)}
 
         Dados de Clientes (Resumo):
-        ${JSON.stringify(simpleCustomers)}
+        \${JSON.stringify(simpleCustomers)}
 
         Gere uma análise estratégica detalhada contendo:
         1. Sumário executivo do desempenho.
@@ -418,7 +418,7 @@ export default function ReportsPage() {
             </Card>
           )}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
