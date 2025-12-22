@@ -22,13 +22,26 @@ export default function CategoryInsights({ transactions, categories }) {
     const threeMonthsAgo = subMonths(new Date(), 3);
     const recentTransactions = transactions
       .filter(t => new Date(t.date) >= threeMonthsAgo)
-      .map(t => ({
-        description: t.description,
-        amount: Math.abs(parseFloat(t.amount) || 0), // sempre positivo para gráfico
-        type: t.type,
-        category: t.categoryId ? (categoryMap[t.categoryId] || 'Sem categoria') : 'Sem categoria',
-        date: t.date
-      }));
+      .map(t => {
+        let categoryName = 'Sem categoria';
+        
+        // Try to map by categoryId first
+        if (t.categoryId && categoryMap[t.categoryId]) {
+          categoryName = categoryMap[t.categoryId];
+        } 
+        // Fallback to category string if available
+        else if (t.category) {
+          categoryName = t.category;
+        }
+        
+        return {
+          description: t.description,
+          amount: Math.abs(parseFloat(t.amount) || 0),
+          type: t.type,
+          category: categoryName,
+          date: t.date
+        };
+      });
 
     // Group by category
     const categoryStats = {};
@@ -79,13 +92,26 @@ export default function CategoryInsights({ transactions, categories }) {
       const threeMonthsAgo = subMonths(new Date(), 3);
       const recentTransactions = transactions
         .filter(t => new Date(t.date) >= threeMonthsAgo)
-        .map(t => ({
-          description: t.description,
-          amount: t.amount,
-          type: t.type,
-          category: t.categoryId ? (categoryMap[t.categoryId] || 'Sem categoria') : 'Sem categoria',
-          date: t.date
-        }));
+        .map(t => {
+          let categoryName = 'Sem categoria';
+          
+          // Try to map by categoryId first
+          if (t.categoryId && categoryMap[t.categoryId]) {
+            categoryName = categoryMap[t.categoryId];
+          } 
+          // Fallback to category string if available
+          else if (t.category) {
+            categoryName = t.category;
+          }
+          
+          return {
+            description: t.description,
+            amount: t.amount,
+            type: t.type,
+            category: categoryName,
+            date: t.date
+          };
+        });
 
       // Group by category
       const categoryStats = {};
