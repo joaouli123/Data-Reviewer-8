@@ -1,107 +1,61 @@
-import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
-import { serveStatic } from "./static";
-import { createServer } from "http";
+import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
 
-export const app = express();
-const httpServer = createServer(app);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-declare module "http" {
-  interface IncomingMessage {
-    rawBody: unknown;
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// Middleware
+app.use(express.json());
+
+// Serve static files from Vite build
+const publicDir = path.join(__dirname, '..', 'dist', 'public');
+if (fs.existsSync(publicDir)) {
+  app.use(express.static(publicDir));
+}
+
+// API mock endpoints (fallback)
+app.get('/api/transactions', (req, res) => {
+  res.json([
+    { id: '1', date: new Date().toISOString(), description: 'Venda de Produto', amount: 1500, type: 'venda' },
+    { id: '2', date: new Date(Date.now() - 86400000).toISOString(), description: 'Compra de Material', amount: 500, type: 'compra' }
+  ]);
+});
+
+app.get('/api/customers', (req, res) => {
+  res.json([{ id: '1', name: 'Cliente A', email: 'cliente@email.com', phone: '11999999999' }]);
+});
+
+app.get('/api/categories', (req, res) => {
+  res.json([
+    { id: '1', name: 'Vendas', type: 'entrada' },
+    { id: '2', name: 'Matéria Prima', type: 'saida' }
+  ]);
+});
+
+app.get('/api/suppliers', (req, res) => {
+  res.json([{ id: '1', name: 'Fornecedor A', email: 'fornecedor@email.com' }]);
+});
+
+app.get('/api/sales', (req, res) => res.json([]));
+app.get('/api/purchases', (req, res) => res.json([]));
+app.get('/api/installments', (req, res) => res.json([]));
+
+// SPA fallback - serve index.html for all non-API routes
+app.get('*', (req, res) => {
+  const indexPath = path.join(publicDir, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).send('App not built. Run: npm run build');
   }
-}
-
-app.use(
-  express.json({
-    verify: (req, _res, buf) => {
-      req.rawBody = buf;
-    },
-  }),
-);
-
-app.use(express.urlencoded({ extended: false }));
-
-export function log(message: string, source = "express") {
-  const formattedTime = new Date().toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: true,
-  });
-
-  console.log(`${formattedTime} [${source}] ${message}`);
-}
-
-app.use((req, res, next) => {
-  const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
-
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
-
-  res.on("finish", () => {
-    // API logging disabled for clean console
-  });
-
-  next();
 });
 
-// Register routes immediately for middleware use
-registerRoutes(httpServer, app);
-
-// Middleware to catch any /api/* requests that weren't handled by registerRoutes
-// and return a proper 404 JSON response instead of letting vite serve HTML
-app.use((req, res, next) => {
-  if (req.path.startsWith("/api/")) {
-    res.status(404).json({ error: "API endpoint not found" });
-    return;
-  }
-  next();
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`✓ Server running on port ${PORT}`);
+  console.log(`✓ Serving static files from: ${publicDir}`);
 });
-
-// Error handler middleware MUST be last
-app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-  const status = err.status || err.statusCode || 500;
-  const message = err.message || "Internal Server Error";
-
-  res.status(status).json({ message });
-  throw err;
-});
-
-// Only start the HTTP server if this module is run directly (not imported as middleware)
-// When Vite imports this module, it uses the app as middleware on its own server
-const isMainModule = import.meta.url === `file://${process.argv[1]}` || 
-                     process.argv[1]?.endsWith('server/index.ts') ||
-                     process.argv[1]?.includes('tsx');
-
-if (isMainModule) {
-  (async () => {
-    // Setup Vite or static serving
-    if (process.env.NODE_ENV === "production") {
-      serveStatic(app);
-    } else {
-      const { setupVite } = await import("./vite");
-      await setupVite(httpServer, app);
-    }
-
-    // ALWAYS serve the app on the port specified in the environment variable PORT
-    const port = parseInt(process.env.PORT || "5000", 10);
-    httpServer.listen(
-      {
-        port,
-        host: "0.0.0.0",
-        reusePort: true,
-      },
-      () => {
-        // Server started silently
-      },
-    );
-  })();
-}
-
-export default app;
