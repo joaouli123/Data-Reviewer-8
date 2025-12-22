@@ -163,9 +163,9 @@ export default function CustomersPage() {
             <Table>
                 <TableHeader className="bg-slate-50">
                     <TableRow>
-                        <TableHead>Nome</TableHead>
-                        <TableHead>Contato</TableHead>
-                        <TableHead>Desde</TableHead>
+                        <TableHead className="pl-6 text-left">Nome</TableHead>
+                        <TableHead className="text-left">Contato</TableHead>
+                        <TableHead className="text-left">Desde</TableHead>
                         <TableHead className="text-right">Total em Vendas</TableHead>
                         <TableHead className="text-right pr-6">Ações</TableHead>
                     </TableRow>
@@ -173,8 +173,8 @@ export default function CustomersPage() {
                 <TableBody>
                     {paginatedCustomers.length > 0 ? (
                         paginatedCustomers.map((c) => (
-                            <TableRow key={c.id} className="hover:bg-slate-50/50">
-                                <TableCell>
+                            <TableRow key={c.id} className="hover:bg-slate-50/50 group">
+                                <TableCell className="pl-6 text-left">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold">
                                             {c.name.charAt(0).toUpperCase()}
@@ -182,13 +182,13 @@ export default function CustomersPage() {
                                         <span className="font-medium text-slate-900">{c.name}</span>
                                     </div>
                                 </TableCell>
-                                <TableCell>
+                                <TableCell className="text-left">
                                     <div className="flex flex-col text-sm text-slate-500 gap-1">
                                         {c.email && <div className="flex items-center gap-2"><Mail className="w-3 h-3" /> {c.email}</div>}
                                         {c.phone && <div className="flex items-center gap-2"><Phone className="w-3 h-3" /> {c.phone}</div>}
                                     </div>
                                 </TableCell>
-                                <TableCell className="text-slate-500 text-sm">
+                                <TableCell className="text-slate-500 text-sm text-left">
                                     {getCustomerJoinDate(c)}
                                 </TableCell>
                                 <TableCell className="text-right">
@@ -196,7 +196,7 @@ export default function CustomersPage() {
                                         R$ {getCustomerSales(c.id).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                     </div>
                                 </TableCell>
-                                <TableCell className="pr-6">
+                                <TableCell className="text-right pr-6">
                                     <div className="flex justify-end">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>

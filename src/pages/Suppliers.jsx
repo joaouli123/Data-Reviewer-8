@@ -151,9 +151,9 @@ export default function SuppliersPage() {
           <Table>
             <TableHeader className="bg-slate-50">
               <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Contato</TableHead>
-                <TableHead>Desde</TableHead>
+                <TableHead className="pl-6 text-left">Nome</TableHead>
+                <TableHead className="text-left">Contato</TableHead>
+                <TableHead className="text-left">Desde</TableHead>
                 <TableHead className="text-right">Total em Compras</TableHead>
                 <TableHead className="text-right pr-6">Ações</TableHead>
               </TableRow>
@@ -161,8 +161,8 @@ export default function SuppliersPage() {
             <TableBody>
               {paginatedSuppliers.length > 0 ? (
                 paginatedSuppliers.map((s) => (
-                  <TableRow key={s.id} className="hover:bg-slate-50/50">
-                    <TableCell>
+                  <TableRow key={s.id} className="hover:bg-slate-50/50 group">
+                    <TableCell className="pl-6 text-left">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-blue-100 text-primary600 flex items-center justify-center font-semibold">
                           {s.name.charAt(0).toUpperCase()}
@@ -173,13 +173,13 @@ export default function SuppliersPage() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-left">
                       <div className="flex flex-col text-sm text-slate-500 gap-1">
                         {s.email && <div className="flex items-center gap-2"><Mail className="w-3 h-3" /> {s.email}</div>}
                         {s.phone && <div className="flex items-center gap-2"><Phone className="w-3 h-3" /> {s.phone}</div>}
                       </div>
                     </TableCell>
-                    <TableCell className="text-slate-500 text-sm">
+                    <TableCell className="text-slate-500 text-sm text-left">
                       {getSupplierJoinDate(s)}
                     </TableCell>
                     <TableCell className="text-right">
@@ -187,7 +187,7 @@ export default function SuppliersPage() {
                         R$ {getSupplierPurchases(s.id).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </div>
                     </TableCell>
-                    <TableCell className="pr-6">
+                    <TableCell className="text-right pr-6">
                       <div className="flex justify-end">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>

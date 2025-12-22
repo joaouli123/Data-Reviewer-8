@@ -111,65 +111,60 @@ export default function CategoriesPage() {
         </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Categorias Disponíveis</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader className="bg-slate-50">
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead className="w-[120px]">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedCategories.length > 0 ? (
-                  paginatedCategories.map((cat) => (
-                    <TableRow key={cat.id} className="hover:bg-slate-50/50">
-                      <TableCell className="font-medium text-slate-900">
-                        {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={cat.type === 'entrada' ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-red-100 text-red-700 hover:bg-red-200'}>
-                          {cat.type === 'entrada' ? '+ Entrada' : '- Saída'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => handleEdit(cat)}
-                            className="h-8 w-8 text-slate-400 hover:text-primary"
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => deleteMutation.mutate(cat.id)}
-                            className="h-8 w-8 text-slate-400 hover:text-rose-600"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={3} className="text-center py-10 text-slate-500">
-                      Nenhuma categoria encontrada.
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader className="bg-slate-50">
+              <TableRow>
+                <TableHead className="pl-6 text-left">Nome</TableHead>
+                <TableHead className="text-left">Tipo</TableHead>
+                <TableHead className="text-right pr-6">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paginatedCategories.length > 0 ? (
+                paginatedCategories.map((cat) => (
+                  <TableRow key={cat.id} className="hover:bg-slate-50/50 group">
+                    <TableCell className="font-medium text-slate-900 pl-6 text-left">
+                      {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
+                    </TableCell>
+                    <TableCell className="text-left">
+                      <Badge className={cat.type === 'entrada' ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-red-100 text-red-700 hover:bg-red-200'}>
+                        {cat.type === 'entrada' ? '+ Entrada' : '- Saída'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right pr-6">
+                      <div className="flex justify-end gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleEdit(cat)}
+                          className="h-8 w-8 text-slate-400 hover:text-primary"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => deleteMutation.mutate(cat.id)}
+                          className="h-8 w-8 text-slate-400 hover:text-rose-600"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center py-10 text-slate-500">
+                    Nenhuma categoria encontrada.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
         <Pagination 
           currentPage={currentPage}
           pageSize={pageSize}
@@ -180,7 +175,7 @@ export default function CategoriesPage() {
             setCurrentPage(1);
           }}
         />
-      </Card>
+      </div>
 
       <Dialog open={isFormOpen} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-[400px]">
