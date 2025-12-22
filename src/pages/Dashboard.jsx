@@ -160,21 +160,21 @@ export default function DashboardPage() {
       {/* KPI Cards - 4 Columns */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPIWidget
-          title="Receita Mensal"
+          title="Receita Total"
           value={`R$ ${metrics.totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
           icon={TrendingUp}
           trend="up"
-          trendValue="0.0%"
+          trendValue="Vendas"
           className="text-emerald-600"
         />
         
         <KPIWidget
-          title="Lucro Líquido"
-          value={`R$ ${metrics.netProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-          icon={TrendingUp}
-          trend="up"
-          trendValue="-579.5% margem"
-          className={metrics.netProfit < 0 ? "text-rose-600" : "text-emerald-600"}
+          title="Despesa Total (Fornecedores)"
+          value={`R$ ${metrics.totalExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+          icon={DollarSign}
+          trend="down"
+          trendValue="Compras"
+          className="text-rose-600"
         />
 
         <KPIWidget
