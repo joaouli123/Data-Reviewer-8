@@ -118,7 +118,6 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
       const transaction = await response.json();
       
       // Then create corresponding cash flow entry (outflow for purchases)
-      const totalPaid = parseFloat(paidAmount || 0) + parseFloat(interest || 0);
       const cashFlowResponse = await fetch('/api/cash-flow', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
