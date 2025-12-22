@@ -6,11 +6,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CheckCircle2, Clock } from 'lucide-react';
+import { CheckCircle2, Clock, X } from 'lucide-react';
 import { toast } from 'sonner';
+import PaymentEditDialog from '../suppliers/PaymentEditDialog';
 
 export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
   const queryClient = useQueryClient();
+  const [paymentEditOpen, setPaymentEditOpen] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
 
   const { data: transactions = [] } = useQuery({
     queryKey: ['transactions'],
@@ -70,12 +73,16 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
   };
 
   const confirmPaymentMutation = useMutation({
-    mutationFn: async (saleId) => {
-      console.log('Confirming payment for:', saleId);
+    mutationFn: async ({ saleId, paidAmount, interest }) => {
+      console.log('Confirming payment for:', saleId, { paidAmount, interest });
       const response = await fetch(`/api/transactions/${saleId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'pago' })
+        body: JSON.stringify({ 
+          status: 'pago',
+          paidAmount: paidAmount ? parseFloat(paidAmount).toString() : undefined,
+          interest: interest ? parseFloat(interest).toString() : '0'
+        })
       });
       if (!response.ok) {
         const errorData = await response.json();
@@ -88,10 +95,39 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
       console.log('Payment confirmed successfully:', data);
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      setPaymentEditOpen(false);
+      setSelectedTransaction(null);
       toast.success('Pagamento confirmado!');
     },
     onError: (error) => {
       console.error('Mutation error:', error);
+      toast.error(error.message);
+    }
+  });
+
+  const cancelPaymentMutation = useMutation({
+    mutationFn: async (saleId) => {
+      console.log('Canceling payment for:', saleId);
+      const response = await fetch(`/api/transactions/${saleId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'pendente', paidAmount: null, interest: '0' })
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Cancel payment failed:', errorData);
+        throw new Error(errorData.error || 'Falha ao cancelar pagamento');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      console.log('Payment canceled successfully');
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      toast.success('Pagamento cancelado!');
+    },
+    onError: (error) => {
+      console.error('Cancel mutation error:', error);
       toast.error(error.message);
     }
   });
@@ -171,20 +207,49 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
                           {(installment.status === 'completed' || installment.status === 'pago') ? (
-                            <Badge className="bg-emerald-50 text-emerald-600 hover:bg-emerald-50 border border-emerald-200 shadow-none font-medium flex items-center gap-1.5 px-3 py-1 text-xs rounded-md">
-                              <CheckCircle2 className="w-3.5 h-3.5" /> Pago
-                            </Badge>
+                            <>
+                              <div className="flex flex-col items-end gap-0.5 mr-2">
+                                {installment.paidAmount && (
+                                  <p className="text-xs text-slate-500">
+                                    Recebido: R$ {parseFloat(installment.paidAmount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                  </p>
+                                )}
+                                {installment.interest && parseFloat(installment.interest) > 0 && (
+                                  <p className="text-xs text-amber-600">
+                                    Juros: R$ {parseFloat(installment.interest).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                  </p>
+                                )}
+                              </div>
+                              <Badge className="bg-emerald-50 text-emerald-600 hover:bg-emerald-50 border border-emerald-200 shadow-none font-medium flex items-center gap-1.5 px-3 py-1 text-xs rounded-md">
+                                <CheckCircle2 className="w-3.5 h-3.5" /> Pago
+                              </Badge>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => {
+                                  if (confirm('Tem certeza que deseja cancelar este recebimento?')) {
+                                    cancelPaymentMutation.mutate(installment.id);
+                                  }
+                                }}
+                                disabled={cancelPaymentMutation.isPending}
+                                className="text-slate-400 hover:text-red-600"
+                                data-testid={`button-cancel-payment-${installment.id}`}
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </>
                           ) : (
                             <Button
                               size="sm"
                               onClick={() => {
-                                console.log('Button clicked for installment:', installment.id);
-                                confirmPaymentMutation.mutate(installment.id);
+                                setSelectedTransaction(installment);
+                                setPaymentEditOpen(true);
                               }}
                               className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4"
                               disabled={confirmPaymentMutation.isPending}
+                              data-testid={`button-confirm-payment-${installment.id}`}
                             >
-                              Confirmar Pagamento
+                              Confirmar Recebimento
                             </Button>
                           )}
                         </div>
@@ -241,17 +306,49 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
                           {(installment.status === 'completed' || installment.status === 'pago') ? (
-                            <Badge className="bg-emerald-50 text-emerald-600 hover:bg-emerald-50 border border-emerald-200 shadow-none font-medium flex items-center gap-1.5 px-3 py-1 text-xs rounded-md">
-                              <CheckCircle2 className="w-3.5 h-3.5" /> Pago
-                            </Badge>
+                            <>
+                              <div className="flex flex-col items-end gap-0.5 mr-2">
+                                {installment.paidAmount && (
+                                  <p className="text-xs text-slate-500">
+                                    Recebido: R$ {parseFloat(installment.paidAmount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                  </p>
+                                )}
+                                {installment.interest && parseFloat(installment.interest) > 0 && (
+                                  <p className="text-xs text-amber-600">
+                                    Juros: R$ {parseFloat(installment.interest).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                  </p>
+                                )}
+                              </div>
+                              <Badge className="bg-emerald-50 text-emerald-600 hover:bg-emerald-50 border border-emerald-200 shadow-none font-medium flex items-center gap-1.5 px-3 py-1 text-xs rounded-md">
+                                <CheckCircle2 className="w-3.5 h-3.5" /> Pago
+                              </Badge>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => {
+                                  if (confirm('Tem certeza que deseja cancelar este recebimento?')) {
+                                    cancelPaymentMutation.mutate(installment.id);
+                                  }
+                                }}
+                                disabled={cancelPaymentMutation.isPending}
+                                className="text-slate-400 hover:text-red-600"
+                                data-testid={`button-cancel-payment-${installment.id}`}
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </>
                           ) : (
                             <Button
                               size="sm"
-                              onClick={() => confirmPaymentMutation.mutate(installment.id)}
+                              onClick={() => {
+                                setSelectedTransaction(installment);
+                                setPaymentEditOpen(true);
+                              }}
                               className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4"
                               disabled={confirmPaymentMutation.isPending}
+                              data-testid={`button-confirm-payment-${installment.id}`}
                             >
-                              Confirmar Pagamento
+                              Confirmar Recebimento
                             </Button>
                           )}
                         </div>
@@ -267,6 +364,25 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
             )}
           </TabsContent>
         </Tabs>
+
+        <PaymentEditDialog
+          isOpen={paymentEditOpen}
+          onClose={() => {
+            setPaymentEditOpen(false);
+            setSelectedTransaction(null);
+          }}
+          transaction={selectedTransaction}
+          onConfirm={(data) => {
+            confirmPaymentMutation.mutate({
+              saleId: selectedTransaction.id,
+              paidAmount: data.paidAmount,
+              interest: data.interest
+            });
+          }}
+          isLoading={confirmPaymentMutation.isPending}
+          title="Confirmar Recebimento"
+          amountLabel="Valor Recebido"
+        />
       </DialogContent>
     </Dialog>
   );

@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from 'sonner';
 import { AlertCircle } from 'lucide-react';
 
-export default function PaymentEditDialog({ isOpen, onClose, transaction, onConfirm, isLoading }) {
+export default function PaymentEditDialog({ isOpen, onClose, transaction, onConfirm, isLoading, title = "Editar Pagamento", amountLabel = "Valor Pago" }) {
   const [paidAmount, setPaidAmount] = useState(0);
   const [interest, setInterest] = useState(0);
 
@@ -43,7 +43,7 @@ export default function PaymentEditDialog({ isOpen, onClose, transaction, onConf
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Editar Pagamento</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
@@ -55,7 +55,7 @@ export default function PaymentEditDialog({ isOpen, onClose, transaction, onConf
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="paidAmount">Valor Pago</Label>
+            <Label htmlFor="paidAmount">{amountLabel}</Label>
             <div className="flex items-center gap-2">
               <span className="text-slate-600">R$</span>
               <CurrencyInput
