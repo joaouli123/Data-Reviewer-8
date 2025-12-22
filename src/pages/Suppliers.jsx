@@ -138,7 +138,6 @@ export default function SuppliersPage() {
               <TableRow>
                 <TableHead>Nome</TableHead>
                 <TableHead>Contato</TableHead>
-                <TableHead>Status</TableHead>
                 <TableHead>Total em Compras</TableHead>
                 <TableHead className="text-right pr-6">Ações</TableHead>
               </TableRow>
@@ -163,13 +162,6 @@ export default function SuppliersPage() {
                         {s.email && <div className="flex items-center gap-2"><Mail className="w-3 h-3" /> {s.email}</div>}
                         {s.phone && <div className="flex items-center gap-2"><Phone className="w-3 h-3" /> {s.phone}</div>}
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary" className={
-                        s.status === 'active' ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-slate-100 text-slate-600'
-                      }>
-                        {s.status === 'active' ? 'Ativo' : 'Inativo'}
-                      </Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2 text-primary600 font-semibold">
@@ -221,7 +213,7 @@ export default function SuppliersPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-10 text-slate-500">
+                  <TableCell colSpan={4} className="text-center py-10 text-slate-500">
                     Nenhum fornecedor encontrado.
                   </TableCell>
                 </TableRow>
