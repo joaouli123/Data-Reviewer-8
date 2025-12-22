@@ -169,12 +169,25 @@ Forneça análise detalhada e recomendações estratégicas.`;
         }
       });
 
+      // Garantir que a resposta tenha a estrutura esperada para evitar tela branca
+      const safeAnalysis = {
+        scenario_analysis: {
+          base_case: response?.scenario_analysis?.base_case || response?.base_case || "Análise indisponível",
+          with_changes: response?.scenario_analysis?.with_changes || response?.with_changes || "Análise indisponível",
+          optimistic: response?.scenario_analysis?.optimistic || response?.optimistic || "Análise indisponível",
+          pessimistic: response?.scenario_analysis?.pessimistic || response?.pessimistic || "Análise indisponível"
+        },
+        key_risks: response?.key_risks || [],
+        recommendations: response?.recommendations || [],
+        cash_flow_impact: response?.cash_flow_impact || ""
+      };
+
       setScenarios({
         baseline,
         withChanges,
         optimistic,
         pessimistic,
-        analysis: response
+        analysis: safeAnalysis
       });
       
       toast.success('Análise de cenários concluída!');
