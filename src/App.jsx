@@ -1,6 +1,6 @@
 import { useEffect } from "react"
 import Pages from "@/pages/index.jsx"
-import { Toaster } from "@/components/ui/toaster"
+import { Toaster } from "sonner"
 
 function App() {
   useEffect(() => {
@@ -17,7 +17,7 @@ function App() {
   return (
     <>
       <Pages />
-      <Toaster />
+      <Toaster position="top-right" richColors />
     </>
   )
 }
