@@ -59,10 +59,10 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       setFormData((prev) => ({ ...prev, category: newCat.name }));
       setIsCreateCategoryModalOpen(false);
-      toast.success('Categoria criada!');
+      toast.success('Categoria criada!', { duration: 5000 });
     },
     onError: (error) => {
-      toast.error(error.message || 'Erro ao criar categoria');
+      toast.error(error.message || 'Erro ao criar categoria', { duration: 5000 });
     }
   });
 
@@ -125,14 +125,14 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
         installment_amount: ''
       });
       setCustomInstallments([]);
-      toast.success('Venda registrada com sucesso!');
+      toast.success('Venda registrada com sucesso!', { duration: 5000 });
     }
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.category) {
-      toast.error('Selecione uma categoria');
+      toast.error('Selecione uma categoria', { duration: 5000 });
       return;
     }
     
@@ -140,7 +140,7 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
     if (customInstallments.length > 0) {
       const totalCustom = customInstallments.reduce((sum, inst) => sum + parseFloat(inst.amount || 0), 0);
       if (Math.abs(totalCustom - Number(formData.total_amount)) > 0.01) {
-        toast.error('A soma das parcelas deve ser igual ao valor total');
+        toast.error('A soma das parcelas deve ser igual ao valor total', { duration: 5000 });
         return;
       }
     }

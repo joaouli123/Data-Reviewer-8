@@ -94,15 +94,15 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.description.trim()) {
-        toast.error('Digite uma descrição');
+        toast.error('Digite uma descrição', { duration: 5000 });
         return;
     }
     if (!formData.amount || Number(formData.amount) <= 0) {
-        toast.error('Digite um valor válido');
+        toast.error('Digite um valor válido', { duration: 5000 });
         return;
     }
     if (!formData.categoryId) {
-        toast.error('Selecione uma categoria');
+        toast.error('Selecione uma categoria', { duration: 5000 });
         return;
     }
     
@@ -130,7 +130,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
 
   const suggestCategory = async () => {
     if (!formData.description.trim() || categories.length === 0) {
-      toast.error('Digite uma descrição primeiro');
+      toast.error('Digite uma descrição primeiro', { duration: 5000 });
       return;
     }
 
@@ -149,12 +149,12 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
       if (matchingCategory) {
         const newType = matchingCategory.type === 'entrada' ? 'venda' : 'compra';
         setFormData({ ...formData, categoryId: matchingCategory.id, type: newType });
-        toast.success('Categoria sugerida aplicada!');
+        toast.success('Categoria sugerida aplicada!', { duration: 5000 });
       } else {
-        toast.error('Não foi possível sugerir uma categoria apropriada');
+        toast.error('Não foi possível sugerir uma categoria apropriada', { duration: 5000 });
       }
     } catch (error) {
-      toast.error('Erro ao sugerir categoria');
+      toast.error('Erro ao sugerir categoria', { duration: 5000 });
     } finally {
       setIsSuggestingCategory(false);
     }

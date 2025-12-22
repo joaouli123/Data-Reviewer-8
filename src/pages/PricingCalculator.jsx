@@ -24,7 +24,7 @@ export default function PricingCalculatorPage() {
 
   const calculatePrice = () => {
     if (!formData.productName.trim()) {
-      toast.error('Nome do produto é obrigatório');
+      toast.error('Nome do produto é obrigatório', { duration: 5000 });
       return;
     }
     const directCost = parseFloat(formData.directCost) || 0;
@@ -32,7 +32,7 @@ export default function PricingCalculatorPage() {
     const desiredMargin = parseFloat(formData.desiredMargin) || 0;
     
     if (directCost <= 0 && operationalCost <= 0) {
-      toast.error('Informe ao menos um custo válido');
+      toast.error('Informe ao menos um custo válido', { duration: 5000 });
       return;
     }
 
@@ -61,7 +61,7 @@ export default function PricingCalculatorPage() {
 
   const getAISuggestion = async () => {
     if (!formData.productName || !results) {
-      toast.error('Preencha os dados e calcule o preço primeiro');
+      toast.error('Preencha os dados e calcule o preço primeiro', { duration: 5000 });
       return;
     }
 
@@ -96,10 +96,10 @@ Forneça recomendações estratégicas de precificação.`;
       });
 
       setAiSuggestion(response);
-      toast.success('Análise concluída!');
+      toast.success('Análise concluída!', { duration: 5000 });
     } catch (error) {
       console.error(error);
-      toast.error('Erro ao gerar sugestão');
+      toast.error('Erro ao gerar sugestão', { duration: 5000 });
     } finally {
       setIsAnalyzing(false);
     }
