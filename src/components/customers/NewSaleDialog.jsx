@@ -23,6 +23,21 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
   const [customInstallments, setCustomInstallments] = useState([]);
   const [isCreateCategoryModalOpen, setIsCreateCategoryModalOpen] = useState(false);
 
+  // Reset form when dialog closes
+  React.useEffect(() => {
+    if (!open) {
+      setFormData({
+        description: '',
+        total_amount: '',
+        category: '',
+        sale_date: format(new Date(), 'yyyy-MM-dd'),
+        installments: '1',
+        installment_amount: ''
+      });
+      setCustomInstallments([]);
+    }
+  }, [open]);
+
   const queryClient = useQueryClient();
 
   const { data: categories } = useQuery({

@@ -23,6 +23,20 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
   });
   const [isCreateCategoryModalOpen, setIsCreateCategoryModalOpen] = useState(false);
 
+  // Reset form when dialog closes
+  React.useEffect(() => {
+    if (!open) {
+      setFormData({
+        description: '',
+        total_amount: '',
+        category: '',
+        purchase_date: format(new Date(), 'yyyy-MM-dd'),
+        installments: 1,
+        installment_amount: ''
+      });
+    }
+  }, [open]);
+
   const queryClient = useQueryClient();
 
   const { data: categories } = useQuery({

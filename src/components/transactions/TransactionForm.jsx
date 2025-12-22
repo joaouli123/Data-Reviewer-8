@@ -53,25 +53,27 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
   });
 
   React.useEffect(() => {
-    if (initialData) {
-      // Find category ID by name
-      const matchedCategory = categories.find(c => c.name.toLowerCase() === (initialData.category || '').toLowerCase());
-      setFormData({
-        ...initialData,
-        categoryId: matchedCategory?.id || '',
-        type: matchedCategory?.type === 'entrada' ? 'venda' : 'compra',
-        date: new Date(initialData.date),
-        amount: Math.abs(initialData.amount).toString()
-      });
-    } else {
-      setFormData({
-        description: '',
-        amount: '',
-        type: 'venda',
-        categoryId: '',
-        date: new Date(),
-        status: 'concluído'
-      });
+    if (open) {
+      if (initialData) {
+        // Find category ID by name
+        const matchedCategory = categories.find(c => c.name.toLowerCase() === (initialData.category || '').toLowerCase());
+        setFormData({
+          ...initialData,
+          categoryId: matchedCategory?.id || '',
+          type: matchedCategory?.type === 'entrada' ? 'venda' : 'compra',
+          date: new Date(initialData.date),
+          amount: Math.abs(initialData.amount).toString()
+        });
+      } else {
+        setFormData({
+          description: '',
+          amount: '',
+          type: 'venda',
+          categoryId: '',
+          date: new Date(),
+          status: 'concluído'
+        });
+      }
     }
   }, [initialData, open, categories]);
 
