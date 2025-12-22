@@ -55,12 +55,25 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
   React.useEffect(() => {
     if (open) {
       if (initialData) {
-        // Find category ID by name
-        const matchedCategory = categories.find(c => c.name.toLowerCase() === (initialData.category || '').toLowerCase());
+        // First try to use categoryId directly, then find by name
+        let categoryId = initialData.categoryId;
+        let selectedCategory = categories.find(c => c.id === categoryId);
+        
+        // If no categoryId match found, try matching by category name
+        if (!selectedCategory && initialData.category) {
+          selectedCategory = categories.find(c => c.name.toLowerCase() === (initialData.category || '').toLowerCase());
+          categoryId = selectedCategory?.id || '';
+        }
+        
+        // If still no category, try to find by ID as string
+        if (!selectedCategory && initialData.categoryId) {
+          selectedCategory = categories.find(c => c.id === initialData.categoryId);
+        }
+        
         setFormData({
           ...initialData,
-          categoryId: matchedCategory?.id || '',
-          type: matchedCategory?.type === 'entrada' ? 'venda' : 'compra',
+          categoryId: categoryId || initialData.categoryId || '',
+          type: selectedCategory?.type === 'entrada' ? 'venda' : 'compra',
           date: new Date(initialData.date),
           amount: Math.abs(initialData.amount).toString()
         });
