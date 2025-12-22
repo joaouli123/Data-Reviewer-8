@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { eq, and, gte, lte, sql, desc } from "drizzle-orm";
+import { eq, and, gte, lte, sql, desc, leftJoin } from "drizzle-orm";
 import {
   customers,
   suppliers,
@@ -192,16 +192,27 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
-  async getTransactions(): Promise<Transaction[]> {
-    return await db.select().from(transactions);
+  async getTransactions(): Promise<(Transaction & { category?: string })[]> {
+    const result = await db.select({
+      ...transactions,
+      category: categories.name
+    }).from(transactions).leftJoin(categories, eq(transactions.categoryId, categories.id)) as any[];
+    return result.map(t => ({
+      ...t,
+      category: t.category || 'Sem Categoria'
+    }));
   }
 
-  async getTransaction(id: string): Promise<Transaction | undefined> {
-    const result = await db
-      .select()
-      .from(transactions)
-      .where(eq(transactions.id, id));
-    return result[0];
+  async getTransaction(id: string): Promise<(Transaction & { category?: string }) | undefined> {
+    const result = await db.select({
+      ...transactions,
+      category: categories.name
+    }).from(transactions).leftJoin(categories, eq(transactions.categoryId, categories.id)).where(eq(transactions.id, id)) as any[];
+    if (!result[0]) return undefined;
+    return {
+      ...result[0],
+      category: result[0].category || 'Sem Categoria'
+    };
   }
 
   async updateTransaction(
