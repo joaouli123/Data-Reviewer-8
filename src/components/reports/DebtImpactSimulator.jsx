@@ -21,6 +21,10 @@ export default function DebtImpactSimulator({ currentMetrics }) {
     purposeDescription: ''
   });
 
+  // Validate currentMetrics
+  const metrics = currentMetrics || {};
+  const hasValidMetrics = metrics.totalDebt !== undefined && metrics.avgMonthlyRevenue !== undefined && metrics.monthlyDebtPayment !== undefined;
+
   const simulateNewDebt = async () => {
     const debtAmount = parseFloat(newDebtInputs.debtAmount);
     const installments = parseInt(newDebtInputs.installments);
@@ -28,6 +32,11 @@ export default function DebtImpactSimulator({ currentMetrics }) {
 
     if (!debtAmount || !installments) {
       toast.error('Preencha o valor e número de parcelas');
+      return;
+    }
+
+    if (!hasValidMetrics || metrics.avgMonthlyRevenue <= 0) {
+      toast.error('Dados de receita insuficientes para simular');
       return;
     }
 
@@ -140,6 +149,26 @@ Forneça análise detalhada do impacto e recomendações.`;
       setIsAnalyzing(false);
     }
   };
+
+  if (!hasValidMetrics) {
+    return (
+      <Card className="border-amber-200 bg-amber-50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-amber-700">
+            <AlertCircle className="w-5 h-5" />
+            Simulador de Impacto de Novas Dívidas
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="p-4 bg-white rounded-lg border border-amber-200">
+            <p className="text-sm text-amber-700">
+              <strong>Dados insuficientes para simular.</strong> Registre algumas transações de receita e despesa para utilizar o simulador.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="border-rose-200 bg-gradient-to-br from-rose-50 to-white">

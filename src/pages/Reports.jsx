@@ -400,14 +400,31 @@ export default function ReportsPage() {
                 purchases={purchases}
                 purchaseInstallments={purchaseInstallments}
               />
-              <DebtImpactSimulator 
-                currentMetrics={{
-                  totalDebt: purchaseInstallments.filter(i => !i.paid).reduce((sum, i) => sum + i.amount, 0),
-                  avgMonthlyRevenue: filteredTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0) / 3,
-                  monthlyDebtPayment: purchaseInstallments.filter(i => !i.paid).slice(0, 1).reduce((sum, i) => sum + i.amount, 0),
-                  debtServiceRatio: 0
-                }}
-              />
+              {(() => {
+                // Calculate metrics with fallbacks
+                const totalDebt = purchaseInstallments && purchaseInstallments.length > 0
+                  ? purchaseInstallments.filter(i => !i.paid).reduce((sum, i) => sum + parseFloat(i.amount || 0), 0)
+                  : transactions.filter(t => t.type === 'compra' && t.status === 'pendente').reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+                
+                const revenueData = transactions.filter(t => (t.type === 'venda' || t.type === 'income'));
+                const avgMonthlyRevenue = revenueData.length > 0 
+                  ? revenueData.reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0) / 3
+                  : 1; // Default to 1 to avoid division by zero
+                
+                const monthlyDebtPayment = totalDebt > 0 ? totalDebt / 12 : 0;
+                const debtServiceRatio = avgMonthlyRevenue > 0 ? (monthlyDebtPayment / avgMonthlyRevenue) * 100 : 0;
+                
+                return (
+                  <DebtImpactSimulator 
+                    currentMetrics={{
+                      totalDebt,
+                      avgMonthlyRevenue,
+                      monthlyDebtPayment,
+                      debtServiceRatio
+                    }}
+                  />
+                );
+              })()}
             </TabsContent>
           </Tabs>
           
