@@ -6,16 +6,28 @@ import {
   categories,
   transactions,
   cashFlow,
+  sales,
+  purchases,
+  installments,
+  purchaseInstallments,
   type InsertCustomer,
   type InsertSupplier,
   type InsertCategory,
   type InsertTransaction,
   type InsertCashFlow,
+  type InsertSale,
+  type InsertPurchase,
+  type InsertInstallment,
+  type InsertPurchaseInstallment,
   type Customer,
   type Supplier,
   type Category,
   type Transaction,
   type CashFlow,
+  type Sale,
+  type Purchase,
+  type Installment,
+  type PurchaseInstallment,
 } from "../shared/schema";
 
 export interface IStorage {
@@ -66,6 +78,34 @@ export interface IStorage {
   deleteCashFlow(id: string): Promise<void>;
   getCashFlowsByDateRange(startDate: Date, endDate: Date): Promise<CashFlow[]>;
   getCashFlowsByShift(shift: string): Promise<CashFlow[]>;
+
+  // Sale operations
+  createSale(data: InsertSale): Promise<Sale>;
+  getSales(): Promise<Sale[]>;
+  getSale(id: string): Promise<Sale | undefined>;
+  updateSale(id: string, data: Partial<InsertSale>): Promise<Sale>;
+  deleteSale(id: string): Promise<void>;
+
+  // Purchase operations
+  createPurchase(data: InsertPurchase): Promise<Purchase>;
+  getPurchases(): Promise<Purchase[]>;
+  getPurchase(id: string): Promise<Purchase | undefined>;
+  updatePurchase(id: string, data: Partial<InsertPurchase>): Promise<Purchase>;
+  deletePurchase(id: string): Promise<void>;
+
+  // Installment operations
+  createInstallment(data: InsertInstallment): Promise<Installment>;
+  getInstallments(): Promise<Installment[]>;
+  getInstallment(id: string): Promise<Installment | undefined>;
+  updateInstallment(id: string, data: Partial<InsertInstallment>): Promise<Installment>;
+  deleteInstallment(id: string): Promise<void>;
+
+  // Purchase Installment operations
+  createPurchaseInstallment(data: InsertPurchaseInstallment): Promise<PurchaseInstallment>;
+  getPurchaseInstallments(): Promise<PurchaseInstallment[]>;
+  getPurchaseInstallment(id: string): Promise<PurchaseInstallment | undefined>;
+  updatePurchaseInstallment(id: string, data: Partial<InsertPurchaseInstallment>): Promise<PurchaseInstallment>;
+  deletePurchaseInstallment(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -290,6 +330,102 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(cashFlow)
       .where(eq(cashFlow.shift, shift));
+  }
+
+  // Sale operations
+  async createSale(data: InsertSale): Promise<Sale> {
+    const result = await db.insert(sales).values(data).returning();
+    return result[0];
+  }
+
+  async getSales(): Promise<Sale[]> {
+    return await db.select().from(sales);
+  }
+
+  async getSale(id: string): Promise<Sale | undefined> {
+    const result = await db.select().from(sales).where(eq(sales.id, id));
+    return result[0];
+  }
+
+  async updateSale(id: string, data: Partial<InsertSale>): Promise<Sale> {
+    const result = await db.update(sales).set(data).where(eq(sales.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteSale(id: string): Promise<void> {
+    await db.delete(sales).where(eq(sales.id, id));
+  }
+
+  // Purchase operations
+  async createPurchase(data: InsertPurchase): Promise<Purchase> {
+    const result = await db.insert(purchases).values(data).returning();
+    return result[0];
+  }
+
+  async getPurchases(): Promise<Purchase[]> {
+    return await db.select().from(purchases);
+  }
+
+  async getPurchase(id: string): Promise<Purchase | undefined> {
+    const result = await db.select().from(purchases).where(eq(purchases.id, id));
+    return result[0];
+  }
+
+  async updatePurchase(id: string, data: Partial<InsertPurchase>): Promise<Purchase> {
+    const result = await db.update(purchases).set(data).where(eq(purchases.id, id)).returning();
+    return result[0];
+  }
+
+  async deletePurchase(id: string): Promise<void> {
+    await db.delete(purchases).where(eq(purchases.id, id));
+  }
+
+  // Installment operations
+  async createInstallment(data: InsertInstallment): Promise<Installment> {
+    const result = await db.insert(installments).values(data).returning();
+    return result[0];
+  }
+
+  async getInstallments(): Promise<Installment[]> {
+    return await db.select().from(installments);
+  }
+
+  async getInstallment(id: string): Promise<Installment | undefined> {
+    const result = await db.select().from(installments).where(eq(installments.id, id));
+    return result[0];
+  }
+
+  async updateInstallment(id: string, data: Partial<InsertInstallment>): Promise<Installment> {
+    const result = await db.update(installments).set(data).where(eq(installments.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteInstallment(id: string): Promise<void> {
+    await db.delete(installments).where(eq(installments.id, id));
+  }
+
+  // Purchase Installment operations
+  async createPurchaseInstallment(data: InsertPurchaseInstallment): Promise<PurchaseInstallment> {
+    const result = await db.insert(purchaseInstallments).values(data).returning();
+    return result[0];
+  }
+
+  async getPurchaseInstallments(): Promise<PurchaseInstallment[]> {
+    return await db.select().from(purchaseInstallments);
+  }
+
+  async getPurchaseInstallment(id: string): Promise<PurchaseInstallment | undefined> {
+    const result = await db.select().from(purchaseInstallments).where(eq(purchaseInstallments.id, id));
+    return result[0];
+  }
+
+  async updatePurchaseInstallment(id: string, data: Partial<InsertPurchaseInstallment>): Promise<PurchaseInstallment> {
+    const result = await db.update(purchaseInstallments).set(data).where(eq(purchaseInstallments.id, id)).returning();
+    return result[0];
+  }
+
+  async deletePurchaseInstallment(id: string): Promise<void> {
+    await db.delete(purchaseInstallments).where(eq(purchaseInstallments.id, id));
   }
 }
 
