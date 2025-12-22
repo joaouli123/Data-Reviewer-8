@@ -165,7 +165,7 @@ export default function CustomersPage() {
                     <TableRow>
                         <TableHead>Nome</TableHead>
                         <TableHead>Contato</TableHead>
-                        <TableHead>Total em Vendas</TableHead>
+                        <TableHead className="text-right">Total em Vendas</TableHead>
                         <TableHead>Desde</TableHead>
                         <TableHead className="text-right pr-6">Ações</TableHead>
                     </TableRow>
@@ -188,7 +188,7 @@ export default function CustomersPage() {
                                         {c.phone && <div className="flex items-center gap-2"><Phone className="w-3 h-3" /> {c.phone}</div>}
                                     </div>
                                 </TableCell>
-                                <TableCell>
+                                <TableCell className="text-right">
                                     <div className="text-emerald-600 font-semibold">
                                         R$ {getCustomerSales(c.id).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                     </div>
