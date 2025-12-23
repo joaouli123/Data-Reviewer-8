@@ -236,7 +236,14 @@ export default function ReportsPage() {
             <Brain className="w-6 sm:w-8 h-6 sm:h-8 text-blue-600" />
             IA Analista Financeiro
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">Insights inteligentes para o seu negócio baseados em dados reais.</p>
+          <div className="flex items-center gap-2 mt-2 flex-wrap">
+            <p className="text-xs sm:text-sm text-slate-500">Insights inteligentes para o seu negócio baseados em dados reais.</p>
+            {dateRange && (
+              <Badge variant="secondary" className="text-xs" data-testid="badge-period-selected">
+                {dateRange.label}
+              </Badge>
+            )}
+          </div>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
           <ReportExporter 
