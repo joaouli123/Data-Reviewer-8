@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Brain, Sparkles, TrendingUp, AlertTriangle, Lightbulb, FileText, Loader2, ArrowRight, Filter, BarChart3 } from 'lucide-react';
-import { format, subMonths, startOfMonth, endOfMonth, isAfter, isBefore, startOfDay, endOfDay, subDays } from 'date-fns';
+import { format, subMonths, startOfMonth, endOfMonth, isAfter, isBefore, startOfDay, endOfDay, subDays, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
