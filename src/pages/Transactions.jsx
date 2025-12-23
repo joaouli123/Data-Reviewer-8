@@ -220,7 +220,7 @@ export default function TransactionsPage() {
       const relevantDate = isPaid && t.paymentDate ? t.paymentDate : t.date;
       const tDateStr = relevantDate.split('T')[0]; // Get YYYY-MM-DD only
       const tDate = parseISO(tDateStr);
-      const amount = parseFloat(t.amount) || 0;
+      const amount = (parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0);
 
       if (tDate < startDate) {
         // Transaction is before the selected period -> contributes to opening balance

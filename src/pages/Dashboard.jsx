@@ -62,7 +62,7 @@ export default function DashboardPage() {
     transactions.forEach(t => {
       const tDateStr = t.date.split('T')[0];
       const tDate = parseISO(tDateStr);
-      const amount = parseFloat(t.amount) || 0;
+      const amount = (parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0);
       
       if (tDate < startDate) {
         if (t.type === 'venda') openingBalance += amount;
@@ -78,11 +78,11 @@ export default function DashboardPage() {
 
     const totalRevenue = filteredTransactions
       .filter(t => t.type === 'venda')
-      .reduce((acc, curr) => acc + Math.abs(parseFloat(curr.amount || 0)), 0);
+      .reduce((acc, curr) => acc + Math.abs((parseFloat(curr.amount || 0) + parseFloat(curr.interest || 0))), 0);
     
     const totalExpenses = filteredTransactions
       .filter(t => t.type === 'compra')
-      .reduce((acc, curr) => acc + Math.abs(parseFloat(curr.amount || 0)), 0);
+      .reduce((acc, curr) => acc + Math.abs((parseFloat(curr.amount || 0) + parseFloat(curr.interest || 0))), 0);
 
     const netProfit = totalRevenue - totalExpenses;
 
@@ -98,7 +98,7 @@ export default function DashboardPage() {
       return t.type === 'venda' && tDate >= today && tDate <= thirtyDaysFromNow;
     });
     
-    const futureRevenue = futureRevenueTransactions.reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
+    const futureRevenue = futureRevenueTransactions.reduce((sum, t) => sum + Math.abs((parseFloat(t.amount || 0) + parseFloat(t.interest || 0))), 0);
     
     const futureExpensesTransactions = transactions.filter(t => {
       const tDateStr = t.date.split('T')[0];
@@ -106,7 +106,7 @@ export default function DashboardPage() {
       return t.type === 'compra' && tDate >= today && tDate <= thirtyDaysFromNow;
     });
     
-    const futureExpenses = futureExpensesTransactions.reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
+    const futureExpenses = futureExpensesTransactions.reduce((sum, t) => sum + Math.abs((parseFloat(t.amount || 0) + parseFloat(t.interest || 0))), 0);
 
     // Count future transactions (no status check)
     const futureSaleCount = futureRevenueTransactions.length;
@@ -122,8 +122,8 @@ export default function DashboardPage() {
         return tDate.startsWith(monthKey);
       });
       
-      const income = monthTrans.filter(t => t.type === 'venda').reduce((acc, t) => acc + Math.abs(parseFloat(t.amount || 0)), 0);
-      const expenseRaw = monthTrans.filter(t => t.type === 'compra').reduce((acc, t) => acc + (parseFloat(t.amount) || 0), 0);
+      const income = monthTrans.filter(t => t.type === 'venda').reduce((acc, t) => acc + Math.abs((parseFloat(t.amount || 0) + parseFloat(t.interest || 0))), 0);
+      const expenseRaw = monthTrans.filter(t => t.type === 'compra').reduce((acc, t) => acc + ((parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0)), 0);
       const expense = Math.abs(expenseRaw);
 
       chartData.push({

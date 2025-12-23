@@ -136,7 +136,7 @@ export default function CashFlowForecastPage() {
             const tDateStr = t.date.split('T')[0];
             const tDate = parseISO(tDateStr);
             if (isWithinInterval(tDate, { start: dStart, end: dEnd })) {
-              const amount = parseFloat(t.amount) || 0;
+              const amount = (parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0);
               if (t.type === 'venda' && amount >= 0) {
                 revenue += amount;
                 revenueDetails.push({ description: t.description, amount, date: t.date, category: t.type });
@@ -154,7 +154,7 @@ export default function CashFlowForecastPage() {
             if (isWithinInterval(tDate, { start: dStart, end: dEnd })) {
               const isPending = t.status === 'pendente' || t.status === 'agendado' || t.status === 'pending';
               if (isPending) {
-                const amount = parseFloat(t.amount) || 0;
+                const amount = (parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0);
                 if (t.type === 'venda' && amount >= 0) {
                   revenue += amount;
                   revenueDetails.push({ description: `${t.description} (Agendado)`, amount, date: t.date, category: t.type });
@@ -199,7 +199,7 @@ export default function CashFlowForecastPage() {
           const tDateStr = t.date.split('T')[0];
           const tDate = parseISO(tDateStr);
           if (isWithinInterval(tDate, { start: monthStart, end: monthEnd })) {
-            const amount = parseFloat(t.amount) || 0;
+            const amount = (parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0);
             if (t.type === 'venda' && amount >= 0) {
               revenue += amount;
               revenueDetails.push({
@@ -228,7 +228,7 @@ export default function CashFlowForecastPage() {
           if (isWithinInterval(tDate, { start: monthStart, end: monthEnd })) {
             const isPending = t.status === 'pendente' || t.status === 'agendado' || t.status === 'pending';
             if (isPending) {
-              const amount = parseFloat(t.amount) || 0;
+              const amount = (parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0);
               if (t.type === 'venda' && amount >= 0) {
                 revenue += amount;
                 revenueDetails.push({
@@ -308,7 +308,7 @@ export default function CashFlowForecastPage() {
       return tDate < dateRange.startDate;
     })
     .reduce((acc, t) => {
-      const amount = parseFloat(t.amount) || 0;
+      const amount = (parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0);
       return acc + (t.type === 'venda' ? amount : -amount);
     }, 0);
 

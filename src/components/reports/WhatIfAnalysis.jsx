@@ -33,11 +33,11 @@ export default function WhatIfAnalysis({ transactions, saleInstallments, purchas
     // Corrigido: usar tipos corretos 'venda' e 'compra'
     const totalRevenue = recentTransactions
       .filter(t => t.type === 'venda' || t.type === 'income')
-      .reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
+      .reduce((sum, t) => sum + Math.abs((parseFloat(t.amount || 0) + parseFloat(t.interest || 0))), 0);
     
     const totalExpense = recentTransactions
       .filter(t => t.type === 'compra' || t.type === 'expense')
-      .reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
+      .reduce((sum, t) => sum + Math.abs((parseFloat(t.amount || 0) + parseFloat(t.interest || 0))), 0);
 
     const avgRevenue = totalRevenue / 3 || 0;
     const avgExpense = totalExpense / 3 || 0;
