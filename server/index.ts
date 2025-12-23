@@ -31,14 +31,17 @@ if (!isDev) {
 // Create HTTP server
 const httpServer = http.createServer(app);
 
-// Register all routes
-registerRoutes(httpServer, app);
+// Initialize server
+(async () => {
+  // Register all routes
+  await registerRoutes(httpServer, app);
 
-// Start server
-httpServer.listen(PORT, "0.0.0.0", () => {
-  console.log(`🚀 Server running on http://0.0.0.0:${PORT}`);
-  console.log(`📝 Environment: ${isDev ? "development" : "production"}`);
-  console.log(`🔐 Multi-tenant SaaS with Authentication`);
-});
+  // Start server
+  httpServer.listen(PORT, "0.0.0.0", () => {
+    console.log(`🚀 Server running on http://0.0.0.0:${PORT}`);
+    console.log(`📝 Environment: ${isDev ? "development" : "production"}`);
+    console.log(`🔐 Multi-tenant SaaS with Authentication`);
+  });
+})();
 
 export default app;

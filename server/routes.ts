@@ -22,9 +22,15 @@ import {
   findUserById,
   findCompanyById,
 } from "./auth";
+import { setupVite } from "./vite";
 import { z } from "zod";
 
-export function registerRoutes(httpServer: Server, app: Express): Server {
+export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
+  // Setup Vite dev server in development
+  const isDev = process.env.NODE_ENV !== "production";
+  if (isDev) {
+    await setupVite(httpServer, app);
+  }
   // Health check (public)
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
