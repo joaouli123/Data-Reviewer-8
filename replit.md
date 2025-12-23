@@ -4,9 +4,10 @@
 
 Sistema de dashboard financeiro completo com interface moderna, dark mode e componentes Shadcn UI. Integrado com API Base44 e IA Gemini para análises preditivas.
 
-**Status**: ✅ **PRONTO PARA DEPLOY - 22 DEZ 2025**  
-**Data Última Atualização**: 22 de Dezembro de 2025  
-**Build Status**: ✅ 100% Funcional
+**Status**: ✅ **PRONTO PARA DEPLOY - 23 DEZ 2025**  
+**Data Última Atualização**: 23 de Dezembro de 2025  
+**Build Status**: ✅ 100% Funcional  
+**Banco de Dados**: ✅ Endpoint `/api/admin/init-db` para inicializar produção
 
 ---
 
@@ -299,9 +300,57 @@ Clique no botão **Publish** para colocar seu sistema no ar!
 
 ---
 
-**Última atualização**: 23/Dez/2025 (16h30)  
-**Sistema**: 🟢 **OPERACIONAL - TODAS AS CORREÇÕES IMPLEMENTADAS**  
-**Build**: ✅ **SEM ERROS**  
-**Deploy**: ✅ **PRONTO PARA PUBLICAR**  
-**Fluxo**: ✅ **Transações → Clientes/Fornecedores → Fluxo de Caixa → Conciliação**
+---
+
+## 🔧 GUIA DE DEPLOY - NOVO BANCO DE DADOS
+
+### Problema Resolvido: Banco não foi migrado em produção
+Quando você faz deploy (publish) no Replit, o banco de produção é separado. Criei um endpoint para inicializar:
+
+### Passo-a-Passo RÁPIDO:
+
+1. **Build localmente** (já pronto):
+   ```bash
+   # Já foi feito, arquivo está em dist/index.cjs (25KB)
+   ```
+
+2. **Publish no Replit** (clique no botão "Publish")
+
+3. **Inicializar banco em produção** (OBRIGATÓRIO):
+   ```bash
+   curl -X POST https://seu-app.replit.dev/api/admin/init-db
+   ```
+   
+   Ou acesse via browser: `https://seu-app.replit.dev/api/admin/init-db`
+
+4. **Resposta esperada**:
+   ```json
+   {
+     "success": true,
+     "message": "Database initialized with tables, categories, customers, and suppliers"
+   }
+   ```
+
+5. **Recarregue o app** - Tudo funcionando!
+
+### Endpoint Automático
+- **URL**: `/api/admin/init-db`
+- **Método**: POST (ou GET via browser)
+- **O que faz**: Cria todas as tabelas + seed com dados iniciais
+- **Segurança**: Só funciona em produção (isDev = false)
+
+### Correções de Build Implementadas (23/DEC):
+✅ Servidor ES modules com `import.meta.url` para path resolution  
+✅ `tsconfig.server.json` configurado para es2020  
+✅ `script/build-server.js` convertido para ES modules  
+✅ Endpoint `/api/admin/init-db` para inicializar banco em produção  
+✅ CashFlowPeriodFilter com período dinâmico  
+
+---
+
+**Última atualização**: 23/Dez/2025 (19h30)  
+**Sistema**: 🟢 **OPERACIONAL - PRONTO PARA PUBLICAR**  
+**Build**: ✅ **SEM ERROS (25KB)**  
+**Banco**: ✅ **ENDPOINT DE INICIALIZAÇÃO CONFIGURADO**  
+**Deploy**: ✅ **PUBLICAR + CHAMAR /api/admin/init-db**
 

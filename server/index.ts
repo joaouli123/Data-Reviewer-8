@@ -534,10 +534,185 @@ app.delete("/api/purchase-installments/:id", async (req, res) => {
   }
 });
 
+// ============== ADMIN API ==============
+// Initialize database in production
+app.post("/api/admin/init-db", async (_req, res) => {
+  try {
+    if (isDev) {
+      return res.status(400).json({ error: "This endpoint is for production only" });
+    }
+    
+    console.log("🚀 Initializing production database...");
+    
+    // Import setup function
+    const { db, pool } = await import("./db");
+    const { sql } = await import("drizzle-orm");
+    const { customers, suppliers, categories, DEFAULT_CATEGORIES } = await import("../shared/schema");
+    
+    // Create all tables
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS categories (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        type VARCHAR(50) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS customers (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name VARCHAR(255) NOT NULL,
+        contact VARCHAR(255),
+        phone VARCHAR(20),
+        status VARCHAR(50) DEFAULT 'ativo',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS suppliers (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name VARCHAR(255) NOT NULL,
+        contact VARCHAR(255),
+        phone VARCHAR(20),
+        cnpj VARCHAR(20),
+        status VARCHAR(50) DEFAULT 'ativo',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS transactions (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        customer_id UUID,
+        supplier_id UUID,
+        category_id INTEGER,
+        type VARCHAR(50) NOT NULL,
+        amount DECIMAL(12, 2) NOT NULL,
+        paid_amount DECIMAL(12, 2) DEFAULT 0,
+        interest DECIMAL(12, 2) DEFAULT 0,
+        payment_date DATE,
+        description TEXT,
+        date DATE NOT NULL,
+        shift VARCHAR(50),
+        status VARCHAR(50) DEFAULT 'pendente',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (customer_id) REFERENCES customers(id),
+        FOREIGN KEY (supplier_id) REFERENCES suppliers(id),
+        FOREIGN KEY (category_id) REFERENCES categories(id)
+      )
+    `);
+    
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS sales (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        customer_id UUID NOT NULL,
+        total_amount DECIMAL(12, 2) NOT NULL,
+        due_date DATE,
+        status VARCHAR(50) DEFAULT 'pendente',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (customer_id) REFERENCES customers(id)
+      )
+    `);
+    
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS installments (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        sale_id UUID NOT NULL,
+        installment_number INTEGER NOT NULL,
+        amount DECIMAL(12, 2) NOT NULL,
+        due_date DATE NOT NULL,
+        paid_date DATE,
+        status VARCHAR(50) DEFAULT 'pendente',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (sale_id) REFERENCES sales(id)
+      )
+    `);
+    
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS purchases (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        supplier_id UUID NOT NULL,
+        total_amount DECIMAL(12, 2) NOT NULL,
+        due_date DATE,
+        status VARCHAR(50) DEFAULT 'pendente',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (supplier_id) REFERENCES suppliers(id)
+      )
+    `);
+    
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS purchase_installments (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        purchase_id UUID NOT NULL,
+        installment_number INTEGER NOT NULL,
+        amount DECIMAL(12, 2) NOT NULL,
+        due_date DATE NOT NULL,
+        paid_date DATE,
+        status VARCHAR(50) DEFAULT 'pendente',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (purchase_id) REFERENCES purchases(id)
+      )
+    `);
+    
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS cash_flow (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        date DATE NOT NULL,
+        type VARCHAR(50) NOT NULL,
+        amount DECIMAL(12, 2) NOT NULL,
+        description TEXT,
+        status VARCHAR(50) DEFAULT 'pendente',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    
+    // Seed categories
+    const categoryData = DEFAULT_CATEGORIES.map((cat: any) => ({
+      name: cat.name,
+      type: cat.type,
+    }));
+    await db.insert(categories).values(categoryData).onConflictDoNothing();
+    
+    // Seed basic customers
+    const customerData = [
+      { name: 'Maria Silva Santos', contact: 'maria@email.com', phone: '(11) 99999-1111', status: 'ativo' },
+      { name: 'João Pedro Oliveira', contact: 'joao@email.com', phone: '(11) 99999-2222', status: 'ativo' },
+      { name: 'Ana Costa Ferreira', contact: 'ana@email.com', phone: '(11) 99999-3333', status: 'ativo' },
+    ];
+    await db.insert(customers).values(customerData).onConflictDoNothing();
+    
+    // Seed basic suppliers
+    const supplierData = [
+      { name: 'Fornecedor ABC Ltda', contact: 'abc@fornecedor.com', phone: '(11) 3333-1111', cnpj: '12.345.678/0001-90', status: 'ativo' },
+      { name: 'Distribuidora XYZ', contact: 'xyz@fornecedor.com', phone: '(11) 3333-2222', cnpj: '98.765.432/0001-10', status: 'ativo' },
+    ];
+    await db.insert(suppliers).values(supplierData).onConflictDoNothing();
+    
+    console.log("✅ Database initialized successfully!");
+    res.json({ 
+      success: true, 
+      message: "Database initialized with tables, categories, customers, and suppliers" 
+    });
+  } catch (error) {
+    console.error("❌ Error initializing database:", error);
+    res.status(500).json({ error: String(error) });
+  }
+});
+
 // SPA fallback - serve index.html for all other routes (production only)
 if (!isDev) {
   app.get("*", (_req, res) => {
-    const indexPath = path.join(process.cwd(), "dist", "public", "index.html");
+    const indexPath = path.join(__dirname, "..", "public", "index.html");
     res.sendFile(indexPath);
   });
 }
