@@ -1,15 +1,21 @@
 import express from 'express';
 import path from 'path';
+import http from 'http';
 import { storage } from './storage';
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '5000', 10);
+const isDev = process.env.NODE_ENV !== 'production';
 
 app.use(express.json());
 
 const cwd = process.cwd();
-const staticPath = path.join(cwd, 'dist', 'public');
-app.use(express.static(staticPath));
+
+// Only serve static files in production mode
+if (!isDev) {
+  const staticPath = path.join(cwd, 'dist', 'public');
+  app.use(express.static(staticPath));
+}
 
 // ============== TRANSACTIONS ==============
 app.get('/api/transactions', async (_req, res) => {
@@ -510,14 +516,27 @@ app.delete('/api/purchase-installments/:id', async (req, res) => {
   }
 });
 
-// SPA fallback - serve index.html for all other routes
-app.get('*', (_req, res) => {
-  const indexPath = path.join(cwd, 'dist', 'public', 'index.html');
-  res.sendFile(indexPath);
-});
+// SPA fallback - serve index.html for all other routes (production only)
+if (!isDev) {
+  app.get('*', (_req, res) => {
+    const indexPath = path.join(cwd, 'dist', 'public', 'index.html');
+    res.sendFile(indexPath);
+  });
+}
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT} - Connected to Neon PostgreSQL`);
-});
+const server = http.createServer(app);
+
+async function startServer() {
+  if (isDev) {
+    const { setupVite } = await import('./vite');
+    await setupVite(server, app);
+  }
+  
+  server.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT} - Connected to Neon PostgreSQL${isDev ? ' (Development Mode)' : ''}`);
+  });
+}
+
+startServer();
 
 export default app;
