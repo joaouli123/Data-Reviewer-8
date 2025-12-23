@@ -174,7 +174,7 @@ export default function CashFlowPeriodFilter({ onPeriodChange, minDate = null, m
                   mode="range"
                   selected={dateRange}
                   onSelect={setDateRange}
-                  numberOfMonths={1}
+                  numberOfMonths={2}
                   locale={ptBR}
                   className="rounded-md border"
                 />

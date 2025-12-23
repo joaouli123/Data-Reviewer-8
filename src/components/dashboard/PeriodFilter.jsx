@@ -209,7 +209,7 @@ export default function PeriodFilter({
                   mode="range"
                   selected={dateRange}
                   onSelect={setDateRange}
-                  numberOfMonths={1}
+                  numberOfMonths={2}
                   locale={ptBR}
                   className="rounded-md border"
                 />
