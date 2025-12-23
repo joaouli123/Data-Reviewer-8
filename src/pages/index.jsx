@@ -11,7 +11,19 @@ import Categories from "./Categories";
 import UserManagement from "./UserManagement";
 import UserPermissions from "./UserPermissions";
 import SuperAdmin from "./SuperAdmin";
+import AccessDenied from "./AccessDenied";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePermission } from "@/hooks/usePermission";
+
+function ProtectedRoute({ component: Component, permission }) {
+  const { hasPermission } = usePermission();
+
+  if (permission && !hasPermission(permission)) {
+    return <AccessDenied />;
+  }
+
+  return <Component />;
+}
 
 export default function Pages() {
   const { user } = useAuth();
@@ -25,15 +37,16 @@ export default function Pages() {
     <Layout>
       <Switch>
         <Route path="/" component={Dashboard} />
-        <Route path="/transactions" component={Transactions} />
-        <Route path="/customers" component={Customers} />
-        <Route path="/reports" component={Reports} />
-        <Route path="/suppliers" component={Suppliers} />
-        <Route path="/cashflowforecast" component={CashFlowForecast} />
+        <Route path="/transactions">{() => <ProtectedRoute component={Transactions} permission="view_transactions" />}</Route>
+        <Route path="/customers">{() => <ProtectedRoute component={Customers} permission="view_customers" />}</Route>
+        <Route path="/reports">{() => <ProtectedRoute component={Reports} permission="view_reports" />}</Route>
+        <Route path="/suppliers">{() => <ProtectedRoute component={Suppliers} permission="view_suppliers" />}</Route>
+        <Route path="/cashflowforecast">{() => <ProtectedRoute component={CashFlowForecast} permission="view_reports" />}</Route>
         <Route path="/pricingcalculator" component={PricingCalculator} />
         <Route path="/categories" component={Categories} />
-        <Route path="/users" component={UserManagement} />
-        <Route path="/permissions" component={UserPermissions} />
+        <Route path="/users">{() => <ProtectedRoute component={UserManagement} permission="manage_users" />}</Route>
+        <Route path="/permissions">{() => <ProtectedRoute component={UserPermissions} permission="manage_users" />}</Route>
+        <Route path="/access-denied" component={AccessDenied} />
       </Switch>
     </Layout>
   );

@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { usePermission } from '@/hooks/usePermission';
+import { ProtectedFeature } from '@/components/ProtectedFeature';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';

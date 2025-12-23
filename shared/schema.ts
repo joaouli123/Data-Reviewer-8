@@ -126,7 +126,7 @@ export const subscriptions = pgTable("subscriptions", {
 // Users table with RBAC support and Super Admin flag
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  companyId: varchar("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
+  companyId: varchar("company_id").references(() => companies.id, { onDelete: "cascade" }), // NULL for super admin
   username: text("username").notNull(),
   email: text("email"),
   password: text("password").notNull(),

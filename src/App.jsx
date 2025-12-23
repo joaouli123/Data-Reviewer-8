@@ -8,6 +8,7 @@ import Pages from "@/pages/index.jsx";
 import Login from "@/pages/Login.jsx";
 import Signup from "@/pages/Signup.jsx";
 import AcceptInvite from "@/pages/AcceptInvite.jsx";
+import AccessDenied from "@/pages/AccessDenied.jsx";
 
 function AppContent() {
   const { isAuthenticated, loading } = useAuth();
@@ -44,7 +45,12 @@ function AppContent() {
     );
   }
 
-  return <Pages />;
+  return (
+    <Switch>
+      <Route path="/access-denied" component={AccessDenied} />
+      <Route component={Pages} />
+    </Switch>
+  );
 }
 
 export default function App() {

@@ -4,11 +4,13 @@ import { LayoutDashboard, Receipt, Users, Settings, Menu, X, Brain, Building2, T
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from '@/contexts/AuthContext';
+import { usePermission } from '@/hooks/usePermission';
 import LogoHUA from '@assets/Logo_HUA_1766187037233.png';
 
 export default function Layout({ children }) {
   const [pathname] = useLocation();
   const { user, company, logout } = useAuth();
+  const { hasPermission } = usePermission();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const handleLogout = () => {
@@ -16,18 +18,22 @@ export default function Layout({ children }) {
   };
 
   const baseNavigation = [
-    { name: 'Visão Geral', icon: LayoutDashboard, path: '/', roles: ['admin', 'manager', 'user', 'operational'] },
-    { name: 'Transações', icon: Receipt, path: '/transactions', roles: ['admin', 'manager', 'user', 'operational'] },
-    { name: 'Clientes', icon: Users, path: '/customers', roles: ['admin', 'manager', 'user', 'operational'] },
-    { name: 'Fornecedores', icon: Building2, path: '/suppliers', roles: ['admin', 'manager', 'user', 'operational'] },
-    { name: 'Categorias', icon: Tag, path: '/categories', roles: ['admin', 'manager'] },
-    { name: 'Fluxo de Caixa', icon: TrendingUp, path: '/cashflowforecast', roles: ['admin', 'manager', 'user'] },
-    { name: 'IA Analista', icon: Brain, path: '/reports', roles: ['admin', 'manager', 'user'] },
-    { name: 'Calc. Preços', icon: Settings, path: '/pricingcalculator', roles: ['admin', 'manager', 'user', 'operational'] },
-    { name: 'Gestão de Usuários', icon: Users, path: '/users', roles: ['admin'] },
+    { name: 'Visão Geral', icon: LayoutDashboard, path: '/', roles: ['admin', 'manager', 'user', 'operational'], permission: null },
+    { name: 'Transações', icon: Receipt, path: '/transactions', roles: ['admin', 'manager', 'user', 'operational'], permission: 'view_transactions' },
+    { name: 'Clientes', icon: Users, path: '/customers', roles: ['admin', 'manager', 'user', 'operational'], permission: 'view_customers' },
+    { name: 'Fornecedores', icon: Building2, path: '/suppliers', roles: ['admin', 'manager', 'user', 'operational'], permission: 'view_suppliers' },
+    { name: 'Categorias', icon: Tag, path: '/categories', roles: ['admin', 'manager'], permission: null },
+    { name: 'Fluxo de Caixa', icon: TrendingUp, path: '/cashflowforecast', roles: ['admin', 'manager', 'user'], permission: 'view_reports' },
+    { name: 'IA Analista', icon: Brain, path: '/reports', roles: ['admin', 'manager', 'user'], permission: 'view_reports' },
+    { name: 'Calc. Preços', icon: Settings, path: '/pricingcalculator', roles: ['admin', 'manager', 'user', 'operational'], permission: null },
+    { name: 'Gestão de Usuários', icon: Users, path: '/users', roles: ['admin'], permission: 'manage_users' },
   ];
 
-  const navigation = baseNavigation.filter(item => item.roles.includes(user?.role || 'user'));
+  const navigation = baseNavigation.filter(item => {
+    const hasRole = item.roles.includes(user?.role || 'user');
+    const hasPermissionCheck = item.permission ? hasPermission(item.permission) : true;
+    return hasRole && hasPermissionCheck;
+  });
 
   const NavContent = ({ onNavigate }) => (
     <div className="flex flex-col h-full py-3 px-4 text-white" style={{ backgroundColor: '#040303' }}>
