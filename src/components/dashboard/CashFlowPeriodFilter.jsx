@@ -12,19 +12,32 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { format, addMonths, startOfDay, endOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-export default function CashFlowPeriodFilter({ onPeriodChange }) {
+export default function CashFlowPeriodFilter({ onPeriodChange, minDate = null, maxDate = null }) {
   const [period, setPeriod] = useState('allTime');
   const [customLabel, setCustomLabel] = useState(null);
   const [customOpen, setCustomOpen] = useState(false);
   const [dateRange, setDateRange] = useState({ from: undefined, to: undefined });
   const [initialized, setInitialized] = useState(false);
 
+  // Use provided minDate/maxDate or default to smart calculation
+  const getDefaultStart = () => {
+    if (minDate) return new Date(minDate);
+    const today = new Date();
+    today.setMonth(today.getMonth() - 3); // Default to 3 months back
+    return today;
+  };
+
+  const getDefaultEnd = () => {
+    if (maxDate) return addMonths(new Date(maxDate), 12);
+    return addMonths(new Date(), 12); // 12 months forward
+  };
+
   const periodOptions = {
     allTime: {
       label: 'Todo o Período',
       getValue: () => {
-        const start = new Date('2020-01-01T00:00:00');
-        const end = addMonths(new Date(), 12);
+        const start = getDefaultStart();
+        const end = getDefaultEnd();
         return { startDate: start, endDate: end, label: 'Todo o Período' };
       }
     },
