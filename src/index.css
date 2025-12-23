@@ -77,3 +77,19 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom Calendar Range Styling */
+@layer components {
+  .calendar-range {
+    /* Range cells - light blue background */
+    [aria-selected="true"][data-range="true"] {
+      @apply bg-primary/15;
+    }
+    
+    /* Start and end dates - solid blue background */
+    [aria-selected="true"][data-range-end="true"],
+    [aria-selected="true"][data-range-start="true"] {
+      @apply bg-primary text-white font-bold;
+    }
+  }
+}

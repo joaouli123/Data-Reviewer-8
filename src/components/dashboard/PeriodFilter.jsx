@@ -212,7 +212,7 @@ export default function PeriodFilter({
                     onSelect={setDateRange}
                     numberOfMonths={2}
                     locale={ptBR}
-                    className="rounded-md border"
+                    className="rounded-md border calendar-range"
                   />
                 </div>
                 <Button
