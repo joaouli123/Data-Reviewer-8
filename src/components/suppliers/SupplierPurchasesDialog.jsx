@@ -34,8 +34,42 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
 
   const purchases = transactions.filter(t => t.supplierId === supplier?.id && t.type === 'compra');
   
-  // Sort purchases by date (most recent first), no grouping
-  const sortedPurchases = purchases.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  // Group purchases by installment group
+  const groupedPurchases = React.useMemo(() => {
+    const groups = {};
+    purchases.forEach(p => {
+      // Use installmentGroup if available, otherwise extract base description (remove (X/Y) suffix)
+      let groupKey = p.installmentGroup;
+      if (!groupKey) {
+        // Remove installment number suffix like "(1/5)" from description to group properly
+        const baseDescription = (p.description || '').replace(/\s*\(\d+\/\d+\)\s*$/, '').trim();
+        groupKey = baseDescription || `purchase-${p.id}`;
+      }
+      if (!groups[groupKey]) {
+        groups[groupKey] = [];
+      }
+      groups[groupKey].push(p);
+    });
+    return Object.values(groups).map(group => {
+      const sortedInstallments = group.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      const main = sortedInstallments[0];
+      const totalAmount = sortedInstallments.reduce((acc, p) => acc + parseFloat(p.amount || 0), 0);
+      const isPaid = sortedInstallments.every(p => p.status === 'completed' || p.status === 'pago');
+      // Get base description without installment number
+      const baseDescription = (main.description || '').replace(/\s*\(\d+\/\d+\)\s*$/, '').trim() || 'Compra';
+
+      return {
+        main: {
+          ...main,
+          description: baseDescription,
+          totalAmount,
+          isPaid,
+          installmentTotal: sortedInstallments.length
+        },
+        installments: sortedInstallments
+      };
+    }).sort((a, b) => new Date(b.main.date).getTime() - new Date(a.main.date).getTime());
+  }, [purchases]);
 
   const getTotalPaid = () => {
     return purchases.reduce((acc, p) => {
@@ -233,78 +267,115 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
           </div>
         </div>
 
-        <div className="space-y-3 mt-4">
-          {sortedPurchases.length > 0 ? (
-              sortedPurchases.map((purchase, idx) => (
-                <div key={purchase.id} className="bg-white border border-slate-200 rounded-lg overflow-hidden">
-                  <div className="flex items-center justify-between gap-4 p-4">
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center justify-center w-7 h-7 rounded-full border-2 border-slate-300 text-slate-500 text-sm font-medium flex-shrink-0">
-                        {idx + 1}
-                      </div>
+        <div className="space-y-6 mt-4">
+          {groupedPurchases.length > 0 ? (
+              groupedPurchases.map((group) => (
+                <div key={group.main.id} className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+                  {/* Header da compra - clicável para expandir/recolher */}
+                  <div 
+                    className="flex items-center justify-between gap-4 p-5 cursor-pointer hover:bg-slate-50 transition-colors"
+                    onClick={() => toggleGroup(group.main.id)}
+                    data-testid={`toggle-purchase-${group.main.id}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      {isGroupExpanded(group.main.id) ? (
+                        <ChevronDown className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                      ) : (
+                        <ChevronRight className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                      )}
                       <div>
-                        <p className="font-semibold text-slate-900">
-                          R$ {parseFloat(purchase.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          Venc: {purchase.date ? format(parseISO(purchase.date), "dd/MM/yyyy") : '-'}
+                        <h4 className="font-semibold text-base text-slate-900">{group.main.description || 'Compra'}</h4>
+                        <p className="text-sm text-slate-500 mt-0.5">
+                          {group.main.date ? format(parseISO(group.main.date), "dd 'de' MMMM, yyyy", { locale: ptBR }) : '-'}
+                          <span className="ml-2 text-slate-400">({group.installments.length} parcela{group.installments.length > 1 ? 's' : ''})</span>
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      {(purchase.status === 'completed' || purchase.status === 'pago') ? (
-                        <>
-                          <div className="flex flex-col items-end gap-0.5 mr-2">
-                            {purchase.paymentDate && (
-                              <p className="text-xs text-emerald-600">
-                                {format(parseISO(purchase.paymentDate), "dd/MM/yyyy")}
-                              </p>
-                            )}
-                            {purchase.paidAmount && (
-                              <p className="text-xs text-slate-500">
-                                Pago: R$ {parseFloat(purchase.paidAmount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                              </p>
-                            )}
-                            {purchase.interest && parseFloat(purchase.interest) > 0 && (
-                              <p className="text-xs text-amber-600">
-                                Juros: R$ {parseFloat(purchase.interest).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                              </p>
-                            )}
-                          </div>
-                          <Badge className="bg-emerald-50 text-emerald-600 hover:bg-emerald-50 border border-emerald-200 shadow-none font-medium flex items-center gap-1.5 px-3 py-1 text-xs rounded-md">
-                            <CheckCircle2 className="w-3.5 h-3.5" /> Pago
-                          </Badge>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => {
-                              if (confirm('Tem certeza que deseja cancelar este pagamento?')) {
-                                cancelPaymentMutation.mutate(purchase.id);
-                              }
-                            }}
-                            disabled={cancelPaymentMutation.isPending}
-                            className="text-slate-400 hover:text-red-600"
-                            data-testid={`button-cancel-payment-${purchase.id}`}
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </>
-                      ) : (
-                        <Button
-                          size="sm"
-                          onClick={() => {
-                            setSelectedTransaction(purchase);
-                            setPaymentEditOpen(true);
-                          }}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4"
-                          disabled={confirmPaymentMutation.isPending}
-                          data-testid={`button-confirm-payment-${purchase.id}`}
-                        >
-                          Confirmar Pagamento
-                        </Button>
-                      )}
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-lg font-bold text-slate-900">
+                        R$ {group.main.totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </p>
+                      <Badge className={`${group.main.isPaid ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-amber-50 text-amber-600 border-amber-200'} shadow-none font-medium text-xs`}>
+                        {group.main.isPaid ? 'Pago' : 'Parcial'}
+                      </Badge>
                     </div>
                   </div>
+                  
+                  {/* Lista de parcelas - recolhível */}
+                  {isGroupExpanded(group.main.id) && (
+                  <div className="divide-y divide-slate-100 border-t border-slate-100">
+                    {group.installments.map((installment, idx) => (
+                      <div key={installment.id} className="flex items-center justify-between gap-4 px-5 py-4">
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center justify-center w-7 h-7 rounded-full border-2 border-slate-300 text-slate-500 text-sm font-medium flex-shrink-0">
+                            {installment.installmentNumber || (idx + 1)}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-slate-900">
+                              R$ {parseFloat(installment.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              Venc: {installment.date ? format(parseISO(installment.date), "dd/MM/yyyy") : '-'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {(installment.status === 'completed' || installment.status === 'pago') ? (
+                            <>
+                              <div className="flex flex-col items-end gap-0.5 mr-2">
+                                {installment.paymentDate && (
+                                  <p className="text-xs text-emerald-600">
+                                    {format(parseISO(installment.paymentDate), "dd/MM/yyyy")}
+                                  </p>
+                                )}
+                                {installment.paidAmount && (
+                                  <p className="text-xs text-slate-500">
+                                    Pago: R$ {parseFloat(installment.paidAmount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                  </p>
+                                )}
+                                {installment.interest && parseFloat(installment.interest) > 0 && (
+                                  <p className="text-xs text-amber-600">
+                                    Juros: R$ {parseFloat(installment.interest).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                  </p>
+                                )}
+                              </div>
+                              <Badge className="bg-emerald-50 text-emerald-600 hover:bg-emerald-50 border border-emerald-200 shadow-none font-medium flex items-center gap-1.5 px-3 py-1 text-xs rounded-md">
+                                <CheckCircle2 className="w-3.5 h-3.5" /> Pago
+                              </Badge>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => {
+                                  if (confirm('Tem certeza que deseja cancelar este pagamento?')) {
+                                    cancelPaymentMutation.mutate(installment.id);
+                                  }
+                                }}
+                                disabled={cancelPaymentMutation.isPending}
+                                className="text-slate-400 hover:text-red-600"
+                                data-testid={`button-cancel-payment-${installment.id}`}
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </>
+                          ) : (
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                setSelectedTransaction(installment);
+                                setPaymentEditOpen(true);
+                              }}
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4"
+                              disabled={confirmPaymentMutation.isPending}
+                              data-testid={`button-confirm-payment-${installment.id}`}
+                            >
+                              Confirmar Pagamento
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  )}
                 </div>
               ))
             ) : (
