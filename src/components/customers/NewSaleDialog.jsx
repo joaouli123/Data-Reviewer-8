@@ -88,7 +88,7 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
           customerId: customer.id,
           categoryId: cat?.id,
           type: 'venda',
-          date: dueDate.toISOString(),
+          date: dueDate && dueDate.toISOString ? dueDate.toISOString() : new Date(baseDate).toISOString(),
           shift: 'manhã',
           amount: String(installmentAmount.toFixed(2)),
           description: `${data.description}${installmentCount > 1 ? ` (${i + 1}/${installmentCount})` : ''}`,

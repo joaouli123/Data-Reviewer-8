@@ -92,7 +92,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
           supplierId: supplier.id,
           categoryId: cat?.id,
           type: 'compra',
-          date: dueDate.toISOString(),
+          date: dueDate && dueDate.toISOString ? dueDate.toISOString() : new Date(baseDate).toISOString(),
           shift: 'manhã',
           amount: String(installmentAmount.toFixed(2)),
           description: `${data.description}${installmentCount > 1 ? ` (${i + 1}/${installmentCount})` : ''}`,

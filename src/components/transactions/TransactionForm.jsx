@@ -125,7 +125,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
       categoryId: formData.categoryId,
       category: selectedCategory?.name || '',
       amount: amount,
-      date: formData.date.toISOString(),
+      date: formData.date && typeof formData.date === 'string' ? new Date(formData.date + 'T00:00:00Z').toISOString() : new Date(formData.date).toISOString(),
       shift: 'turno1'
     });
   };

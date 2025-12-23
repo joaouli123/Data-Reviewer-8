@@ -121,7 +121,7 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
           status: status,
           paidAmount: paidAmount ? parseFloat(paidAmount).toString() : undefined,
           interest: interest ? parseFloat(interest).toString() : '0',
-          paymentDate: paymentDate ? new Date(paymentDate).toISOString() : null
+          paymentDate: paymentDate && paymentDate.trim() ? new Date(paymentDate).toISOString() : null
         })
       });
       if (!response.ok) {
