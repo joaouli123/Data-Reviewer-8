@@ -65,6 +65,7 @@ export const transactions = pgTable("transactions", {
   amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
   paidAmount: decimal("paid_amount", { precision: 15, scale: 2 }),
   interest: decimal("interest", { precision: 15, scale: 2 }).default("0"),
+  paymentDate: timestamp("payment_date"),
   description: text("description"),
   date: timestamp("date").notNull(),
   shift: text("shift").notNull(),

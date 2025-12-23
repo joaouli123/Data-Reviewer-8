@@ -3,18 +3,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { CurrencyInput, formatCurrency, parseCurrency } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { toast } from 'sonner';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Calendar } from 'lucide-react';
+import { format } from 'date-fns';
 
 export default function PaymentEditDialog({ isOpen, onClose, transaction, onConfirm, isLoading, title = "Editar Pagamento", amountLabel = "Valor Pago" }) {
   const [paidAmount, setPaidAmount] = useState(0);
   const [interest, setInterest] = useState(0);
+  const [paymentDate, setPaymentDate] = useState(format(new Date(), 'yyyy-MM-dd'));
 
   // Reset values when transaction changes or dialog opens
   useEffect(() => {
     if (transaction) {
       setPaidAmount(transaction.paidAmount ? parseFloat(transaction.paidAmount) : parseFloat(transaction.amount || 0));
       setInterest(transaction.interest ? parseFloat(transaction.interest) : 0);
+      setPaymentDate(transaction.paymentDate ? format(new Date(transaction.paymentDate), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'));
     }
   }, [transaction]);
 
@@ -27,9 +31,14 @@ export default function PaymentEditDialog({ isOpen, onClose, transaction, onConf
       toast.error('Valor pago deve ser maior que zero');
       return;
     }
+    if (!paymentDate) {
+      toast.error('Data de pagamento é obrigatória');
+      return;
+    }
     onConfirm({
       paidAmount: paidAmount.toString(),
-      interest: interest.toString()
+      interest: interest.toString(),
+      paymentDate: paymentDate
     });
   };
 
@@ -83,6 +92,22 @@ export default function PaymentEditDialog({ isOpen, onClose, transaction, onConf
               />
             </div>
             <p className="text-xs text-slate-500">Juros, multa ou outros custos adicionais</p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="paymentDate">Data do Pagamento</Label>
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-slate-600" />
+              <Input
+                id="paymentDate"
+                type="date"
+                value={paymentDate}
+                onChange={(e) => setPaymentDate(e.target.value)}
+                className="flex-1"
+                data-testid="input-payment-date"
+              />
+            </div>
+            <p className="text-xs text-slate-500">Data em que o pagamento foi realizado</p>
           </div>
 
           <div className="p-3 bg-slate-50 rounded-lg space-y-2 border border-slate-200">

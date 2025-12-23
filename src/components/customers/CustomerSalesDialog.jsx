@@ -98,7 +98,7 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
   };
 
   const confirmPaymentMutation = useMutation({
-    mutationFn: async ({ saleId, paidAmount, interest }) => {
+    mutationFn: async ({ saleId, paidAmount, interest, paymentDate }) => {
       
       // Get the transaction first to check the amount
       const getResponse = await fetch(`/api/transactions/${saleId}`);
@@ -120,7 +120,8 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
         body: JSON.stringify({ 
           status: status,
           paidAmount: paidAmount ? parseFloat(paidAmount).toString() : undefined,
-          interest: interest ? parseFloat(interest).toString() : '0'
+          interest: interest ? parseFloat(interest).toString() : '0',
+          paymentDate: paymentDate ? new Date(paymentDate).toISOString() : null
         })
       });
       if (!response.ok) {
@@ -356,7 +357,8 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
             confirmPaymentMutation.mutate({
               saleId: selectedTransaction.id,
               paidAmount: data.paidAmount,
-              interest: data.interest
+              interest: data.interest,
+              paymentDate: data.paymentDate
             });
           }}
           isLoading={confirmPaymentMutation.isPending}
