@@ -1,17 +1,19 @@
-
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Receipt, Users, Settings, Menu, X, Brain, Building2, TrendingUp, Tag, Globe } from 'lucide-react';
+import { useState } from 'react';
+import { useLocation } from 'wouter';
+import { LayoutDashboard, Receipt, Users, Settings, Menu, X, Brain, Building2, TrendingUp, Tag, LogOut } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useAuth } from '@/contexts/AuthContext';
 import LogoHUA from '@assets/Logo_HUA_1766187037233.png';
 
 export default function Layout({ children }) {
-  const location = useLocation();
-  const [isMobileOpen, setIsMobileOpen] = React.useState(false);
+  const [pathname] = useLocation();
+  const { user, company, logout } = useAuth();
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-  const closeMobileMenu = () => {
-    setIsMobileOpen(false);
+  const handleLogout = () => {
+    logout();
+    window.location.href = '/login';
   };
 
   const navigation = [
@@ -38,9 +40,9 @@ export default function Layout({ children }) {
       
       <nav className="space-y-1 flex-1">
         {navigation.map((item) => {
-            const isActive = location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path));
+            const isActive = pathname === item.path || (item.path !== '/' && pathname.startsWith(item.path));
             return (
-                <Link key={item.name} to={item.path} onClick={onNavigate}>
+                <a key={item.name} href={item.path} onClick={onNavigate}>
                 <div
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${
                     isActive 
@@ -48,25 +50,35 @@ export default function Layout({ children }) {
                         : 'text-slate-400 hover:text-white hover:bg-white/10'
                     }`}
                     style={{ backgroundColor: isActive ? '#E7AA1C' : 'transparent' }}
+                    data-testid={`link-nav-${item.name.toLowerCase()}`}
                 >
                     <item.icon className={`w-5 h-5 ${isActive ? 'text-black' : 'text-slate-400 group-hover:text-white'}`} />
                     <span className="font-medium text-sm">{item.name}</span>
                 </div>
-                </Link>
+                </a>
             );
         })}
       </nav>
 
-      <div className="pt-6 border-t border-slate-800">
+      <div className="pt-6 space-y-3 border-t border-slate-800">
         <div className="flex items-center gap-3 px-3 py-3 rounded-lg bg-slate-800/50">
           <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-blue-400 font-medium text-xs">
-            US
+            {user?.name?.substring(0, 2).toUpperCase() || 'US'}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white truncate">Empresário</p>
-            <p className="text-xs text-slate-400 truncate">Plano Pro</p>
+            <p className="text-sm font-medium text-white truncate">{user?.name || 'Usuário'}</p>
+            <p className="text-xs text-slate-400 truncate">{company?.name || 'Empresa'}</p>
           </div>
         </div>
+        <Button
+          variant="ghost"
+          className="w-full justify-start gap-2 text-white hover:bg-white/10"
+          onClick={handleLogout}
+          data-testid="button-logout"
+        >
+          <LogOut className="w-4 h-4" />
+          <span className="text-sm">Logout</span>
+        </Button>
       </div>
     </div>
   );
@@ -81,7 +93,7 @@ export default function Layout({ children }) {
       {/* Mobile Header */}
       <div className="md:hidden flex items-center justify-between p-3 text-white sticky top-0 z-20" style={{ backgroundColor: '#040303' }}>
         <img 
-          src="/logo-hua.png" 
+          src={LogoHUA}
           alt="HUA Logo" 
           className="w-16 h-16 object-contain"
           title="HUA - Consultoria e Análise"
@@ -89,11 +101,11 @@ export default function Layout({ children }) {
         <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" className="text-white hover:bg-white/10">
-              <Menu className="w-8 h-8" />
+              {isMobileOpen ? <X className="w-8 h-8" /> : <Menu className="w-8 h-8" />}
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="p-0 border-r-slate-800 w-64" style={{ backgroundColor: '#040303' }}>
-            <NavContent onNavigate={closeMobileMenu} />
+            <NavContent onNavigate={() => setIsMobileOpen(false)} />
           </SheetContent>
         </Sheet>
       </div>
