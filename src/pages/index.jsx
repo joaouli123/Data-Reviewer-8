@@ -12,6 +12,7 @@ import UserManagement from "./UserManagement";
 import UserPermissions from "./UserPermissions";
 import SuperAdmin from "./SuperAdmin";
 import AccessDenied from "./AccessDenied";
+import TeamPage from "./settings/Team";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePermission } from "@/hooks/usePermission";
 
@@ -45,6 +46,7 @@ export default function Pages() {
         <Route path="/pricingcalculator" component={PricingCalculator} />
         <Route path="/categories" component={Categories} />
         <Route path="/settings/users">{() => <ProtectedRoute component={UserManagement} permission="manage_users" />}</Route>
+        <Route path="/settings/team">{() => <ProtectedRoute component={TeamPage} permission="manage_users" />}</Route>
         <Route path="/users">{() => <ProtectedRoute component={UserManagement} permission="manage_users" />}</Route>
         <Route path="/permissions">{() => <ProtectedRoute component={UserPermissions} permission="manage_users" />}</Route>
         <Route path="/access-denied" component={AccessDenied} />
