@@ -96,14 +96,15 @@ export default function PaymentEditDialog({ isOpen, onClose, transaction, onConf
 
           <div className="space-y-2">
             <Label htmlFor="paymentDate">Data do Pagamento</Label>
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-slate-600" />
+            <div className="relative">
+              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-600 pointer-events-none" />
               <Input
                 id="paymentDate"
                 type="date"
                 value={paymentDate}
                 onChange={(e) => setPaymentDate(e.target.value)}
-                className="flex-1 [&::-webkit-calendar-picker-indicator]:hidden"
+                className="pl-9 flex-1"
+                style={{ paddingLeft: '2.25rem' }}
                 data-testid="input-payment-date"
               />
             </div>
