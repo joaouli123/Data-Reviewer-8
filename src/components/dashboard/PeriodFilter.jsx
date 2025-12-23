@@ -115,17 +115,29 @@ export default function PeriodFilter({
 
   const handleCustom = () => {
     if (customStart && customEnd) {
+      // Ensure startDate <= endDate
+      const start = new Date(customStart);
+      const end = new Date(customEnd);
+      
+      if (start > end) {
+        alert('Data inicial não pode ser maior que a data final');
+        return;
+      }
+      
       const isMonthMode = mode === 'months';
       const newRange = {
-        startDate: isMonthMode ? startOfMonth(customStart) : startOfDay(customStart),
-        endDate: isMonthMode ? endOfMonth(customEnd) : endOfDay(customEnd),
+        startDate: isMonthMode ? startOfMonth(start) : startOfDay(start),
+        endDate: isMonthMode ? endOfMonth(end) : endOfDay(end),
         label: isMonthMode 
-          ? `${format(customStart, 'MMM/yy', { locale: ptBR })} - ${format(customEnd, 'MMM/yy', { locale: ptBR })}`
-          : `${format(customStart, 'dd/MM/yyyy')} - ${format(customEnd, 'dd/MM/yyyy')}`
+          ? `${format(start, 'MMM/yy', { locale: ptBR })} - ${format(end, 'MMM/yy', { locale: ptBR })}`
+          : `${format(start, 'dd/MM/yyyy')} - ${format(end, 'dd/MM/yyyy')}`
       };
       setPeriod('custom');
       onPeriodChange(newRange);
       setCustomOpen(false);
+      // Reset custom dates after applying
+      setCustomStart(null);
+      setCustomEnd(null);
     }
   };
 
@@ -167,21 +179,36 @@ export default function PeriodFilter({
             </PopoverTrigger>
             <PopoverContent className="w-auto p-4" side="right">
               <div className="space-y-4">
+                <p className="text-sm text-slate-600 font-medium">Selecione o período desejado</p>
                 <div className="flex flex-col md:flex-row gap-4">
                   <div>
-                    <p className="text-sm font-medium text-foreground mb-2">De:</p>
+                    <p className="text-sm font-medium text-foreground mb-2">De: {customStart ? format(customStart, 'dd/MM/yyyy') : 'Selecione'}</p>
                     <CalendarComponent
                       mode="single"
                       selected={customStart}
-                      onSelect={setCustomStart}
+                      onSelect={(date) => {
+                        setCustomStart(date);
+                        // Reset end date if it's before the new start date
+                        if (customEnd && date && date > customEnd) {
+                          setCustomEnd(null);
+                        }
+                      }}
+                      disabled={(date) => customEnd && date > customEnd}
                     />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-foreground mb-2">Até:</p>
+                    <p className="text-sm font-medium text-foreground mb-2">Até: {customEnd ? format(customEnd, 'dd/MM/yyyy') : 'Selecione'}</p>
                     <CalendarComponent
                       mode="single"
                       selected={customEnd}
-                      onSelect={setCustomEnd}
+                      onSelect={(date) => {
+                        if (customStart && date && date < customStart) {
+                          alert('Data final não pode ser menor que a data inicial');
+                          return;
+                        }
+                        setCustomEnd(date);
+                      }}
+                      disabled={(date) => !customStart || (customStart && date < customStart)}
                     />
                   </div>
                 </div>
