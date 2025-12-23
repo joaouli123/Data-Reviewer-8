@@ -24,7 +24,8 @@ export default function DebtAnalysis({ transactions, purchases, purchaseInstallm
         .filter(i => !i.paid)
         .reduce((sum, i) => {
           const amount = typeof i.amount === 'string' ? parseFloat(i.amount) : i.amount;
-          return sum + (isNaN(amount) ? 0 : amount);
+          const interest = typeof i.interest === 'string' ? parseFloat(i.interest) : (i.interest || 0);
+          return sum + (isNaN(amount) ? 0 : amount) + (isNaN(interest) ? 0 : interest);
         }, 0);
     } else {
       // Fallback: calculate from pending purchase transactions
@@ -32,7 +33,8 @@ export default function DebtAnalysis({ transactions, purchases, purchaseInstallm
         .filter(t => t.type === 'compra' && t.status === 'pendente')
         .reduce((sum, t) => {
           const amount = parseFloat(t.amount || 0);
-          return sum + (isNaN(amount) ? 0 : amount);
+          const interest = parseFloat(t.interest || 0);
+          return sum + (isNaN(amount) ? 0 : amount) + (isNaN(interest) ? 0 : interest);
         }, 0);
     }
 
@@ -41,7 +43,8 @@ export default function DebtAnalysis({ transactions, purchases, purchaseInstallm
       .filter(t => (t.type === 'venda' || t.type === 'income') && new Date(t.date) >= threeMonthsAgo)
       .reduce((sum, t) => {
         const amount = Math.abs(parseFloat(t.amount || 0));
-        return sum + (isNaN(amount) ? 0 : amount);
+        const interest = Math.abs(parseFloat(t.interest || 0));
+        return sum + (isNaN(amount) ? 0 : amount) + (isNaN(interest) ? 0 : interest);
       }, 0);
 
     // Average monthly revenue
@@ -58,7 +61,8 @@ export default function DebtAnalysis({ transactions, purchases, purchaseInstallm
         .filter(i => !i.paid && new Date(i.due_date) <= threeMonthsLater)
         .reduce((sum, i) => {
           const amount = typeof i.amount === 'string' ? parseFloat(i.amount) : i.amount;
-          return sum + (isNaN(amount) ? 0 : amount);
+          const interest = typeof i.interest === 'string' ? parseFloat(i.interest) : (i.interest || 0);
+          return sum + (isNaN(amount) ? 0 : amount) + (isNaN(interest) ? 0 : interest);
         }, 0);
     } else {
       // Fallback: calculate from recent pending purchases
@@ -66,7 +70,8 @@ export default function DebtAnalysis({ transactions, purchases, purchaseInstallm
         .filter(t => t.type === 'compra' && t.status === 'pendente' && new Date(t.date) >= now)
         .reduce((sum, t) => {
           const amount = parseFloat(t.amount || 0);
-          return sum + (isNaN(amount) ? 0 : amount);
+          const interest = parseFloat(t.interest || 0);
+          return sum + (isNaN(amount) ? 0 : amount) + (isNaN(interest) ? 0 : interest);
         }, 0);
     }
 
@@ -80,7 +85,8 @@ export default function DebtAnalysis({ transactions, purchases, purchaseInstallm
         .filter(i => !i.paid && new Date(i.due_date) <= addMonths(now, 1))
         .reduce((sum, i) => {
           const amount = typeof i.amount === 'string' ? parseFloat(i.amount) : i.amount;
-          return sum + (isNaN(amount) ? 0 : amount);
+          const interest = typeof i.interest === 'string' ? parseFloat(i.interest) : (i.interest || 0);
+          return sum + (isNaN(amount) ? 0 : amount) + (isNaN(interest) ? 0 : interest);
         }, 0);
     } else {
       // Fallback: use portion of total debt divided by 3 months average
@@ -98,7 +104,8 @@ export default function DebtAnalysis({ transactions, purchases, purchaseInstallm
           .filter(i => i.purchase_id === p.id && !i.paid)
           .reduce((sum, i) => {
             const amount = typeof i.amount === 'string' ? parseFloat(i.amount) : i.amount;
-            return sum + (isNaN(amount) ? 0 : amount);
+            const interest = typeof i.interest === 'string' ? parseFloat(i.interest) : (i.interest || 0);
+            return sum + (isNaN(amount) ? 0 : amount) + (isNaN(interest) ? 0 : interest);
           }, 0);
         
         if (purchaseDebt > 0) {

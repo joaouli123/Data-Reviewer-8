@@ -35,7 +35,7 @@ export default function ExpensesBreakdown({ opportunities, transactions, categor
         categoryName = t.category;
       }
       
-      acc[categoryName] = (acc[categoryName] || 0) + Math.abs(parseFloat(t.amount || 0));
+      acc[categoryName] = (acc[categoryName] || 0) + Math.abs((parseFloat(t.amount || 0) + parseFloat(t.interest || 0)));
       return acc;
     }, {});
 
