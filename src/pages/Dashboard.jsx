@@ -57,6 +57,21 @@ export default function DashboardPage() {
 
   // Calculate metrics based on date range
   const calculateMetrics = () => {
+    // Calculate opening balance (all transactions before start date)
+    let openingBalance = 0;
+    transactions.forEach(t => {
+      const tDate = new Date(t.date);
+      const amount = parseFloat(t.amount) || 0;
+      const isPaid = (t.status === 'completed' || t.status === 'pago' || t.status === 'concluído');
+      
+      if (!isPaid) return;
+      
+      if (tDate < dateRange.startDate) {
+        if (t.type === 'venda') openingBalance += amount;
+        else openingBalance -= amount;
+      }
+    });
+
     const filteredTransactions = transactions.filter(t => {
       const tDate = new Date(t.date);
       return tDate >= dateRange.startDate && tDate <= dateRange.endDate;
@@ -123,6 +138,7 @@ export default function DashboardPage() {
     }
 
     return {
+      openingBalance,
       totalRevenue,
       totalExpenses,
       netProfit,
@@ -159,6 +175,15 @@ export default function DashboardPage() {
 
       {/* KPI Cards - 4 Columns */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <KPIWidget
+          title="Saldo Inicial"
+          value={`R$ ${metrics.openingBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+          icon={Wallet}
+          trend={metrics.openingBalance >= 0 ? "up" : "down"}
+          trendValue="Período anterior"
+          className={metrics.openingBalance >= 0 ? "text-emerald-600" : "text-rose-600"}
+        />
+        
         <KPIWidget
           title="Receita Total"
           value={`R$ ${metrics.totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
