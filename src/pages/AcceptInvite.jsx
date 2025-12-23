@@ -19,10 +19,21 @@ export default function AcceptInvitePage() {
     setToken(params.get('token') || '');
   }, []);
 
+  const validatePassword = (pass) => pass && pass.length >= 6;
+  const validateUsername = (user) => user && user.length >= 3;
+
   const handleAccept = async (e) => {
     e.preventDefault();
-    if (!token || !username || !password) {
+    if (!token || !username?.trim() || !password?.trim()) {
       toast.error('Preencha todos os campos');
+      return;
+    }
+    if (!validateUsername(username)) {
+      toast.error('Username deve ter no mínimo 3 caracteres');
+      return;
+    }
+    if (!validatePassword(password)) {
+      toast.error('Senha deve ter no mínimo 6 caracteres');
       return;
     }
 
@@ -31,7 +42,7 @@ export default function AcceptInvitePage() {
       const res = await fetch('/api/invitations/accept', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, username, password })
+        body: JSON.stringify({ token, username: username.trim(), password })
       });
 
       if (!res.ok) {

@@ -170,18 +170,33 @@ export default function TeamPage() {
     setActiveTab('direct');
   };
 
+  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const validatePassword = (password) => password.length >= 6;
+
   const handleAddUser = (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.email || !formData.password) {
+    if (!formData.name?.trim() || !formData.email?.trim() || !formData.password?.trim()) {
       toast.error('Preencha todos os campos');
+      return;
+    }
+    if (!validateEmail(formData.email)) {
+      toast.error('Email inválido');
+      return;
+    }
+    if (!validatePassword(formData.password)) {
+      toast.error('Senha deve ter no mínimo 6 caracteres');
       return;
     }
     createUserMutation.mutate(formData);
   };
 
   const handleGenerateInvite = () => {
-    if (!formData.email) {
+    if (!formData.email?.trim()) {
       toast.error('Digite um email');
+      return;
+    }
+    if (!validateEmail(formData.email)) {
+      toast.error('Email inválido');
       return;
     }
     generateInviteMutation.mutate(formData.email);

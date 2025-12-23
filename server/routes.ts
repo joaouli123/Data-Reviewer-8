@@ -836,12 +836,26 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     try {
       const { username, email, password, name, role = "operational", permissions = {} } = req.body;
       
-      if (!username || !email || !password) {
+      if (!username?.trim() || !email?.trim() || !password?.trim()) {
         return res.status(400).json({ error: "Missing required fields" });
       }
 
+      if (password.length < 6) {
+        return res.status(400).json({ error: "Password must be at least 6 characters" });
+      }
+
+      if (username.length < 3) {
+        return res.status(400).json({ error: "Username must be at least 3 characters" });
+      }
+
+      // Check if user already exists
+      const existingUser = await findUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).json({ error: "Username already exists" });
+      }
+
       // Create user in same company
-      const user = await createUser(req.user.companyId, username, email, password, name, role);
+      const user = await createUser(req.user.companyId, username.trim(), email.trim(), password, name?.trim() || username, role);
 
       // Add permissions if provided
       if (role !== "admin" && Object.keys(permissions).length > 0) {
@@ -865,12 +879,21 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.post("/api/invitations", authMiddleware, requireRole(["admin"]), async (req: AuthenticatedRequest, res) => {
     try {
       const { email, role = "operational", permissions = {} } = req.body;
+      
+      if (!email?.trim()) {
+        return res.status(400).json({ error: "Email is required" });
+      }
+
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return res.status(400).json({ error: "Invalid email format" });
+      }
+
       const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
       const invitation = await storage.createInvitation(req.user.companyId, req.user.id, { 
-        email, 
+        email: email.toLowerCase().trim(), 
         role, 
         expiresAt, 
-        permissions: JSON.stringify(permissions)
+        permissions: JSON.stringify(permissions || {})
       });
       res.json({ invitationId: invitation.id, token: invitation.token });
     } catch (error) {
@@ -905,6 +928,19 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.post("/api/invitations/accept", async (req, res) => {
     try {
       const { token, username, password } = req.body;
+      
+      if (!token?.trim() || !username?.trim() || !password?.trim()) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      if (password.length < 6) {
+        return res.status(400).json({ error: "Password must be at least 6 characters" });
+      }
+
+      if (username.length < 3) {
+        return res.status(400).json({ error: "Username must be at least 3 characters" });
+      }
+
       const invitation = await storage.getInvitationByToken(token);
       
       if (!invitation) {
@@ -919,12 +955,18 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         return res.status(400).json({ error: "Invitation expired" });
       }
 
+      // Check if username already exists
+      const existingUser = await findUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).json({ error: "Username already exists" });
+      }
+
       const newUser = await createUser(
         invitation.companyId, 
-        username, 
+        username.trim(), 
         invitation.email, 
         password, 
-        username, 
+        username.trim(), 
         invitation.role
       );
       
