@@ -88,14 +88,25 @@ export function AuthProvider({ children }) {
     // Importar queryClient aqui para evitar circular dependency
     const { queryClient } = await import("@/lib/queryClient");
     
-    // Limpar todo o cache do React Query
+    // Limpar todo o cache do React Query COMPLETAMENTE
     queryClient.clear();
+    queryClient.setDefaultOptions({
+      queries: {
+        staleTime: 1000 * 60 * 5,
+        gcTime: 1000 * 60 * 10,
+      },
+    });
     
     // Remover dados locais
     setToken(null);
     setUser(null);
     setCompany(null);
-    localStorage.removeItem("auth");
+    localStorage.clear(); // Limpar TUDO do localStorage, não apenas "auth"
+    
+    // Forçar limpar sessionStorage também
+    if (typeof window !== 'undefined') {
+      sessionStorage.clear();
+    }
   };
 
   const updateUser = (newUserData) => {
