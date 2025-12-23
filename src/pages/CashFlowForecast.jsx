@@ -41,14 +41,17 @@ export default function CashFlowForecastPage() {
       return { minDate: new Date('2000-01-01'), maxDate: new Date('2099-12-31') };
     }
     
-    // Parse dates using noon UTC to ensure consistent timezone handling
-    const dates = transactions.map(t => {
-      const dateStr = t.date.split('T')[0];
-      const [year, month, day] = dateStr.split('-');
-      return new Date(`${year}-${month}-${day}T12:00:00Z`);
-    });
-    const minDate = new Date(Math.min(...dates));
-    const maxDate = new Date(Math.max(...dates));
+    // Parse dates as YYYY-MM-DD strings and find min/max
+    const dateStrings = transactions.map(t => t.date.split('T')[0]).sort();
+    const minDateStr = dateStrings[0];
+    const maxDateStr = dateStrings[dateStrings.length - 1];
+    
+    // Create Date objects from the min/max date strings
+    const [minYear, minMonth, minDay] = minDateStr.split('-');
+    const minDate = new Date(`${minYear}-${minMonth}-${minDay}T00:00:00Z`);
+    
+    const [maxYear, maxMonth, maxDay] = maxDateStr.split('-');
+    const maxDate = new Date(`${maxYear}-${maxMonth}-${maxDay}T23:59:59Z`);
     
     return { minDate, maxDate };
   };
