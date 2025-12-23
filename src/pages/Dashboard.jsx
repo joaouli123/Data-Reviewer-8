@@ -160,6 +160,13 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Visão Geral</h1>
           <p className="text-xs sm:text-sm text-muted-foreground mt-1">Bem-vindo de volta ao seu painel financeiro.</p>
+          {metrics.openingBalance !== 0 && (
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-2">
+              Saldo Inicial: <span className={metrics.openingBalance >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'} style={{fontWeight: 'bold'}}>
+                R$ {metrics.openingBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              </span>
+            </p>
+          )}
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
           <DateFilter onDateRangeChange={setDateRange} />
