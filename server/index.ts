@@ -789,14 +789,14 @@ app.post("/api/admin/seed-data", async (_req, res) => {
           const finalAmount = template.type === 'expense' ? -Math.abs(amount) : Math.abs(amount);
           
           transactions.push({
-            category_id: catMap[template.category],
-            customer_id: template.type === 'income' && custIds.length > 0 ? custIds[Math.floor(Math.random() * custIds.length)] : null,
-            supplier_id: template.type === 'expense' && suppIds.length > 0 ? suppIds[Math.floor(Math.random() * suppIds.length)] : null,
+            categoryId: catMap[template.category],
+            customerId: template.type === 'income' && custIds.length > 0 ? custIds[Math.floor(Math.random() * custIds.length)] : undefined,
+            supplierId: template.type === 'expense' && suppIds.length > 0 ? suppIds[Math.floor(Math.random() * suppIds.length)] : undefined,
             type: template.type,
-            amount: finalAmount,
-            paid_amount: isPastDate ? Math.abs(finalAmount) : 0,
-            date: dateStr,
-            payment_date: isPastDate ? dateStr : null,
+            amount: finalAmount.toString(),
+            paidAmount: isPastDate ? Math.abs(finalAmount).toString() : '0',
+            date: new Date(dateStr + 'T12:00:00Z'),
+            paymentDate: isPastDate ? new Date(dateStr + 'T12:00:00Z') : undefined,
             description: template.category,
             status: isPastDate ? 'pago' : 'pendente',
             shift: ['manha', 'tarde', 'noite'][Math.floor(Math.random() * 3)],
@@ -809,19 +809,14 @@ app.post("/api/admin/seed-data", async (_req, res) => {
       currentDate.setDate(currentDate.getDate() + 1);
     }
     
-    // Insert transactions in batches
+    // Import transactions table from shared schema
+    const { transactions: txnTable } = await import("../shared/schema");
+    
+    // Insert transactions in batches using Drizzle ORM (type-safe)
     const batchSize = 50;
     for (let i = 0; i < transactions.length; i += batchSize) {
       const batch = transactions.slice(i, i + batchSize);
-      const values = batch.map(t => 
-        `(gen_random_uuid(), ${t.customer_id ? `'${t.customer_id}'` : 'NULL'}, ${t.supplier_id ? `'${t.supplier_id}'` : 'NULL'}, ${t.category_id}, '${t.type}', ${t.amount}, ${t.paid_amount}, '${t.date}', ${t.payment_date ? `'${t.payment_date}'` : 'NULL'}, '${t.description}', '${t.status}', '${t.shift}')`
-      ).join(',');
-      
-      await db.execute(sql.raw(`
-        INSERT INTO transactions (id, customer_id, supplier_id, category_id, type, amount, paid_amount, date, payment_date, description, status, shift)
-        VALUES ${values}
-        ON CONFLICT DO NOTHING
-      `));
+      await db.insert(txnTable).values(batch).onConflictDoNothing();
     }
     
     console.log(`✅ Seeded ${transactions.length} transactions from Dec 2025 to May 2026`);
