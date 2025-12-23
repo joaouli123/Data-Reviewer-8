@@ -28,11 +28,6 @@ import { setupVite } from "./vite";
 import { z } from "zod";
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
-  // Setup Vite dev server in development
-  const isDev = process.env.NODE_ENV !== "production";
-  if (isDev) {
-    await setupVite(httpServer, app);
-  }
   // Health check (public)
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
@@ -806,6 +801,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.all("/api/*", (req, res) => {
     res.status(404).json({ error: "API route not found" });
   });
+
+  // Setup Vite dev server in development (MUST be last!)
+  const isDev = process.env.NODE_ENV !== "production";
+  if (isDev) {
+    await setupVite(httpServer, app);
+  }
 
   return httpServer;
 }
