@@ -90,19 +90,40 @@ export default function CashFlowForecastPage() {
         const revenueDetails = [];
         const expenseDetails = [];
 
-        transactions.forEach(t => {
-          const tDate = parseISO(t.date);
-          if (isWithinInterval(tDate, { start: dStart, end: dEnd })) {
-            const amount = parseFloat(t.amount) || 0;
-            if (t.type === 'venda' && amount >= 0) {
-              revenue += amount;
-              revenueDetails.push({ description: t.description, amount, date: t.date, category: t.type });
-            } else if (t.type === 'compra' && amount >= 0) {
-              expense += amount;
-              expenseDetails.push({ description: t.description, amount, date: t.date, category: t.type });
+        if (isHistorical) {
+          // Historical data - only completed transactions
+          transactions.forEach(t => {
+            const tDate = parseISO(t.date);
+            if (isWithinInterval(tDate, { start: dStart, end: dEnd })) {
+              const amount = parseFloat(t.amount) || 0;
+              if (t.type === 'venda' && amount >= 0) {
+                revenue += amount;
+                revenueDetails.push({ description: t.description, amount, date: t.date, category: t.type });
+              } else if (t.type === 'compra' && amount >= 0) {
+                expense += amount;
+                expenseDetails.push({ description: t.description, amount, date: t.date, category: t.type });
+              }
             }
-          }
-        });
+          });
+        } else {
+          // Future data - pending transactions
+          transactions.forEach(t => {
+            const tDate = parseISO(t.date);
+            if (isWithinInterval(tDate, { start: dStart, end: dEnd })) {
+              const isPending = t.status === 'pendente' || t.status === 'agendado' || t.status === 'pending';
+              if (isPending) {
+                const amount = parseFloat(t.amount) || 0;
+                if (t.type === 'venda' && amount >= 0) {
+                  revenue += amount;
+                  revenueDetails.push({ description: `${t.description} (Agendado)`, amount, date: t.date, category: t.type });
+                } else if (t.type === 'compra' && amount >= 0) {
+                  expense += amount;
+                  expenseDetails.push({ description: `${t.description} (Agendado)`, amount, date: t.date, category: t.type });
+                }
+              }
+            }
+          });
+        }
 
         return {
           month: format(day, 'dd/MM', { locale: ptBR }),
@@ -156,7 +177,36 @@ export default function CashFlowForecastPage() {
           }
         });
       } else {
-        // Future projections from pending installments
+        // Future projections from pending transactions and installments
+        // First, add future transactions with pending/agendado status
+        transactions.forEach(t => {
+          const tDate = parseISO(t.date);
+          if (isWithinInterval(tDate, { start: monthStart, end: monthEnd })) {
+            const isPending = t.status === 'pendente' || t.status === 'agendado' || t.status === 'pending';
+            if (isPending) {
+              const amount = parseFloat(t.amount) || 0;
+              if (t.type === 'venda' && amount >= 0) {
+                revenue += amount;
+                revenueDetails.push({
+                  description: `${t.description} (Agendado)`,
+                  amount: amount,
+                  date: t.date,
+                  category: t.type
+                });
+              } else if (t.type === 'compra' && amount >= 0) {
+                expense += amount;
+                expenseDetails.push({
+                  description: `${t.description} (Agendado)`,
+                  amount: amount,
+                  date: t.date,
+                  category: t.type
+                });
+              }
+            }
+          }
+        });
+
+        // Then, add pending installments from sales
         saleInstallments.forEach(inst => {
           if (!inst.paid) {
             const dueDate = parseISO(inst.due_date);
@@ -173,6 +223,7 @@ export default function CashFlowForecastPage() {
           }
         });
 
+        // And pending installments from purchases
         purchaseInstallments.forEach(inst => {
           if (!inst.paid) {
             const dueDate = parseISO(inst.due_date);
