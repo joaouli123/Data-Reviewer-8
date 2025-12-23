@@ -197,7 +197,27 @@ O sistema funciona em **4 módulos integrados**:
 
 ## 📝 Atualizações Recentes (23/DEC/2025)
 
-### Correções Críticas Implementadas
+### CRÍTICO: Timezone Bug RESOLVIDO! 🎯
+**Status**: ✅ **CORRIGIDO COMPLETAMENTE**
+
+#### Problema:
+- Datas foram salvas em UTC mas filtros usavam timezone local
+- Transações de hoje não apareciam quando confirmadas em Clientes/Fornecedores
+
+#### Solução Implementada:
+1. ✅ Date parsing normalizado: extrai apenas `YYYY-MM-DD` (ignore time/timezone)
+2. ✅ Atualizado em 3 arquivos:
+   - `src/pages/Transactions.jsx` - comparação de datas no filtro
+   - `src/pages/Dashboard.jsx` - cálculo de métricas
+   - `src/pages/CashFlowForecast.jsx` - análise de fluxo
+
+#### Fluxo Agora Funciona:
+1. Confirma recebimento/pagamento em **Clientes** ou **Fornecedores**
+2. Data é salva como `YYYY-MM-DD` em UTC
+3. Transação aparece **imediatamente** em **Transações** na data correta
+4. Filtro "Hoje" mostra transações de hoje automaticamente
+
+### Correções Anteriores (Mantidas)
 **Status**: ✅ TODAS RESOLVIDAS
 
 #### O que foi corrigido:

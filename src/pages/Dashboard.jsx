@@ -59,22 +59,29 @@ export default function DashboardPage() {
   const calculateMetrics = () => {
     // Calculate opening balance (all transactions before start date)
     let openingBalance = 0;
+    const startDateStr = format(dateRange.startDate, 'yyyy-MM-dd');
+    const endDateStr = format(dateRange.endDate, 'yyyy-MM-dd');
+    const startDate = parseISO(startDateStr);
+    const endDate = parseISO(endDateStr);
+    
     transactions.forEach(t => {
-      const tDate = new Date(t.date);
+      const tDateStr = t.date.split('T')[0];
+      const tDate = parseISO(tDateStr);
       const amount = parseFloat(t.amount) || 0;
       const isPaid = (t.status === 'completed' || t.status === 'pago' || t.status === 'concluído');
       
       if (!isPaid) return;
       
-      if (tDate < dateRange.startDate) {
+      if (tDate < startDate) {
         if (t.type === 'venda') openingBalance += amount;
         else openingBalance -= amount;
       }
     });
 
     const filteredTransactions = transactions.filter(t => {
-      const tDate = new Date(t.date);
-      return tDate >= dateRange.startDate && tDate <= dateRange.endDate;
+      const tDateStr = t.date.split('T')[0];
+      const tDate = parseISO(tDateStr);
+      return tDate >= startDate && tDate <= endDate;
     });
 
     const totalRevenue = filteredTransactions
@@ -93,16 +100,16 @@ export default function DashboardPage() {
     const next30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
     
     const futureRevenueTransactions = transactions.filter(t => {
-      const tDate = new Date(t.date);
-      tDate.setHours(0, 0, 0, 0);
+      const tDateStr = t.date.split('T')[0];
+      const tDate = parseISO(tDateStr);
       return t.type === 'venda' && tDate >= now && tDate <= next30Days;
     });
     
     const futureRevenue = futureRevenueTransactions.reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
     
     const futureExpensesTransactions = transactions.filter(t => {
-      const tDate = new Date(t.date);
-      tDate.setHours(0, 0, 0, 0);
+      const tDateStr = t.date.split('T')[0];
+      const tDate = parseISO(tDateStr);
       return t.type === 'compra' && tDate >= now && tDate <= next30Days;
     });
     
