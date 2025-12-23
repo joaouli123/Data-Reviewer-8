@@ -7,7 +7,7 @@ import { ptBR } from 'date-fns/locale';
 import KPIWidget from '../components/dashboard/KPIWidget';
 import RevenueChart from '../components/dashboard/RevenueChart';
 import QuickActionsFAB from '../components/dashboard/QuickActionsFAB';
-import DateRangeFilter from '../components/dashboard/DateRangeFilter';
+import PeriodFilter from '../components/dashboard/PeriodFilter';
 import TransactionForm from '../components/transactions/TransactionForm';
 import { Transaction, Installment } from '@/api/entities';
 import { PurchaseInstallment } from '@/api/entities';
@@ -165,10 +165,10 @@ export default function DashboardPage() {
           )}
         </div>
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-          <DateRangeFilter 
-            initialStartDate={dateRange.startDate} 
-            initialEndDate={dateRange.endDate}
-            onApply={setDateRange}
+          <PeriodFilter 
+            onPeriodChange={setDateRange}
+            mode="days"
+            defaultPeriod="last30Days"
           />
           <Button 
             onClick={() => setIsFormOpen(true)}
