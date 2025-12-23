@@ -109,10 +109,18 @@ export default function SuppliersPage() {
     return '-';
   };
 
-  const filteredSuppliers = suppliers.filter(s => 
-    s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    s.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredSuppliers = suppliers
+    .filter(s => 
+      s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      s.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    // Sort by ID ascending to show oldest first
+    .sort((a, b) => {
+      if (typeof a.id === 'string' && typeof b.id === 'string') {
+        return a.id.localeCompare(b.id);
+      }
+      return (a.id || 0) - (b.id || 0);
+    });
 
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;

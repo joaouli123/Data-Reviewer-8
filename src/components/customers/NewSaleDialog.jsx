@@ -76,7 +76,8 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
       const installmentAmount = parseFloat(data.installment_amount) || (totalAmount / installmentCount);
       
       const installmentGroupId = `group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      const baseDate = new Date(data.sale_date);
+      // Use UTC normalization to avoid timezone issues: YYYY-MM-DD -> YYYY-MM-DDTHH:MM:SSZ
+      const baseDate = new Date(data.sale_date + 'T00:00:00Z');
       
       const promises = [];
       

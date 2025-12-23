@@ -121,10 +121,18 @@ export default function CustomersPage() {
     return '-';
   };
 
-  const filteredCustomers = customers.filter(c => 
-    c.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    c.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredCustomers = customers
+    .filter(c => 
+      c.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      c.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    // Sort by ID ascending to show oldest first
+    .sort((a, b) => {
+      if (typeof a.id === 'string' && typeof b.id === 'string') {
+        return a.id.localeCompare(b.id);
+      }
+      return (a.id || 0) - (b.id || 0);
+    });
 
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
