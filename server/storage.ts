@@ -13,6 +13,8 @@ import {
   companies,
   subscriptions,
   auditLogs,
+  users,
+  invitations,
   type InsertCustomer,
   type InsertSupplier,
   type InsertCategory,
@@ -36,6 +38,10 @@ import {
   type AuditLog,
   type InsertSubscription,
   type InsertAuditLog,
+  type User,
+  type InsertUser,
+  type Invitation,
+  type InsertInvitation,
 } from "../shared/schema";
 
 export interface IStorage {
@@ -111,6 +117,20 @@ export interface IStorage {
   getCompany(id: string): Promise<Company | undefined>;
   updateCompanySubscription(companyId: string, data: Partial<InsertSubscription>): Promise<Subscription>;
   getCompanySubscription(companyId: string): Promise<Subscription | undefined>;
+  
+  // User operations
+  getUsers(companyId: string): Promise<User[]>;
+  getUser(companyId: string, id: string): Promise<User | undefined>;
+  updateUserPermissions(companyId: string, userId: string, permissions: Record<string, boolean>): Promise<User>;
+  updateUser(companyId: string, userId: string, data: Partial<InsertUser>): Promise<User>;
+  deleteUser(companyId: string, userId: string): Promise<void>;
+  
+  // Invitation operations
+  createInvitation(companyId: string, createdBy: string, data: InsertInvitation): Promise<Invitation>;
+  getInvitations(companyId: string): Promise<Invitation[]>;
+  getInvitationByToken(token: string): Promise<Invitation | undefined>;
+  acceptInvitation(token: string, userId: string): Promise<User>;
+  deleteInvitation(token: string): Promise<void>;
   
   // Audit log operations
   createAuditLog(data: InsertAuditLog): Promise<AuditLog>;
@@ -525,6 +545,57 @@ export class DatabaseStorage implements IStorage {
       .where(eq(auditLogs.companyId, companyId))
       .orderBy(desc(auditLogs.createdAt))
       .limit(limit);
+  }
+
+  // User operations
+  async getUsers(companyId: string): Promise<User[]> {
+    return await db.select().from(users).where(eq(users.companyId, companyId));
+  }
+
+  async getUser(companyId: string, id: string): Promise<User | undefined> {
+    const result = await db.select().from(users).where(and(eq(users.companyId, companyId), eq(users.id, id)));
+    return result[0];
+  }
+
+  async updateUserPermissions(companyId: string, userId: string, permissions: Record<string, boolean>): Promise<User> {
+    const result = await db.update(users).set({ permissions: JSON.stringify(permissions) }).where(and(eq(users.companyId, companyId), eq(users.id, userId))).returning();
+    return result[0];
+  }
+
+  async updateUser(companyId: string, userId: string, data: Partial<InsertUser>): Promise<User> {
+    const result = await db.update(users).set(data).where(and(eq(users.companyId, companyId), eq(users.id, userId))).returning();
+    return result[0];
+  }
+
+  async deleteUser(companyId: string, userId: string): Promise<void> {
+    await db.delete(users).where(and(eq(users.companyId, companyId), eq(users.id, userId)));
+  }
+
+  // Invitation operations
+  async createInvitation(companyId: string, createdBy: string, data: InsertInvitation): Promise<Invitation> {
+    const token = require('crypto').randomBytes(32).toString('hex');
+    const result = await db.insert(invitations).values({ ...data, companyId, token, createdBy }).returning();
+    return result[0];
+  }
+
+  async getInvitations(companyId: string): Promise<Invitation[]> {
+    return await db.select().from(invitations).where(eq(invitations.companyId, companyId));
+  }
+
+  async getInvitationByToken(token: string): Promise<Invitation | undefined> {
+    const result = await db.select().from(invitations).where(eq(invitations.token, token));
+    return result[0];
+  }
+
+  async acceptInvitation(token: string, userId: string): Promise<User> {
+    const invitation = await this.getInvitationByToken(token);
+    if (!invitation) throw new Error('Invalid invitation');
+    await db.update(invitations).set({ acceptedAt: new Date(), acceptedBy: userId }).where(eq(invitations.token, token));
+    return (await db.select().from(users).where(eq(users.id, userId)))[0];
+  }
+
+  async deleteInvitation(token: string): Promise<void> {
+    await db.delete(invitations).where(eq(invitations.token, token));
   }
 }
 

@@ -8,6 +8,7 @@ import Suppliers from "./Suppliers";
 import CashFlowForecast from "./CashFlowForecast";
 import PricingCalculator from "./PricingCalculator";
 import Categories from "./Categories";
+import UserManagement from "./UserManagement";
 import SuperAdmin from "./SuperAdmin";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -30,6 +31,7 @@ export default function Pages() {
         <Route path="/cashflowforecast" component={CashFlowForecast} />
         <Route path="/pricingcalculator" component={PricingCalculator} />
         <Route path="/categories" component={Categories} />
+        <Route path="/users" component={UserManagement} />
       </Switch>
     </Layout>
   );

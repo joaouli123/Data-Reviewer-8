@@ -797,6 +797,36 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // ========== USER MANAGEMENT ==========
+  app.get("/api/users", authMiddleware, requireRole(["admin", "manager"]), async (req: AuthenticatedRequest, res) => {
+    try {
+      const users = await storage.getUsers(req.user.companyId);
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch users" });
+    }
+  });
+
+  app.post("/api/invitations", authMiddleware, requireRole(["admin"]), async (req: AuthenticatedRequest, res) => {
+    try {
+      const { email, role } = req.body;
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      const invitation = await storage.createInvitation(req.user.companyId, req.user.id, { email, role, expiresAt, permissions: "{}" });
+      res.json({ invitationId: invitation.id, token: invitation.token });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create invitation" });
+    }
+  });
+
+  app.delete("/api/users/:userId", authMiddleware, requireRole(["admin"]), async (req: AuthenticatedRequest, res) => {
+    try {
+      await storage.deleteUser(req.user.companyId, req.params.userId);
+      res.json({ message: "User deleted" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete user" });
+    }
+  });
+
   // 404 fallback
   app.all("/api/*", (req, res) => {
     res.status(404).json({ error: "API route not found" });

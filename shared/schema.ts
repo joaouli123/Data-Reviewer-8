@@ -11,6 +11,88 @@ import {
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Permissões granulares disponíveis
+export const PERMISSIONS = {
+  // Transações
+  VIEW_TRANSACTIONS: "view_transactions",
+  CREATE_TRANSACTIONS: "create_transactions",
+  EDIT_TRANSACTIONS: "edit_transactions",
+  DELETE_TRANSACTIONS: "delete_transactions",
+  IMPORT_BANK: "import_bank",
+  
+  // Relatórios
+  VIEW_REPORTS: "view_reports",
+  VIEW_PROFIT: "view_profit",
+  EXPORT_REPORTS: "export_reports",
+  
+  // Clientes
+  VIEW_CUSTOMERS: "view_customers",
+  MANAGE_CUSTOMERS: "manage_customers",
+  
+  // Fornecedores
+  VIEW_SUPPLIERS: "view_suppliers",
+  MANAGE_SUPPLIERS: "manage_suppliers",
+  
+  // Usuários
+  MANAGE_USERS: "manage_users",
+  INVITE_USERS: "invite_users",
+  
+  // Configurações
+  VIEW_SETTINGS: "view_settings",
+  MANAGE_SETTINGS: "manage_settings",
+} as const;
+
+export const DEFAULT_PERMISSIONS = {
+  admin: {
+    [PERMISSIONS.VIEW_TRANSACTIONS]: true,
+    [PERMISSIONS.CREATE_TRANSACTIONS]: true,
+    [PERMISSIONS.EDIT_TRANSACTIONS]: true,
+    [PERMISSIONS.DELETE_TRANSACTIONS]: true,
+    [PERMISSIONS.IMPORT_BANK]: true,
+    [PERMISSIONS.VIEW_REPORTS]: true,
+    [PERMISSIONS.VIEW_PROFIT]: true,
+    [PERMISSIONS.EXPORT_REPORTS]: true,
+    [PERMISSIONS.VIEW_CUSTOMERS]: true,
+    [PERMISSIONS.MANAGE_CUSTOMERS]: true,
+    [PERMISSIONS.VIEW_SUPPLIERS]: true,
+    [PERMISSIONS.MANAGE_SUPPLIERS]: true,
+    [PERMISSIONS.MANAGE_USERS]: true,
+    [PERMISSIONS.INVITE_USERS]: true,
+    [PERMISSIONS.VIEW_SETTINGS]: true,
+    [PERMISSIONS.MANAGE_SETTINGS]: true,
+  },
+  manager: {
+    [PERMISSIONS.VIEW_TRANSACTIONS]: true,
+    [PERMISSIONS.CREATE_TRANSACTIONS]: true,
+    [PERMISSIONS.EDIT_TRANSACTIONS]: true,
+    [PERMISSIONS.IMPORT_BANK]: true,
+    [PERMISSIONS.VIEW_REPORTS]: true,
+    [PERMISSIONS.VIEW_PROFIT]: true,
+    [PERMISSIONS.EXPORT_REPORTS]: true,
+    [PERMISSIONS.VIEW_CUSTOMERS]: true,
+    [PERMISSIONS.MANAGE_CUSTOMERS]: true,
+    [PERMISSIONS.VIEW_SUPPLIERS]: true,
+    [PERMISSIONS.MANAGE_SUPPLIERS]: true,
+    [PERMISSIONS.VIEW_SETTINGS]: false,
+    [PERMISSIONS.MANAGE_SETTINGS]: false,
+    [PERMISSIONS.MANAGE_USERS]: false,
+    [PERMISSIONS.INVITE_USERS]: false,
+  },
+  user: {
+    [PERMISSIONS.VIEW_TRANSACTIONS]: true,
+    [PERMISSIONS.CREATE_TRANSACTIONS]: true,
+    [PERMISSIONS.VIEW_REPORTS]: true,
+    [PERMISSIONS.EXPORT_REPORTS]: true,
+    [PERMISSIONS.VIEW_CUSTOMERS]: true,
+    [PERMISSIONS.VIEW_SUPPLIERS]: true,
+  },
+  operational: {
+    [PERMISSIONS.VIEW_TRANSACTIONS]: true,
+    [PERMISSIONS.CREATE_TRANSACTIONS]: true,
+    [PERMISSIONS.IMPORT_BANK]: true,
+  },
+} as const;
+
 export const DEFAULT_CATEGORIES = [
   { name: "Vendas", type: "entrada" },
   { name: "Compras", type: "saida" },
@@ -51,9 +133,25 @@ export const users = pgTable("users", {
   name: text("name"),
   role: text("role").notNull().default("user"), // admin, manager, user, operational
   isSuperAdmin: boolean("is_super_admin").notNull().default(false), // Flag for Super Admin
+  permissions: text("permissions").default(sql`'{}'::jsonb`), // JSON: {view_reports: true, manage_transactions: true, ...}
   status: text("status").notNull().default("active"), // active, inactive, suspended
   createdAt: timestamp("created_at").notNull().default(sql`now()`),
   updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
+});
+
+// Invitations table for user onboarding
+export const invitations = pgTable("invitations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
+  token: text("token").notNull().unique(), // Unique invite token
+  email: text("email").notNull(),
+  role: text("role").notNull().default("user"),
+  permissions: text("permissions").default(sql`'{}'::jsonb`),
+  expiresAt: timestamp("expires_at").notNull(),
+  acceptedAt: timestamp("accepted_at"),
+  acceptedBy: varchar("accepted_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+  createdBy: varchar("created_by").notNull().references(() => users.id, { onDelete: "cascade" }),
 });
 
 // Audit logs for security tracking
@@ -221,6 +319,22 @@ export const insertUserSchema = createInsertSchema(users).omit({
   password: z.string().min(6, "Password must be at least 6 characters"),
   username: z.string().min(3, "Username must be at least 3 characters"),
 });
+
+export const insertInvitationSchema = createInsertSchema(invitations).omit({
+  id: true,
+  createdAt: true,
+  acceptedAt: true,
+  acceptedBy: true,
+}).extend({
+  email: z.string().email("Invalid email"),
+  token: z.string().optional(),
+  expiresAt: z.date().or(z.string()),
+});
+
+export type User = typeof users.$inferSelect;
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type Invitation = typeof invitations.$inferSelect;
+export type InsertInvitation = z.infer<typeof insertInvitationSchema>;
 
 export const insertCustomerSchema = createInsertSchema(customers).omit({
   id: true,
