@@ -538,8 +538,10 @@ app.delete("/api/purchase-installments/:id", async (req, res) => {
 // Initialize database in production
 app.post("/api/admin/init-db", async (_req, res) => {
   try {
-    if (isDev) {
-      return res.status(400).json({ error: "This endpoint is for production only" });
+    // Allow if NOT on localhost or if explicitly called via deployed domain
+    const isLocalhost = _req.hostname === 'localhost' || _req.hostname === '127.0.0.1';
+    if (isLocalhost && isDev) {
+      return res.status(400).json({ error: "This endpoint is for deployed instances only" });
     }
     
     console.log("🚀 Initializing production database...");
