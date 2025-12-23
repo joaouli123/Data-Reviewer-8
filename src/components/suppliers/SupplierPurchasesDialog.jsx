@@ -98,7 +98,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
   };
 
   const confirmPaymentMutation = useMutation({
-    mutationFn: async ({ purchaseId, paidAmount, interest }) => {
+    mutationFn: async ({ purchaseId, paidAmount, interest, paymentDate }) => {
       
       // Get the transaction first to check the amount
       const getResponse = await fetch(`/api/transactions/${purchaseId}`);
@@ -120,7 +120,8 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
         body: JSON.stringify({ 
           status: status,
           paidAmount: paidAmount ? parseFloat(paidAmount).toString() : undefined,
-          interest: interest ? parseFloat(interest).toString() : '0'
+          interest: interest ? parseFloat(interest).toString() : '0',
+          paymentDate: paymentDate && paymentDate.trim() ? new Date(paymentDate).toISOString() : null
         })
       });
       if (!response.ok) {
@@ -149,12 +150,12 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
       return transaction;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/cash-flow'] });
-      setPaymentEditOpen(false);
-      setSelectedTransaction(null);
       toast.success('Pagamento confirmado!');
+      // Refetch immediately and wait for it to complete before closing
+      queryClient.refetchQueries({ queryKey: ['transactions'] }).then(() => {
+        setPaymentEditOpen(false);
+        setSelectedTransaction(null);
+      });
     },
     onError: (error) => {
       toast.error(error.message);
@@ -207,7 +208,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Compras - {supplier.name}</DialogTitle>
         </DialogHeader>
@@ -289,6 +290,11 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                           {(installment.status === 'completed' || installment.status === 'pago') ? (
                             <>
                               <div className="flex flex-col items-end gap-0.5 mr-2">
+                                {installment.paymentDate && (
+                                  <p className="text-xs text-emerald-600">
+                                    {format(parseISO(installment.paymentDate), "dd/MM/yyyy")}
+                                  </p>
+                                )}
                                 {installment.paidAmount && (
                                   <p className="text-xs text-slate-500">
                                     Pago: R$ {parseFloat(installment.paidAmount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
@@ -357,10 +363,13 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
             confirmPaymentMutation.mutate({
               purchaseId: selectedTransaction.id,
               paidAmount: data.paidAmount,
-              interest: data.interest
+              interest: data.interest,
+              paymentDate: data.paymentDate
             });
           }}
           isLoading={confirmPaymentMutation.isPending}
+          title="Confirmar Pagamento"
+          amountLabel="Valor Pago"
         />
       </DialogContent>
     </Dialog>
