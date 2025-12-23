@@ -128,7 +128,8 @@ export default function DashboardPage() {
       });
       
       const income = monthTrans.filter(t => t.type === 'venda').reduce((acc, t) => acc + Math.abs(parseFloat(t.amount || 0)), 0);
-      const expense = monthTrans.filter(t => t.type === 'compra').reduce((acc, t) => acc + Math.abs(parseFloat(t.amount || 0)), 0);
+      const expenseRaw = monthTrans.filter(t => t.type === 'compra').reduce((acc, t) => acc + (parseFloat(t.amount) || 0), 0);
+      const expense = Math.abs(expenseRaw);
 
       chartData.push({
         name: date.toLocaleString('pt-BR', { month: 'short' }).toUpperCase(),

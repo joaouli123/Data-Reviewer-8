@@ -206,7 +206,7 @@ export default function TransactionsPage() {
       } else if (tDate >= dateRange.startDate && tDate <= dateRange.endDate) {
         // Transaction is within period
         if (t.type === 'venda') periodIncome += amount;
-        else periodExpense += amount;
+        else periodExpense += Math.abs(amount);  // Always use positive for expense calculation
       }
     });
 
