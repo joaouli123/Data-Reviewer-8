@@ -107,8 +107,8 @@ export default function CashFlowForecastPage() {
         return {
           month: format(day, 'dd/MM', { locale: ptBR }),
           monthKey: format(day, 'yyyy-MM-dd'),
-          receita: Math.max(0, revenue),
-          despesa: Math.max(0, expense),
+          receita: revenue,
+          despesa: expense,
           saldo: revenue - expense,
           isHistorical,
           revenueDetails,
