@@ -121,22 +121,8 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
         formattedPaymentDate = new Date(`${year}-${month}-${day}T12:00:00Z`).toISOString();
       }
       
-      // Find the group this installment belongs to to count paid/total
-      const baseDescription = (currentTransaction.description || '').replace(/\s*\(\d+\/\d+.*?\)\s*$/, '').trim();
-      const groupPurchases = purchases.filter(p => {
-        const pDesc = (p.description || '').replace(/\s*\(\d+\/\d+.*?\)\s*$/, '').trim();
-        return pDesc === baseDescription;
-      });
-      const totalInstallments = groupPurchases.length;
-      const paidInstallments = groupPurchases.filter(p => p.status === 'pago' || p.status === 'completed').length + 1;
-      
-      // Add installment indicator to description (e.g., "Compra (1/5 paga)")
-      let updatedDescription = baseDescription;
-      if (totalInstallments > 1) {
-        updatedDescription = `${baseDescription} (${paidInstallments}/${totalInstallments} paga)`;
-      }
-      
       // IMPORTANT: Do NOT update 'date' field - that's the due date and must remain unchanged
+      // IMPORTANT: Do NOT update 'description' - keep the base description to maintain grouping
       // Only update paymentDate (when payment was made), status, paidAmount, and interest
       const response = await fetch(`/api/transactions/${purchaseId}`, {
         method: 'PATCH',
@@ -145,8 +131,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
           status: status,
           paidAmount: paidAmount ? parseFloat(paidAmount).toString() : undefined,
           interest: interest ? parseFloat(interest).toString() : '0',
-          paymentDate: formattedPaymentDate,
-          description: updatedDescription
+          paymentDate: formattedPaymentDate
         })
       });
       if (!response.ok) {
@@ -194,18 +179,14 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
       const transactionRes = await fetch(`/api/transactions/${purchaseId}`);
       const transaction = await transactionRes.json();
       
-      // Remove installment indicator from description
-      const baseDescription = (transaction.description || '').replace(/\s*\(\d+\/\d+.*?\)\s*$/, '').trim();
-      
-      // Revert the transaction status
+      // Revert the transaction status (description stays the same)
       const response = await fetch(`/api/transactions/${purchaseId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           status: 'pendente', 
           paidAmount: null, 
-          interest: '0',
-          description: baseDescription
+          interest: '0'
         })
       });
       if (!response.ok) {

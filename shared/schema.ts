@@ -70,6 +70,9 @@ export const transactions = pgTable("transactions", {
   date: timestamp("date").notNull(),
   shift: text("shift").notNull(),
   status: text("status").notNull().default("pendente"),
+  installmentGroup: text("installment_group"),
+  installmentNumber: integer("installment_number"),
+  installmentTotal: integer("installment_total"),
 });
 
 export const cashFlow = pgTable("cash_flow", {
