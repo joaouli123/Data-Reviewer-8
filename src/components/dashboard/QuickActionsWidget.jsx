@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Plus, Upload, DollarSign, Users, TrendingUp, FileText, Calculator } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link } from 'wouter';
 import TransactionForm from '../transactions/TransactionForm';
 import BankStatementUpload from '../transactions/BankStatementUpload';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
