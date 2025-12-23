@@ -15,11 +15,18 @@ import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 export default function DashboardPage() {
-  const [dateRange, setDateRange] = useState({
-    startDate: startOfDay(subDays(new Date(), 29)),
-    endDate: endOfDay(new Date()),
-    label: 'Últimos 30 dias'
-  });
+  // Initialize with UTC-normalized dates for São Paulo timezone
+  const getInitialDateRange = () => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const thirtyDaysAgoStr = new Date(new Date().setDate(new Date().getDate() - 29)).toISOString().split('T')[0];
+    return {
+      startDate: new Date(thirtyDaysAgoStr + 'T00:00:00Z'),
+      endDate: new Date(todayStr + 'T23:59:59Z'),
+      label: 'Últimos 30 dias'
+    };
+  };
+
+  const [dateRange, setDateRange] = useState(getInitialDateRange());
   const [isFormOpen, setIsFormOpen] = useState(false);
   const queryClient = useQueryClient();
 
@@ -35,18 +42,6 @@ export default function DashboardPage() {
   const handleSubmit = (data) => {
     createMutation.mutate(data);
   };
-
-  const handleComplete = (id) => {
-    updateMutation.mutate({ id, data: { status: 'concluído' } });
-  };
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => Transaction.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      toast.success('Transação concluída!');
-    }
-  });
 
   // Fetch data
   const { data: transactions } = useQuery({
@@ -68,9 +63,6 @@ export default function DashboardPage() {
       const tDateStr = t.date.split('T')[0];
       const tDate = parseISO(tDateStr);
       const amount = parseFloat(t.amount) || 0;
-      const isPaid = (t.status === 'completed' || t.status === 'pago' || t.status === 'concluído');
-      
-      if (!isPaid) return;
       
       if (tDate < startDate) {
         if (t.type === 'venda') openingBalance += amount;
@@ -85,24 +77,25 @@ export default function DashboardPage() {
     });
 
     const totalRevenue = filteredTransactions
-      .filter(t => t.type === 'venda' && (t.status === 'completed' || t.status === 'pago' || t.status === 'concluído'))
+      .filter(t => t.type === 'venda')
       .reduce((acc, curr) => acc + Math.abs(parseFloat(curr.amount || 0)), 0);
     
     const totalExpenses = filteredTransactions
-      .filter(t => t.type === 'compra' && (t.status === 'completed' || t.status === 'pago' || t.status === 'concluído'))
+      .filter(t => t.type === 'compra')
       .reduce((acc, curr) => acc + Math.abs(parseFloat(curr.amount || 0)), 0);
 
     const netProfit = totalRevenue - totalExpenses;
 
     // Future Cash Flow (próximos 30 dias)
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    const next30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const todayStr = new Date().toISOString().split('T')[0];
+    const today = new Date(todayStr + 'T00:00:00Z');
+    const thirtyDaysFromNowStr = new Date(new Date().setDate(new Date().getDate() + 30)).toISOString().split('T')[0];
+    const thirtyDaysFromNow = new Date(thirtyDaysFromNowStr + 'T23:59:59Z');
     
     const futureRevenueTransactions = transactions.filter(t => {
       const tDateStr = t.date.split('T')[0];
       const tDate = parseISO(tDateStr);
-      return t.type === 'venda' && tDate >= now && tDate <= next30Days;
+      return t.type === 'venda' && tDate >= today && tDate <= thirtyDaysFromNow;
     });
     
     const futureRevenue = futureRevenueTransactions.reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
@@ -110,19 +103,14 @@ export default function DashboardPage() {
     const futureExpensesTransactions = transactions.filter(t => {
       const tDateStr = t.date.split('T')[0];
       const tDate = parseISO(tDateStr);
-      return t.type === 'compra' && tDate >= now && tDate <= next30Days;
+      return t.type === 'compra' && tDate >= today && tDate <= thirtyDaysFromNow;
     });
     
     const futureExpenses = futureExpensesTransactions.reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
 
-    // Count pending installments (parcelas)
-    const pendingSaleInstallments = transactions.filter(t => 
-      t.type === 'venda' && t.installmentGroup && (t.status === 'pendente' || t.status === 'pending')
-    ).length;
-    
-    const pendingPurchaseInstallments = transactions.filter(t => 
-      t.type === 'compra' && t.installmentGroup && (t.status === 'pendente' || t.status === 'pending')
-    ).length;
+    // Count future transactions (no status check)
+    const futureSaleCount = futureRevenueTransactions.length;
+    const futurePurchaseCount = futureExpensesTransactions.length;
 
     // Chart data - últimos 6 meses
     const chartData = [];
@@ -152,8 +140,8 @@ export default function DashboardPage() {
       netProfit,
       futureRevenue,
       futureExpenses,
-      futureRevenueCount: futureRevenueTransactions.length + pendingSaleInstallments,
-      futureExpensesCount: futureExpensesTransactions.length + pendingPurchaseInstallments,
+      futureRevenueCount: futureSaleCount,
+      futureExpensesCount: futurePurchaseCount,
       chartData,
       filteredTransactions
     };
