@@ -286,11 +286,6 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
                             </p>
                             <p className="text-xs text-slate-500">
                               Venc: {installment.date ? format(parseISO(installment.date), "dd/MM/yyyy") : '-'}
-                              {installment.paymentDate && installment.paymentDate !== installment.date && (
-                                <span className="text-emerald-600 ml-2">
-                                  Pag: {format(parseISO(installment.paymentDate), "dd/MM/yyyy")}
-                                </span>
-                              )}
                             </p>
                           </div>
                         </div>
