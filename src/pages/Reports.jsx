@@ -86,7 +86,8 @@ export default function ReportsPage() {
     
     // Period filter
     filtered = filtered.filter(t => {
-      const tDate = new Date(t.date);
+      // Parse date using UTC to avoid timezone issues
+      const tDate = parseISO(t.date.split('T')[0] + 'T12:00:00Z');
       return tDate >= dateRange.startDate && tDate <= dateRange.endDate;
     });
     

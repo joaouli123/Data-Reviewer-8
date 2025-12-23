@@ -261,7 +261,7 @@ export default function DashboardPage() {
             {metrics.filteredTransactions.length > 0 ? (
               <>
                 {metrics.filteredTransactions
-                  .sort((a, b) => new Date(b.date) - new Date(a.date))
+                  .sort((a, b) => parseISO(b.date.split('T')[0] + 'T12:00:00Z') - parseISO(a.date.split('T')[0] + 'T12:00:00Z'))
                   .slice(0, 5)
                   .map((t) => (
                     <div
@@ -285,7 +285,7 @@ export default function DashboardPage() {
                         <div className="min-w-0">
                           <p className="font-medium text-foreground truncate text-xs">{t.description}</p>
                           <p className="text-xs text-muted-foreground">
-                            {format(new Date(t.date), 'dd MMM', { locale: ptBR })}
+                            {format(parseISO(t.date.split('T')[0] + 'T12:00:00Z'), 'dd MMM', { locale: ptBR })}
                           </p>
                         </div>
                       </div>

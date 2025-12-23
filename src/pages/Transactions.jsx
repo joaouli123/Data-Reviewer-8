@@ -28,9 +28,11 @@ export default function TransactionsPage() {
   // Initialize with UTC-normalized dates to avoid timezone issues
   const getInitialDateRange = () => {
     const todayStr = new Date().toISOString().split('T')[0];
+    // Use noon UTC to ensure date stays consistent across timezones
+    const [year, month, day] = todayStr.split('-');
     return {
-      startDate: new Date(todayStr + 'T00:00:00Z'),
-      endDate: new Date(todayStr + 'T23:59:59Z'),
+      startDate: new Date(`${year}-${month}-${day}T00:00:00Z`),
+      endDate: new Date(`${year}-${month}-${day}T23:59:59Z`),
       label: 'Hoje'
     };
   };
@@ -362,7 +364,8 @@ export default function TransactionsPage() {
                         paginatedTransactions.map((t) => (
                             <TableRow key={t.id} className="hover:bg-slate-50/50 group">
                                 <TableCell className="font-medium text-slate-600 pl-6 text-left">
-                                    {format(new Date(t.date), "dd/MM/yyyy", { locale: ptBR })}
+                                    {/* Parse date using UTC to avoid timezone issues */}
+                                    {format(parseISO(t.date.split('T')[0] + 'T12:00:00Z'), "dd/MM/yyyy", { locale: ptBR })}
                                 </TableCell>
                                 <TableCell className="font-medium text-slate-900 text-left">{t.description}</TableCell>
                                 <TableCell className="text-left">

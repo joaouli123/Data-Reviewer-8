@@ -114,7 +114,7 @@ export default function CustomersPage() {
     
     const customerTransactions = transactions.filter(t => t.customerId === customer.id);
     if (customerTransactions.length > 0) {
-      const earliestDate = new Date(Math.min(...customerTransactions.map(t => new Date(t.date))));
+      const earliestDate = new Date(Math.min(...customerTransactions.map(t => parseISO(t.date.split('T')[0] + 'T12:00:00Z'))));
       return format(earliestDate, "MMM yyyy", { locale: ptBR });
     }
     
@@ -126,12 +126,12 @@ export default function CustomersPage() {
       c.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
       c.email?.toLowerCase().includes(searchTerm.toLowerCase())
     )
-    // Sort by ID ascending to show oldest first
+    // Sort by ID descending to show newest first
     .sort((a, b) => {
       if (typeof a.id === 'string' && typeof b.id === 'string') {
-        return a.id.localeCompare(b.id);
+        return b.id.localeCompare(a.id);
       }
-      return (a.id || 0) - (b.id || 0);
+      return (b.id || 0) - (a.id || 0);
     });
 
   const startIndex = (currentPage - 1) * pageSize;
