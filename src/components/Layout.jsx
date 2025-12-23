@@ -24,6 +24,7 @@ export default function Layout({ children }) {
     { name: 'Fluxo de Caixa', icon: TrendingUp, path: '/cashflowforecast', roles: ['admin', 'manager', 'user'] },
     { name: 'IA Analista', icon: Brain, path: '/reports', roles: ['admin', 'manager', 'user'] },
     { name: 'Calc. Preços', icon: Settings, path: '/pricingcalculator', roles: ['admin', 'manager', 'user', 'operational'] },
+    { name: 'Gestão de Usuários', icon: Users, path: '/users', roles: ['admin'] },
   ];
 
   const navigation = baseNavigation.filter(item => item.roles.includes(user?.role || 'user'));

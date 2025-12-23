@@ -372,9 +372,6 @@ export type InsertCompany = z.infer<typeof insertCompanySchema>;
 export type Subscription = typeof subscriptions.$inferSelect;
 export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
 
-export type User = typeof users.$inferSelect;
-export type InsertUser = z.infer<typeof insertUserSchema>;
-
 export type Session = typeof sessions.$inferSelect;
 
 export type Customer = typeof customers.$inferSelect;

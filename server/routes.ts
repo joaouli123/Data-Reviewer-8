@@ -827,6 +827,34 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  app.patch("/api/users/:userId/permissions", authMiddleware, requireRole(["admin"]), async (req: AuthenticatedRequest, res) => {
+    try {
+      const { permissions } = req.body;
+      await storage.updateUserPermissions(req.user.companyId, req.params.userId, permissions);
+      res.json({ message: "Permissions updated" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update permissions" });
+    }
+  });
+
+  app.post("/api/invitations/accept", async (req, res) => {
+    try {
+      const { token, username, password } = req.body;
+      const invitation = await storage.getInvitationByToken(token);
+      
+      if (!invitation || new Date(invitation.expiresAt) < new Date()) {
+        return res.status(400).json({ error: "Invalid or expired invitation" });
+      }
+
+      const newUser = await createUser(invitation.companyId, username, invitation.email, password, username, invitation.role);
+      await storage.acceptInvitation(token, newUser.id);
+
+      res.json({ user: { id: newUser.id, username: newUser.username, email: newUser.email } });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to accept invitation" });
+    }
+  });
+
   // 404 fallback
   app.all("/api/*", (req, res) => {
     res.status(404).json({ error: "API route not found" });
