@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Transaction, Category } from '@/api/entities';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -44,25 +45,27 @@ export default function TransactionsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
 
-
-  const { data: categories } = useQuery({
-    queryKey: ['categories'],
-    queryFn: () => Category.list(),
-    initialData: []
-  });
-
+  const { company } = useAuth();
   const queryClient = useQueryClient();
 
+  const { data: categories } = useQuery({
+    queryKey: ['/api/categories', company?.id],
+    queryFn: () => Category.list(),
+    initialData: [],
+    enabled: !!company?.id
+  });
+
   const { data: transactions, isLoading } = useQuery({
-    queryKey: ['transactions'],
+    queryKey: ['/api/transactions', company?.id],
     queryFn: () => Transaction.list(),
-    initialData: []
+    initialData: [],
+    enabled: !!company?.id
   });
 
   const createMutation = useMutation({
     mutationFn: (data) => Transaction.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions', company?.id] });
       setIsFormOpen(false);
       toast.success('Transação criada com sucesso!', { duration: 5000 });
     }
@@ -71,7 +74,7 @@ export default function TransactionsPage() {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => Transaction.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions', company?.id] });
       setIsFormOpen(false);
       setEditingTransaction(null);
       toast.success('Transação atualizada!', { duration: 5000 });
@@ -81,7 +84,7 @@ export default function TransactionsPage() {
   const deleteMutation = useMutation({
     mutationFn: (id) => Transaction.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions', company?.id] });
       toast.success('Transação removida.', { duration: 5000 });
     }
   });

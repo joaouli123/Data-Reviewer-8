@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { DollarSign, TrendingUp, Wallet, Users, Plus, ChevronRight, CheckCircle2, Clock, Check } from 'lucide-react';
 import { subMonths, startOfMonth, format, isAfter, isBefore, subDays, startOfDay, endOfDay, parseISO } from 'date-fns';
@@ -28,12 +29,13 @@ export default function DashboardPage() {
 
   const [dateRange, setDateRange] = useState(getInitialDateRange());
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const { company } = useAuth();
   const queryClient = useQueryClient();
 
   const createMutation = useMutation({
     mutationFn: (data) => Transaction.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions', company?.id] });
       setIsFormOpen(false);
       toast.success('Transação criada com sucesso!');
     }
@@ -45,9 +47,10 @@ export default function DashboardPage() {
 
   // Fetch ALL transactions to show only periods with actual data
   const { data: allTransactions = [] } = useQuery({
-    queryKey: ['transactions', 'all'],
+    queryKey: ['/api/transactions', 'all', company?.id],
     queryFn: () => Transaction.list(),
-    staleTime: 1000 * 60 * 5 // Cache for 5 minutes
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    enabled: !!company?.id
   });
 
   // Calculate metrics based on date range

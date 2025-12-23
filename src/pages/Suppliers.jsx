@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Supplier, Purchase, Category } from '@/api/entities';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -27,24 +28,28 @@ export default function SuppliersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   
+  const { company } = useAuth();
   const queryClient = useQueryClient();
 
   const { data: suppliers, isLoading } = useQuery({
-    queryKey: ['suppliers'],
+    queryKey: ['/api/suppliers', company?.id],
     queryFn: () => Supplier.list(),
-    initialData: []
+    initialData: [],
+    enabled: !!company?.id
   });
 
   const { data: expenseCategories = [] } = useQuery({
-    queryKey: ['categories'],
+    queryKey: ['/api/categories', company?.id],
     queryFn: () => Category.list(),
-    initialData: []
+    initialData: [],
+    enabled: !!company?.id
   });
 
   const { data: transactions = [] } = useQuery({
-    queryKey: ['transactions'],
+    queryKey: ['/api/transactions', company?.id],
     queryFn: () => fetch('/api/transactions').then(res => res.json()),
-    initialData: []
+    initialData: [],
+    enabled: !!company?.id
   });
 
   const saveMutation = useMutation({
@@ -55,7 +60,7 @@ export default function SuppliersPage() {
       return Supplier.create(data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/suppliers', company?.id] });
       setIsFormDialogOpen(false);
       setSelectedSupplier(null);
       toast.success(selectedSupplier ? 'Fornecedor atualizado!' : 'Fornecedor adicionado!', { duration: 5000 });
@@ -65,7 +70,7 @@ export default function SuppliersPage() {
   const deleteMutation = useMutation({
     mutationFn: (id) => Supplier.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/suppliers', company?.id] });
       toast.success('Fornecedor removido.', { duration: 5000 });
     }
   });

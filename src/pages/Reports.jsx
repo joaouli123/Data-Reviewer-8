@@ -2,6 +2,7 @@ import { InvokeLLM, UploadFile, ExtractDataFromUploadedFile } from '@/api/integr
 import React, { useState } from 'react';
 import { Transaction, Customer, Category, Installment, PurchaseInstallment, Purchase } from '@/api/entities';
 import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Brain, Sparkles, TrendingUp, AlertTriangle, Lightbulb, FileText, Loader2, ArrowRight, Filter, BarChart3 } from 'lucide-react';
@@ -27,6 +28,7 @@ import ReportExporter from '../components/reports/ReportExporter';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 export default function ReportsPage() {
+  const { company } = useAuth();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -45,39 +47,45 @@ export default function ReportsPage() {
   const [categoryFilter, setCategoryFilter] = useState('all');
 
   const { data: transactions } = useQuery({
-    queryKey: ['transactions'],
+    queryKey: ['/api/transactions', company?.id],
     queryFn: () => Transaction.list(),
-    initialData: []
+    initialData: [],
+    enabled: !!company?.id
   });
 
   const { data: customers } = useQuery({
-    queryKey: ['customers'],
+    queryKey: ['/api/customers', company?.id],
     queryFn: () => Customer.list(),
-    initialData: []
+    initialData: [],
+    enabled: !!company?.id
   });
 
   const { data: categories } = useQuery({
-    queryKey: ['categories'],
+    queryKey: ['/api/categories', company?.id],
     queryFn: () => Category.list(),
-    initialData: []
+    initialData: [],
+    enabled: !!company?.id
   });
 
   const { data: saleInstallments } = useQuery({
-    queryKey: ['sale-installments'],
+    queryKey: ['/api/sale-installments', company?.id],
     queryFn: () => Installment.list(),
-    initialData: []
+    initialData: [],
+    enabled: !!company?.id
   });
 
   const { data: purchaseInstallments } = useQuery({
-    queryKey: ['purchase-installments'],
+    queryKey: ['/api/purchase-installments', company?.id],
     queryFn: () => PurchaseInstallment.list(),
-    initialData: []
+    initialData: [],
+    enabled: !!company?.id
   });
 
   const { data: purchases } = useQuery({
-    queryKey: ['purchases'],
+    queryKey: ['/api/purchases', company?.id],
     queryFn: () => Purchase.list(),
-    initialData: []
+    initialData: [],
+    enabled: !!company?.id
   });
 
   // Filter transactions based on period and category

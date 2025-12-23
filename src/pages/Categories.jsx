@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -14,6 +15,7 @@ import { Category } from '@/api/entities';
 import Pagination from '../components/Pagination';
 
 export default function CategoriesPage() {
+  const { company } = useAuth();
   const queryClient = useQueryClient();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
@@ -22,15 +24,16 @@ export default function CategoriesPage() {
   const [pageSize, setPageSize] = useState(20);
 
   const { data: categories } = useQuery({
-    queryKey: ['categories'],
+    queryKey: ['/api/categories', company?.id],
     queryFn: () => Category.list(),
-    initialData: []
+    initialData: [],
+    enabled: !!company?.id
   });
 
   const createMutation = useMutation({
     mutationFn: (data) => Category.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/categories', company?.id] });
       setIsFormOpen(false);
       setFormData({ name: '', type: 'entrada' });
       toast.success('Categoria criada com sucesso!', { duration: 5000 });
@@ -44,7 +47,7 @@ export default function CategoriesPage() {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => Category.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/categories', company?.id] });
       setIsFormOpen(false);
       setEditingCategory(null);
       setFormData({ name: '' });
@@ -56,7 +59,7 @@ export default function CategoriesPage() {
   const deleteMutation = useMutation({
     mutationFn: (id) => Category.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/categories', company?.id] });
       toast.success('Categoria removida!', { duration: 5000 });
     },
     onError: () => toast.error('Erro ao remover categoria', { duration: 5000 })

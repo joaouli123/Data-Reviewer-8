@@ -84,7 +84,14 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    // Importar queryClient aqui para evitar circular dependency
+    const { queryClient } = await import("@/lib/queryClient");
+    
+    // Limpar todo o cache do React Query
+    queryClient.clear();
+    
+    // Remover dados locais
     setToken(null);
     setUser(null);
     setCompany(null);

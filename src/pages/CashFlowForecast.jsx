@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Transaction, Installment, PurchaseInstallment, Sale, Purchase } from '@/api/entities';
 import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarIcon, TrendingUp, TrendingDown, Wallet, ChevronDown, ChevronRight } from 'lucide-react';
@@ -29,10 +30,12 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 export default function CashFlowForecastPage() {
+  const { company } = useAuth();
   const { data: transactions } = useQuery({
-    queryKey: ['transactions'],
+    queryKey: ['/api/transactions', company?.id],
     queryFn: () => Transaction.list(),
-    initialData: []
+    initialData: [],
+    enabled: !!company?.id
   });
 
   // Calculate min and max dates from all transactions
@@ -86,27 +89,31 @@ export default function CashFlowForecastPage() {
   const [pageSize, setPageSize] = useState(20);
 
   const { data: saleInstallments } = useQuery({
-    queryKey: ['sale-installments'],
+    queryKey: ['/api/sale-installments', company?.id],
     queryFn: () => Installment.list(),
-    initialData: []
+    initialData: [],
+    enabled: !!company?.id
   });
 
   const { data: purchaseInstallments } = useQuery({
-    queryKey: ['purchase-installments'],
+    queryKey: ['/api/purchase-installments', company?.id],
     queryFn: () => PurchaseInstallment.list(),
-    initialData: []
+    initialData: [],
+    enabled: !!company?.id
   });
 
   const { data: sales } = useQuery({
-    queryKey: ['sales'],
+    queryKey: ['/api/sales', company?.id],
     queryFn: () => Sale.list(),
-    initialData: []
+    initialData: [],
+    enabled: !!company?.id
   });
 
   const { data: purchases } = useQuery({
-    queryKey: ['purchases'],
+    queryKey: ['/api/purchases', company?.id],
     queryFn: () => Purchase.list(),
-    initialData: []
+    initialData: [],
+    enabled: !!company?.id
   });
 
   const calculateCashFlow = () => {

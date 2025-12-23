@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Customer, Sale, Category } from '@/api/entities';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -27,24 +28,28 @@ export default function CustomersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   
+  const { company } = useAuth();
   const queryClient = useQueryClient();
 
   const { data: customers, isLoading } = useQuery({
-    queryKey: ['customers'],
+    queryKey: ['/api/customers', company?.id],
     queryFn: () => Customer.list(),
-    initialData: []
+    initialData: [],
+    enabled: !!company?.id
   });
 
   const { data: categories = [] } = useQuery({
-    queryKey: ['categories'],
+    queryKey: ['/api/categories', company?.id],
     queryFn: () => Category.list(),
-    initialData: []
+    initialData: [],
+    enabled: !!company?.id
   });
 
   const { data: transactions = [] } = useQuery({
-    queryKey: ['transactions'],
+    queryKey: ['/api/transactions', company?.id],
     queryFn: () => fetch('/api/transactions').then(res => res.json()),
-    initialData: []
+    initialData: [],
+    enabled: !!company?.id
   });
 
   const saveMutation = useMutation({
