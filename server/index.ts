@@ -74,6 +74,11 @@ app.patch('/api/transactions/:id', async (req, res) => {
       data.date = new Date(data.date);
     }
     
+    // Convert paymentDate string to Date object if it's a string
+    if (data.paymentDate && typeof data.paymentDate === 'string') {
+      data.paymentDate = new Date(data.paymentDate);
+    }
+    
     const updated = await storage.updateTransaction(id, data);
     if (updated) {
       console.log('✅ Transaction updated:', updated.id);
