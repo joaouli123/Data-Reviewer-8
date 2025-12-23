@@ -184,7 +184,7 @@ export default function PeriodFilter({
                 Personalizado
               </div>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-4" side="bottom" align="start" sideOffset={5}>
+            <PopoverContent className="w-auto max-w-4xl p-4" side="bottom" align="start" sideOffset={5}>
               <div className="space-y-4">
                 <p className="text-sm text-muted-foreground font-medium">Selecione o período desejado</p>
                 <div className="text-sm font-medium text-foreground">
@@ -205,14 +205,16 @@ export default function PeriodFilter({
                     'Clique na data inicial'
                   )}
                 </div>
-                <CalendarComponent
-                  mode="range"
-                  selected={dateRange}
-                  onSelect={setDateRange}
-                  numberOfMonths={2}
-                  locale={ptBR}
-                  className="rounded-md border"
-                />
+                <div className="overflow-x-auto">
+                  <CalendarComponent
+                    mode="range"
+                    selected={dateRange}
+                    onSelect={setDateRange}
+                    numberOfMonths={2}
+                    locale={ptBR}
+                    className="rounded-md border"
+                  />
+                </div>
                 <Button
                   onClick={handleCustomApply}
                   disabled={!dateRange.from || !dateRange.to}
