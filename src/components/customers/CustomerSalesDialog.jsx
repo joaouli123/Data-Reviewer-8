@@ -157,6 +157,10 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
       setPaymentEditOpen(false);
       setSelectedTransaction(null);
       toast.success('Pagamento confirmado!', { duration: 5000 });
+      // Force refetch to update UI immediately
+      setTimeout(() => {
+        queryClient.refetchQueries({ queryKey: ['transactions'] });
+      }, 100);
     },
     onError: (error) => {
       toast.error(error.message, { duration: 5000 });
@@ -282,6 +286,11 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
                             </p>
                             <p className="text-xs text-slate-500">
                               Venc: {installment.date ? format(parseISO(installment.date), "dd/MM/yyyy") : '-'}
+                              {installment.paymentDate && installment.paymentDate !== installment.date && (
+                                <span className="text-emerald-600 ml-2">
+                                  Pag: {format(parseISO(installment.paymentDate), "dd/MM/yyyy")}
+                                </span>
+                              )}
                             </p>
                           </div>
                         </div>
@@ -289,6 +298,11 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
                           {(installment.status === 'completed' || installment.status === 'pago') ? (
                             <>
                               <div className="flex flex-col items-end gap-0.5 mr-2">
+                                {installment.paymentDate && (
+                                  <p className="text-xs text-emerald-600">
+                                    {format(parseISO(installment.paymentDate), "dd/MM/yyyy")}
+                                  </p>
+                                )}
                                 {installment.paidAmount && (
                                   <p className="text-xs text-slate-500">
                                     Recebido: R$ {parseFloat(installment.paidAmount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
