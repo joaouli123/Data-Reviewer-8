@@ -51,7 +51,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
       groups[groupKey].push(p);
     });
     return Object.values(groups).map(group => {
-      const sortedInstallments = group.sort((a, b) => (a.installmentNumber || 0) - (b.installmentNumber || 0));
+      const sortedInstallments = group.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
       const main = sortedInstallments[0];
       const totalAmount = sortedInstallments.reduce((acc, p) => acc + parseFloat(p.amount || 0), 0);
       const isPaid = sortedInstallments.every(p => p.status === 'completed' || p.status === 'pago');

@@ -51,7 +51,7 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
       groups[groupKey].push(s);
     });
     return Object.values(groups).map(group => {
-      const sortedInstallments = group.sort((a, b) => (a.installmentNumber || 0) - (b.installmentNumber || 0));
+      const sortedInstallments = group.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
       const main = sortedInstallments[0];
       const totalAmount = sortedInstallments.reduce((acc, s) => acc + parseFloat(s.amount || 0), 0);
       const isPaid = sortedInstallments.every(s => s.status === 'completed' || s.status === 'pago');
