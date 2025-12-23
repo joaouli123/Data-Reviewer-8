@@ -93,7 +93,8 @@ export default function CashFlowForecastPage() {
         if (isHistorical) {
           // Historical data - only completed transactions
           transactions.forEach(t => {
-            const tDate = parseISO(t.date);
+            const tDateStr = t.date.split('T')[0];
+            const tDate = parseISO(tDateStr);
             if (isWithinInterval(tDate, { start: dStart, end: dEnd })) {
               const amount = parseFloat(t.amount) || 0;
               if (t.type === 'venda' && amount >= 0) {
@@ -108,7 +109,8 @@ export default function CashFlowForecastPage() {
         } else {
           // Future data - pending transactions
           transactions.forEach(t => {
-            const tDate = parseISO(t.date);
+            const tDateStr = t.date.split('T')[0];
+            const tDate = parseISO(tDateStr);
             if (isWithinInterval(tDate, { start: dStart, end: dEnd })) {
               const isPending = t.status === 'pendente' || t.status === 'agendado' || t.status === 'pending';
               if (isPending) {
@@ -154,7 +156,8 @@ export default function CashFlowForecastPage() {
       if (isHistorical) {
         // Historical data from completed transactions
         transactions.forEach(t => {
-          const tDate = parseISO(t.date);
+          const tDateStr = t.date.split('T')[0];
+          const tDate = parseISO(tDateStr);
           if (isWithinInterval(tDate, { start: monthStart, end: monthEnd })) {
             const amount = parseFloat(t.amount) || 0;
             if (t.type === 'venda' && amount >= 0) {
@@ -180,7 +183,8 @@ export default function CashFlowForecastPage() {
         // Future projections from pending transactions and installments
         // First, add future transactions with pending/agendado status
         transactions.forEach(t => {
-          const tDate = parseISO(t.date);
+          const tDateStr = t.date.split('T')[0];
+          const tDate = parseISO(tDateStr);
           if (isWithinInterval(tDate, { start: monthStart, end: monthEnd })) {
             const isPending = t.status === 'pendente' || t.status === 'agendado' || t.status === 'pending';
             if (isPending) {

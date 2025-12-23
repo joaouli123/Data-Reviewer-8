@@ -161,7 +161,14 @@ export default function TransactionsPage() {
   // Filter Logic
   const filteredTransactions = transactions
     .filter(t => {
-      const tDate = parseISO(t.date);
+      // Parse date and normalize to date-only comparison (ignore time and timezone)
+      const tDateStr = t.date.split('T')[0]; // Get YYYY-MM-DD only
+      const tDate = parseISO(tDateStr);
+      const startDateStr = format(dateRange.startDate, 'yyyy-MM-dd');
+      const endDateStr = format(dateRange.endDate, 'yyyy-MM-dd');
+      const startDate = parseISO(startDateStr);
+      const endDate = parseISO(endDateStr);
+      
       const typeMap = { 'income': 'venda', 'expense': 'compra', 'all': 'all' };
       const mappedType = typeMap[typeFilter] || typeFilter;
       const matchesType = mappedType === 'all' || t.type === mappedType;
@@ -174,7 +181,7 @@ export default function TransactionsPage() {
 
       const matchesSearch = t.description.toLowerCase().includes(searchTerm.toLowerCase()) || 
                             (t.category && t.category.toLowerCase().includes(searchTerm.toLowerCase()));
-      const matchesDate = tDate >= dateRange.startDate && tDate <= dateRange.endDate;
+      const matchesDate = tDate >= startDate && tDate <= endDate;
       
       // Match by status
       const isPaid = (t.status === 'completed' || t.status === 'pago' || t.status === 'concluído');
@@ -191,19 +198,26 @@ export default function TransactionsPage() {
     let openingBalance = 0;
     let periodIncome = 0;
     let periodExpense = 0;
+    
+    const startDateStr = format(dateRange.startDate, 'yyyy-MM-dd');
+    const endDateStr = format(dateRange.endDate, 'yyyy-MM-dd');
+    const startDate = parseISO(startDateStr);
+    const endDate = parseISO(endDateStr);
 
     transactions.forEach(t => {
-      const tDate = parseISO(t.date);
+      // Parse date and normalize to date-only comparison (ignore time and timezone)
+      const tDateStr = t.date.split('T')[0]; // Get YYYY-MM-DD only
+      const tDate = parseISO(tDateStr);
       const amount = parseFloat(t.amount) || 0;
       const isPaid = (t.status === 'completed' || t.status === 'pago' || t.status === 'concluído');
       
       if (!isPaid) return; // Only count paid transactions for cash flow
 
-      if (tDate < dateRange.startDate) {
+      if (tDate < startDate) {
         // Transaction is before the selected period -> contributes to opening balance
         if (t.type === 'venda') openingBalance += amount;
         else openingBalance -= amount;
-      } else if (tDate >= dateRange.startDate && tDate <= dateRange.endDate) {
+      } else if (tDate >= startDate && tDate <= endDate) {
         // Transaction is within period
         if (t.type === 'venda') periodIncome += amount;
         else periodExpense += Math.abs(amount);  // Always use positive for expense calculation
