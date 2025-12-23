@@ -13,7 +13,7 @@ export interface AuthenticatedRequest extends Request {
     isSuperAdmin: boolean;
   };
   token?: string;
-  ip?: string;
+  clientIp?: string;
 }
 
 // ========== RATE LIMITING MIDDLEWARE ==========
@@ -52,7 +52,7 @@ export async function recordLoginAttempt(ip: string, username: string | undefine
 // ========== LAYER 1: AUTHENTICATION MIDDLEWARE ==========
 export function authMiddleware(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   const token = extractToken(req);
-  req.ip = req.headers['x-forwarded-for']?.toString().split(',')[0] || req.socket.remoteAddress || 'unknown';
+  req.clientIp = (req.headers['x-forwarded-for']?.toString().split(',')[0] || req.socket.remoteAddress || 'unknown') as string;
   
   if (!token) {
     return res.status(401).json({ error: "Unauthorized - No token provided" });
