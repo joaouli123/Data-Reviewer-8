@@ -128,23 +128,23 @@ export default function CashFlowPeriodFilter({ onPeriodChange }) {
         </PopoverTrigger>
         <PopoverContent className="w-auto p-4">
           <div className="space-y-4">
-            <div>
-              <p className="text-sm font-medium text-foreground mb-2">De:</p>
-              <CalendarComponent
-                mode="single"
-                selected={customStart}
-                onSelect={setCustomStart}
-                disabled={(date) => customEnd && date > customEnd}
-              />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-foreground mb-2">Até:</p>
-              <CalendarComponent
-                mode="single"
-                selected={customEnd}
-                onSelect={setCustomEnd}
-                disabled={(date) => customStart && date < customStart}
-              />
+            <div className="flex flex-row gap-4">
+              <div>
+                <p className="text-sm font-medium text-foreground mb-2">De:</p>
+                <CalendarComponent
+                  mode="single"
+                  selected={customStart}
+                  onSelect={setCustomStart}
+                />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground mb-2">Até:</p>
+                <CalendarComponent
+                  mode="single"
+                  selected={customEnd}
+                  onSelect={setCustomEnd}
+                />
+              </div>
             </div>
             <Button
               onClick={handleCustom}
