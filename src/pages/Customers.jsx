@@ -101,6 +101,7 @@ export default function CustomersPage() {
 
   // Calculate customer sales from transactions
   const getCustomerSales = (customerId) => {
+    if (!Array.isArray(transactions)) return 0;
     return transactions
       .filter(t => t.customerId === customerId && t.type === 'venda')
       .reduce((acc, t) => acc + parseFloat(t.amount || 0), 0);
@@ -112,6 +113,7 @@ export default function CustomersPage() {
       return format(parseISO(customer.join_date), "MMM yyyy", { locale: ptBR });
     }
     
+    if (!Array.isArray(transactions)) return '-';
     const customerTransactions = transactions.filter(t => t.customerId === customer.id);
     if (customerTransactions.length > 0) {
       const earliestDate = new Date(Math.min(...customerTransactions.map(t => parseISO(t.date.split('T')[0] + 'T12:00:00Z'))));
