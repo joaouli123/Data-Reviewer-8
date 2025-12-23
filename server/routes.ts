@@ -831,11 +831,47 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // Create user directly (for admin to add users)
+  app.post("/api/auth/create-user", authMiddleware, requireRole(["admin"]), async (req: AuthenticatedRequest, res) => {
+    try {
+      const { username, email, password, name, role = "operational", permissions = {} } = req.body;
+      
+      if (!username || !email || !password) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      // Create user in same company
+      const user = await createUser(req.user.companyId, username, email, password, name, role);
+
+      // Add permissions if provided
+      if (role !== "admin" && Object.keys(permissions).length > 0) {
+        await storage.updateUserPermissions(req.user.companyId, user.id, permissions);
+      }
+
+      res.status(201).json({
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          role: user.role,
+          permissions: permissions
+        }
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create user" });
+    }
+  });
+
   app.post("/api/invitations", authMiddleware, requireRole(["admin"]), async (req: AuthenticatedRequest, res) => {
     try {
-      const { email, role } = req.body;
+      const { email, role = "operational", permissions = {} } = req.body;
       const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
-      const invitation = await storage.createInvitation(req.user.companyId, req.user.id, { email, role, expiresAt, permissions: "{}" });
+      const invitation = await storage.createInvitation(req.user.companyId, req.user.id, { 
+        email, 
+        role, 
+        expiresAt, 
+        permissions: JSON.stringify(permissions)
+      });
       res.json({ invitationId: invitation.id, token: invitation.token });
     } catch (error) {
       res.status(500).json({ error: "Failed to create invitation" });
@@ -844,6 +880,10 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.delete("/api/users/:userId", authMiddleware, requireRole(["admin"]), async (req: AuthenticatedRequest, res) => {
     try {
+      // Prevent admin from deleting themselves
+      if (req.params.userId === req.user.id) {
+        return res.status(400).json({ error: "Cannot delete your own account" });
+      }
       await storage.deleteUser(req.user.companyId, req.params.userId);
       res.json({ message: "User deleted" });
     } catch (error) {
@@ -854,8 +894,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.patch("/api/users/:userId/permissions", authMiddleware, requireRole(["admin"]), async (req: AuthenticatedRequest, res) => {
     try {
       const { permissions } = req.body;
-      await storage.updateUserPermissions(req.user.companyId, req.params.userId, permissions);
-      res.json({ message: "Permissions updated" });
+      const permsObj = typeof permissions === 'string' ? JSON.parse(permissions) : permissions;
+      const updated = await storage.updateUserPermissions(req.user.companyId, req.params.userId, permsObj);
+      res.json({ message: "Permissions updated", user: updated });
     } catch (error) {
       res.status(500).json({ error: "Failed to update permissions" });
     }
@@ -866,11 +907,35 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const { token, username, password } = req.body;
       const invitation = await storage.getInvitationByToken(token);
       
-      if (!invitation || new Date(invitation.expiresAt) < new Date()) {
-        return res.status(400).json({ error: "Invalid or expired invitation" });
+      if (!invitation) {
+        return res.status(400).json({ error: "Invalid invitation" });
       }
 
-      const newUser = await createUser(invitation.companyId, username, invitation.email, password, username, invitation.role);
+      if (invitation.acceptedAt) {
+        return res.status(400).json({ error: "Invitation already accepted" });
+      }
+      
+      if (new Date(invitation.expiresAt) < new Date()) {
+        return res.status(400).json({ error: "Invitation expired" });
+      }
+
+      const newUser = await createUser(
+        invitation.companyId, 
+        username, 
+        invitation.email, 
+        password, 
+        username, 
+        invitation.role
+      );
+      
+      // Save permissions from invitation
+      if (invitation.permissions) {
+        const perms = typeof invitation.permissions === 'string' 
+          ? JSON.parse(invitation.permissions) 
+          : invitation.permissions;
+        await storage.updateUserPermissions(invitation.companyId, newUser.id, perms);
+      }
+      
       await storage.acceptInvitation(token, newUser.id);
 
       res.json({ user: { id: newUser.id, username: newUser.username, email: newUser.email } });
