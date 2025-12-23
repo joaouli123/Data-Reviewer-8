@@ -7,7 +7,7 @@ import { ptBR } from 'date-fns/locale';
 import KPIWidget from '../components/dashboard/KPIWidget';
 import RevenueChart from '../components/dashboard/RevenueChart';
 import QuickActionsFAB from '../components/dashboard/QuickActionsFAB';
-import DateFilter from '../components/dashboard/DateFilter';
+import DateRangeFilter from '../components/dashboard/DateRangeFilter';
 import TransactionForm from '../components/transactions/TransactionForm';
 import { Transaction, Installment } from '@/api/entities';
 import { PurchaseInstallment } from '@/api/entities';
@@ -164,8 +164,12 @@ export default function DashboardPage() {
             </p>
           )}
         </div>
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-          <DateFilter onDateRangeChange={setDateRange} />
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <DateRangeFilter 
+            initialStartDate={dateRange.startDate} 
+            initialEndDate={dateRange.endDate}
+            onApply={setDateRange}
+          />
           <Button 
             onClick={() => setIsFormOpen(true)}
             className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 w-full sm:w-auto"

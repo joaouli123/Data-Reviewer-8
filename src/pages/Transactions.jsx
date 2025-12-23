@@ -13,7 +13,7 @@ import { ptBR } from 'date-fns/locale';
 import TransactionForm from '../components/transactions/TransactionForm';
 import BankStatementUpload from '../components/transactions/BankStatementUpload';
 import BankReconciliation from '../components/transactions/BankReconciliation';
-import PeriodFilter from '../components/dashboard/PeriodFilter';
+import DateRangeFilter from '../components/dashboard/DateRangeFilter';
 import Pagination from '../components/Pagination';
 import { toast } from 'sonner';
 import { cn } from "@/lib/utils";
@@ -240,10 +240,10 @@ export default function TransactionsPage() {
             <p className="text-xs sm:text-sm text-slate-500">Gerencie suas receitas e despesas.</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <PeriodFilter 
-              onPeriodChange={setDateRange}
-              mode="days"
-              defaultPeriod="last30Days"
+            <DateRangeFilter 
+              initialStartDate={dateRange.startDate}
+              initialEndDate={dateRange.endDate}
+              onApply={setDateRange}
             />
             <Button variant="outline" onClick={handleExport} className="flex items-center gap-2 flex-1 sm:flex-none">
                 <Download className="w-4 h-4" /> Exportar CSV

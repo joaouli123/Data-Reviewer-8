@@ -7,7 +7,7 @@ import { Calendar as CalendarIcon, TrendingUp, TrendingDown, Wallet, ChevronDown
 import { format, parseISO, isWithinInterval, startOfMonth, endOfMonth, eachMonthOfInterval, startOfDay, endOfDay, subDays, eachDayOfInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import CashFlowPeriodFilter from '../components/dashboard/CashFlowPeriodFilter';
+import DateRangeFilter from '../components/dashboard/DateRangeFilter';
 import Pagination from '../components/Pagination';
 
 // Custom Tooltip Component
@@ -320,10 +320,10 @@ export default function CashFlowForecastPage() {
           <p className="text-xs sm:text-sm text-slate-500">Visualize receitas e despesas projetadas por período</p>
         </div>
 
-        <CashFlowPeriodFilter 
-          onPeriodChange={setDateRange}
-          minDate={minDate}
-          maxDate={maxDate}
+        <DateRangeFilter 
+          initialStartDate={dateRange.startDate}
+          initialEndDate={dateRange.endDate}
+          onApply={setDateRange}
         />
       </div>
 

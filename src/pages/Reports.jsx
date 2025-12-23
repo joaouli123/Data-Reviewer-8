@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import PeriodFilter from '../components/dashboard/PeriodFilter';
+import DateRangeFilter from '../components/dashboard/DateRangeFilter';
 import CashFlowForecastChart from '../components/reports/CashFlowForecastChart';
 import ExpensesBreakdown from '../components/reports/ExpensesBreakdown';
 import RevenueGrowthReport from '../components/reports/RevenueGrowthReport';
@@ -295,12 +295,10 @@ export default function ReportsPage() {
           <div className="grid gap-6 py-4">
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-700">Período de Análise</label>
-              <PeriodFilter 
-                onPeriodChange={(period) => {
-                  setTempDateRange(period);
-                }}
-                mode="days"
-                defaultPeriod="last30Days"
+              <DateRangeFilter 
+                initialStartDate={tempDateRange.startDate}
+                initialEndDate={tempDateRange.endDate}
+                onApply={setTempDateRange}
               />
             </div>
             
