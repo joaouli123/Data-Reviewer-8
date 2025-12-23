@@ -164,8 +164,10 @@ export default function TransactionsPage() {
   // Filter Logic
   const filteredTransactions = transactions
     .filter(t => {
-      // Parse date and normalize to date-only comparison (ignore time and timezone)
-      const tDateStr = t.date.split('T')[0]; // Get YYYY-MM-DD only
+      // For paid transactions, use paymentDate; for pending, use date (due date)
+      const isPaid = t.status === 'pago' || t.status === 'completed';
+      const relevantDate = isPaid && t.paymentDate ? t.paymentDate : t.date;
+      const tDateStr = relevantDate.split('T')[0]; // Get YYYY-MM-DD only
       const tDate = parseISO(tDateStr);
       const startDateStr = format(dateRange.startDate, 'yyyy-MM-dd');
       const endDateStr = format(dateRange.endDate, 'yyyy-MM-dd');
@@ -188,7 +190,14 @@ export default function TransactionsPage() {
 
       return matchesType && matchesCategory && matchesSearch && matchesDate;
     })
-    .sort((a, b) => new Date(b.date) - new Date(a.date));
+    .sort((a, b) => {
+      // Sort by relevant date (paymentDate for paid, date for pending)
+      const aIsPaid = a.status === 'pago' || a.status === 'completed';
+      const bIsPaid = b.status === 'pago' || b.status === 'completed';
+      const aDate = aIsPaid && a.paymentDate ? a.paymentDate : a.date;
+      const bDate = bIsPaid && b.paymentDate ? b.paymentDate : b.date;
+      return new Date(bDate) - new Date(aDate);
+    });
 
   // Calculate Balances
   const calculateBalances = () => {
@@ -202,8 +211,10 @@ export default function TransactionsPage() {
     const endDate = parseISO(endDateStr);
 
     transactions.forEach(t => {
-      // Parse date and normalize to date-only comparison (ignore time and timezone)
-      const tDateStr = t.date.split('T')[0]; // Get YYYY-MM-DD only
+      // For paid transactions, use paymentDate; for pending, use date (due date)
+      const isPaid = t.status === 'pago' || t.status === 'completed';
+      const relevantDate = isPaid && t.paymentDate ? t.paymentDate : t.date;
+      const tDateStr = relevantDate.split('T')[0]; // Get YYYY-MM-DD only
       const tDate = parseISO(tDateStr);
       const amount = parseFloat(t.amount) || 0;
 
