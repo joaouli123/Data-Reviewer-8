@@ -43,18 +43,11 @@ export default function DashboardPage() {
     createMutation.mutate(data);
   };
 
-  // Fetch only recent transactions (last 10) - NOT ALL for performance
-  const { data: recentTransactions = [] } = useQuery({
-    queryKey: ['transactions', 'recent'],
-    queryFn: async () => {
-      // Load only limited transactions for dashboard display
-      const response = await fetch('/api/transactions?limit=10&sort=desc', {
-        headers: {
-          Authorization: `Bearer ${JSON.parse(localStorage.getItem("auth") || "{}").token || ''}`,
-        }
-      });
-      return response.json();
-    }
+  // Fetch ALL transactions to show only periods with actual data
+  const { data: allTransactions = [] } = useQuery({
+    queryKey: ['transactions', 'all'],
+    queryFn: () => Transaction.list(),
+    staleTime: 1000 * 60 * 5 // Cache for 5 minutes
   });
 
   // Calculate metrics based on date range
@@ -64,8 +57,8 @@ export default function DashboardPage() {
     const startDate = parseISO(startDateStr);
     const endDate = parseISO(endDateStr);
     
-    // Use only recent transactions for calculations
-    const filteredTransactions = recentTransactions.filter(t => {
+    // Filter transactions by date range
+    const filteredTransactions = allTransactions.filter(t => {
       const tDateStr = t.date.split('T')[0];
       const tDate = parseISO(tDateStr);
       return tDate >= startDate && tDate <= endDate;
@@ -87,7 +80,7 @@ export default function DashboardPage() {
     const thirtyDaysFromNowStr = new Date(new Date().setDate(new Date().getDate() + 30)).toISOString().split('T')[0];
     const thirtyDaysFromNow = new Date(thirtyDaysFromNowStr + 'T23:59:59Z');
     
-    const futureRevenueTransactions = recentTransactions.filter(t => {
+    const futureRevenueTransactions = allTransactions.filter(t => {
       const tDateStr = t.date.split('T')[0];
       const tDate = parseISO(tDateStr);
       return t.type === 'venda' && tDate >= today && tDate <= thirtyDaysFromNow;
@@ -95,7 +88,7 @@ export default function DashboardPage() {
     
     const futureRevenue = futureRevenueTransactions.reduce((sum, t) => sum + Math.abs((parseFloat(t.amount || 0) + parseFloat(t.interest || 0))), 0);
     
-    const futureExpensesTransactions = recentTransactions.filter(t => {
+    const futureExpensesTransactions = allTransactions.filter(t => {
       const tDateStr = t.date.split('T')[0];
       const tDate = parseISO(tDateStr);
       return t.type === 'compra' && tDate >= today && tDate <= thirtyDaysFromNow;
@@ -103,30 +96,40 @@ export default function DashboardPage() {
     
     const futureExpenses = futureExpensesTransactions.reduce((sum, t) => sum + Math.abs((parseFloat(t.amount || 0) + parseFloat(t.interest || 0))), 0);
 
-    // Count future transactions (no status check)
+    // Count future transactions
     const futureSaleCount = futureRevenueTransactions.length;
     const futurePurchaseCount = futureExpensesTransactions.length;
 
-    // Chart data - últimos 6 meses
-    const chartData = [];
-    for (let i = 5; i >= 0; i--) {
-      const date = subMonths(new Date(), i);
-      const monthKey = date.toISOString().slice(0, 7);
-      const monthTrans = recentTransactions.filter(t => {
-        const tDate = typeof t.date === 'string' ? t.date : new Date(t.date).toISOString();
-        return tDate.startsWith(monthKey);
-      });
-      
-      const income = monthTrans.filter(t => t.type === 'venda').reduce((acc, t) => acc + Math.abs((parseFloat(t.amount || 0) + parseFloat(t.interest || 0))), 0);
-      const expenseRaw = monthTrans.filter(t => t.type === 'compra').reduce((acc, t) => acc + ((parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0)), 0);
-      const expense = Math.abs(expenseRaw);
+    // Chart data - ONLY months with actual transactions
+    const monthsWithData = new Map();
+    allTransactions.forEach(t => {
+      const monthKey = t.date.slice(0, 7); // YYYY-MM
+      if (!monthsWithData.has(monthKey)) {
+        monthsWithData.set(monthKey, []);
+      }
+      monthsWithData.get(monthKey).push(t);
+    });
 
-      chartData.push({
-        name: date.toLocaleString('pt-BR', { month: 'short' }).toUpperCase(),
+    // Sort months and show only those with data
+    const sortedMonths = Array.from(monthsWithData.keys()).sort();
+    const chartData = sortedMonths.map(monthKey => {
+      const monthTrans = monthsWithData.get(monthKey);
+      const income = monthTrans
+        .filter(t => t.type === 'venda')
+        .reduce((acc, t) => acc + Math.abs((parseFloat(t.amount || 0) + parseFloat(t.interest || 0))), 0);
+      const expenseRaw = monthTrans
+        .filter(t => t.type === 'compra')
+        .reduce((acc, t) => acc + ((parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0)), 0);
+      
+      const [year, month] = monthKey.split('-');
+      const date = new Date(parseInt(year), parseInt(month) - 1, 1);
+      
+      return {
+        name: date.toLocaleString('pt-BR', { month: 'short', year: '2-digit' }).toUpperCase(),
         income,
-        expense
-      });
-    }
+        expense: Math.abs(expenseRaw)
+      };
+    });
 
     return {
       openingBalance: 0, // Simplified - opening balance from recent transactions only
