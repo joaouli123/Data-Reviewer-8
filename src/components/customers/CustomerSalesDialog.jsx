@@ -113,14 +113,16 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
       // Status should be 'pago' only if fully paid
       const status = totalPaid >= totalAmount ? 'pago' : 'parcial';
       
-      // First update the transaction
-      let transactionDate = new Date().toISOString(); // Default to today
+      // Format payment date (NOT the due date - that stays unchanged)
+      let formattedPaymentDate = new Date().toISOString(); // Default to today
       if (paymentDate && paymentDate.trim()) {
-        // Parse yyyy-MM-dd format correctly with timezone awareness
+        // Parse yyyy-MM-dd format correctly with timezone awareness (use noon UTC to avoid -1 day offset)
         const [year, month, day] = paymentDate.split('-');
-        transactionDate = new Date(`${year}-${month}-${day}T00:00:00Z`).toISOString();
+        formattedPaymentDate = new Date(`${year}-${month}-${day}T12:00:00Z`).toISOString();
       }
       
+      // IMPORTANT: Do NOT update 'date' field - that's the due date and must remain unchanged
+      // Only update paymentDate (when payment was made), status, paidAmount, and interest
       const response = await fetch(`/api/transactions/${saleId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -128,8 +130,7 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
           status: status,
           paidAmount: paidAmount ? parseFloat(paidAmount).toString() : undefined,
           interest: interest ? parseFloat(interest).toString() : '0',
-          paymentDate: paymentDate && paymentDate.trim() ? transactionDate : null,
-          date: transactionDate
+          paymentDate: formattedPaymentDate
         })
       });
       if (!response.ok) {
@@ -138,13 +139,13 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
       }
       const transaction = await response.json();
       
-      // Then create corresponding cash flow entry
+      // Then create corresponding cash flow entry (using payment date, not due date)
       const totalReceived = parseFloat(paidAmount || 0) + parseFloat(interest || 0);
       const cashFlowResponse = await fetch('/api/cash-flow', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          date: paymentDate ? new Date(paymentDate) : new Date(transaction.date),
+          date: formattedPaymentDate,
           inflow: totalReceived.toFixed(2),
           outflow: '0',
           balance: totalReceived.toFixed(2),
