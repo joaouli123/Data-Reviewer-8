@@ -1,0 +1,123 @@
+Perfeito. Como você pediu sem código, vou estruturar um Guia de Arquitetura e Lógica detalhado. Pense nisso como a "planta baixa" da construção antes de colocar os tijolos.
+
+Vou dividir em 4 pilares: Banco de Dados, Segurança (Login), Lógica de Permissões (Backend) e Experiência do Usuário (Frontend).
+
+1. O Alicerce: Banco de Dados (Novas Estruturas)
+Para suportar o "Super Admin" e as "Assinaturas", seu banco de dados precisa evoluir além de apenas guardar dados financeiros.
+
+A Tabela de Usuários (users):
+
+Precisa de um campo especial (uma "flag") que diga: "Este usuário é um Super Admin do sistema?". Isso é diferente do "Admin da Empresa".
+
+Por que? O Super Admin não pertence a nenhuma empresa específica (ou pertence a uma empresa "Mestre"), ele paira sobre todas.
+
+O campo de role (cargo) continua existindo para diferenciar o "Admin da Empresa" do "Operacional".
+
+A Tabela de Assinaturas (subscriptions):
+
+Você precisa criar uma tabela vinculada à tabela de Empresas, não aos usuários.
+
+Campos essenciais: Status (Ativo, Bloqueado, Cancelado), Tipo de Plano (Básico, Pro), Data de Vencimento.
+
+Lógica: Antes de qualquer usuário fazer login, o sistema vai checar nesta tabela. Se o status for "Bloqueado", ninguém daquela empresa entra, nem o Admin dela.
+
+A Tabela de Auditoria (audit_logs):
+
+Para um sistema seguro, você precisa saber quem fez o quê.
+
+O que gravar: ID do usuário, Ação (Ex: "Excluiu Cliente"), Data/Hora e IP.
+
+Isso é vital para quando um cliente reclamar que algo sumiu.
+
+2. O Porteiro: Sistema de Login Robusto
+Um login robusto não é apenas verificar senha. É garantir que robôs não tentem adivinhar senhas e que sessões antigas morram.
+
+Proteção contra Força Bruta (Rate Limiting):
+
+Você deve configurar o servidor para contar quantas vezes um IP tentou logar errado.
+
+Regra: Se errar 5 vezes em 1 minuto, bloqueia aquele IP por 15 minutos. Isso impede ataques automatizados.
+
+O Token de Acesso (JWT):
+
+Quando o usuário loga, o "crachá" (Token) que ele recebe deve conter três informações vitais criptografadas:
+
+Quem ele é (ID).
+
+De qual empresa ele é (CompanyID).
+
+Qual o nível dele (Super Admin, Admin ou Operacional).
+
+Isso evita que o sistema tenha que ir no banco de dados em toda requisição perguntar quem é o usuário.
+
+Hash de Senha (Bcrypt):
+
+Nunca salve a senha real. O sistema já usa hashing, mas certifique-se de usar um "Custo de Processamento" (salt rounds) de pelo menos 10 ou 12. Isso torna impossível reverter a senha mesmo se o banco for roubado.
+
+3. O Guarda de Trânsito: Controle de Acesso (Middleware)
+É aqui que a mágica da segurança acontece no Backend. Você terá "Guardas" (Middlewares) em camadas.
+
+Camada 1: Autenticação (Quem é você?)
+
+Todo pedido ao servidor verifica se o Token é válido e não expirou.
+
+Camada 2: Verificação de Assinatura (Pagou?)
+
+Antes de deixar o usuário acessar os dados, o sistema olha o CompanyID dele, vai na tabela de assinaturas e checa: "A empresa deste cara está ativa?". Se não, devolve erro de pagamento. (O Super Admin ignora essa checagem).
+
+Camada 3: Autorização (Você pode fazer isso?)
+
+Aqui diferenciamos os cargos:
+
+Rota de Transações: Aceita Admin e Operacional.
+
+Rota de Criar Usuário: O sistema checa o Token. Se for Operacional, bloqueia. Se for Admin, deixa passar.
+
+Rota de Gerenciar Assinaturas: O sistema checa a flag is_super_admin. Se for falso, bloqueia imediatamente.
+
+4. A Experiência: Frontend e Funcionalidades
+Como isso aparece na tela para cada tipo de usuário:
+
+A. O Super Admin (Você)
+Você terá uma área exclusiva (ex: /super-admin) que clientes normais nem sabem que existe.
+
+Lista de Empresas: Uma tabela com todas as empresas cadastradas.
+
+Botão de Bloqueio: Um interruptor para ativar/desativar uma empresa (inadimplência).
+
+Criar Admin: Você cria a empresa e o primeiro usuário (o dono daquela empresa).
+
+B. O Admin da Empresa (Seu Cliente)
+Ele tem acesso total aos dados da empresa dele, mas não vê outras empresas.
+
+Gestão de Equipe: Uma tela onde ele cria usuários. Ele digita nome, email e escolhe: "Este funcionário é Operacional".
+
+Financeiro Completo: Vê saldo, DRE, Relatórios sensíveis.
+
+C. O Usuário Operacional (Funcionário do Cliente)
+A interface dele deve ser "limpa". O menu lateral deve esconder o que ele não pode tocar.
+
+Menu Reduzido: Itens como "Configurações da Empresa", "Gestão de Usuários" e "Relatórios de Lucro" simplesmente não aparecem no menu dele.
+
+Acesso Permitido (Conforme seu pedido):
+
+Transações: Pode lançar vendas e despesas.
+
+Clientes/Fornecedores: Pode cadastrar e editar.
+
+Cálculo de Preços: Acesso à ferramenta de precificação.
+
+Importar Extrato: Acesso à tela de upload de OFX/CSV.
+
+Bloqueio Visual: Se ele tentar digitar a URL de uma página proibida (ex: /relatorios), o sistema o redireciona para a Home com um aviso "Sem permissão".
+
+Resumo do Fluxo de Desenvolvimento
+Backend Primeiro: Altere o banco de dados para suportar a flag Super Admin e a tabela Assinaturas.
+
+Middlewares: Crie as regras de proteção no servidor. Teste tentando acessar uma rota de admin com um token de usuário comum (deve falhar).
+
+Frontend Super Admin: Crie o painel para você gerenciar as empresas.
+
+Frontend Cliente: Crie a lógica do menu lateral dinâmico (se for operacional, esconde X, Y, Z).
+
+Essa estrutura garante que a segurança seja imposta pelo servidor (que é inviolável pelo usuário) e refletida na interface (para boa usabilidade).
