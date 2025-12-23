@@ -75,7 +75,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.post("/api/auth/login", async (req, res) => {
     try {
       const ip = req.headers['x-forwarded-for']?.toString().split(',')[0] || req.socket.remoteAddress || 'unknown';
-      const { username, password, companyId } = req.body;
+      const { username, password } = req.body;
 
       if (!username || !password) {
         return res.status(400).json({ error: "Missing username or password" });
@@ -88,7 +88,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       }
 
       // Find user
-      const user = await findUserByUsername(username, companyId);
+      const user = await findUserByUsername(username);
       if (!user) {
         await recordLoginAttempt(ip, username, false);
         return res.status(401).json({ error: "Invalid credentials" });

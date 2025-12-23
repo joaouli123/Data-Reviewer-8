@@ -9,21 +9,20 @@ import { toast } from "sonner";
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [companyId, setCompanyId] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const [, setLocation] = useLocation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!username || !password || !companyId) {
+    if (!username || !password) {
       toast.error("Please fill in all fields");
       return;
     }
 
     try {
       setLoading(true);
-      await login(username, password, companyId);
+      await login(username, password);
       toast.success("Login successful!");
       setLocation("/");
     } catch (error) {
@@ -39,18 +38,6 @@ export default function Login() {
         <h1 className="text-2xl font-bold mb-6">Login</h1>
         
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">Company ID</label>
-            <Input
-              type="text"
-              value={companyId}
-              onChange={(e) => setCompanyId(e.target.value)}
-              placeholder="Enter your company ID"
-              disabled={loading}
-              data-testid="input-company-id"
-            />
-          </div>
-
           <div>
             <label className="block text-sm font-medium mb-2">Username</label>
             <Input
