@@ -136,7 +136,7 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          date: new Date(transaction.date),
+          date: paymentDate ? new Date(paymentDate) : new Date(transaction.date),
           inflow: totalReceived.toFixed(2),
           outflow: '0',
           balance: totalReceived.toFixed(2),
