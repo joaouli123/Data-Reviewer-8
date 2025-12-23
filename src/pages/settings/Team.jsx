@@ -69,15 +69,18 @@ export default function TeamPage() {
   const createUserMutation = useMutation({
     mutationFn: async (data) => {
       const token = JSON.parse(localStorage.getItem('auth') || '{}').token;
-      const res = await fetch('/api/team', {
+      const res = await fetch('/api/auth/create-user', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          ...data,
-          companyId: company.id,
+          username: data.email.split('@')[0],
+          email: data.email,
+          password: data.password,
+          name: data.name,
+          role: data.isAdmin ? 'admin' : 'operational',
           permissions: data.role === 'admin' ? {} : permissions,
         }),
       });
@@ -97,7 +100,7 @@ export default function TeamPage() {
   const generateInviteMutation = useMutation({
     mutationFn: async (email) => {
       const token = JSON.parse(localStorage.getItem('auth') || '{}').token;
-      const res = await fetch('/api/team/invite', {
+      const res = await fetch('/api/invitations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -105,7 +108,6 @@ export default function TeamPage() {
         },
         body: JSON.stringify({
           email,
-          companyId: company.id,
           role: 'operational',
           permissions,
         }),
@@ -125,7 +127,7 @@ export default function TeamPage() {
   const updatePermissionsMutation = useMutation({
     mutationFn: async () => {
       const token = JSON.parse(localStorage.getItem('auth') || '{}').token;
-      const res = await fetch(`/api/team/${editingUser.id}`, {
+      const res = await fetch(`/api/users/${editingUser.id}/permissions`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -148,7 +150,7 @@ export default function TeamPage() {
   const deleteMutation = useMutation({
     mutationFn: async (userId) => {
       const token = JSON.parse(localStorage.getItem('auth') || '{}').token;
-      const res = await fetch(`/api/team/${userId}`, {
+      const res = await fetch(`/api/users/${userId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
