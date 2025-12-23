@@ -168,7 +168,7 @@ export default function DashboardPage() {
           <PeriodFilter 
             onPeriodChange={setDateRange}
             mode="days"
-            defaultPeriod="last30Days"
+            defaultPeriod="today"
           />
           <Button 
             onClick={() => setIsFormOpen(true)}
