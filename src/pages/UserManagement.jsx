@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Trash2, Plus, Mail, Copy } from 'lucide-react';
+import { Trash2, Plus, Mail, Copy, Settings } from 'lucide-react';
+import { useLocation } from 'wouter';
 import { toast } from 'sonner';
 import { queryClient } from '@/lib/queryClient';
 
@@ -19,6 +20,7 @@ const ROLES = [
 
 export default function UserManagementPage() {
   const { company } = useAuth();
+  const [, setLocation] = useLocation();
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('user');
@@ -116,15 +118,26 @@ export default function UserManagementPage() {
                     <p className="text-sm text-muted-foreground">{user.email}</p>
                     <p className="text-xs text-muted-foreground capitalize">{user.role}</p>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => deleteUserMutation.mutate(user.id)}
-                    disabled={deleteUserMutation.isPending}
-                    data-testid={`button-delete-user-${user.id}`}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setLocation(`/permissions?userId=${user.id}`)}
+                      title="Gerenciar permissões"
+                      data-testid={`button-manage-permissions-${user.id}`}
+                    >
+                      <Settings className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => deleteUserMutation.mutate(user.id)}
+                      disabled={deleteUserMutation.isPending}
+                      data-testid={`button-delete-user-${user.id}`}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>

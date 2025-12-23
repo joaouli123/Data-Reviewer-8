@@ -7,6 +7,7 @@ import { Toaster } from "sonner";
 import Pages from "@/pages/index.jsx";
 import Login from "@/pages/Login.jsx";
 import Signup from "@/pages/Signup.jsx";
+import AcceptInvite from "@/pages/AcceptInvite.jsx";
 
 function AppContent() {
   const { isAuthenticated, loading } = useAuth();
@@ -37,6 +38,7 @@ function AppContent() {
       <Switch>
         <Route path="/login" component={Login} />
         <Route path="/signup" component={Signup} />
+        <Route path="/accept-invite" component={AcceptInvite} />
         <Route component={Login} />
       </Switch>
     );
