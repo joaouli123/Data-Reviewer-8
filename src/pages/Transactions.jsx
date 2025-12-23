@@ -164,6 +164,10 @@ export default function TransactionsPage() {
   // Filter Logic
   const filteredTransactions = transactions
     .filter(t => {
+      // ONLY show paid or partially paid transactions - pendente transactions should NOT appear
+      const isPaidOrPartial = t.status === 'pago' || t.status === 'completed' || t.status === 'parcial';
+      if (!isPaidOrPartial) return false;
+      
       // For paid transactions, use paymentDate; for pending, use date (due date)
       const isPaid = t.status === 'pago' || t.status === 'completed';
       const relevantDate = isPaid && t.paymentDate ? t.paymentDate : t.date;
