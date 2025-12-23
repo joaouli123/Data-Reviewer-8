@@ -114,6 +114,13 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
       const status = totalPaid >= totalAmount ? 'pago' : 'parcial';
       
       // First update the transaction
+      let transactionDate = new Date().toISOString(); // Default to today
+      if (paymentDate && paymentDate.trim()) {
+        // Parse yyyy-MM-dd format correctly with timezone awareness
+        const [year, month, day] = paymentDate.split('-');
+        transactionDate = new Date(`${year}-${month}-${day}T00:00:00Z`).toISOString();
+      }
+      
       const response = await fetch(`/api/transactions/${saleId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -121,8 +128,8 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
           status: status,
           paidAmount: paidAmount ? parseFloat(paidAmount).toString() : undefined,
           interest: interest ? parseFloat(interest).toString() : '0',
-          paymentDate: paymentDate && paymentDate.trim() ? new Date(paymentDate).toISOString() : null,
-          date: paymentDate && paymentDate.trim() ? new Date(paymentDate).toISOString() : new Date().toISOString()
+          paymentDate: paymentDate && paymentDate.trim() ? transactionDate : null,
+          date: transactionDate
         })
       });
       if (!response.ok) {
