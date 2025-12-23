@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Calendar, ChevronDown } from 'lucide-react';
 import {
@@ -9,18 +9,18 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { format, subDays, subMonths, startOfDay, endOfDay, startOfMonth, endOfMonth } from 'date-fns';
+import { format, subMonths, startOfDay, endOfDay, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export default function PeriodFilter({ 
   onPeriodChange, 
-  mode = 'months', // 'days' ou 'months'
+  mode = 'months',
   defaultPeriod = mode === 'months' ? 'last6Months' : 'today'
 }) {
   const [period, setPeriod] = useState(defaultPeriod);
+  const [customLabel, setCustomLabel] = useState(null);
   const [customOpen, setCustomOpen] = useState(false);
-  const [customStart, setCustomStart] = useState(null);
-  const [customEnd, setCustomEnd] = useState(null);
+  const [dateRange, setDateRange] = useState({ from: undefined, to: undefined });
   const [initialized, setInitialized] = useState(false);
 
   const periodOptionsMonths = {
@@ -62,7 +62,6 @@ export default function PeriodFilter({
     today: {
       label: 'Hoje',
       getValue: () => {
-        // Use UTC normalization to avoid timezone issues
         const todayStr = new Date().toISOString().split('T')[0];
         const today = new Date(todayStr + 'T00:00:00Z');
         return { 
@@ -105,43 +104,42 @@ export default function PeriodFilter({
   };
 
   const periodOptions = mode === 'months' ? periodOptionsMonths : periodOptionsDays;
-  const currentLabel = periodOptions[period]?.label || 'Selecionar período';
+  
+  const currentLabel = period === 'custom' && customLabel 
+    ? customLabel 
+    : (periodOptions[period]?.label || 'Selecionar período');
 
   const handlePeriodChange = (newPeriod) => {
     setPeriod(newPeriod);
+    setCustomLabel(null);
     const periodData = periodOptions[newPeriod].getValue();
     onPeriodChange(periodData);
   };
 
-  const handleCustom = () => {
-    if (customStart && customEnd) {
-      // Ensure startDate <= endDate
-      const start = new Date(customStart);
-      const end = new Date(customEnd);
-      
-      if (start > end) {
-        alert('Data inicial não pode ser maior que a data final');
-        return;
-      }
+  const handleCustomApply = () => {
+    if (dateRange.from && dateRange.to) {
+      const start = dateRange.from;
+      const end = dateRange.to;
       
       const isMonthMode = mode === 'months';
+      const label = isMonthMode 
+        ? `${format(start, 'MMM/yy', { locale: ptBR })} - ${format(end, 'MMM/yy', { locale: ptBR })}`
+        : `${format(start, 'dd/MM/yyyy')} - ${format(end, 'dd/MM/yyyy')}`;
+      
       const newRange = {
         startDate: isMonthMode ? startOfMonth(start) : startOfDay(start),
         endDate: isMonthMode ? endOfMonth(end) : endOfDay(end),
-        label: isMonthMode 
-          ? `${format(start, 'MMM/yy', { locale: ptBR })} - ${format(end, 'MMM/yy', { locale: ptBR })}`
-          : `${format(start, 'dd/MM/yyyy')} - ${format(end, 'dd/MM/yyyy')}`
+        label: label
       };
+      
       setPeriod('custom');
+      setCustomLabel(label);
       onPeriodChange(newRange);
       setCustomOpen(false);
-      // Reset custom dates after applying
-      setCustomStart(null);
-      setCustomEnd(null);
+      setDateRange({ from: undefined, to: undefined });
     }
   };
 
-  // Initialize with default period on first render
   useEffect(() => {
     if (!initialized) {
       const periodData = periodOptions[defaultPeriod].getValue();
@@ -154,9 +152,9 @@ export default function PeriodFilter({
     <div className="flex items-center gap-2 w-full sm:w-auto">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="gap-2 no-default-hover-elevate w-full sm:w-auto">
+          <Button variant="outline" className="gap-2 no-default-hover-elevate w-full sm:w-auto" data-testid="button-period-filter">
             <Calendar className="w-4 h-4" />
-            {currentLabel}
+            <span className="truncate max-w-[200px]">{currentLabel}</span>
             <ChevronDown className="w-4 h-4 ml-2 opacity-50" />
           </Button>
         </DropdownMenuTrigger>
@@ -166,6 +164,7 @@ export default function PeriodFilter({
               key={key}
               onClick={() => handlePeriodChange(key)}
               className={period === key ? 'bg-accent' : ''}
+              data-testid={`menu-item-${key}`}
             >
               {option.label}
             </DropdownMenuItem>
@@ -174,57 +173,51 @@ export default function PeriodFilter({
           <Popover open={customOpen} onOpenChange={(open) => {
             setCustomOpen(open);
             if (open) {
-              setCustomStart(null);
-              setCustomEnd(null);
+              setDateRange({ from: undefined, to: undefined });
             }
           }}>
             <PopoverTrigger asChild>
-              <div className="px-2 py-1.5 text-sm cursor-pointer rounded-sm hover:bg-accent">
+              <div 
+                className={`px-2 py-1.5 text-sm cursor-pointer rounded-sm hover:bg-accent ${period === 'custom' ? 'bg-accent' : ''}`}
+                data-testid="menu-item-custom"
+              >
                 Personalizado
               </div>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-4 max-w-[95vw]" side="bottom" align="start">
+            <PopoverContent className="w-auto p-4" side="bottom" align="start" sideOffset={5}>
               <div className="space-y-4">
-                <p className="text-sm text-slate-600 dark:text-slate-300 font-medium">Selecione o período desejado</p>
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-foreground mb-2">
-                      De: <span className="text-primary">{customStart ? format(customStart, 'dd/MM/yyyy') : 'Selecione'}</span>
-                    </p>
-                    <CalendarComponent
-                      key="start-calendar"
-                      mode="single"
-                      selected={customStart}
-                      onSelect={(date) => {
-                        setCustomStart(date);
-                      }}
-                      disabled={(date) => customEnd && date > customEnd}
-                      className="rounded-md border"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-foreground mb-2">
-                      Até: <span className="text-primary">{customEnd ? format(customEnd, 'dd/MM/yyyy') : 'Selecione'}</span>
-                    </p>
-                    <CalendarComponent
-                      key="end-calendar"
-                      mode="single"
-                      selected={customEnd}
-                      onSelect={(date) => {
-                        setCustomEnd(date);
-                      }}
-                      disabled={(date) => !customStart || date < customStart}
-                      className="rounded-md border"
-                    />
-                  </div>
+                <p className="text-sm text-muted-foreground font-medium">Selecione o período desejado</p>
+                <div className="text-sm font-medium text-foreground">
+                  {dateRange.from ? (
+                    dateRange.to ? (
+                      <>
+                        <span className="text-primary">{format(dateRange.from, 'dd/MM/yyyy')}</span>
+                        {' até '}
+                        <span className="text-primary">{format(dateRange.to, 'dd/MM/yyyy')}</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-primary">{format(dateRange.from, 'dd/MM/yyyy')}</span>
+                        {' - Selecione a data final'}
+                      </>
+                    )
+                  ) : (
+                    'Clique na data inicial'
+                  )}
                 </div>
-                {customStart && customEnd && customStart > customEnd && (
-                  <p className="text-sm text-red-500">Data inicial não pode ser maior que a final</p>
-                )}
+                <CalendarComponent
+                  mode="range"
+                  selected={dateRange}
+                  onSelect={setDateRange}
+                  numberOfMonths={1}
+                  locale={ptBR}
+                  className="rounded-md border"
+                />
                 <Button
-                  onClick={handleCustom}
-                  disabled={!customStart || !customEnd || customStart > customEnd}
-                  className="w-full bg-primary text-primary-foreground no-default-hover-elevate"
+                  onClick={handleCustomApply}
+                  disabled={!dateRange.from || !dateRange.to}
+                  className="w-full"
+                  data-testid="button-apply-custom"
                 >
                   Aplicar
                 </Button>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Calendar, ChevronDown } from 'lucide-react';
 import {
@@ -9,94 +9,89 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { format, subDays, subMonths, startOfDay, endOfDay, startOfMonth, endOfMonth } from 'date-fns';
+import { format, addMonths, startOfDay, endOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-export default function CashFlowPeriodFilter({ onPeriodChange, minDate = new Date('2000-01-01'), maxDate = new Date('2099-12-31') }) {
+export default function CashFlowPeriodFilter({ onPeriodChange }) {
   const [period, setPeriod] = useState('allTime');
+  const [customLabel, setCustomLabel] = useState(null);
   const [customOpen, setCustomOpen] = useState(false);
-  const [customStart, setCustomStart] = useState(null);
-  const [customEnd, setCustomEnd] = useState(null);
+  const [dateRange, setDateRange] = useState({ from: undefined, to: undefined });
   const [initialized, setInitialized] = useState(false);
 
   const periodOptions = {
     allTime: {
-      label: 'Todo período',
+      label: 'Todo o Período',
       getValue: () => {
-        return { 
-          startDate: minDate, 
-          endDate: maxDate,
-          label: 'Todo período' 
-        };
+        const start = new Date('2020-01-01T00:00:00');
+        const end = addMonths(new Date(), 12);
+        return { startDate: start, endDate: end, label: 'Todo o Período' };
       }
     },
-    today: {
-      label: 'Hoje',
+    next30Days: {
+      label: 'Próximos 30 dias',
       getValue: () => {
-        const now = new Date();
-        return { 
-          startDate: startOfDay(now), 
-          endDate: endOfDay(now),
-          label: 'Hoje' 
-        };
+        const todayStr = new Date().toISOString().split('T')[0];
+        const today = new Date(todayStr + 'T00:00:00');
+        const futureStr = new Date(new Date().setDate(new Date().getDate() + 30)).toISOString().split('T')[0];
+        const future = new Date(futureStr + 'T23:59:59');
+        return { startDate: today, endDate: future, label: 'Próximos 30 dias' };
       }
     },
-    last7Days: {
-      label: 'Últimos 7 dias',
+    next60Days: {
+      label: 'Próximos 60 dias',
       getValue: () => {
-        const end = endOfDay(new Date());
-        const start = startOfDay(subDays(new Date(), 6));
-        return { startDate: start, endDate: end, label: 'Últimos 7 dias' };
+        const todayStr = new Date().toISOString().split('T')[0];
+        const today = new Date(todayStr + 'T00:00:00');
+        const futureStr = new Date(new Date().setDate(new Date().getDate() + 60)).toISOString().split('T')[0];
+        const future = new Date(futureStr + 'T23:59:59');
+        return { startDate: today, endDate: future, label: 'Próximos 60 dias' };
       }
     },
-    last30Days: {
-      label: 'Últimos 30 dias',
+    next90Days: {
+      label: 'Próximos 90 dias',
       getValue: () => {
-        const end = endOfDay(new Date());
-        const start = startOfDay(subDays(new Date(), 29));
-        return { startDate: start, endDate: end, label: 'Últimos 30 dias' };
-      }
-    },
-    last3Months: {
-      label: 'Últimos 3 meses',
-      getValue: () => {
-        const end = endOfMonth(new Date());
-        const start = startOfMonth(subMonths(new Date(), 2));
-        return { startDate: start, endDate: end, label: 'Últimos 3 meses' };
-      }
-    },
-    last6Months: {
-      label: 'Últimos 6 meses',
-      getValue: () => {
-        const end = endOfMonth(new Date());
-        const start = startOfMonth(subMonths(new Date(), 5));
-        return { startDate: start, endDate: end, label: 'Últimos 6 meses' };
+        const todayStr = new Date().toISOString().split('T')[0];
+        const today = new Date(todayStr + 'T00:00:00');
+        const futureStr = new Date(new Date().setDate(new Date().getDate() + 90)).toISOString().split('T')[0];
+        const future = new Date(futureStr + 'T23:59:59');
+        return { startDate: today, endDate: future, label: 'Próximos 90 dias' };
       }
     }
   };
 
-  const currentLabel = periodOptions[period]?.label || 'Selecionar período';
+  const currentLabel = period === 'custom' && customLabel 
+    ? customLabel 
+    : (periodOptions[period]?.label || 'Selecionar período');
 
   const handlePeriodChange = (newPeriod) => {
     setPeriod(newPeriod);
+    setCustomLabel(null);
     const periodData = periodOptions[newPeriod].getValue();
     onPeriodChange(periodData);
   };
 
-  const handleCustom = () => {
-    if (customStart && customEnd) {
+  const handleCustomApply = () => {
+    if (dateRange.from && dateRange.to) {
+      const start = dateRange.from;
+      const end = dateRange.to;
+      
+      const label = `${format(start, 'dd/MM/yyyy')} - ${format(end, 'dd/MM/yyyy')}`;
+      
       const newRange = {
-        startDate: startOfDay(customStart),
-        endDate: endOfDay(customEnd),
-        label: `${format(customStart, 'dd/MM/yyyy')} - ${format(customEnd, 'dd/MM/yyyy')}`
+        startDate: startOfDay(start),
+        endDate: endOfDay(end),
+        label: label
       };
+      
       setPeriod('custom');
+      setCustomLabel(label);
       onPeriodChange(newRange);
       setCustomOpen(false);
+      setDateRange({ from: undefined, to: undefined });
     }
   };
 
-  // Initialize with all time on first render
   useEffect(() => {
     if (!initialized) {
       const periodData = periodOptions.allTime.getValue();
@@ -109,9 +104,9 @@ export default function CashFlowPeriodFilter({ onPeriodChange, minDate = new Dat
     <div className="flex items-center gap-2 w-full sm:w-auto">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="gap-2 no-default-hover-elevate w-full sm:w-auto">
+          <Button variant="outline" className="gap-2 no-default-hover-elevate w-full sm:w-auto" data-testid="button-cashflow-period-filter">
             <Calendar className="w-4 h-4" />
-            {currentLabel}
+            <span className="truncate max-w-[200px]">{currentLabel}</span>
             <ChevronDown className="w-4 h-4 ml-2 opacity-50" />
           </Button>
         </DropdownMenuTrigger>
@@ -121,6 +116,7 @@ export default function CashFlowPeriodFilter({ onPeriodChange, minDate = new Dat
               key={key}
               onClick={() => handlePeriodChange(key)}
               className={period === key ? 'bg-accent' : ''}
+              data-testid={`cashflow-menu-item-${key}`}
             >
               {option.label}
             </DropdownMenuItem>
@@ -129,57 +125,51 @@ export default function CashFlowPeriodFilter({ onPeriodChange, minDate = new Dat
           <Popover open={customOpen} onOpenChange={(open) => {
             setCustomOpen(open);
             if (open) {
-              setCustomStart(null);
-              setCustomEnd(null);
+              setDateRange({ from: undefined, to: undefined });
             }
           }}>
             <PopoverTrigger asChild>
-              <div className="px-2 py-1.5 text-sm cursor-pointer rounded-sm hover:bg-accent">
+              <div 
+                className={`px-2 py-1.5 text-sm cursor-pointer rounded-sm hover:bg-accent ${period === 'custom' ? 'bg-accent' : ''}`}
+                data-testid="cashflow-menu-item-custom"
+              >
                 Personalizado
               </div>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-4 max-w-[95vw]" side="bottom" align="start">
+            <PopoverContent className="w-auto p-4" side="bottom" align="start" sideOffset={5}>
               <div className="space-y-4">
-                <p className="text-sm text-slate-600 dark:text-slate-300 font-medium">Selecione o período desejado</p>
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-foreground mb-2">
-                      De: <span className="text-primary">{customStart ? format(customStart, 'dd/MM/yyyy') : 'Selecione'}</span>
-                    </p>
-                    <CalendarComponent
-                      key="cashflow-start-calendar"
-                      mode="single"
-                      selected={customStart}
-                      onSelect={(date) => {
-                        setCustomStart(date);
-                      }}
-                      disabled={(date) => customEnd && date > customEnd}
-                      className="rounded-md border"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-foreground mb-2">
-                      Até: <span className="text-primary">{customEnd ? format(customEnd, 'dd/MM/yyyy') : 'Selecione'}</span>
-                    </p>
-                    <CalendarComponent
-                      key="cashflow-end-calendar"
-                      mode="single"
-                      selected={customEnd}
-                      onSelect={(date) => {
-                        setCustomEnd(date);
-                      }}
-                      disabled={(date) => !customStart || date < customStart}
-                      className="rounded-md border"
-                    />
-                  </div>
+                <p className="text-sm text-muted-foreground font-medium">Selecione o período desejado</p>
+                <div className="text-sm font-medium text-foreground">
+                  {dateRange.from ? (
+                    dateRange.to ? (
+                      <>
+                        <span className="text-primary">{format(dateRange.from, 'dd/MM/yyyy')}</span>
+                        {' até '}
+                        <span className="text-primary">{format(dateRange.to, 'dd/MM/yyyy')}</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-primary">{format(dateRange.from, 'dd/MM/yyyy')}</span>
+                        {' - Selecione a data final'}
+                      </>
+                    )
+                  ) : (
+                    'Clique na data inicial'
+                  )}
                 </div>
-                {customStart && customEnd && customStart > customEnd && (
-                  <p className="text-sm text-red-500">Data inicial não pode ser maior que a final</p>
-                )}
+                <CalendarComponent
+                  mode="range"
+                  selected={dateRange}
+                  onSelect={setDateRange}
+                  numberOfMonths={1}
+                  locale={ptBR}
+                  className="rounded-md border"
+                />
                 <Button
-                  onClick={handleCustom}
-                  disabled={!customStart || !customEnd || customStart > customEnd}
-                  className="w-full bg-primary text-primary-foreground no-default-hover-elevate"
+                  onClick={handleCustomApply}
+                  disabled={!dateRange.from || !dateRange.to}
+                  className="w-full"
+                  data-testid="button-apply-cashflow-custom"
                 >
                   Aplicar
                 </Button>
