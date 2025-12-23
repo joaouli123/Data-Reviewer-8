@@ -171,50 +171,52 @@ export default function PeriodFilter({
             </DropdownMenuItem>
           ))}
           
-          <Popover open={customOpen} onOpenChange={setCustomOpen}>
+          <Popover open={customOpen} onOpenChange={(open) => {
+            setCustomOpen(open);
+            if (open) {
+              setCustomStart(null);
+              setCustomEnd(null);
+            }
+          }}>
             <PopoverTrigger asChild>
               <div className="px-2 py-1.5 text-sm cursor-pointer rounded-sm hover:bg-accent">
                 Personalizado
               </div>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-4" side="right">
+            <PopoverContent className="w-auto p-4 max-w-[95vw]" side="bottom" align="start">
               <div className="space-y-4">
-                <p className="text-sm text-slate-600 font-medium">Selecione o período desejado</p>
-                <div className="flex flex-col md:flex-row gap-4">
-                  <div>
-                    <p className="text-sm font-medium text-foreground mb-2">De: {customStart ? format(customStart, 'dd/MM/yyyy') : 'Selecione'}</p>
+                <p className="text-sm text-slate-600 dark:text-slate-300 font-medium">Selecione o período desejado</p>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-foreground mb-2">
+                      De: <span className="text-primary">{customStart ? format(customStart, 'dd/MM/yyyy') : 'Selecione'}</span>
+                    </p>
                     <CalendarComponent
                       mode="single"
                       selected={customStart}
-                      onSelect={(date) => {
-                        setCustomStart(date);
-                        // Reset end date if it's before the new start date
-                        if (customEnd && date && date > customEnd) {
-                          setCustomEnd(null);
-                        }
-                      }}
-                      disabled={(date) => customEnd && date > customEnd}
+                      onSelect={setCustomStart}
+                      className="rounded-md border"
+                      initialFocus
                     />
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-foreground mb-2">Até: {customEnd ? format(customEnd, 'dd/MM/yyyy') : 'Selecione'}</p>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-foreground mb-2">
+                      Até: <span className="text-primary">{customEnd ? format(customEnd, 'dd/MM/yyyy') : 'Selecione'}</span>
+                    </p>
                     <CalendarComponent
                       mode="single"
                       selected={customEnd}
-                      onSelect={(date) => {
-                        if (customStart && date && date < customStart) {
-                          alert('Data final não pode ser menor que a data inicial');
-                          return;
-                        }
-                        setCustomEnd(date);
-                      }}
-                      disabled={(date) => !customStart || (customStart && date < customStart)}
+                      onSelect={setCustomEnd}
+                      className="rounded-md border"
                     />
                   </div>
                 </div>
+                {customStart && customEnd && customStart > customEnd && (
+                  <p className="text-sm text-red-500">Data inicial não pode ser maior que a final</p>
+                )}
                 <Button
                   onClick={handleCustom}
-                  disabled={!customStart || !customEnd}
+                  disabled={!customStart || !customEnd || customStart > customEnd}
                   className="w-full bg-primary text-primary-foreground no-default-hover-elevate"
                 >
                   Aplicar
