@@ -97,16 +97,24 @@ export default function PaymentEditDialog({ isOpen, onClose, transaction, onConf
           <div className="space-y-2">
             <Label htmlFor="paymentDate">Data do Pagamento</Label>
             <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-600 pointer-events-none" />
               <Input
                 id="paymentDate"
                 type="date"
                 value={paymentDate}
                 onChange={(e) => setPaymentDate(e.target.value)}
-                className="pl-9 flex-1"
-                style={{ paddingLeft: '2.25rem' }}
+                className="w-full"
                 data-testid="input-payment-date"
               />
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8"
+                onClick={() => document.getElementById('paymentDate').click()}
+                data-testid="button-open-calendar"
+              >
+                <Calendar className="w-4 h-4" />
+              </Button>
             </div>
             <p className="text-xs text-slate-500">Data em que o pagamento foi realizado</p>
           </div>
