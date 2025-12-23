@@ -41,17 +41,28 @@ export default function CashFlowForecastPage() {
       return { minDate: new Date('2000-01-01'), maxDate: new Date('2099-12-31') };
     }
     
-    // Parse dates as YYYY-MM-DD strings and find min/max
-    const dateStrings = transactions.map(t => t.date.split('T')[0]).sort();
-    const minDateStr = dateStrings[0];
-    const maxDateStr = dateStrings[dateStrings.length - 1];
+    // Extract and validate date strings (YYYY-MM-DD format)
+    const validDateStrings = transactions
+      .map(t => {
+        if (!t.date) return null;
+        const dateStr = t.date.split('T')[0];
+        // Validate format: should match YYYY-MM-DD
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return null;
+        return dateStr;
+      })
+      .filter(d => d !== null)
+      .sort();
     
-    // Create Date objects from the min/max date strings
-    const [minYear, minMonth, minDay] = minDateStr.split('-');
-    const minDate = new Date(`${minYear}-${minMonth}-${minDay}T00:00:00Z`);
+    if (validDateStrings.length === 0) {
+      return { minDate: new Date('2000-01-01'), maxDate: new Date('2099-12-31') };
+    }
     
-    const [maxYear, maxMonth, maxDay] = maxDateStr.split('-');
-    const maxDate = new Date(`${maxYear}-${maxMonth}-${maxDay}T23:59:59Z`);
+    const minDateStr = validDateStrings[0];
+    const maxDateStr = validDateStrings[validDateStrings.length - 1];
+    
+    // Create Date objects from the min/max date strings using parseISO for safety
+    const minDate = parseISO(minDateStr);
+    const maxDate = parseISO(maxDateStr);
     
     return { minDate, maxDate };
   };
