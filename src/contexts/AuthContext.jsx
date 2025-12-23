@@ -90,22 +90,18 @@ export function AuthProvider({ children }) {
     
     // Limpar todo o cache do React Query COMPLETAMENTE
     queryClient.clear();
-    queryClient.setDefaultOptions({
-      queries: {
-        staleTime: 1000 * 60 * 5,
-        gcTime: 1000 * 60 * 10,
-      },
-    });
+    queryClient.removeQueries();
     
     // Remover dados locais
     setToken(null);
     setUser(null);
     setCompany(null);
-    localStorage.clear(); // Limpar TUDO do localStorage, não apenas "auth"
+    localStorage.clear();
+    sessionStorage.clear();
     
-    // Forçar limpar sessionStorage também
+    // Forçar reload da página para limpar tudo
     if (typeof window !== 'undefined') {
-      sessionStorage.clear();
+      window.location.href = '/login';
     }
   };
 
