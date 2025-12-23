@@ -32,405 +32,439 @@ import {
 
 export interface IStorage {
   // Customer operations
-  createCustomer(data: InsertCustomer): Promise<Customer>;
-  getCustomers(): Promise<Customer[]>;
-  getCustomer(id: string): Promise<Customer | undefined>;
-  updateCustomer(id: string, data: Partial<InsertCustomer>): Promise<Customer>;
-  deleteCustomer(id: string): Promise<void>;
+  createCustomer(companyId: string, data: InsertCustomer): Promise<Customer>;
+  getCustomers(companyId: string): Promise<Customer[]>;
+  getCustomer(companyId: string, id: string): Promise<Customer | undefined>;
+  updateCustomer(companyId: string, id: string, data: Partial<InsertCustomer>): Promise<Customer>;
+  deleteCustomer(companyId: string, id: string): Promise<void>;
 
   // Supplier operations
-  createSupplier(data: InsertSupplier): Promise<Supplier>;
-  getSuppliers(): Promise<Supplier[]>;
-  getSupplier(id: string): Promise<Supplier | undefined>;
-  updateSupplier(id: string, data: Partial<InsertSupplier>): Promise<Supplier>;
-  deleteSupplier(id: string): Promise<void>;
+  createSupplier(companyId: string, data: InsertSupplier): Promise<Supplier>;
+  getSuppliers(companyId: string): Promise<Supplier[]>;
+  getSupplier(companyId: string, id: string): Promise<Supplier | undefined>;
+  updateSupplier(companyId: string, id: string, data: Partial<InsertSupplier>): Promise<Supplier>;
+  deleteSupplier(companyId: string, id: string): Promise<void>;
 
   // Category operations
-  createCategory(data: InsertCategory): Promise<Category>;
-  getCategories(): Promise<Category[]>;
-  getCategory(id: string): Promise<Category | undefined>;
-  updateCategory(id: string, data: Partial<InsertCategory>): Promise<Category>;
-  deleteCategory(id: string): Promise<void>;
+  createCategory(companyId: string, data: InsertCategory): Promise<Category>;
+  getCategories(companyId: string): Promise<Category[]>;
+  getCategory(companyId: string, id: string): Promise<Category | undefined>;
+  updateCategory(companyId: string, id: string, data: Partial<InsertCategory>): Promise<Category>;
+  deleteCategory(companyId: string, id: string): Promise<void>;
 
   // Transaction operations
-  createTransaction(data: InsertTransaction): Promise<Transaction>;
-  getTransactions(): Promise<Transaction[]>;
-  getTransaction(id: string): Promise<Transaction | undefined>;
-  updateTransaction(
-    id: string,
-    data: Partial<InsertTransaction>
-  ): Promise<Transaction>;
-  deleteTransaction(id: string): Promise<void>;
-  getTransactionsByDateRange(
-    startDate: Date,
-    endDate: Date
-  ): Promise<Transaction[]>;
-  getTransactionsByShift(shift: string): Promise<Transaction[]>;
+  createTransaction(companyId: string, data: InsertTransaction): Promise<Transaction>;
+  getTransactions(companyId: string): Promise<Transaction[]>;
+  getTransaction(companyId: string, id: string): Promise<Transaction | undefined>;
+  updateTransaction(companyId: string, id: string, data: Partial<InsertTransaction>): Promise<Transaction>;
+  deleteTransaction(companyId: string, id: string): Promise<void>;
+  getTransactionsByDateRange(companyId: string, startDate: Date, endDate: Date): Promise<Transaction[]>;
+  getTransactionsByShift(companyId: string, shift: string): Promise<Transaction[]>;
 
   // Cash Flow operations
-  createCashFlow(data: InsertCashFlow): Promise<CashFlow>;
-  getCashFlows(): Promise<CashFlow[]>;
-  getCashFlow(id: string): Promise<CashFlow | undefined>;
-  updateCashFlow(
-    id: string,
-    data: Partial<InsertCashFlow>
-  ): Promise<CashFlow>;
-  deleteCashFlow(id: string): Promise<void>;
-  getCashFlowsByDateRange(startDate: Date, endDate: Date): Promise<CashFlow[]>;
-  getCashFlowsByShift(shift: string): Promise<CashFlow[]>;
+  createCashFlow(companyId: string, data: InsertCashFlow): Promise<CashFlow>;
+  getCashFlows(companyId: string): Promise<CashFlow[]>;
+  getCashFlow(companyId: string, id: string): Promise<CashFlow | undefined>;
+  updateCashFlow(companyId: string, id: string, data: Partial<InsertCashFlow>): Promise<CashFlow>;
+  deleteCashFlow(companyId: string, id: string): Promise<void>;
+  getCashFlowsByDateRange(companyId: string, startDate: Date, endDate: Date): Promise<CashFlow[]>;
+  getCashFlowsByShift(companyId: string, shift: string): Promise<CashFlow[]>;
 
   // Sale operations
-  createSale(data: InsertSale): Promise<Sale>;
-  getSales(): Promise<Sale[]>;
-  getSale(id: string): Promise<Sale | undefined>;
-  updateSale(id: string, data: Partial<InsertSale>): Promise<Sale>;
-  deleteSale(id: string): Promise<void>;
+  createSale(companyId: string, data: InsertSale): Promise<Sale>;
+  getSales(companyId: string): Promise<Sale[]>;
+  getSale(companyId: string, id: string): Promise<Sale | undefined>;
+  updateSale(companyId: string, id: string, data: Partial<InsertSale>): Promise<Sale>;
+  deleteSale(companyId: string, id: string): Promise<void>;
 
   // Purchase operations
-  createPurchase(data: InsertPurchase): Promise<Purchase>;
-  getPurchases(): Promise<Purchase[]>;
-  getPurchase(id: string): Promise<Purchase | undefined>;
-  updatePurchase(id: string, data: Partial<InsertPurchase>): Promise<Purchase>;
-  deletePurchase(id: string): Promise<void>;
+  createPurchase(companyId: string, data: InsertPurchase): Promise<Purchase>;
+  getPurchases(companyId: string): Promise<Purchase[]>;
+  getPurchase(companyId: string, id: string): Promise<Purchase | undefined>;
+  updatePurchase(companyId: string, id: string, data: Partial<InsertPurchase>): Promise<Purchase>;
+  deletePurchase(companyId: string, id: string): Promise<void>;
 
   // Installment operations
-  createInstallment(data: InsertInstallment): Promise<Installment>;
-  getInstallments(): Promise<Installment[]>;
-  getInstallment(id: string): Promise<Installment | undefined>;
-  updateInstallment(id: string, data: Partial<InsertInstallment>): Promise<Installment>;
-  deleteInstallment(id: string): Promise<void>;
+  createInstallment(companyId: string, data: InsertInstallment): Promise<Installment>;
+  getInstallments(companyId: string): Promise<Installment[]>;
+  getInstallment(companyId: string, id: string): Promise<Installment | undefined>;
+  updateInstallment(companyId: string, id: string, data: Partial<InsertInstallment>): Promise<Installment>;
+  deleteInstallment(companyId: string, id: string): Promise<void>;
 
   // Purchase Installment operations
-  createPurchaseInstallment(data: InsertPurchaseInstallment): Promise<PurchaseInstallment>;
-  getPurchaseInstallments(): Promise<PurchaseInstallment[]>;
-  getPurchaseInstallment(id: string): Promise<PurchaseInstallment | undefined>;
-  updatePurchaseInstallment(id: string, data: Partial<InsertPurchaseInstallment>): Promise<PurchaseInstallment>;
-  deletePurchaseInstallment(id: string): Promise<void>;
+  createPurchaseInstallment(companyId: string, data: InsertPurchaseInstallment): Promise<PurchaseInstallment>;
+  getPurchaseInstallments(companyId: string): Promise<PurchaseInstallment[]>;
+  getPurchaseInstallment(companyId: string, id: string): Promise<PurchaseInstallment | undefined>;
+  updatePurchaseInstallment(companyId: string, id: string, data: Partial<InsertPurchaseInstallment>): Promise<PurchaseInstallment>;
+  deletePurchaseInstallment(companyId: string, id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
   // Customer operations
-  async createCustomer(data: InsertCustomer): Promise<Customer> {
-    // @ts-ignore - Drizzle type inference
-    const result = await db.insert(customers).values(data).returning();
+  async createCustomer(companyId: string, data: InsertCustomer): Promise<Customer> {
+    const result = await db.insert(customers).values({ ...data, companyId }).returning();
     return result[0];
   }
 
-  async getCustomers(): Promise<Customer[]> {
-    return await db.select().from(customers).orderBy(desc(customers.createdAt));
+  async getCustomers(companyId: string): Promise<Customer[]> {
+    return await db
+      .select()
+      .from(customers)
+      .where(eq(customers.companyId, companyId))
+      .orderBy(desc(customers.createdAt));
   }
 
-  async getCustomer(id: string): Promise<Customer | undefined> {
+  async getCustomer(companyId: string, id: string): Promise<Customer | undefined> {
     const result = await db
       .select()
       .from(customers)
-      .where(eq(customers.id, id));
+      .where(and(eq(customers.companyId, companyId), eq(customers.id, id)));
     return result[0];
   }
 
-  async updateCustomer(
-    id: string,
-    data: Partial<InsertCustomer>
-  ): Promise<Customer> {
+  async updateCustomer(companyId: string, id: string, data: Partial<InsertCustomer>): Promise<Customer> {
     const result = await db
       .update(customers)
       .set(data)
-      .where(eq(customers.id, id))
+      .where(and(eq(customers.companyId, companyId), eq(customers.id, id)))
       .returning();
     return result[0];
   }
 
-  async deleteCustomer(id: string): Promise<void> {
+  async deleteCustomer(companyId: string, id: string): Promise<void> {
     await db
       .delete(customers)
-      .where(eq(customers.id, id));
+      .where(and(eq(customers.companyId, companyId), eq(customers.id, id)));
   }
 
   // Supplier operations
-  async createSupplier(data: InsertSupplier): Promise<Supplier> {
-    // @ts-ignore - Drizzle type inference
-    const result = await db.insert(suppliers).values(data).returning();
+  async createSupplier(companyId: string, data: InsertSupplier): Promise<Supplier> {
+    const result = await db.insert(suppliers).values({ ...data, companyId }).returning();
     return result[0];
   }
 
-  async getSuppliers(): Promise<Supplier[]> {
-    return await db.select().from(suppliers).orderBy(desc(suppliers.createdAt));
+  async getSuppliers(companyId: string): Promise<Supplier[]> {
+    return await db
+      .select()
+      .from(suppliers)
+      .where(eq(suppliers.companyId, companyId))
+      .orderBy(desc(suppliers.createdAt));
   }
 
-  async getSupplier(id: string): Promise<Supplier | undefined> {
+  async getSupplier(companyId: string, id: string): Promise<Supplier | undefined> {
     const result = await db
       .select()
       .from(suppliers)
-      .where(eq(suppliers.id, id));
+      .where(and(eq(suppliers.companyId, companyId), eq(suppliers.id, id)));
     return result[0];
   }
 
-  async updateSupplier(
-    id: string,
-    data: Partial<InsertSupplier>
-  ): Promise<Supplier> {
+  async updateSupplier(companyId: string, id: string, data: Partial<InsertSupplier>): Promise<Supplier> {
     const result = await db
       .update(suppliers)
       .set(data)
-      .where(eq(suppliers.id, id))
+      .where(and(eq(suppliers.companyId, companyId), eq(suppliers.id, id)))
       .returning();
     return result[0];
   }
 
-  async deleteSupplier(id: string): Promise<void> {
+  async deleteSupplier(companyId: string, id: string): Promise<void> {
     await db
       .delete(suppliers)
-      .where(eq(suppliers.id, id));
+      .where(and(eq(suppliers.companyId, companyId), eq(suppliers.id, id)));
   }
 
   // Category operations
-  async createCategory(data: InsertCategory): Promise<Category> {
-    try {
-      console.log("Database Insert - Category Data:", data);
-      // @ts-ignore - Drizzle type inference
-      const [newCategory] = await db.insert(categories).values(data).returning();
-      if (!newCategory) {
-        throw new Error("Falha ao inserir categoria: nenhum registro retornado");
-      }
-      return newCategory;
-    } catch (error) {
-      console.error("Database Insert Error (createCategory):", error);
-      throw error;
-    }
+  async createCategory(companyId: string, data: InsertCategory): Promise<Category> {
+    const result = await db.insert(categories).values({ ...data, companyId }).returning();
+    if (!result[0]) throw new Error("Failed to create category");
+    return result[0];
   }
 
-  async getCategories(): Promise<Category[]> {
-    return await db.select().from(categories);
+  async getCategories(companyId: string): Promise<Category[]> {
+    return await db
+      .select()
+      .from(categories)
+      .where(eq(categories.companyId, companyId));
   }
 
-  async getCategory(id: string): Promise<Category | undefined> {
+  async getCategory(companyId: string, id: string): Promise<Category | undefined> {
     const result = await db
       .select()
       .from(categories)
-      .where(eq(categories.id, id));
+      .where(and(eq(categories.companyId, companyId), eq(categories.id, id)));
     return result[0];
   }
 
-  async updateCategory(
-    id: string,
-    data: Partial<InsertCategory>
-  ): Promise<Category> {
+  async updateCategory(companyId: string, id: string, data: Partial<InsertCategory>): Promise<Category> {
     const result = await db
       .update(categories)
       .set(data)
-      .where(eq(categories.id, id))
+      .where(and(eq(categories.companyId, companyId), eq(categories.id, id)))
       .returning();
     return result[0];
   }
 
-  async deleteCategory(id: string): Promise<void> {
+  async deleteCategory(companyId: string, id: string): Promise<void> {
     await db
       .delete(categories)
-      .where(eq(categories.id, id));
+      .where(and(eq(categories.companyId, companyId), eq(categories.id, id)));
   }
 
   // Transaction operations
-  async createTransaction(data: InsertTransaction): Promise<Transaction> {
-    // @ts-ignore - Drizzle type inference
-    const result = await db.insert(transactions).values(data).returning();
+  async createTransaction(companyId: string, data: InsertTransaction): Promise<Transaction> {
+    const result = await db.insert(transactions).values({ ...data, companyId }).returning();
     return result[0];
   }
 
-  async getTransactions(): Promise<Transaction[]> {
-    return await db.select().from(transactions);
+  async getTransactions(companyId: string): Promise<Transaction[]> {
+    return await db
+      .select()
+      .from(transactions)
+      .where(eq(transactions.companyId, companyId));
   }
 
-  async getTransaction(id: string): Promise<Transaction | undefined> {
+  async getTransaction(companyId: string, id: string): Promise<Transaction | undefined> {
     const result = await db
       .select()
       .from(transactions)
-      .where(eq(transactions.id, id));
+      .where(and(eq(transactions.companyId, companyId), eq(transactions.id, id)));
     return result[0];
   }
 
-  async updateTransaction(
-    id: string,
-    data: Partial<InsertTransaction>
-  ): Promise<Transaction> {
+  async updateTransaction(companyId: string, id: string, data: Partial<InsertTransaction>): Promise<Transaction> {
     const result = await db
       .update(transactions)
       .set(data)
-      .where(eq(transactions.id, id))
+      .where(and(eq(transactions.companyId, companyId), eq(transactions.id, id)))
       .returning();
     return result[0];
   }
 
-  async deleteTransaction(id: string): Promise<void> {
+  async deleteTransaction(companyId: string, id: string): Promise<void> {
     await db
       .delete(transactions)
-      .where(eq(transactions.id, id));
+      .where(and(eq(transactions.companyId, companyId), eq(transactions.id, id)));
   }
 
-  async getTransactionsByDateRange(
-    startDate: Date,
-    endDate: Date
-  ): Promise<Transaction[]> {
+  async getTransactionsByDateRange(companyId: string, startDate: Date, endDate: Date): Promise<Transaction[]> {
     return await db
       .select()
       .from(transactions)
-      .where(and(gte(transactions.date, startDate), lte(transactions.date, endDate)));
+      .where(
+        and(
+          eq(transactions.companyId, companyId),
+          gte(transactions.date, startDate),
+          lte(transactions.date, endDate)
+        )
+      );
   }
 
-  async getTransactionsByShift(shift: string): Promise<Transaction[]> {
+  async getTransactionsByShift(companyId: string, shift: string): Promise<Transaction[]> {
     return await db
       .select()
       .from(transactions)
-      .where(eq(transactions.shift, shift));
+      .where(and(eq(transactions.companyId, companyId), eq(transactions.shift, shift)));
   }
 
   // Cash Flow operations
-  async createCashFlow(data: InsertCashFlow): Promise<CashFlow> {
-    // @ts-ignore - Drizzle type inference
-    const result = await db.insert(cashFlow).values(data).returning();
+  async createCashFlow(companyId: string, data: InsertCashFlow): Promise<CashFlow> {
+    const result = await db.insert(cashFlow).values({ ...data, companyId }).returning();
     return result[0];
   }
 
-  async getCashFlows(): Promise<CashFlow[]> {
-    return await db.select().from(cashFlow);
+  async getCashFlows(companyId: string): Promise<CashFlow[]> {
+    return await db
+      .select()
+      .from(cashFlow)
+      .where(eq(cashFlow.companyId, companyId));
   }
 
-  async getCashFlow(id: string): Promise<CashFlow | undefined> {
+  async getCashFlow(companyId: string, id: string): Promise<CashFlow | undefined> {
     const result = await db
       .select()
       .from(cashFlow)
-      .where(eq(cashFlow.id, id));
+      .where(and(eq(cashFlow.companyId, companyId), eq(cashFlow.id, id)));
     return result[0];
   }
 
-  async updateCashFlow(
-    id: string,
-    data: Partial<InsertCashFlow>
-  ): Promise<CashFlow> {
+  async updateCashFlow(companyId: string, id: string, data: Partial<InsertCashFlow>): Promise<CashFlow> {
     const result = await db
       .update(cashFlow)
       .set(data)
-      .where(eq(cashFlow.id, id))
+      .where(and(eq(cashFlow.companyId, companyId), eq(cashFlow.id, id)))
       .returning();
     return result[0];
   }
 
-  async deleteCashFlow(id: string): Promise<void> {
+  async deleteCashFlow(companyId: string, id: string): Promise<void> {
     await db
       .delete(cashFlow)
-      .where(eq(cashFlow.id, id));
+      .where(and(eq(cashFlow.companyId, companyId), eq(cashFlow.id, id)));
   }
 
-  async getCashFlowsByDateRange(
-    startDate: Date,
-    endDate: Date
-  ): Promise<CashFlow[]> {
+  async getCashFlowsByDateRange(companyId: string, startDate: Date, endDate: Date): Promise<CashFlow[]> {
     return await db
       .select()
       .from(cashFlow)
-      .where(and(gte(cashFlow.date, startDate), lte(cashFlow.date, endDate)));
+      .where(
+        and(
+          eq(cashFlow.companyId, companyId),
+          gte(cashFlow.date, startDate),
+          lte(cashFlow.date, endDate)
+        )
+      );
   }
 
-  async getCashFlowsByShift(shift: string): Promise<CashFlow[]> {
+  async getCashFlowsByShift(companyId: string, shift: string): Promise<CashFlow[]> {
     return await db
       .select()
       .from(cashFlow)
-      .where(eq(cashFlow.shift, shift));
+      .where(and(eq(cashFlow.companyId, companyId), eq(cashFlow.shift, shift)));
   }
 
   // Sale operations
-  async createSale(data: InsertSale): Promise<Sale> {
-    const result = await db.insert(sales).values(data).returning();
+  async createSale(companyId: string, data: InsertSale): Promise<Sale> {
+    const result = await db.insert(sales).values({ ...data, companyId }).returning();
     return result[0];
   }
 
-  async getSales(): Promise<Sale[]> {
-    return await db.select().from(sales);
+  async getSales(companyId: string): Promise<Sale[]> {
+    return await db
+      .select()
+      .from(sales)
+      .where(eq(sales.companyId, companyId));
   }
 
-  async getSale(id: string): Promise<Sale | undefined> {
-    const result = await db.select().from(sales).where(eq(sales.id, id));
+  async getSale(companyId: string, id: string): Promise<Sale | undefined> {
+    const result = await db
+      .select()
+      .from(sales)
+      .where(and(eq(sales.companyId, companyId), eq(sales.id, id)));
     return result[0];
   }
 
-  async updateSale(id: string, data: Partial<InsertSale>): Promise<Sale> {
-    const result = await db.update(sales).set(data).where(eq(sales.id, id)).returning();
+  async updateSale(companyId: string, id: string, data: Partial<InsertSale>): Promise<Sale> {
+    const result = await db
+      .update(sales)
+      .set(data)
+      .where(and(eq(sales.companyId, companyId), eq(sales.id, id)))
+      .returning();
     return result[0];
   }
 
-  async deleteSale(id: string): Promise<void> {
-    await db.delete(sales).where(eq(sales.id, id));
+  async deleteSale(companyId: string, id: string): Promise<void> {
+    await db
+      .delete(sales)
+      .where(and(eq(sales.companyId, companyId), eq(sales.id, id)));
   }
 
   // Purchase operations
-  async createPurchase(data: InsertPurchase): Promise<Purchase> {
-    const result = await db.insert(purchases).values(data).returning();
+  async createPurchase(companyId: string, data: InsertPurchase): Promise<Purchase> {
+    const result = await db.insert(purchases).values({ ...data, companyId }).returning();
     return result[0];
   }
 
-  async getPurchases(): Promise<Purchase[]> {
-    return await db.select().from(purchases);
+  async getPurchases(companyId: string): Promise<Purchase[]> {
+    return await db
+      .select()
+      .from(purchases)
+      .where(eq(purchases.companyId, companyId));
   }
 
-  async getPurchase(id: string): Promise<Purchase | undefined> {
-    const result = await db.select().from(purchases).where(eq(purchases.id, id));
+  async getPurchase(companyId: string, id: string): Promise<Purchase | undefined> {
+    const result = await db
+      .select()
+      .from(purchases)
+      .where(and(eq(purchases.companyId, companyId), eq(purchases.id, id)));
     return result[0];
   }
 
-  async updatePurchase(id: string, data: Partial<InsertPurchase>): Promise<Purchase> {
-    const result = await db.update(purchases).set(data).where(eq(purchases.id, id)).returning();
+  async updatePurchase(companyId: string, id: string, data: Partial<InsertPurchase>): Promise<Purchase> {
+    const result = await db
+      .update(purchases)
+      .set(data)
+      .where(and(eq(purchases.companyId, companyId), eq(purchases.id, id)))
+      .returning();
     return result[0];
   }
 
-  async deletePurchase(id: string): Promise<void> {
-    await db.delete(purchases).where(eq(purchases.id, id));
+  async deletePurchase(companyId: string, id: string): Promise<void> {
+    await db
+      .delete(purchases)
+      .where(and(eq(purchases.companyId, companyId), eq(purchases.id, id)));
   }
 
   // Installment operations
-  async createInstallment(data: InsertInstallment): Promise<Installment> {
-    const result = await db.insert(installments).values(data).returning();
+  async createInstallment(companyId: string, data: InsertInstallment): Promise<Installment> {
+    const result = await db.insert(installments).values({ ...data, companyId }).returning();
     return result[0];
   }
 
-  async getInstallments(): Promise<Installment[]> {
-    return await db.select().from(installments);
+  async getInstallments(companyId: string): Promise<Installment[]> {
+    return await db
+      .select()
+      .from(installments)
+      .where(eq(installments.companyId, companyId));
   }
 
-  async getInstallment(id: string): Promise<Installment | undefined> {
-    const result = await db.select().from(installments).where(eq(installments.id, id));
+  async getInstallment(companyId: string, id: string): Promise<Installment | undefined> {
+    const result = await db
+      .select()
+      .from(installments)
+      .where(and(eq(installments.companyId, companyId), eq(installments.id, id)));
     return result[0];
   }
 
-  async updateInstallment(id: string, data: Partial<InsertInstallment>): Promise<Installment> {
-    const result = await db.update(installments).set(data).where(eq(installments.id, id)).returning();
+  async updateInstallment(companyId: string, id: string, data: Partial<InsertInstallment>): Promise<Installment> {
+    const result = await db
+      .update(installments)
+      .set(data)
+      .where(and(eq(installments.companyId, companyId), eq(installments.id, id)))
+      .returning();
     return result[0];
   }
 
-  async deleteInstallment(id: string): Promise<void> {
-    await db.delete(installments).where(eq(installments.id, id));
+  async deleteInstallment(companyId: string, id: string): Promise<void> {
+    await db
+      .delete(installments)
+      .where(and(eq(installments.companyId, companyId), eq(installments.id, id)));
   }
 
   // Purchase Installment operations
-  async createPurchaseInstallment(data: InsertPurchaseInstallment): Promise<PurchaseInstallment> {
-    const result = await db.insert(purchaseInstallments).values(data).returning();
+  async createPurchaseInstallment(companyId: string, data: InsertPurchaseInstallment): Promise<PurchaseInstallment> {
+    const result = await db.insert(purchaseInstallments).values({ ...data, companyId }).returning();
     return result[0];
   }
 
-  async getPurchaseInstallments(): Promise<PurchaseInstallment[]> {
-    return await db.select().from(purchaseInstallments);
+  async getPurchaseInstallments(companyId: string): Promise<PurchaseInstallment[]> {
+    return await db
+      .select()
+      .from(purchaseInstallments)
+      .where(eq(purchaseInstallments.companyId, companyId));
   }
 
-  async getPurchaseInstallment(id: string): Promise<PurchaseInstallment | undefined> {
-    const result = await db.select().from(purchaseInstallments).where(eq(purchaseInstallments.id, id));
+  async getPurchaseInstallment(companyId: string, id: string): Promise<PurchaseInstallment | undefined> {
+    const result = await db
+      .select()
+      .from(purchaseInstallments)
+      .where(and(eq(purchaseInstallments.companyId, companyId), eq(purchaseInstallments.id, id)));
     return result[0];
   }
 
-  async updatePurchaseInstallment(id: string, data: Partial<InsertPurchaseInstallment>): Promise<PurchaseInstallment> {
-    const result = await db.update(purchaseInstallments).set(data).where(eq(purchaseInstallments.id, id)).returning();
+  async updatePurchaseInstallment(companyId: string, id: string, data: Partial<InsertPurchaseInstallment>): Promise<PurchaseInstallment> {
+    const result = await db
+      .update(purchaseInstallments)
+      .set(data)
+      .where(and(eq(purchaseInstallments.companyId, companyId), eq(purchaseInstallments.id, id)))
+      .returning();
     return result[0];
   }
 
-  async deletePurchaseInstallment(id: string): Promise<void> {
-    await db.delete(purchaseInstallments).where(eq(purchaseInstallments.id, id));
+  async deletePurchaseInstallment(companyId: string, id: string): Promise<void> {
+    await db
+      .delete(purchaseInstallments)
+      .where(and(eq(purchaseInstallments.companyId, companyId), eq(purchaseInstallments.id, id)));
   }
 }
 
