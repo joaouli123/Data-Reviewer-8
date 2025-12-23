@@ -84,14 +84,15 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
       const promises = [];
       
       for (let i = 0; i < installmentCount; i++) {
-        const dueDate = new Date(baseDate);
-        dueDate.setMonth(dueDate.getMonth() + i);
+        // Use addMonths from date-fns to properly handle timezone-aware date arithmetic
+        const dueDate = addMonths(baseDate, i);
+        const dueDateISO = dueDate.toISOString();
         
         const payload = {
           customerId: customer.id,
           categoryId: cat?.id,
           type: 'venda',
-          date: dueDate && dueDate.toISOString ? dueDate.toISOString() : new Date(baseDate).toISOString(),
+          date: dueDateISO,
           shift: 'manhã',
           amount: String(installmentAmount.toFixed(2)),
           description: `${data.description}${installmentCount > 1 ? ` (${i + 1}/${installmentCount})` : ''}`,
