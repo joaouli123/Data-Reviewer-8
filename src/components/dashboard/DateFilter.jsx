@@ -53,7 +53,7 @@ export default function DateFilter({ onDateRangeChange }) {
   }, [initialized, onDateRangeChange, dateRange]);
 
   return (
-    <div className="flex items-center gap-2 w-full sm:w-auto">
+    <div className="flex flex-col gap-2 w-full sm:w-auto">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" className="gap-2 no-default-hover-elevate w-full sm:w-auto">
@@ -75,43 +75,45 @@ export default function DateFilter({ onDateRangeChange }) {
           <DropdownMenuItem onClick={() => handlePreset(89, 'Últimos 90 dias')}>
             Últimos 90 dias
           </DropdownMenuItem>
-          
-          <Popover open={customOpen} onOpenChange={setCustomOpen}>
-            <PopoverTrigger asChild>
-              <div className="px-2 py-1.5 text-sm cursor-pointer rounded-sm">
-                Personalizado
-              </div>
-            </PopoverTrigger>
-            <PopoverContent className="w-80">
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm font-medium text-foreground mb-2">De:</p>
-                  <CalendarComponent
-                    mode="single"
-                    selected={customStart}
-                    onSelect={setCustomStart}
-                  />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-foreground mb-2">Até:</p>
-                  <CalendarComponent
-                    mode="single"
-                    selected={customEnd}
-                    onSelect={setCustomEnd}
-                  />
-                </div>
-                <Button
-                  onClick={handleCustom}
-                  disabled={!customStart || !customEnd}
-                  className="w-full bg-primary text-primary-foreground no-default-hover-elevate"
-                >
-                  Aplicar
-                </Button>
-              </div>
-            </PopoverContent>
-          </Popover>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <Popover open={customOpen} onOpenChange={setCustomOpen}>
+        <PopoverTrigger asChild>
+          <Button variant="outline" className="gap-2 no-default-hover-elevate w-full sm:w-auto">
+            Personalizado
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-4">
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm font-medium text-foreground mb-2">De:</p>
+              <CalendarComponent
+                mode="single"
+                selected={customStart}
+                onSelect={setCustomStart}
+                disabled={(date) => customEnd && date > customEnd}
+              />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-foreground mb-2">Até:</p>
+              <CalendarComponent
+                mode="single"
+                selected={customEnd}
+                onSelect={setCustomEnd}
+                disabled={(date) => customStart && date < customStart}
+              />
+            </div>
+            <Button
+              onClick={handleCustom}
+              disabled={!customStart || !customEnd}
+              className="w-full bg-primary text-primary-foreground no-default-hover-elevate"
+            >
+              Aplicar
+            </Button>
+          </div>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }
