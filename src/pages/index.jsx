@@ -11,6 +11,7 @@ import Categories from "./Categories";
 import UserManagement from "./UserManagement";
 import UserPermissions from "./UserPermissions";
 import SuperAdmin from "./SuperAdmin";
+import SuperAdminDashboard from "./admin/super-dashboard";
 import AccessDenied from "./AccessDenied";
 import TeamPage from "./settings/Team";
 import Profile from "./Profile";
@@ -36,9 +37,9 @@ function ProtectedRoute({ component: Component, permission }) {
 export default function Pages() {
   const { user } = useAuth();
 
-  // Redirect Super Admin to their panel
+  // Redirect Super Admin to their admin panel
   if (user?.isSuperAdmin) {
-    return <SuperAdmin />;
+    return <SuperAdminDashboard />;
   }
 
   return (

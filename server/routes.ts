@@ -1108,6 +1108,259 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // ========== SUPER ADMIN ROUTES ==========
+
+  // Get all companies with stats
+  app.get("/api/admin/companies", authMiddleware, requireSuperAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user?.isSuperAdmin) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const companies_list = await storage.getCompanies();
+      const enriched = await Promise.all(
+        companies_list.map(async (company) => {
+          const subscription = await storage.getCompanySubscription(company.id);
+          const users = await storage.getUsers(company.id);
+          const admin = users.find(u => u.role === 'admin');
+          
+          return {
+            ...company,
+            subscription,
+            ownerEmail: admin?.email || 'N/A',
+            ownerName: admin?.name || admin?.username || 'Unknown',
+            userCount: users.length,
+          };
+        })
+      );
+
+      res.json(enriched);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch companies" });
+    }
+  });
+
+  // Get admin stats
+  app.get("/api/admin/stats", authMiddleware, requireSuperAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user?.isSuperAdmin) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const companies_list = await storage.getCompanies();
+      const subscriptions_list = await Promise.all(
+        companies_list.map(c => storage.getCompanySubscription(c.id))
+      );
+
+      const activeCompanies = companies_list.filter(c => c.subscriptionStatus === 'active').length;
+      const activeSubscriptions = subscriptions_list.filter(s => s?.status === 'active').length;
+      
+      const monthlyRevenue = subscriptions_list
+        .filter(s => s?.status === 'active')
+        .reduce((sum, s) => {
+          const planPrice = { basic: 0, pro: 99, enterprise: 299 }[s?.plan || 'basic'];
+          return sum + planPrice;
+        }, 0);
+
+      const alerts = companies_list.filter(c => c.subscriptionStatus === 'suspended').length;
+
+      res.json({
+        totalCompanies: companies_list.length,
+        activeCompanies,
+        activeSubscriptions,
+        monthlyRevenue,
+        alerts,
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch stats" });
+    }
+  });
+
+  // Create new company and admin user
+  app.post("/api/admin/companies", authMiddleware, requireSuperAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user?.isSuperAdmin) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const { companyName, companyDocument, adminName, adminEmail, adminPassword, plan } = req.body;
+
+      if (!companyName || !companyDocument || !adminName || !adminEmail || !adminPassword || !plan) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      // Create company
+      const company = await createCompany(companyName, companyDocument);
+
+      // Create admin user
+      const adminUser = await createUser(
+        company.id,
+        adminEmail.split('@')[0],
+        adminEmail,
+        adminPassword,
+        adminName,
+        'admin',
+        false
+      );
+
+      // Update subscription
+      await storage.updateCompanySubscription(company.id, {
+        plan,
+        status: 'active',
+      });
+
+      // Create session and token
+      const token = generateToken({
+        userId: adminUser.id,
+        companyId: company.id,
+        role: 'admin',
+        isSuperAdmin: false,
+      });
+      await createSession(adminUser.id, company.id, token);
+
+      // Audit log
+      await createAuditLog(
+        req.user.id,
+        req.user.companyId,
+        "CREATE_COMPANY",
+        "company",
+        company.id,
+        `Created ${companyName}`,
+        req.clientIp || 'unknown',
+        req.headers['user-agent'] || 'unknown'
+      );
+
+      res.status(201).json({
+        company,
+        admin: adminUser,
+        subscription: { plan, status: 'active' }
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message || "Failed to create company" });
+    }
+  });
+
+  // Block/Suspend company
+  app.patch("/api/admin/companies/:id/status", authMiddleware, requireSuperAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user?.isSuperAdmin) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const { status } = req.body;
+      if (!['active', 'suspended', 'cancelled'].includes(status)) {
+        return res.status(400).json({ error: "Invalid status" });
+      }
+
+      const company = await storage.getCompany(req.params.id);
+      if (!company) {
+        return res.status(404).json({ error: "Company not found" });
+      }
+
+      // Update company status
+      const result = await db
+        .update(companies)
+        .set({ subscriptionStatus: status })
+        .where(eq(companies.id, req.params.id))
+        .returning();
+
+      // Audit log
+      await createAuditLog(
+        req.user.id,
+        req.user.companyId,
+        "UPDATE_COMPANY_STATUS",
+        "company",
+        req.params.id,
+        `Changed status to ${status}`,
+        req.clientIp || 'unknown',
+        req.headers['user-agent'] || 'unknown'
+      );
+
+      res.json(result[0]);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update company status" });
+    }
+  });
+
+  // Impersonate company (generate temp token)
+  app.post("/api/admin/companies/:id/impersonate", authMiddleware, requireSuperAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user?.isSuperAdmin) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const company = await storage.getCompany(req.params.id);
+      if (!company) {
+        return res.status(404).json({ error: "Company not found" });
+      }
+
+      const users_list = await storage.getUsers(req.params.id);
+      const admin = users_list.find(u => u.role === 'admin') || users_list[0];
+
+      if (!admin) {
+        return res.status(404).json({ error: "No admin found for this company" });
+      }
+
+      const token = generateToken({
+        userId: admin.id,
+        companyId: company.id,
+        role: admin.role,
+        isSuperAdmin: false,
+      });
+
+      await createSession(admin.id, company.id, token);
+
+      // Audit log
+      await createAuditLog(
+        req.user.id,
+        req.user.companyId,
+        "IMPERSONATE_COMPANY",
+        "company",
+        req.params.id,
+        `Impersonated as ${admin.username}`,
+        req.clientIp || 'unknown',
+        req.headers['user-agent'] || 'unknown'
+      );
+
+      res.json({ token, company, user: admin });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to generate impersonation token" });
+    }
+  });
+
+  // Delete company
+  app.delete("/api/admin/companies/:id", authMiddleware, requireSuperAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user?.isSuperAdmin) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const company = await storage.getCompany(req.params.id);
+      if (!company) {
+        return res.status(404).json({ error: "Company not found" });
+      }
+
+      // Delete via database (cascade delete via foreign keys)
+      await db.delete(companies).where(eq(companies.id, req.params.id));
+
+      // Audit log
+      await createAuditLog(
+        req.user.id,
+        req.user.companyId,
+        "DELETE_COMPANY",
+        "company",
+        req.params.id,
+        `Deleted ${company.name}`,
+        req.clientIp || 'unknown',
+        req.headers['user-agent'] || 'unknown'
+      );
+
+      res.json({ message: "Company deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete company" });
+    }
+  });
+
   // 404 fallback
   app.all("/api/*", (req, res) => {
     res.status(404).json({ error: "API route not found" });
