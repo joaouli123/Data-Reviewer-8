@@ -193,7 +193,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           status: 'pendente', 
-          paidAmount: null, 
+          paidAmount: undefined, 
           interest: '0'
         })
       });
