@@ -47,24 +47,26 @@ export default function DREAnalysis({ transactions, categories = [], period = 'c
       .filter(([cat]) => 
         cat.toLowerCase().includes('custo') || 
         cat.toLowerCase().includes('compra') ||
-        cat.toLowerCase().includes('fornecedor')
+        cat.toLowerCase().includes('fornecedor') ||
+        cat.toLowerCase().includes('mercadoria') ||
+        cat.toLowerCase().includes('frete')
       )
       .reduce((sum, [, val]) => sum + val, 0);
     
     const receitaLiquida = receitaBruta - custosDiretos;
     
-    const despesasOperacionais = Object.entries(expenses)
+    const despesasOperacionaisBreakdown = Object.entries(expenses)
       .filter(([cat]) => 
         !cat.toLowerCase().includes('custo') && 
         !cat.toLowerCase().includes('compra') &&
-        !cat.toLowerCase().includes('fornecedor')
-      )
-      .reduce((sum, [, val]) => sum + val, 0);
+        !cat.toLowerCase().includes('fornecedor') &&
+        !cat.toLowerCase().includes('mercadoria') &&
+        !cat.toLowerCase().includes('frete')
+      );
+
+    const despesasOperacionais = despesasOperacionaisBreakdown.reduce((sum, [, val]) => sum + val, 0);
     
     const lucroOperacional = receitaLiquida - despesasOperacionais;
-    const margemLiquida = receitaBruta > 0 ? (lucroOperacional / receitaBruta) * 100 : 0;
-
-    const despesasOperacionaisBreakdown = Object.entries(expenses);
 
     // Group by payment method
     const paymentMethodStats = {};
