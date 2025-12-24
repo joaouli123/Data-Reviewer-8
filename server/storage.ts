@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { eq, and, gte, lte, sql, desc } from "drizzle-orm";
+import { eq, and, gte, lte, sql, desc, sum } from "drizzle-orm";
 import {
   customers,
   suppliers,
@@ -145,6 +145,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCustomers(companyId: string): Promise<Customer[]> {
+    // Get all customers with their basic info
     return await db
       .select()
       .from(customers)
@@ -182,6 +183,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getSuppliers(companyId: string): Promise<Supplier[]> {
+    // Get all suppliers with their basic info
     return await db
       .select()
       .from(suppliers)

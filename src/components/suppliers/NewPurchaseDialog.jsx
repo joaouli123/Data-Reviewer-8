@@ -137,9 +137,10 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
       
       return Promise.all(promises);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions', company?.id] });
-      queryClient.invalidateQueries({ queryKey: ['/api/suppliers', company?.id] });
+    onSuccess: async () => {
+      // Force immediate refetch (invalidation alone won't work with staleTime: Infinity)
+      await queryClient.refetchQueries({ queryKey: ['/api/transactions', company?.id] });
+      await queryClient.refetchQueries({ queryKey: ['/api/suppliers', company?.id] });
       toast.success('Compra registrada com sucesso!');
       setFormData({
         description: '',
