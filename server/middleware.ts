@@ -57,9 +57,10 @@ export function authMiddleware(req: AuthenticatedRequest, res: Response, next: N
   if (!token) {
     // In development, allow requests without token (demo mode)
     if (process.env.NODE_ENV === "development") {
+      // Use the real company from database (HUA Consultoria)
       req.user = {
         id: "dev-user-1",
-        companyId: "dev-company-1",
+        companyId: "4645f6f4-89f2-446f-a08c-0b2f62796c72",
         role: "admin",
         isSuperAdmin: false,
       };
