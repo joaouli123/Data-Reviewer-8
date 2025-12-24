@@ -19,6 +19,7 @@ export default function WhatIfAnalysis({ transactions, saleInstallments, purchas
     expenseIncrease: '0',
     receivableDelay: '0',
     payableDelay: '0'
+  });
 
   const calculateBaselineScenario = () => {
     const now = new Date();
