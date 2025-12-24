@@ -289,6 +289,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
           : parseFloat(amount) / installmentCount;
         
         const payload = {
+          companyId: company?.id,
           categoryId: formData.categoryId,
           amount: installmentAmount.toFixed(2),
           date: dueDateISO,
@@ -316,6 +317,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
       onSubmit(transactions);
     } else {
       const payload = {
+        companyId: company?.id,
         categoryId: formData.categoryId,
         amount: amount,
         date: isoDate,
