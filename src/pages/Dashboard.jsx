@@ -307,7 +307,7 @@ export default function DashboardPage() {
             {metrics.filteredTransactions.length > 0 ? (
               <>
                 {metrics.filteredTransactions
-                  .sort((a, b) => new Date(b.date) - new Date(a.date))
+                  .sort((a, b) => b.id - a.id)
                   .slice(0, 5)
                   .map((t) => (
                     <div
