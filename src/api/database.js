@@ -1,10 +1,29 @@
-// API-only, NO localStorage fallback for critical data
+// Get stored auth token from localStorage (NOT data storage)
+const getAuthToken = () => {
+  try {
+    return localStorage.getItem('auth_token');
+  } catch (e) {
+    return null;
+  }
+};
+
 const fetchWithTimeout = (url, options = {}) => {
   const timeout = options.timeout || 30000;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
   
-  return fetch(url, { ...options, signal: controller.signal })
+  const headers = {
+    'Content-Type': 'application/json',
+    ...options.headers
+  };
+  
+  // Add auth token if available
+  const token = getAuthToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  return fetch(url, { ...options, headers, signal: controller.signal })
     .finally(() => clearTimeout(timeoutId));
 };
 

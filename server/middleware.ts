@@ -55,6 +55,17 @@ export function authMiddleware(req: AuthenticatedRequest, res: Response, next: N
   req.clientIp = (req.headers['x-forwarded-for']?.toString().split(',')[0] || req.socket.remoteAddress || 'unknown') as string;
   
   if (!token) {
+    // In development, allow requests without token (demo mode)
+    if (process.env.NODE_ENV === "development") {
+      req.user = {
+        id: "dev-user-1",
+        companyId: "dev-company-1",
+        role: "admin",
+        isSuperAdmin: false,
+      };
+      req.token = "dev-token";
+      return next();
+    }
     return res.status(401).json({ error: "Unauthorized - No token provided" });
   }
 
