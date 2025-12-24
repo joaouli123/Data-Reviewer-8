@@ -429,10 +429,21 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const body = req.body;
       if (typeof body.date === "string") body.date = new Date(body.date);
+      if (typeof body.paymentDate === "string" && body.paymentDate) body.paymentDate = new Date(body.paymentDate);
       // Convert amount to string for decimal validation
       if (body.amount && typeof body.amount === "number") {
         body.amount = body.amount.toString();
       }
+      if (body.paidAmount && typeof body.paidAmount === "number") {
+        body.paidAmount = body.paidAmount.toString();
+      }
+      if (body.interest && typeof body.interest === "number") {
+        body.interest = body.interest.toString();
+      }
+      // Remove undefined/null customer/supplier IDs
+      if (!body.customerId) delete body.customerId;
+      if (!body.supplierId) delete body.supplierId;
+      
       const data = insertTransactionSchema.parse(body);
       const transaction = await storage.createTransaction(req.user.companyId, data);
       res.status(201).json({
@@ -442,8 +453,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         interest: transaction.interest ? parseFloat(transaction.interest.toString()) : 0
       });
     } catch (error: any) {
-      console.error("Transaction validation error:", error.message || error);
-      res.status(400).json({ error: "Invalid transaction data", details: error.message });
+      console.error("Transaction validation error:", error);
+      const details = error.errors ? error.errors[0]?.message : error.message;
+      res.status(400).json({ error: "Invalid transaction data", details });
     }
   });
 

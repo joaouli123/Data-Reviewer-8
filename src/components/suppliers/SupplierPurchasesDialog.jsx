@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
+import { Transaction } from '@/api/entities';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +12,7 @@ import { CheckCircle2, Calendar, Clock, X, ChevronDown, ChevronRight } from 'luc
 import PaymentEditDialog from './PaymentEditDialog';
 
 export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }) {
+  const { company } = useAuth();
   const queryClient = useQueryClient();
   const [paymentEditOpen, setPaymentEditOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
@@ -29,7 +31,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
 
   const { data: transactionsData = [] } = useQuery({
     queryKey: ['/api/transactions', company?.id],
-    queryFn: () => fetch('/api/transactions').then(res => res.json()),
+    queryFn: () => Transaction.list(),
     initialData: [],
     enabled: !!company?.id,
     staleTime: 0,
