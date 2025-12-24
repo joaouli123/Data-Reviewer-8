@@ -394,6 +394,7 @@ export default function TransactionsPage() {
                         <TableHead className="pl-6 text-left">Data</TableHead>
                         <TableHead className="text-left">Descrição</TableHead>
                         <TableHead className="text-left">Categoria</TableHead>
+                        <TableHead className="text-left">Status</TableHead>
                         <TableHead className="text-right">Valor</TableHead>
                         <TableHead className="text-right pr-6">Ações</TableHead>
                     </TableRow>
@@ -410,6 +411,19 @@ export default function TransactionsPage() {
                                 <TableCell className="text-left">
                                     <Badge variant="secondary" className="capitalize font-normal bg-slate-100 text-slate-600 hover:bg-slate-200">
                                         {categories.find(c => c.id === t.categoryId)?.name || t.category}
+                                    </Badge>
+                                </TableCell>
+                                <TableCell className="text-left">
+                                    <Badge 
+                                        className={`font-normal ${
+                                            t.status === 'pago' || t.status === 'completed' 
+                                                ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+                                                : t.status === 'parcial'
+                                                ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                                                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                        }`}
+                                    >
+                                        {t.status === 'pago' || t.status === 'completed' ? 'Pago' : t.status === 'parcial' ? 'Parcial' : 'Pendente'}
                                     </Badge>
                                 </TableCell>
                                 <TableCell className={`text-right font-bold ${t.type === 'venda' ? 'text-emerald-600' : 'text-rose-600'}`}>
@@ -444,7 +458,7 @@ export default function TransactionsPage() {
                         ))
                     ) : (
                         <TableRow>
-                            <TableCell colSpan={5} className="text-center py-10 text-slate-500">
+                            <TableCell colSpan={6} className="text-center py-10 text-slate-500">
                                 Nenhuma transação encontrada.
                             </TableCell>
                         </TableRow>
