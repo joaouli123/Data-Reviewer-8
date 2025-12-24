@@ -40,6 +40,10 @@ export default function DashboardPage() {
       queryClient.invalidateQueries({ queryKey: ['/api/transactions', 'all', company?.id] });
       setIsFormOpen(false);
       toast.success('Transação criada com sucesso!');
+    },
+    onError: (error) => {
+      console.error('Erro ao criar transação:', error);
+      toast.error(error.message || 'Erro ao salvar transação. Tente novamente.');
     }
   });
 
