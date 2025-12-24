@@ -83,15 +83,8 @@ export default function CustomersPage() {
   });
 
   const handleFormSubmit = (data) => {
-    if (selectedCustomer) {
-      saveMutation.mutate(data);
-    } else {
-      saveMutation.mutate({
-        ...data,
-        join_date: format(new Date(), 'yyyy-MM-dd'),
-        ltv: 0
-      });
-    }
+    console.log('📝 Form submitted:', data);
+    saveMutation.mutate(data);
   };
 
   const openFormDialog = (customer = null) => {

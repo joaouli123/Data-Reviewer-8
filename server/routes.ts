@@ -239,8 +239,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const data = insertCustomerSchema.parse(req.body);
       const customer = await storage.createCustomer(req.user.companyId, data);
       res.status(201).json(customer);
-    } catch (error) {
-      res.status(400).json({ error: "Invalid customer data" });
+    } catch (error: any) {
+      console.error("Customer creation error:", error.message || error);
+      res.status(400).json({ error: error.message || "Invalid customer data" });
     }
   });
 
@@ -293,8 +294,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const data = insertSupplierSchema.parse(req.body);
       const supplier = await storage.createSupplier(req.user.companyId, data);
       res.status(201).json(supplier);
-    } catch (error) {
-      res.status(400).json({ error: "Invalid supplier data" });
+    } catch (error: any) {
+      console.error("Supplier creation error:", error.message || error);
+      res.status(400).json({ error: error.message || "Invalid supplier data" });
     }
   });
 
