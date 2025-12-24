@@ -233,37 +233,12 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
           <DialogTitle>Registrar Compra - {supplier?.name}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Descrição da Compra</Label>
-              <Input
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Ex: Matéria-prima..."
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Valor Total</Label>
-              <div className="flex items-center gap-2">
-                <span className="text-slate-600">R$</span>
-                <CurrencyInput
-                  value={formData.total_amount}
-                  onChange={(e) => setFormData({ ...formData, total_amount: e.target.value })}
-                  placeholder="0,00"
-                  className="flex-1"
-                  required
-                />
-              </div>
-            </div>
-          </div>
-
           <div className="space-y-2">
-            <Label>Data da Compra</Label>
+            <Label>Descrição da Compra</Label>
             <Input
-              type="date"
-              value={formData.purchase_date}
-              onChange={(e) => setFormData({ ...formData, purchase_date: e.target.value })}
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Ex: Matéria-prima..."
               required
             />
           </div>
@@ -286,6 +261,20 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
             />
           </div>
 
+          <div className="space-y-2">
+            <Label>Valor Total</Label>
+            <div className="flex items-center gap-2">
+              <span className="text-slate-600">R$</span>
+              <CurrencyInput
+                value={formData.total_amount}
+                onChange={(e) => setFormData({ ...formData, total_amount: e.target.value })}
+                placeholder="0,00"
+                className="flex-1"
+                required
+              />
+            </div>
+          </div>
+
           {formData.status !== 'pago' && (
             <div className="space-y-2">
               <Label>Número de Parcelas</Label>
@@ -297,6 +286,16 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
               />
             </div>
           )}
+
+          <div className="space-y-2">
+            <Label>Data da Compra</Label>
+            <Input
+              type="date"
+              value={formData.purchase_date}
+              onChange={(e) => setFormData({ ...formData, purchase_date: e.target.value })}
+              required
+            />
+          </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -333,21 +332,6 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
               </div>
             </div>
           </div>
-
-          {formData.status !== 'pago' && formData.installments > 1 && (
-            <div className="space-y-2">
-              <Label>Valor da Parcela (opcional)</Label>
-              <div className="flex items-center gap-2">
-                <span className="text-slate-600">R$</span>
-                <CurrencyInput
-                  value={formData.installment_amount}
-                  onChange={(e) => setFormData({ ...formData, installment_amount: e.target.value })}
-                  placeholder={formatCurrency((parseFloat(formData.total_amount || 0) / formData.installments))}
-                  className="flex-1"
-                />
-              </div>
-            </div>
-          )}
 
           {formData.status !== 'pago' && Number(formData.installments) > 1 && customInstallments.length === 0 && (
             <div className="p-3 bg-slate-50 rounded-lg text-sm text-slate-600 mt-6">

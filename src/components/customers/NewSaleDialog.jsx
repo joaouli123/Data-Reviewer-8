@@ -230,6 +230,24 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
             />
           </div>
           
+          <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900 border border-emerald-200 dark:border-emerald-700">
+            <Label className="cursor-pointer">Pago à Vista</Label>
+            <Switch 
+              checked={formData.status === 'pago'}
+              onCheckedChange={(checked) => {
+                setFormData({
+                  ...formData, 
+                  status: checked ? 'pago' : 'pendente',
+                  paymentDate: checked ? format(new Date(), 'yyyy-MM-dd') : null,
+                  installments: checked ? '1' : formData.installments
+                });
+                if (checked) {
+                  setCustomInstallments([]);
+                }
+              }}
+            />
+          </div>
+
           <div className="space-y-2">
             <Label>Valor Total</Label>
             <div className="flex items-center gap-2">
@@ -255,38 +273,6 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
               />
             </div>
           )}
-          {formData.status !== 'pago' && Number(formData.installments) > 1 && (
-            <div className="space-y-2">
-              <Label>Valor da Parcela (opcional)</Label>
-              <div className="flex items-center gap-2">
-                <span className="text-slate-600">R$</span>
-                <CurrencyInput
-                  value={formData.installment_amount}
-                  onChange={(e) => setFormData({ ...formData, installment_amount: e.target.value })}
-                  placeholder={formatCurrency((parseFloat(formData.total_amount || 0) / Number(formData.installments || 1)))}
-                  className="flex-1"
-                />
-              </div>
-            </div>
-          )}
-
-          <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900 border border-emerald-200 dark:border-emerald-700">
-            <Label className="cursor-pointer">Pago à Vista</Label>
-            <Switch 
-              checked={formData.status === 'pago'}
-              onCheckedChange={(checked) => {
-                setFormData({
-                  ...formData, 
-                  status: checked ? 'pago' : 'pendente',
-                  paymentDate: checked ? format(new Date(), 'yyyy-MM-dd') : null,
-                  installments: checked ? '1' : formData.installments
-                });
-                if (checked) {
-                  setCustomInstallments([]);
-                }
-              }}
-            />
-          </div>
 
           {formData.status !== 'pago' && Number(formData.installments) > 1 && customInstallments.length === 0 && (
             <div className="p-3 bg-slate-50 rounded-lg text-sm text-slate-600">
