@@ -1317,8 +1317,21 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       if (name !== undefined) updateData.name = name;
       if (phone !== undefined) updateData.phone = phone;
       if (avatar !== undefined) updateData.avatar = avatar;
-      
-      const updated = await storage.updateUser(req.user.companyId, req.user.id, updateData);
+
+      // Handle both regular users and super admin (who have null companyId)
+      let updated;
+      if (req.user.isSuperAdmin && !req.user.companyId) {
+        // For super admin, update without company filter
+        const result = await db.update(users).set(updateData).where(eq(users.id, req.user.id)).returning();
+        updated = result[0];
+      } else {
+        // For regular users, use storage with company filter
+        updated = await storage.updateUser(req.user.companyId, req.user.id, updateData);
+      }
+
+      if (!updated) {
+        return res.status(404).json({ error: "User not found" });
+      }
       
       res.json({
         user: {

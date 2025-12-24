@@ -73,7 +73,8 @@ export default function ProfilePage() {
       queryClient.invalidateQueries({ queryKey: ['/api/auth/profile'] });
     },
     onError: (error) => {
-      toast.error(error.message);
+      const errorMessage = error?.message || typeof error === 'string' ? error : 'Erro ao atualizar perfil';
+      toast.error(errorMessage);
     }
   });
 
