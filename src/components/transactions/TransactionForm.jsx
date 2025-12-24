@@ -8,11 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
+import { format, addMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarIcon, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { CurrencyInput, parseCurrency } from "@/components/ui/currency-input";
+import { CurrencyInput, formatCurrency, parseCurrency } from "@/components/ui/currency-input";
 import { Switch } from "@/components/ui/switch";
 import CreateCategoryModal from './CreateCategoryModal';
 
@@ -23,6 +23,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
   const queryClient = useQueryClient();
   const [isCreateCategoryModalOpen, setIsCreateCategoryModalOpen] = useState(false);
   const [isSuggestingCategory, setIsSuggestingCategory] = useState(false);
+  const [customInstallments, setCustomInstallments] = useState([]);
   
   const [formData, setFormData] = React.useState({
     description: '',
@@ -30,6 +31,8 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
     type: 'venda',
     categoryId: '',
     date: new Date(),
+    installments: 1,
+    installment_amount: '',
     status: 'pendente',
     paymentDate: null
   });
@@ -90,12 +93,39 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
           type: 'venda',
           categoryId: '',
           date: new Date(),
+          installments: 1,
+          installment_amount: '',
           status: 'pendente',
           paymentDate: null
         });
+        setCustomInstallments([]);
       }
     }
   }, [initialData, open, categories]);
+
+  const handleInstallmentsChange = (value) => {
+    const numValue = value === '' ? 1 : parseInt(value);
+    setFormData({ ...formData, installments: numValue, installment_amount: '' });
+    
+    if (numValue > 1) {
+      const totalAmount = parseFloat(formData.amount) || 0;
+      const defaultAmount = totalAmount > 0 ? totalAmount / numValue : '';
+      const baseDate = new Date(formData.date);
+      const newCustomInstallments = Array.from({ length: numValue }, (_, i) => ({
+        amount: defaultAmount,
+        due_date: format(addMonths(baseDate, i), 'yyyy-MM-dd')
+      }));
+      setCustomInstallments(newCustomInstallments);
+    } else {
+      setCustomInstallments([]);
+    }
+  };
+
+  const updateCustomInstallment = (index, field, value) => {
+    const updated = [...customInstallments];
+    updated[index] = { ...updated[index], [field]: value };
+    setCustomInstallments(updated);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -142,15 +172,46 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
       }
     }
 
-    onSubmit({
-      ...formData,
-      categoryId: formData.categoryId,
-      category: selectedCategory?.name || '',
-      amount: amount,
-      date: isoDate,
-      paymentDate: paymentDateISO,
-      shift: 'turno1'
-    });
+    // Handle installments
+    const installmentCount = formData.installments || 1;
+    if (installmentCount > 1) {
+      // Create multiple transactions for installments
+      const installmentGroupId = `group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const baseDate = new Date(formData.date);
+      
+      const transactions = [];
+      for (let i = 0; i < installmentCount; i++) {
+        const dueDate = addMonths(baseDate, i);
+        const dueDateISO = dueDate.toISOString();
+        const installmentAmount = customInstallments.length > i 
+          ? parseFloat(customInstallments[i].amount) 
+          : parseFloat(amount) / installmentCount;
+        
+        transactions.push({
+          ...formData,
+          categoryId: formData.categoryId,
+          category: selectedCategory?.name || '',
+          amount: installmentAmount.toFixed(2),
+          date: dueDateISO,
+          paymentDate: paymentDateISO,
+          shift: 'turno1',
+          installmentGroup: installmentGroupId,
+          installmentNumber: i + 1,
+          installmentTotal: installmentCount
+        });
+      }
+      onSubmit(transactions);
+    } else {
+      onSubmit({
+        ...formData,
+        categoryId: formData.categoryId,
+        category: selectedCategory?.name || '',
+        amount: amount,
+        date: isoDate,
+        paymentDate: paymentDateISO,
+        shift: 'turno1'
+      });
+    }
   };
 
 
@@ -291,6 +352,82 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
               </PopoverContent>
             </Popover>
           </div>
+
+          <div className="space-y-2">
+            <Label>Número de Parcelas</Label>
+            <Input
+              type="number"
+              min="1"
+              value={formData.installments}
+              onChange={(e) => handleInstallmentsChange(e.target.value)}
+            />
+          </div>
+
+          {Number(formData.installments) > 1 && customInstallments.length === 0 && (
+            <div className="p-3 bg-slate-50 rounded-lg text-sm text-slate-600">
+              <p>
+                {formData.installment_amount && !isNaN(parseFloat(formData.installment_amount))
+                  ? `${formData.installments}x de R$ ${formatCurrency(formData.installment_amount)}`
+                  : `${formData.installments}x de R$ ${formatCurrency((parseFloat(formData.amount || 0) / Number(formData.installments || 1)))}`
+                }
+              </p>
+            </div>
+          )}
+
+          {customInstallments.length > 1 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium">Detalhamento das Parcelas</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setCustomInstallments([])}
+                  className="text-xs"
+                >
+                  Usar valor padrão
+                </Button>
+              </div>
+              <div className="max-h-60 overflow-y-auto space-y-2 border rounded-lg p-3 bg-slate-50 pr-2">
+                {customInstallments.map((inst, idx) => (
+                  <div key={idx} className="bg-white p-2 rounded border space-y-2">
+                    <div className="text-sm font-medium text-slate-600">
+                      Parcela {idx + 1}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex items-center gap-1">
+                        <span className="text-slate-600 text-sm">R$</span>
+                        <CurrencyInput
+                          placeholder="Valor"
+                          value={inst.amount}
+                          onChange={(e) => updateCustomInstallment(idx, 'amount', e.target.value)}
+                          className="text-sm flex-1"
+                        />
+                      </div>
+                      <Input
+                        type="date"
+                        value={inst.due_date}
+                        onChange={(e) => updateCustomInstallment(idx, 'due_date', e.target.value)}
+                        className="text-sm"
+                      />
+                    </div>
+                  </div>
+                ))}
+                <div className="pt-2 border-t mt-2">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="font-medium">Total das Parcelas:</span>
+                    <span className={`font-bold ${
+                      Math.abs(customInstallments.reduce((sum, inst) => sum + parseFloat(inst.amount || 0), 0) - parseFloat(formData.amount || 0)) < 0.01
+                        ? 'text-emerald-600'
+                        : 'text-rose-600'
+                    }`}>
+                      R$ {customInstallments.reduce((sum, inst) => sum + parseFloat(inst.amount || 0), 0).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
             <Label className="cursor-pointer">Já está pago?</Label>
