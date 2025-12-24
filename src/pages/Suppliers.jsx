@@ -45,7 +45,7 @@ export default function SuppliersPage() {
     enabled: !!company?.id
   });
 
-  const { data: transactionsData = [] } = useQuery({
+  const transactionsQuery = useQuery({
     queryKey: ['/api/transactions', company?.id],
     queryFn: () => {
       // Direct API call with proper error handling
@@ -65,6 +65,7 @@ export default function SuppliersPage() {
     refetchInterval: false // Never refetch automatically
   });
 
+  const { data: transactionsData = [] } = transactionsQuery;
   const transactions = Array.isArray(transactionsData) ? transactionsData : (transactionsData?.data || []);
 
   const saveMutation = useMutation({
@@ -159,12 +160,21 @@ export default function SuppliersPage() {
           <p className="text-xs sm:text-sm text-slate-500">Gerencie seus fornecedores e compras.</p>
         </div>
         
-        <Button 
-          className="bg-primary hover:bg-primary w-full sm:w-auto"
-          onClick={() => openFormDialog()}
-        >
-          <Plus className="w-4 h-4 mr-2" /> Novo Fornecedor
-        </Button>
+        <div className="flex gap-2 w-full sm:w-auto flex-col sm:flex-row">
+          <Button 
+            variant="outline"
+            onClick={() => transactionsQuery.refetch()}
+            disabled={transactionsQuery.isRefetching}
+          >
+            Atualizar
+          </Button>
+          <Button 
+            className="bg-primary hover:bg-primary"
+            onClick={() => openFormDialog()}
+          >
+            <Plus className="w-4 h-4 mr-2" /> Novo Fornecedor
+          </Button>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">

@@ -45,7 +45,7 @@ export default function CustomersPage() {
     enabled: !!company?.id
   });
 
-  const { data: transactionsData = [] } = useQuery({
+  const transactionsQuery = useQuery({
     queryKey: ['/api/transactions', company?.id],
     queryFn: () => {
       return fetch('/api/transactions', {
@@ -64,6 +64,7 @@ export default function CustomersPage() {
     refetchInterval: false // Never refetch automatically
   });
 
+  const { data: transactionsData = [] } = transactionsQuery;
   const transactions = Array.isArray(transactionsData) ? transactionsData : (transactionsData?.data || []);
 
   const saveMutation = useMutation({
@@ -163,12 +164,21 @@ export default function CustomersPage() {
             <p className="text-xs sm:text-sm text-slate-500">Gerencie sua base de clientes e contatos.</p>
         </div>
         
-        <Button 
-          className="bg-primary hover:bg-primary w-full sm:w-auto"
-          onClick={() => openFormDialog()}
-        >
-          <Plus className="w-4 h-4 mr-2" /> Novo Cliente
-        </Button>
+        <div className="flex gap-2 w-full sm:w-auto flex-col sm:flex-row">
+          <Button 
+            variant="outline"
+            onClick={() => transactionsQuery.refetch()}
+            disabled={transactionsQuery.isRefetching}
+          >
+            Atualizar
+          </Button>
+          <Button 
+            className="bg-primary hover:bg-primary"
+            onClick={() => openFormDialog()}
+          >
+            <Plus className="w-4 h-4 mr-2" /> Novo Cliente
+          </Button>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
