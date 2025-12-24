@@ -307,7 +307,11 @@ export default function DashboardPage() {
             {metrics.filteredTransactions.length > 0 ? (
               <>
                 {metrics.filteredTransactions
-                  .sort((a, b) => b.id - a.id)
+                  .sort((a, b) => {
+                    const dateCompare = new Date(b.date) - new Date(a.date);
+                    if (dateCompare !== 0) return dateCompare;
+                    return String(b.id).localeCompare(String(a.id));
+                  })
                   .slice(0, 5)
                   .map((t) => (
                     <div

@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Mail, Copy, UserPlus, Loader2 } from 'lucide-react';
+import { Mail, Copy, UserPlus, Loader2, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -22,14 +22,24 @@ export default function InviteUserModal({ open, onOpenChange, onInvite }) {
   const [inviteData, setInviteData] = useState({
     email: '',
     role: 'user',
-    name: ''
+    name: '',
+    password: '',
+    confirmPassword: ''
   });
   const [loading, setLoading] = useState(false);
   const [inviteLink, setInviteLink] = useState('');
 
   const handleCreateNow = async () => {
-    if (!inviteData.email || !inviteData.name) {
-      toast.error('Email e nome são obrigatórios');
+    if (!inviteData.email || !inviteData.name || !inviteData.password) {
+      toast.error('Email, nome e senha são obrigatórios');
+      return;
+    }
+    if (inviteData.password !== inviteData.confirmPassword) {
+      toast.error('As senhas não coincidem');
+      return;
+    }
+    if (inviteData.password.length < 6) {
+      toast.error('A senha deve ter no mínimo 6 caracteres');
       return;
     }
     setLoading(true);
@@ -37,13 +47,13 @@ export default function InviteUserModal({ open, onOpenChange, onInvite }) {
       const result = await onInvite({
         email: inviteData.email,
         role: inviteData.role,
-        name: inviteData.name
+        name: inviteData.name,
+        password: inviteData.password
       });
       if (result?.inviteLink) {
         setInviteLink(result.inviteLink);
-        toast.success('Usuário criado! Redirecionando para cadastro...');
+        toast.success('Usuário criado com sucesso!');
         setTimeout(() => {
-          window.open(`/signup?companyId=${company?.id}&inviteToken=${result.inviteToken}`, '_blank');
           resetModal();
         }, 500);
       }
@@ -96,7 +106,7 @@ export default function InviteUserModal({ open, onOpenChange, onInvite }) {
 
   const resetModal = () => {
     setStep('methods');
-    setInviteData({ email: '', role: 'user', name: '' });
+    setInviteData({ email: '', role: 'user', name: '', password: '', confirmPassword: '' });
     setInviteLink('');
     onOpenChange(false);
   };
@@ -203,6 +213,44 @@ export default function InviteUserModal({ open, onOpenChange, onInvite }) {
                 </SelectContent>
               </Select>
             </div>
+
+            {step === 'create' && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Senha</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 w-4 h-4 text-muted-foreground pointer-events-none" />
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="Mínimo 6 caracteres"
+                      value={inviteData.password}
+                      onChange={(e) => setInviteData({ ...inviteData, password: e.target.value })}
+                      disabled={loading}
+                      data-testid="input-invite-password"
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirmar Senha</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 w-4 h-4 text-muted-foreground pointer-events-none" />
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      placeholder="Confirme a senha"
+                      value={inviteData.confirmPassword}
+                      onChange={(e) => setInviteData({ ...inviteData, confirmPassword: e.target.value })}
+                      disabled={loading}
+                      data-testid="input-invite-confirm-password"
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
 
             <div className="flex gap-3">
               <Button 
