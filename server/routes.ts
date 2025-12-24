@@ -452,13 +452,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         body.interest = body.interest.toString();
       }
       
-      // Only remove if explicitly empty string or falsy
-      if (body.customerId === "" || body.customerId === null || body.customerId === undefined) {
-        delete body.customerId;
-      }
-      if (body.supplierId === "" || body.supplierId === null || body.supplierId === undefined) {
-        delete body.supplierId;
-      }
+      // DO NOT delete customerId or supplierId - they are required for their respective transaction types
+      // The schema validation will handle optional/required validation
       
       const data = insertTransactionSchema.parse(body);
       const transaction = await storage.createTransaction(req.user.companyId, data);
