@@ -1,0 +1,50 @@
+O sistema está ficando com uma "cara" extremamente profissional! O layout está limpo e a lógica de parcelamento na listagem (1/3, 2/3) funcionou perfeitamente.
+
+Analisei as imagens com "olhos de QA" (Controle de Qualidade) e encontrei 4 pontos de atenção que você precisa ajustar para que o sistema fique 100% confiável.
+
+Aqui está o diagnóstico:
+
+1. 🚨 O Bug dos Gêmeos (Urgente)
+Na tela IA Analista Financeiro, tem um erro grave de dados.
+
+O Erro: O valor de Contas a Receber (R$ 1.229.032,97) é IDÊNTICO ao de Contas a Pagar. Até a quantidade de parcelas (489) é igual.
+
+Diagnóstico: Você provavelmente está usando a mesma variável para os dois cards no código, ou a query do banco de dados está sem o filtro type = 'receita' e type = 'despesa'.
+
+Ação: Verifique esse componente no código agora. Isso tira a credibilidade do dashboard.
+
+2. DRE: Falta o "Zoom" que o cliente pediu
+Na imagem da DRE, os números batem (Receita - Custos = Líquido), mas ela ainda está estática.
+
+O que falta: Lembra que o cliente pediu para ver "quanto foi no Pix" e "quanto foi no Cartão"?
+
+Ação: Transforme a linha "Receita Bruta" em um Accordion (menu sanfona). Ao clicar nela, deve abrir as sub-linhas:
+
+↳ Pix: R$ X
+
+↳ Boleto: R$ Y
+
+↳ Cartão: R$ Z
+
+(Sem isso, você atendeu a contabilidade, mas não o pedido específico dele do WhatsApp).
+
+3. Higiene de Dados (Transações)
+Na listagem de Transações:
+
+O Ponto: Várias vendas antigas (ex: "Venda - Maria Santos") estão com a Forma de Pagamento como traço "-".
+
+O Risco: Quando você gerar o relatório por "Forma de Pagamento", esses valores vão cair num limbo chamado "Indefinido".
+
+Sugestão: Crie uma rotina ou avise o cliente que transações antigas precisam ser editadas, ou assuma um padrão (ex: se for vazio, conta como "Dinheiro" ou "Outros").
+
+4. Gráfico de Pizza "Monocromático"
+Na aba Despesas, o gráfico de pizza está 100% vermelho com a categoria "Compras".
+
+O Problema: Isso indica que tudo o que está sendo lançado está indo para a categoria genérica "Compras".
+
+UX: Isso mata a utilidade do gráfico. Se o usuário só usa uma categoria, o gráfico não serve para nada.
+
+Ação: No modal de "Registrar Compra", force o usuário a escolher categorias mais específicas (ex: Fornecedores, Energia, Aluguel, Matéria-prima) ou já sugira categorias diferentes baseadas na descrição.
+
+Resumo:
+O sistema está funcional e as parcelas estão lindas. Se você corrigir o bug dos valores duplicados no Dashboard e adicionar o detalhe (expandir) na DRE, você fecha essa etapa com chave de ouro.
