@@ -428,8 +428,19 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const body = req.body;
+      
+      // Log incoming data for debugging
+      console.log("Transaction POST:", { 
+        supplierId: body.supplierId, 
+        customerId: body.customerId,
+        amount: body.amount,
+        type: body.type,
+        status: body.status 
+      });
+      
       if (typeof body.date === "string") body.date = new Date(body.date);
       if (typeof body.paymentDate === "string" && body.paymentDate) body.paymentDate = new Date(body.paymentDate);
+      
       // Convert amount to string for decimal validation
       if (body.amount && typeof body.amount === "number") {
         body.amount = body.amount.toString();
@@ -440,12 +451,26 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       if (body.interest && typeof body.interest === "number") {
         body.interest = body.interest.toString();
       }
-      // Remove undefined/null customer/supplier IDs
-      if (!body.customerId) delete body.customerId;
-      if (!body.supplierId) delete body.supplierId;
+      
+      // Only remove if explicitly empty string or falsy
+      if (body.customerId === "" || body.customerId === null || body.customerId === undefined) {
+        delete body.customerId;
+      }
+      if (body.supplierId === "" || body.supplierId === null || body.supplierId === undefined) {
+        delete body.supplierId;
+      }
       
       const data = insertTransactionSchema.parse(body);
       const transaction = await storage.createTransaction(req.user.companyId, data);
+      
+      // Log saved transaction
+      console.log("Transaction saved:", { 
+        id: transaction.id, 
+        supplierId: transaction.supplierId, 
+        customerId: transaction.customerId,
+        amount: transaction.amount 
+      });
+      
       res.status(201).json({
         ...transaction,
         amount: transaction.amount ? parseFloat(transaction.amount.toString()) : 0,

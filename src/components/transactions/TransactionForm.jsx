@@ -274,7 +274,6 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
       const payload = {
         companyId: company?.id,
         categoryId: formData.categoryId,
-        category: selectedCategory?.name || '',
         amount: amount,
         date: isoDate,
         paymentDate: paymentDateISO,
@@ -284,14 +283,20 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
         status: formData.status
       };
       
-      // Only add customer/supplier if selected
+      // Only add customer/supplier if selected and has value
       if (formData.entityType === 'customer' && formData.customerId) {
         payload.customerId = formData.customerId;
-      }
-      if (formData.entityType === 'supplier' && formData.supplierId) {
-        payload.supplierId = formData.supplierId;
+      } else if (formData.entityType === 'customer') {
+        console.warn('Customer selected but no customerId provided');
       }
       
+      if (formData.entityType === 'supplier' && formData.supplierId) {
+        payload.supplierId = formData.supplierId;
+      } else if (formData.entityType === 'supplier') {
+        console.warn('Supplier selected but no supplierId provided');
+      }
+      
+      console.log('Submitting payload:', payload);
       onSubmit(payload);
     }
   };
