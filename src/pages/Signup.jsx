@@ -53,7 +53,7 @@ export default function Signup() {
 
     try {
       setLoading(true);
-      await signup(
+      const data = await signup(
         formData.companyName,
         formData.companyDocument,
         formData.username,
@@ -61,7 +61,8 @@ export default function Signup() {
         formData.password,
         formData.name
       );
-      toast.success("Conta criada com sucesso!");
+      const userName = data.user?.name || "usuário";
+      toast.success(`Seja bem vindo, ${userName}!`);
       setLocation("/");
     } catch (error) {
       toast.error(error.message);
