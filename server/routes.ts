@@ -15,6 +15,7 @@ import {
   customers,
   users,
   companies,
+  subscriptions,
 } from "../shared/schema";
 import {
   createCompany,
