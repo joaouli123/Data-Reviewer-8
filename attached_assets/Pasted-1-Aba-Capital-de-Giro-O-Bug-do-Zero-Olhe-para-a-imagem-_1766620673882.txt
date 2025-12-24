@@ -1,0 +1,51 @@
+1. Aba Capital de Giro: O "Bug do Zero" 🚨
+Olhe para a imagem.
+
+O Erro: O sistema diz que você tem R$ 0,00 de Recebimentos nos próximos 30 dias e R$ 0,00 de Pagamentos.
+
+A Contradição: Na tela anterior do "Analista IA", você tinha R$ 1.229.032,97 em Contas a Receber e a Pagar.
+
+O Diagnóstico: A query (consulta) dessa tela não está puxando os dados das transações parceladas ou futuras.
+
+Provável causa: O filtro de data deve estar pegando apenas "Hoje" ou está quebrado. Ele precisa somar tudo que vence entre Data de Hoje e Data de Hoje + 30 dias.
+
+Ajuste Visual (Detalhe Chato mas Necessário): Os números estão com 3 casas decimais (R$ 54.698,593). Dinheiro só tem duas casas. Arredonde isso no front-end (.toFixed(2)).
+
+2. Aba Endividamento: Lógica Conflitante 🤔
+Aqui temos uma confusão conceitual na imagem.
+
+O Cenário:
+
+Dívida Total: R$ 1.111.692,66.
+
+Índice Dívida/Receita: 229% (Alto).
+
+Status do Topo: "Saudável" (Verde).
+
+O Problema: Matematicamente, se uma empresa deve 2x mais do que fatura no ano (229%), ela não está "Saudável", ela está alavancada ou em risco. O selo verde está mentindo para o usuário.
+
+Como corrigir a lógica do Status: Você precisa definir as faixas de risco. Exemplo padrão de mercado:
+
+🟢 Saudável: Dívida é até 30% da Receita Anual.
+
+🟡 Atenção: Dívida é entre 30% e 100% da Receita.
+
+🔴 Crítico: Dívida é maior que 100% da Receita (Seu caso atual).
+
+3. Onde separar "Contas a Pagar" de "Dívida"?
+Essa é a maior dúvida de quem monta esses sistemas.
+
+Aba Despesas/Fluxo: Mostra fornecedores, luz, água, aluguel (o dia a dia).
+
+Aba Endividamento: Deve mostrar Empréstimos Bancários, Financiamentos e Parcelamentos de Longo Prazo.
+
+Dica: Se esse valor de R$ 1.1 Milhão for apenas "Fornecedores a pagar", ele não deveria estar na aba Endividamento. Ele deveria estar apenas no Capital de Giro (Passivo Circulante).
+
+Ação: Verifique se você não está somando "Contas de Luz" como se fosse "Dívida Bancária".
+
+Resumo do que fazer agora:
+Conserte a query do Capital de Giro: Faça ela enxergar as parcelas que vencem nos próximos 30 dias (Recebimentos e Pagamentos). Atualmente está zerado.
+
+Arredonde as casas decimais: Deixe tudo com 2 casas (0.00).
+
+Revise a regra do "Status Saudável": Se a dívida é alta, o status tem que ficar amarelo ou vermelho.

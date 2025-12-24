@@ -14,7 +14,9 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
 
   const calculateWorkingCapital = () => {
     const now = new Date();
-    const next30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    // Use end of day for today to include all current transactions
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const next30Days = new Date(startOfToday.getTime() + 31 * 24 * 60 * 60 * 1000);
 
     // Fallback: Calculate from transactions if installments are empty
     let currentReceivables = 0;
@@ -24,11 +26,11 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
       // Current Assets (Receivables)
       currentReceivables = saleInstallments
         .filter(i => !i.paid && new Date(i.due_date) <= next30Days)
-        .reduce((sum, i) => sum + i.amount, 0);
+        .reduce((sum, i) => sum + parseFloat(i.amount || 0), 0);
     } else {
       // Calculate from transactions with sale type and pending status
       currentReceivables = transactions
-        .filter(t => t.type === 'venda' && t.status === 'pendente' && new Date(t.date) <= next30Days)
+        .filter(t => (t.type === 'venda' || t.type === 'income') && t.status === 'pendente' && new Date(t.date) <= next30Days)
         .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
     }
 
@@ -36,11 +38,11 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
       // Current Liabilities (Payables)
       currentPayables = purchaseInstallments
         .filter(i => !i.paid && new Date(i.due_date) <= next30Days)
-        .reduce((sum, i) => sum + i.amount, 0);
+        .reduce((sum, i) => sum + parseFloat(i.amount || 0), 0);
     } else {
       // Calculate from transactions with purchase type and pending status
       currentPayables = transactions
-        .filter(t => t.type === 'compra' && t.status === 'pendente' && new Date(t.date) <= next30Days)
+        .filter(t => (t.type === 'compra' || t.type === 'expense') && t.status === 'pendente' && new Date(t.date) <= next30Days)
         .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
     }
 
