@@ -40,8 +40,13 @@ export default function CashFlowForecastPage() {
 
   // Calculate min and max dates from all transactions
   const getDateRange = () => {
+    const today = startOfDay(new Date());
+    
+    // If no transactions, show next 30 days only
     if (transactions.length === 0) {
-      return { minDate: new Date('2000-01-01'), maxDate: new Date('2099-12-31') };
+      const thirtyDaysFromNow = new Date(today);
+      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+      return { minDate: today, maxDate: thirtyDaysFromNow };
     }
     
     // Extract and validate date strings (YYYY-MM-DD format)
@@ -57,7 +62,9 @@ export default function CashFlowForecastPage() {
       .sort();
     
     if (validDateStrings.length === 0) {
-      return { minDate: new Date('2000-01-01'), maxDate: new Date('2099-12-31') };
+      const thirtyDaysFromNow = new Date(today);
+      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+      return { minDate: today, maxDate: thirtyDaysFromNow };
     }
     
     const minDateStr = validDateStrings[0];
@@ -67,10 +74,13 @@ export default function CashFlowForecastPage() {
     const minDate = parseISO(minDateStr);
     let maxDate = parseISO(maxDateStr);
     
-    // Cap maxDate to today - don't show future months with no data
-    const today = startOfDay(new Date());
-    if (maxDate > today) {
-      maxDate = today;
+    // Limit maxDate to 6 months in the future from today
+    const sixMonthsFromToday = new Date(today);
+    sixMonthsFromToday.setMonth(sixMonthsFromToday.getMonth() + 6);
+    
+    // Use whichever is earlier: the last transaction date or 6 months from today
+    if (maxDate > sixMonthsFromToday) {
+      maxDate = sixMonthsFromToday;
     }
     
     return { minDate, maxDate };
@@ -306,6 +316,9 @@ export default function CashFlowForecastPage() {
   };
 
   const cashFlowData = calculateCashFlow();
+  
+  // Filter chart data to show only periods with transactions
+  const chartData = cashFlowData.filter(item => item.receita > 0 || item.despesa > 0);
 
   // Calculate opening balance (all transactions before start date)
   const openingBalance = transactions
@@ -328,16 +341,25 @@ export default function CashFlowForecastPage() {
       saldoAcumulado: cumulativeBalance
     };
   });
+  
+  // Filter for balanced view (only show periods with transactions)
+  const chartDataWithBalance = cashFlowWithBalance.filter(item => item.receita > 0 || item.despesa > 0);
 
   const totalRevenue = cashFlowData.reduce((acc, item) => acc + item.receita, 0);
   const totalExpense = cashFlowData.reduce((acc, item) => acc + item.despesa, 0);
   const netCashFlow = totalRevenue - totalExpense;
   const finalBalance = openingBalance + netCashFlow;
 
-  // Pagination
-  const startIndex = (currentPage - 1) * pageSize;
+  // Filter out empty periods (only show periods with transactions)
+  const filteredCashFlow = chartDataWithBalance;
+
+  // Reset pagination when no results
+  const validCurrentPage = filteredCashFlow.length === 0 ? 1 : currentPage;
+  
+  // Pagination on filtered data
+  const startIndex = (validCurrentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedCashFlow = cashFlowWithBalance.slice(startIndex, endIndex);
+  const paginatedCashFlow = filteredCashFlow.slice(startIndex, endIndex);
 
   return (
     <div className="space-y-6 p-4 sm:p-6">
@@ -413,8 +435,13 @@ export default function CashFlowForecastPage() {
             <CardDescription>Comparação mensal de entradas e saídas</CardDescription>
           </CardHeader>
           <CardContent>
+            {chartDataWithBalance.length === 0 ? (
+              <div className="h-[350px] flex items-center justify-center text-slate-500">
+                Nenhum dado disponível para o período selecionado
+              </div>
+            ) : (
             <ResponsiveContainer width="100%" height={350}>
-              <BarChart data={cashFlowWithBalance}>
+              <BarChart data={chartDataWithBalance}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis dataKey="month" tick={{fill: '#64748b', fontSize: 12}} />
                 <YAxis tick={{fill: '#64748b', fontSize: 12}} tickFormatter={(value) => `R$${(value/1000).toFixed(0)}k`} />
@@ -424,6 +451,7 @@ export default function CashFlowForecastPage() {
                 <Bar dataKey="despesa" fill="#dc2626" name="Despesa" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
 
@@ -433,8 +461,13 @@ export default function CashFlowForecastPage() {
             <CardDescription>Evolução do saldo ao longo do tempo</CardDescription>
           </CardHeader>
           <CardContent>
+            {chartDataWithBalance.length === 0 ? (
+              <div className="h-[350px] flex items-center justify-center text-slate-500">
+                Nenhum dado disponível para o período selecionado
+              </div>
+            ) : (
             <ResponsiveContainer width="100%" height={350}>
-              <LineChart data={cashFlowWithBalance}>
+              <LineChart data={chartDataWithBalance}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis dataKey="month" tick={{fill: '#64748b', fontSize: 12}} />
                 <YAxis tick={{fill: '#64748b', fontSize: 12}} tickFormatter={(value) => `R$${(value/1000).toFixed(0)}k`} />
@@ -449,6 +482,7 @@ export default function CashFlowForecastPage() {
                 />
               </LineChart>
             </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -458,6 +492,11 @@ export default function CashFlowForecastPage() {
         <div className="p-4 border-b border-slate-100 bg-slate-50/50">
           <h3 className="font-semibold text-slate-900">Detalhamento Mensal</h3>
         </div>
+        {paginatedCashFlow.length === 0 ? (
+          <div className="p-6 text-center text-slate-500">
+            Nenhum período com dados encontrado
+          </div>
+        ) : (
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-slate-50">
@@ -577,10 +616,11 @@ export default function CashFlowForecastPage() {
             </tbody>
           </table>
         </div>
+        )}
         <Pagination 
-          currentPage={currentPage}
+          currentPage={validCurrentPage}
           pageSize={pageSize}
-          totalItems={cashFlowWithBalance.length}
+          totalItems={filteredCashFlow.length}
           onPageChange={setCurrentPage}
           onPageSizeChange={(newSize) => {
             setPageSize(newSize);
