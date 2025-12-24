@@ -13,8 +13,10 @@ import { format, addMonths } from 'date-fns';
 import { Plus } from 'lucide-react';
 import CreateCategoryModal from '../transactions/CreateCategoryModal';
 import { apiRequest } from '@/lib/queryClient';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
+  const { company } = useAuth();
   const [formData, setFormData] = useState({
     description: '',
     total_amount: '',
@@ -98,6 +100,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
         const dueDateISO = dueDate.toISOString();
         
         const payload = {
+          companyId: company?.id,
           supplierId: supplier.id,
           categoryId: cat.id,
           type: 'compra',
