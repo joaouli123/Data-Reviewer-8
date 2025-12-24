@@ -21,42 +21,34 @@ export default function DREAnalysis({ transactions, period = 'currentYear' }) {
     transactions.forEach(t => {
       const category = (!t.categoryId ? 'Sem Categoria' : (t.categoryId || 'Sem Categoria')).toString().trim();
       
-      // For revenues: use paidAmount if partial, full amount if paid or pending
+      // Get category object to determine type if needed, though we mainly rely on transaction type
+      const amount = Math.abs(parseFloat(t.amount || 0));
+      const interest = parseFloat(t.interest || 0);
+      const totalAmount = amount + interest;
+
       if (t.type === 'venda' || t.type === 'income') {
-        let amount = 0;
-        if (t.status === 'pago' || t.status === 'completed') {
-          // Fully paid: count full amount + interest
-          amount = parseFloat(t.amount || 0) + parseFloat(t.interest || 0);
-        } else if (t.status === 'parcial') {
-          // Partially paid: count only what was paid + interest
-          amount = parseFloat(t.paidAmount || 0) + parseFloat(t.interest || 0);
-        }
-        // If pending (status === 'pendente'): don't count anything (amount = 0)
-        revenues[category] = (revenues[category] || 0) + amount;
+        revenues[category] = (revenues[category] || 0) + totalAmount;
       } else if (t.type === 'compra' || t.type === 'expense') {
-        let amount = 0;
-        if (t.status === 'pago' || t.status === 'completed') {
-          // Fully paid: count full amount + interest
-          amount = parseFloat(t.amount || 0) + parseFloat(t.interest || 0);
-        } else if (t.status === 'parcial') {
-          // Partially paid: count only what was paid + interest
-          amount = parseFloat(t.paidAmount || 0) + parseFloat(t.interest || 0);
-        }
-        // If pending: don't count anything
-        expenses[category] = (expenses[category] || 0) + amount;
+        expenses[category] = (expenses[category] || 0) + totalAmount;
       }
     });
 
     const receitaBruta = Object.values(revenues).reduce((sum, v) => sum + v, 0);
-    const custosDiretos = expenses['Custos'] || expenses['custos'] || 0;
+    const custosDiretos = Object.entries(expenses)
+      .filter(([cat]) => cat.toLowerCase().includes('custo') || cat.toLowerCase().includes('compra'))
+      .reduce((sum, [, val]) => sum + val, 0);
+    
     const receitaLiquida = receitaBruta - custosDiretos;
     
     const despesasOperacionais = Object.entries(expenses)
-      .filter(([cat]) => cat !== 'Custos' && cat !== 'custos')
+      .filter(([cat]) => !cat.toLowerCase().includes('custo') && !cat.toLowerCase().includes('compra'))
       .reduce((sum, [, val]) => sum + val, 0);
     
     const lucroOperacional = receitaLiquida - despesasOperacionais;
     const margemLiquida = receitaBruta > 0 ? (lucroOperacional / receitaBruta) * 100 : 0;
+
+    const despesasOperacionaisBreakdown = Object.entries(expenses)
+      .filter(([cat]) => !cat.toLowerCase().includes('custo') && !cat.toLowerCase().includes('compra'));
 
     return {
       receitaBruta,
@@ -64,8 +56,7 @@ export default function DREAnalysis({ transactions, period = 'currentYear' }) {
       receitaLiquida,
       despesasOperacionais: {
         total: despesasOperacionais,
-        breakdown: Object.entries(expenses)
-          .filter(([cat]) => cat !== 'Custos' && cat !== 'custos')
+        breakdown: despesasOperacionaisBreakdown
           .map(([cat, val]) => [cat || 'Sem Categoria', val || 0])
       },
       lucroOperacional,

@@ -387,13 +387,18 @@ export default function ReportsPage() {
           />
 
           <Tabs defaultValue="cashflow" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="cashflow">Fluxo de Caixa</TabsTrigger>
               <TabsTrigger value="expenses">Despesas</TabsTrigger>
               <TabsTrigger value="revenue">Receita</TabsTrigger>
               <TabsTrigger value="working-capital">Capital de Giro</TabsTrigger>
               <TabsTrigger value="debt">Endividamento</TabsTrigger>
+              <TabsTrigger value="dre">DRE</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="dre" className="space-y-6 mt-6">
+              <DREAnalysis transactions={filteredTransactions} />
+            </TabsContent>
 
             <TabsContent value="cashflow" className="space-y-6 mt-6">
               <CashFlowForecastChart forecast={analysisResult.cash_flow_forecast} />
