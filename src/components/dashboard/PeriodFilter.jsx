@@ -76,9 +76,10 @@ export default function PeriodFilter({
       getValue: () => {
         const todayStr = new Date().toISOString().split('T')[0];
         const today = new Date(todayStr + 'T23:59:59Z');
-        const sevenDaysAgoStr = new Date(new Date().setDate(new Date().getDate() - 6)).toISOString().split('T')[0];
-        const sevenDaysAgo = new Date(sevenDaysAgoStr + 'T00:00:00Z');
-        return { startDate: sevenDaysAgo, endDate: today, label: 'Últimos 7 dias' };
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+        const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
+        return { startDate: new Date(sevenDaysAgoStr + 'T00:00:00Z'), endDate: today, label: 'Últimos 7 dias' };
       }
     },
     last30Days: {
@@ -86,9 +87,10 @@ export default function PeriodFilter({
       getValue: () => {
         const todayStr = new Date().toISOString().split('T')[0];
         const today = new Date(todayStr + 'T23:59:59Z');
-        const thirtyDaysAgoStr = new Date(new Date().setDate(new Date().getDate() - 29)).toISOString().split('T')[0];
-        const thirtyDaysAgo = new Date(thirtyDaysAgoStr + 'T00:00:00Z');
-        return { startDate: thirtyDaysAgo, endDate: today, label: 'Últimos 30 dias' };
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29);
+        const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
+        return { startDate: new Date(thirtyDaysAgoStr + 'T00:00:00Z'), endDate: today, label: 'Últimos 30 dias' };
       }
     },
     last90Days: {
@@ -96,9 +98,10 @@ export default function PeriodFilter({
       getValue: () => {
         const todayStr = new Date().toISOString().split('T')[0];
         const today = new Date(todayStr + 'T23:59:59Z');
-        const ninetyDaysAgoStr = new Date(new Date().setDate(new Date().getDate() - 89)).toISOString().split('T')[0];
-        const ninetyDaysAgo = new Date(ninetyDaysAgoStr + 'T00:00:00Z');
-        return { startDate: ninetyDaysAgo, endDate: today, label: 'Últimos 90 dias' };
+        const ninetyDaysAgo = new Date();
+        ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 89);
+        const ninetyDaysAgoStr = ninetyDaysAgo.toISOString().split('T')[0];
+        return { startDate: new Date(ninetyDaysAgoStr + 'T00:00:00Z'), endDate: today, label: 'Últimos 90 dias' };
       }
     }
   };
