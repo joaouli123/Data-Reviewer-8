@@ -1612,118 +1612,123 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   // Reset database and seed with test users (DEV ONLY)
   app.post("/api/dev/reset-and-seed", async (req, res) => {
     try {
-      console.log('Starting database reset...');
+      console.log('\n🔴 RESET VIA API INICIADO...\n');
       
-      const apiKey = `api_${Math.random().toString(36).substring(2, 15)}`;
+      // Delete ALL tables in correct order
+      console.log('🧹 Deletando todas as tabelas...');
+      await db.delete(loginAttempts).catch(() => {});
+      await db.delete(auditLogs).catch(() => {});
+      await db.delete(sessions).catch(() => {});
+      await db.delete(invitations).catch(() => {});
+      await db.delete(installments).catch(() => {});
+      await db.delete(purchaseInstallments).catch(() => {});
+      await db.delete(purchases).catch(() => {});
+      await db.delete(sales).catch(() => {});
+      await db.delete(transactions).catch(() => {});
+      await db.delete(cashFlow).catch(() => {});
+      await db.delete(categories).catch(() => {});
+      await db.delete(customers).catch(() => {});
+      await db.delete(suppliers).catch(() => {});
+      await db.delete(subscriptions).catch(() => {});
+      await db.delete(users).catch(() => {});
+      await db.delete(companies).catch(() => {});
+      console.log('✅ Tabelas deletadas\n');
+
+      // Create company
+      console.log('🏢 Criando empresa...');
+      const company = await createCompany('HUA Consultoria', '00.000.000/0000-00');
+      console.log(`✅ Empresa criada\n`);
+
+      // Create test users with companyId
+      console.log('👤 Criando usuários de teste...');
       const testCredentials = [
         { 
           username: 'superadmin', 
           password: 'senha123456', 
-          email: 'superadmin@test.com', 
+          email: 'superadmin@huaconsultoria.com', 
           role: 'admin',
-          name: 'Super Admin'
+          name: 'Super Admin',
+          isSuperAdmin: true
         },
         { 
           username: 'admin', 
           password: 'senha123456', 
-          email: 'admin@test.com', 
+          email: 'admin@huaconsultoria.com', 
           role: 'admin',
-          name: 'Admin User'
+          name: 'Admin HUA',
+          isSuperAdmin: false
         },
         { 
-          username: 'operacional', 
+          username: 'gerente', 
           password: 'senha123456', 
-          email: 'operacional@test.com', 
-          role: 'operational',
-          name: 'Operacional User'
+          email: 'gerente@huaconsultoria.com', 
+          role: 'manager',
+          name: 'Gerente HUA',
+          isSuperAdmin: false
         }
       ];
 
-      try {
-        console.log('Clearing existing data...');
-        // Delete all companies and their related data (cascades will handle the rest)
-        await db.delete(companies);
-        console.log('Existing data cleared');
-        
-        console.log('Attempting to create company in database...');
-        const uniqueDoc = `00.000.000/0000-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
-        const company = await createCompany('Test Company', uniqueDoc);
-        console.log(`Company created: ${company.id}`);
+      const createdUsers = [];
+      for (const cred of testCredentials) {
+        const user = await createUser(
+          company.id,
+          cred.username,
+          cred.email,
+          cred.password,
+          cred.name,
+          cred.role,
+          cred.isSuperAdmin
+        );
 
-        const createdUsers = [];
-        for (const cred of testCredentials) {
-          try {
-            const user = await createUser(
-              company.id,
-              cred.username,
-              cred.email,
-              cred.password,
-              cred.name,
-              cred.role,
-              cred.username === 'superadmin'
-            );
-            console.log(`User created: ${user.id}`);
-
-            const token = generateToken({
-              userId: user.id,
-              companyId: company.id,
-              role: user.role,
-              isSuperAdmin: cred.username === 'superadmin',
-            });
-
-            try {
-              await createSession(user.id, company.id, token);
-              console.log(`Session created for user: ${user.id}`);
-            } catch (e) {
-              console.log(`Session creation skipped for ${cred.username}`);
-            }
-
-            createdUsers.push({
-              id: user.id,
-              username: cred.username,
-              password: cred.password,
-              email: cred.email,
-              role: cred.role,
-              name: cred.name
-            });
-          } catch (userError) {
-            console.warn(`User creation warning for ${cred.username}:`, userError.message);
-            createdUsers.push({
-              username: cred.username,
-              password: cred.password,
-              email: cred.email,
-              role: cred.role,
-              name: cred.name,
-              error: userError.message
-            });
-          }
-        }
-
-        return res.json({
-          success: true,
+        const token = generateToken({
+          userId: user.id,
           companyId: company.id,
-          apiKey: apiKey,
-          users: createdUsers
+          role: user.role,
+          isSuperAdmin: cred.isSuperAdmin,
         });
-      } catch (dbError) {
-        console.log('Database operations failed:', dbError.message);
-        
-        return res.json({
-          success: false,
-          error: dbError.message,
-          apiKey: apiKey,
-          users: testCredentials.map(c => ({
-            username: c.username,
-            password: c.password,
-            email: c.email,
-            role: c.role,
-            name: c.name
-          })),
-          message: 'Database creation failed, but test credentials are available above'
+        await createSession(user.id, company.id, token);
+
+        createdUsers.push({
+          id: user.id,
+          username: cred.username,
+          password: cred.password,
+          email: cred.email,
+          role: cred.role,
+          name: cred.name
         });
       }
+      console.log(`✅ ${createdUsers.length} usuários criados\n`);
+
+      // Create default categories
+      console.log('📂 Criando categorias padrão...');
+      const defaultCategories = [
+        { name: 'Vendas', type: 'entrada' },
+        { name: 'Compras', type: 'saida' },
+        { name: 'Devolução', type: 'entrada' },
+        { name: 'Ajuste', type: 'saida' },
+        { name: 'Pagamento', type: 'saida' },
+      ];
+
+      for (const cat of defaultCategories) {
+        await db.insert(categories).values({
+          companyId: company.id,
+          ...cat,
+        });
+      }
+      console.log(`✅ ${defaultCategories.length} categorias criadas\n`);
+
+      console.log('='.repeat(60));
+      console.log('✨ BANCO RESETADO COM SUCESSO!');
+      console.log('='.repeat(60) + '\n');
+
+      return res.json({
+        success: true,
+        companyId: company.id,
+        users: createdUsers
+      });
+
     } catch (error) {
-      console.error('Reset database error:', error.message);
+      console.error('❌ Reset error:', error.message);
       
       res.status(500).json({
         success: false,
@@ -1732,23 +1737,23 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           { 
             username: 'superadmin', 
             password: 'senha123456', 
-            email: 'superadmin@test.com', 
+            email: 'superadmin@huaconsultoria.com', 
             role: 'admin',
             name: 'Super Admin'
           },
           { 
             username: 'admin', 
             password: 'senha123456', 
-            email: 'admin@test.com', 
+            email: 'admin@huaconsultoria.com', 
             role: 'admin',
-            name: 'Admin User'
+            name: 'Admin HUA'
           },
           { 
-            username: 'operacional', 
+            username: 'gerente', 
             password: 'senha123456', 
-            email: 'operacional@test.com', 
-            role: 'operational',
-            name: 'Operacional User'
+            email: 'gerente@huaconsultoria.com', 
+            role: 'manager',
+            name: 'Gerente HUA'
           }
         ]
       });
