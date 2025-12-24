@@ -203,12 +203,14 @@ export default function TransactionsPage() {
       // For paid transactions, use paymentDate; for pending, use date (due date)
       const isPaid = t.status === 'pago' || t.status === 'completed';
       const relevantDate = isPaid && t.paymentDate ? t.paymentDate : t.date;
-      const tDateStr = relevantDate.split('T')[0]; // Get YYYY-MM-DD only
-      const tDate = parseISO(tDateStr);
-      const startDateStr = format(dateRange.startDate, 'yyyy-MM-dd');
-      const endDateStr = format(dateRange.endDate, 'yyyy-MM-dd');
-      const startDate = parseISO(startDateStr);
-      const endDate = parseISO(endDateStr);
+      
+      // Extract date string (YYYY-MM-DD) from ISO format
+      const tDateStr = relevantDate.split('T')[0];
+      const tDate = new Date(tDateStr + 'T00:00:00Z').getTime();
+      
+      // Compare dates directly in UTC
+      const startTime = dateRange.startDate.getTime();
+      const endTime = dateRange.endDate.getTime();
       
       const typeMap = { 'income': 'venda', 'expense': 'compra', 'all': 'all' };
       const mappedType = typeMap[typeFilter] || typeFilter;
@@ -222,7 +224,7 @@ export default function TransactionsPage() {
 
       const matchesSearch = t.description.toLowerCase().includes(searchTerm.toLowerCase()) || 
                             (t.category && t.category.toLowerCase().includes(searchTerm.toLowerCase()));
-      const matchesDate = tDate >= startDate && tDate <= endDate;
+      const matchesDate = tDate >= startTime && tDate <= endTime;
 
       return matchesType && matchesCategory && matchesSearch && matchesDate;
     })
@@ -241,24 +243,22 @@ export default function TransactionsPage() {
     let periodIncome = 0;
     let periodExpense = 0;
     
-    const startDateStr = format(dateRange.startDate, 'yyyy-MM-dd');
-    const endDateStr = format(dateRange.endDate, 'yyyy-MM-dd');
-    const startDate = parseISO(startDateStr);
-    const endDate = parseISO(endDateStr);
+    const startTime = dateRange.startDate.getTime();
+    const endTime = dateRange.endDate.getTime();
 
     txArray.forEach(t => {
       // For paid transactions, use paymentDate; for pending, use date (due date)
       const isPaid = t.status === 'pago' || t.status === 'completed';
       const relevantDate = isPaid && t.paymentDate ? t.paymentDate : t.date;
       const tDateStr = relevantDate.split('T')[0]; // Get YYYY-MM-DD only
-      const tDate = parseISO(tDateStr);
+      const tDate = new Date(tDateStr + 'T00:00:00Z').getTime();
       const amount = (parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0);
 
-      if (tDate < startDate) {
+      if (tDate < startTime) {
         // Transaction is before the selected period -> contributes to opening balance
         if (t.type === 'venda') openingBalance += amount;
         else openingBalance -= amount;
-      } else if (tDate >= startDate && tDate <= endDate) {
+      } else if (tDate >= startTime && tDate <= endTime) {
         // Transaction is within period
         if (t.type === 'venda') periodIncome += amount;
         else periodExpense += Math.abs(amount);  // Always use positive for expense calculation
