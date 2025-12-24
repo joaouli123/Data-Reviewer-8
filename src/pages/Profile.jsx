@@ -45,7 +45,12 @@ export default function ProfilePage() {
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data) => {
-      const token = JSON.parse(localStorage.getItem('auth') || '{}').token;
+      const auth = JSON.parse(localStorage.getItem('auth') || '{}');
+      const token = auth?.token;
+      
+      if (!token) {
+        throw new Error('Sessão expirada. Por favor, faça login novamente.');
+      }
       
       const res = await fetch('/api/auth/profile', {
         method: 'PATCH',
@@ -62,6 +67,9 @@ export default function ProfilePage() {
       
       if (!res.ok) {
         const error = await res.json();
+        if (res.status === 401) {
+          throw new Error('Sessão expirada. Por favor, faça login novamente.');
+        }
         throw new Error(error.error || 'Falha ao atualizar perfil');
       }
       
