@@ -17,18 +17,11 @@ client.connect().then(() => {
   console.error('✗ Database connection failed:', err.message);
 });
 
-// Mock data for fallback
+// Mock data for fallback - empty to ensure clean data
 const mockData = {
-  transactions: [
-    { id: '1', date: new Date().toISOString(), description: 'Venda de Produto', amount: 1500, type: 'venda', customerId: null, categoryId: null }
-  ],
-  customers: [
-    { id: '1', name: 'Cliente Padrão', email: 'cliente@email.com', phone: '11999999999', address: 'Rua Padrão' }
-  ],
-  categories: [
-    { id: '1', name: 'Vendas', type: 'entrada' },
-    { id: '2', name: 'Matéria Prima', type: 'saida' }
-  ]
+  transactions: [],
+  customers: [],
+  categories: []
 };
 
 // Transactions endpoints

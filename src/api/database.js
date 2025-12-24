@@ -2,17 +2,10 @@
 const STORAGE_KEY = 'financial_app_data';
 
 const getMockData = () => ({
-  transactions: [
-    { id: '1', date: new Date().toISOString(), description: 'Venda de Produto A', amount: 1500, type: 'venda', status: 'completed', customerId: '1', categoryId: '1' },
-    { id: '2', date: new Date(Date.now() - 86400000).toISOString(), description: 'Compra de Material', amount: 500, type: 'compra', status: 'completed', supplierId: '1', categoryId: '2' }
-  ],
-  customers: [{ id: '1', name: 'Cliente A', email: 'cliente@email.com', phone: '11999999999', address: 'Rua A, 123' }],
-  categories: [
-    { id: '1', name: 'Vendas', type: 'entrada' },
-    { id: '2', name: 'Matéria Prima', type: 'saida' },
-    { id: '3', name: 'Utilidades', type: 'saida' }
-  ],
-  suppliers: [{ id: '1', name: 'Fornecedor A', email: 'fornecedor@email.com', phone: '1133333333', address: 'Rua B, 456' }],
+  transactions: [],
+  customers: [],
+  categories: [],
+  suppliers: [],
   sales: [],
   purchases: [],
   installments: []

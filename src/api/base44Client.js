@@ -56,15 +56,8 @@ const createEntity = (endpoint) => ({
 
 // Dados de fallback em caso de erro
 const fallbackData = {
-  transactions: [
-    { id: '1', date: new Date().toISOString(), description: 'Venda de Produto A', amount: 1500.00, type: 'income', category: 'Vendas' },
-  ],
-  categories: [
-    { id: '1', name: 'Vendas' },
-    { id: '2', name: 'Serviços' },
-    { id: '3', name: 'Matéria Prima' },
-    { id: '4', name: 'Utilidades' },
-  ],
+  transactions: [],
+  categories: [],
 };
 
 export const base44 = {
