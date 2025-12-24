@@ -8,9 +8,9 @@ import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Download, MoreVertical, Trash2, Eye, Lock, Unlock, Building2 } from 'lucide-react';
+import { Download, MoreVertical, Trash2, Eye, Lock, Unlock } from 'lucide-react';
+import { SubscriptionEditModal } from '@/components/admin/SubscriptionEditModal';
 import { formatDateWithTimezone } from '@/utils/dateFormatter';
 
 const apiRequest = async (url, options = {}) => {
@@ -234,55 +234,15 @@ function SubscriptionListContent() {
         </CardContent>
       </Card>
 
-      {/* Subscription Details Modal */}
+      {/* Subscription Edit Modal */}
       {selectedSubscription && (
-        <Dialog open={!!selectedSubscription} onOpenChange={() => setSelectedSubscription(null)}>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Detalhes da Assinatura</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Empresa</p>
-                  <p className="font-medium">{selectedSubscription.companyName}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Comprador</p>
-                  <p className="font-medium">{selectedSubscription.subscriberName || '-'}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Plano</p>
-                  <p className="font-medium capitalize">{selectedSubscription.plan}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Valor</p>
-                  <p className="font-medium">{selectedSubscription.amount ? `R$ ${parseFloat(selectedSubscription.amount).toFixed(2)}` : '-'}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Forma de Pagamento</p>
-                  <p className="font-medium">{selectedSubscription.paymentMethod || '-'}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Data de Assinatura</p>
-                  <p className="font-medium">{formatDateWithTimezone(selectedSubscription.createdAt)}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Vencimento</p>
-                  <p className="font-medium">
-                    {selectedSubscription.isLifetime ? 'Vitalício' : (selectedSubscription.expiresAt ? formatDateWithTimezone(selectedSubscription.expiresAt) : '-')}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Status</p>
-                  <Badge variant={selectedSubscription.status === 'active' ? 'default' : 'destructive'}>
-                    {selectedSubscription.status === 'active' ? 'Ativa' : 'Bloqueada'}
-                  </Badge>
-                </div>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <SubscriptionEditModal
+          subscription={selectedSubscription}
+          open={!!selectedSubscription}
+          onOpenChange={() => setSelectedSubscription(null)}
+          onSave={updateMutation.mutateAsync}
+          isPending={updateMutation.isPending}
+        />
       )}
 
       {/* Delete Confirmation */}
