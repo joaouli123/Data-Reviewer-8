@@ -15,11 +15,13 @@ import { cn } from "@/lib/utils";
 import { CurrencyInput, formatCurrency, parseCurrency } from "@/components/ui/currency-input";
 import { Switch } from "@/components/ui/switch";
 import CreateCategoryModal from './CreateCategoryModal';
+import { useAuth } from '@/contexts/AuthContext';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 export default function TransactionForm({ open, onOpenChange, onSubmit, initialData = null }) {
+  const { company } = useAuth();
   const queryClient = useQueryClient();
   const [isCreateCategoryModalOpen, setIsCreateCategoryModalOpen] = useState(false);
   const [isSuggestingCategory, setIsSuggestingCategory] = useState(false);
@@ -39,7 +41,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
 
   // Fetch Categories
   const { data: categories } = useQuery({
-    queryKey: ['categories'],
+    queryKey: ['/api/categories', company?.id],
     queryFn: () => Category.list(),
     initialData: []
   });
@@ -47,7 +49,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
   const createCategoryMutation = useMutation({
     mutationFn: (data) => Category.create(data),
     onSuccess: (newCat) => {
-      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/categories', company?.id] });
       setFormData((prev) => ({ ...prev, categoryId: newCat.id }));
       setIsCreateCategoryModalOpen(false);
       toast.success('Categoria criada!');
@@ -189,6 +191,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
         
         transactions.push({
           ...formData,
+          companyId: company?.id,
           categoryId: formData.categoryId,
           category: selectedCategory?.name || '',
           amount: installmentAmount.toFixed(2),
@@ -204,6 +207,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
     } else {
       onSubmit({
         ...formData,
+        companyId: company?.id,
         categoryId: formData.categoryId,
         category: selectedCategory?.name || '',
         amount: amount,
