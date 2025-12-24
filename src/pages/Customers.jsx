@@ -58,9 +58,10 @@ export default function CustomersPage() {
     },
     initialData: [],
     enabled: !!company?.id,
-    staleTime: 60000,
-    refetchOnMount: 'stale',
-    refetchOnWindowFocus: false
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnMount: false, // Never refetch on mount
+    refetchOnWindowFocus: false, // Never refetch on window focus
+    refetchInterval: false // Never refetch automatically
   });
 
   const transactions = Array.isArray(transactionsData) ? transactionsData : (transactionsData?.data || []);
