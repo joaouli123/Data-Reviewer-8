@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Customer, Sale, Category } from '@/api/entities';
+import { Customer, Sale, Category, Transaction } from '@/api/entities';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -57,38 +57,32 @@ export default function CustomersPage() {
 
   const transactionsQuery = useQuery({
     queryKey: ['/api/transactions', company?.id],
-    queryFn: () => {
-      return fetch('/api/transactions', {
-        method: 'GET',
-        credentials: 'include'
-      }).then(res => {
-        if (!res.ok) throw new Error('Failed to fetch transactions');
-        const data = res.json();
-        console.log('📊 Transactions fetched:', data);
-        return data;
-      });
+    queryFn: async () => {
+      try {
+        console.log('🔄 Fetching transactions...');
+        const data = await Transaction.list();
+        console.log('✅ Transactions fetched:', data);
+        return data || [];
+      } catch (err) {
+        console.error('❌ Error fetching transactions:', err);
+        throw err;
+      }
     },
     initialData: [],
     enabled: !!company?.id,
-    staleTime: 60 * 60 * 1000, // 1 hour - much longer cache
+    staleTime: 60 * 60 * 1000, // 1 hour
     gcTime: 2 * 60 * 60 * 1000, // 2 hours
-    refetchOnMount: false, // Never refetch on mount
-    refetchOnWindowFocus: false, // Never refetch on window focus
-    refetchInterval: false, // Never refetch automatically
-    retry: 3, // Retry 3 times on failure
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchInterval: false,
+    retry: 3,
     retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000)
   });
 
   const { data: transactionsData = [], isLoading: isTransactionsLoading, error: transactionsError } = transactionsQuery;
-  const transactions = Array.isArray(transactionsData) ? transactionsData : (Array.isArray(transactionsData?.data) ? transactionsData.data : []);
+  const transactions = Array.isArray(transactionsData) ? transactionsData : [];
   
-  // Log for debugging
-  console.log('💰 Transactions state:', { 
-    data: transactions, 
-    length: transactions.length,
-    isLoading: isTransactionsLoading,
-    error: transactionsError 
-  });
+  console.log('💰 Transactions state:', { length: transactions.length, error: transactionsError });
 
   const saveMutation = useMutation({
     mutationFn: (data) => {
@@ -196,8 +190,8 @@ export default function CustomersPage() {
           <Button 
             variant="outline"
             onClick={() => {
-              console.log('🔄 Manual refresh clicked');
-              queryClient.invalidateQueries({ queryKey: ['/api/transactions', company?.id] });
+              console.log('🔄 Manual refresh - forcing cache invalidation');
+              queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
               transactionsQuery.refetch();
             }}
             disabled={transactionsQuery.isRefetching}
