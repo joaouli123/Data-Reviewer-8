@@ -13,6 +13,7 @@ import { ptBR } from "date-fns/locale";
 import { CalendarIcon, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CurrencyInput, parseCurrency } from "@/components/ui/currency-input";
+import { Switch } from "@/components/ui/switch";
 import CreateCategoryModal from './CreateCategoryModal';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -260,59 +261,53 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Data da Transação</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-full pl-3 text-left font-normal",
-                      !formData.date && "text-muted-foreground"
-                    )}
-                  >
-                    {formData.date ? (
-                      format(formData.date, "dd/MM/yyyy")
-                    ) : (
-                      <span>Selecione uma data</span>
-                    )}
-                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={formData.date}
-                    onSelect={(d) => d && setFormData({...formData, date: d})}
-                    initialFocus
-                    locale={ptBR}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Status</Label>
-              <Select 
-                value={formData.status} 
-                onValueChange={(v) => {
-                  setFormData({...formData, status: v, paymentDate: v === 'pendente' ? null : formData.paymentDate});
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pendente">Pendente</SelectItem>
-                  <SelectItem value="pago">Pago</SelectItem>
-                  <SelectItem value="parcial">Parcialmente Pago</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="space-y-2">
+            <Label>Data da Transação</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-full pl-3 text-left font-normal",
+                    !formData.date && "text-muted-foreground"
+                  )}
+                >
+                  {formData.date ? (
+                    format(formData.date, "dd/MM/yyyy")
+                  ) : (
+                    <span>Selecione uma data</span>
+                  )}
+                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={formData.date}
+                  onSelect={(d) => d && setFormData({...formData, date: d})}
+                  initialFocus
+                  locale={ptBR}
+                />
+              </PopoverContent>
+            </Popover>
           </div>
 
-          {(formData.status === 'pago' || formData.status === 'parcial') && (
+          <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+            <Label className="cursor-pointer">Já está pago?</Label>
+            <Switch 
+              checked={formData.status === 'pago'}
+              onCheckedChange={(checked) => {
+                if (checked) {
+                  const today = new Date();
+                  setFormData({...formData, status: 'pago', paymentDate: today});
+                } else {
+                  setFormData({...formData, status: 'pendente', paymentDate: null});
+                }
+              }}
+            />
+          </div>
+
+          {formData.status === 'pago' && (
             <div className="space-y-2">
               <Label>Data do Pagamento</Label>
               <Popover>

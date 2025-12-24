@@ -19,6 +19,7 @@ import Pagination from '../components/Pagination';
 import { toast } from 'sonner';
 import { cn } from "@/lib/utils";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function TransactionsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -26,6 +27,7 @@ export default function TransactionsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('paid'); // 'all', 'paid', 'pending'
   // Initialize with UTC-normalized dates to avoid timezone issues
   const getInitialDateRange = () => {
     const todayStr = new Date().toISOString().split('T')[0];
@@ -170,9 +172,15 @@ export default function TransactionsPage() {
   const txArray = Array.isArray(transactions) ? transactions : (transactions?.data || []);
   const filteredTransactions = txArray
     .filter(t => {
-      // ONLY show paid or partially paid transactions - pendente transactions should NOT appear
-      const isPaidOrPartial = t.status === 'pago' || t.status === 'completed' || t.status === 'parcial';
-      if (!isPaidOrPartial) return false;
+      // Filter by status
+      if (statusFilter === 'paid') {
+        const isPaidOrPartial = t.status === 'pago' || t.status === 'completed' || t.status === 'parcial';
+        if (!isPaidOrPartial) return false;
+      } else if (statusFilter === 'pending') {
+        const isPending = t.status === 'pendente';
+        if (!isPending) return false;
+      }
+      // 'all' shows everything
       
       // For paid transactions, use paymentDate; for pending, use date (due date)
       const isPaid = t.status === 'pago' || t.status === 'completed';
@@ -331,6 +339,23 @@ export default function TransactionsPage() {
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        {/* Status Tabs */}
+        <div className="border-b border-slate-200">
+          <Tabs value={statusFilter} onValueChange={setStatusFilter} className="w-full">
+            <TabsList className="w-full justify-start rounded-none bg-transparent border-b">
+              <TabsTrigger value="all" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
+                Todas ({txArray.length})
+              </TabsTrigger>
+              <TabsTrigger value="paid" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
+                Pagas ({txArray.filter(t => t.status === 'pago' || t.status === 'completed' || t.status === 'parcial').length})
+              </TabsTrigger>
+              <TabsTrigger value="pending" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
+                Pendentes ({txArray.filter(t => t.status === 'pendente').length})
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
         {/* Filters */}
         <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex flex-col md:flex-row gap-4 justify-start">
             <div className="relative w-full md:w-[300px]">
