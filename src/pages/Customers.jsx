@@ -45,12 +45,14 @@ export default function CustomersPage() {
     enabled: !!company?.id
   });
 
-  const { data: transactions = [] } = useQuery({
+  const { data: transactionsData = [] } = useQuery({
     queryKey: ['/api/transactions', company?.id],
     queryFn: () => fetch('/api/transactions').then(res => res.json()),
     initialData: [],
     enabled: !!company?.id
   });
+
+  const transactions = Array.isArray(transactionsData) ? transactionsData : (transactionsData.data || []);
 
   const saveMutation = useMutation({
     mutationFn: (data) => {

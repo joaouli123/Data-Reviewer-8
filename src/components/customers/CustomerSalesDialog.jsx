@@ -26,12 +26,13 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
     return expandedGroups[groupId] !== false;
   };
 
-  const { data: transactions = [] } = useQuery({
+  const { data: transactionsData = [] } = useQuery({
     queryKey: ['transactions'],
     queryFn: () => fetch('/api/transactions').then(res => res.json()),
     initialData: []
   });
 
+  const transactions = Array.isArray(transactionsData) ? transactionsData : (transactionsData.data || []);
   const sales = transactions.filter(t => t.customerId === customer?.id && t.type === 'venda');
   
   // Group sales by installment group
