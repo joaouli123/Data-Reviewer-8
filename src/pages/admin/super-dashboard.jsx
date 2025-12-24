@@ -76,43 +76,125 @@ function SuperDashboardContent() {
   // Calculate statistics
   const activeCompanies = companies.filter(c => c.subscriptionStatus === 'active').length;
   const suspendedCompanies = companies.filter(c => c.subscriptionStatus === 'suspended').length;
+  const activeUsers = users.filter(u => u.status === 'active').length;
+  const activeCustomers = customers.filter(c => c.status === 'ativo').length;
+  
+  // Calculate advanced KPIs
+  const churnRate = activeCompanies > 0 ? ((suspendedCompanies / activeCompanies) * 100).toFixed(1) : 0;
+  const totalUsers = users.length;
+  const avgUsersPerCompany = activeCompanies > 0 ? (totalUsers / activeCompanies).toFixed(1) : 0;
+  const lastMonthCompanies = companies.filter(c => {
+    const createdDate = new Date(c.createdAt);
+    const monthAgo = new Date();
+    monthAgo.setMonth(monthAgo.getMonth() - 1);
+    return createdDate >= monthAgo;
+  }).length;
 
   return (
     <div className="space-y-8 p-4 md:p-8">
       {/* Header */}
       <div>
         <h1 className="text-4xl font-bold text-foreground">Dashboard Super Admin</h1>
-        <p className="text-muted-foreground mt-2">Visão geral do sistema</p>
+        <p className="text-muted-foreground mt-2">Piloto do negócio - Métricas financeiras e crescimento</p>
       </div>
 
-      {/* Executive KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard 
-          title="Total de Empresas" 
-          value={stats.totalCompanies || companies.length}
-          icon={Building2}
-          trend={activeCompanies > suspendedCompanies ? 'up' : 'down'}
-          trendValue={`${activeCompanies} ativas`}
-          data-testid="kpi-companies"
-        />
-        <KPICard 
-          title="Usuários Ativos" 
-          value={users.filter(u => u.status === 'active').length}
-          icon={Users}
-          data-testid="kpi-active-users"
-        />
-        <KPICard 
-          title="Clientes Cadastrados" 
-          value={customers.length}
-          icon={Activity}
-          data-testid="kpi-customers"
-        />
-        <KPICard 
-          title="Alertas Críticos" 
-          value={stats.alerts || 0}
-          icon={AlertTriangle}
-          data-testid="kpi-alerts"
-        />
+      {/* Executive KPIs - Row 1: Financeiro */}
+      <div>
+        <h2 className="text-xl font-bold mb-4">Métricas Financeiras (O Oxigênio)</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <KPICard 
+            title="Total de Empresas" 
+            value={companies.length}
+            icon={Building2}
+            trend={activeCompanies > suspendedCompanies ? 'up' : 'down'}
+            trendValue={`${activeCompanies} ativas`}
+            data-testid="kpi-companies"
+          />
+          <KPICard 
+            title="Taxa de Cancelamento" 
+            value={`${churnRate}%`}
+            icon={TrendingUp}
+            trend={churnRate > 7 ? 'down' : 'up'}
+            trendValue={churnRate > 7 ? 'Acima do normal' : 'Saudável'}
+            data-testid="kpi-churn"
+          />
+          <KPICard 
+            title="Receita Mensal Recorrente" 
+            value="R$ 0,00"
+            icon={TrendingUp}
+            data-testid="kpi-mrr"
+          />
+          <KPICard 
+            title="Ticket Médio" 
+            value="R$ 0,00"
+            icon={Activity}
+            data-testid="kpi-arpu"
+          />
+        </div>
+      </div>
+
+      {/* Row 2: Crescimento */}
+      <div>
+        <h2 className="text-xl font-bold mb-4">Métricas de Crescimento (O Motor)</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <KPICard 
+            title="Novas Empresas (30d)" 
+            value={lastMonthCompanies}
+            icon={Building2}
+            trend={lastMonthCompanies > 0 ? 'up' : 'down'}
+            trendValue={`Crescimento ${lastMonthCompanies > 0 ? 'positivo' : 'estagnado'}`}
+            data-testid="kpi-new-companies"
+          />
+          <KPICard 
+            title="Taxa de Conversão" 
+            value="0%"
+            icon={TrendingUp}
+            data-testid="kpi-conversion"
+          />
+          <KPICard 
+            title="CAC (Custo Aquisição)" 
+            value="R$ 0,00"
+            icon={Activity}
+            data-testid="kpi-cac"
+          />
+          <KPICard 
+            title="LTV (Lifetime Value)" 
+            value="R$ 0,00"
+            icon={Activity}
+            data-testid="kpi-ltv"
+          />
+        </div>
+      </div>
+
+      {/* Row 3: Engajamento */}
+      <div>
+        <h2 className="text-xl font-bold mb-4">Métricas de Engajamento (A Retenção)</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <KPICard 
+            title="Empresas Ativas (MAU)" 
+            value={activeCompanies}
+            icon={Building2}
+            data-testid="kpi-active-companies"
+          />
+          <KPICard 
+            title="Usuários Ativos" 
+            value={activeUsers}
+            icon={Users}
+            data-testid="kpi-active-users"
+          />
+          <KPICard 
+            title="Usuários por Empresa" 
+            value={avgUsersPerCompany}
+            icon={Users}
+            data-testid="kpi-users-per-company"
+          />
+          <KPICard 
+            title="Clientes Cadastrados" 
+            value={activeCustomers}
+            icon={Activity}
+            data-testid="kpi-customers"
+          />
+        </div>
       </div>
 
       {/* Quick Stats Grid */}
