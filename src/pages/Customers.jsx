@@ -66,6 +66,11 @@ export default function CustomersPage() {
       setIsFormDialogOpen(false);
       setSelectedCustomer(null);
       toast.success(selectedCustomer ? 'Cliente atualizado!' : 'Cliente adicionado!', { duration: 5000 });
+    },
+    onError: (error) => {
+      console.error('Customer save error:', error);
+      const errorMsg = error?.message || 'Erro ao salvar cliente';
+      toast.error(errorMsg, { duration: 5000 });
     }
   });
 

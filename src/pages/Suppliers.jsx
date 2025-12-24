@@ -66,6 +66,11 @@ export default function SuppliersPage() {
       setIsFormDialogOpen(false);
       setSelectedSupplier(null);
       toast.success(selectedSupplier ? 'Fornecedor atualizado!' : 'Fornecedor adicionado!', { duration: 5000 });
+    },
+    onError: (error) => {
+      console.error('Supplier save error:', error);
+      const errorMsg = error?.message || 'Erro ao salvar fornecedor';
+      toast.error(errorMsg, { duration: 5000 });
     }
   });
 

@@ -345,11 +345,13 @@ export type InsertInvitation = z.infer<typeof insertInvitationSchema>;
 export const insertCustomerSchema = createInsertSchema(customers).omit({
   id: true,
   createdAt: true,
+  companyId: true,
 });
 
 export const insertSupplierSchema = createInsertSchema(suppliers).omit({
   id: true,
   createdAt: true,
+  companyId: true,
 });
 
 export const insertCategorySchema = createInsertSchema(categories).omit({
