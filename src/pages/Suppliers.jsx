@@ -59,9 +59,9 @@ export default function SuppliersPage() {
     },
     initialData: [],
     enabled: !!company?.id,
-    staleTime: 1000, // Cache for 1 second only
+    staleTime: 5000,
     refetchOnMount: true,
-    refetchOnWindowFocus: true
+    refetchOnWindowFocus: false
   });
 
   const transactions = Array.isArray(transactionsData) ? transactionsData : (transactionsData?.data || []);
