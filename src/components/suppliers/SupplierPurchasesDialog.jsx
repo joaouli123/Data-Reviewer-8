@@ -26,12 +26,13 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
     return expandedGroups[groupId] !== false;
   };
 
-  const { data: transactions = [] } = useQuery({
+  const { data: transactionsData = [] } = useQuery({
     queryKey: ['transactions'],
     queryFn: () => fetch('/api/transactions').then(res => res.json()),
     initialData: []
   });
 
+  const transactions = Array.isArray(transactionsData) ? transactionsData : (transactionsData.data || []);
   const purchases = transactions.filter(t => t.supplierId === supplier?.id && t.type === 'compra');
   
   // Group purchases by installment group

@@ -165,7 +165,8 @@ export default function TransactionsPage() {
   };
 
   // Filter Logic
-  const filteredTransactions = transactions
+  const txArray = Array.isArray(transactions) ? transactions : (transactions?.data || []);
+  const filteredTransactions = txArray
     .filter(t => {
       // ONLY show paid or partially paid transactions - pendente transactions should NOT appear
       const isPaidOrPartial = t.status === 'pago' || t.status === 'completed' || t.status === 'parcial';
@@ -217,7 +218,7 @@ export default function TransactionsPage() {
     const startDate = parseISO(startDateStr);
     const endDate = parseISO(endDateStr);
 
-    transactions.forEach(t => {
+    txArray.forEach(t => {
       // For paid transactions, use paymentDate; for pending, use date (due date)
       const isPaid = t.status === 'pago' || t.status === 'completed';
       const relevantDate = isPaid && t.paymentDate ? t.paymentDate : t.date;
