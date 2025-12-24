@@ -36,7 +36,8 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
     installments: 1,
     installment_amount: '',
     status: 'pendente',
-    paymentDate: null
+    paymentDate: null,
+    isInstallmentPayment: true
   });
 
   // Fetch Categories
@@ -98,7 +99,8 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
           installments: 1,
           installment_amount: '',
           status: 'pendente',
-          paymentDate: null
+          paymentDate: null,
+          isInstallmentPayment: true
         });
         setCustomInstallments([]);
       }
@@ -253,7 +255,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{initialData ? 'Editar Transação' : 'Nova Transação'}</DialogTitle>
         </DialogHeader>
@@ -326,127 +328,157 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label>Data de Vencimento (1ª Parcela)</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant={"outline"}
-                  className={cn(
-                    "w-full pl-3 text-left font-normal",
-                    !formData.date && "text-muted-foreground"
-                  )}
-                >
-                  {formData.date ? (
-                    format(formData.date, "dd/MM/yyyy")
-                  ) : (
-                    <span>Selecione uma data</span>
-                  )}
-                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={formData.date}
-                  onSelect={(d) => d && setFormData({...formData, date: d})}
-                  initialFocus
-                  locale={ptBR}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Número de Parcelas</Label>
-            <Input
-              type="number"
-              min="1"
-              value={formData.installments}
-              onChange={(e) => handleInstallmentsChange(e.target.value)}
-            />
-          </div>
-
-          {Number(formData.installments) > 1 && customInstallments.length === 0 && (
-            <div className="p-3 bg-slate-50 rounded-lg text-sm text-slate-600">
-              <p>
-                {formData.installment_amount && !isNaN(parseFloat(formData.installment_amount))
-                  ? `${formData.installments}x de R$ ${formatCurrency(formData.installment_amount)}`
-                  : `${formData.installments}x de R$ ${formatCurrency((parseFloat(formData.amount || 0) / Number(formData.installments || 1)))}`
-                }
-              </p>
-            </div>
-          )}
-
-          {customInstallments.length > 1 && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">Detalhamento das Parcelas</Label>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setCustomInstallments([])}
-                  className="text-xs"
-                >
-                  Usar valor padrão
-                </Button>
-              </div>
-              <div className="max-h-60 overflow-y-auto space-y-2 border rounded-lg p-3 bg-slate-50 pr-2">
-                {customInstallments.map((inst, idx) => (
-                  <div key={idx} className="bg-white p-2 rounded border space-y-2">
-                    <div className="text-sm font-medium text-slate-600">
-                      Parcela {idx + 1}
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="flex items-center gap-1">
-                        <span className="text-slate-600 text-sm">R$</span>
-                        <CurrencyInput
-                          placeholder="Valor"
-                          value={inst.amount}
-                          onChange={(e) => updateCustomInstallment(idx, 'amount', e.target.value)}
-                          className="text-sm flex-1"
-                        />
-                      </div>
-                      <Input
-                        type="date"
-                        value={inst.due_date}
-                        onChange={(e) => updateCustomInstallment(idx, 'due_date', e.target.value)}
-                        className="text-sm"
-                      />
-                    </div>
-                  </div>
-                ))}
-                <div className="pt-2 border-t mt-2">
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="font-medium">Total das Parcelas:</span>
-                    <span className={`font-bold ${
-                      Math.abs(customInstallments.reduce((sum, inst) => sum + parseFloat(inst.amount || 0), 0) - parseFloat(formData.amount || 0)) < 0.01
-                        ? 'text-emerald-600'
-                        : 'text-rose-600'
-                    }`}>
-                      R$ {customInstallments.reduce((sum, inst) => sum + parseFloat(inst.amount || 0), 0).toFixed(2)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
-            <Label className="cursor-pointer">Já está pago?</Label>
+          <div className="flex items-center justify-between p-3 rounded-lg bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700">
+            <Label className="cursor-pointer">Pagamento à vista</Label>
             <Switch 
-              checked={formData.status === 'pago'}
+              checked={!formData.isInstallmentPayment}
               onCheckedChange={(checked) => {
-                if (checked) {
-                  const today = new Date();
-                  setFormData({...formData, status: 'pago', paymentDate: today});
-                } else {
-                  setFormData({...formData, status: 'pendente', paymentDate: null});
+                setFormData({
+                  ...formData, 
+                  isInstallmentPayment: !checked,
+                  installments: checked ? 1 : formData.installments,
+                  status: checked ? 'pago' : 'pendente',
+                  paymentDate: checked ? new Date() : null
+                });
+                if (!checked) {
+                  setCustomInstallments([]);
                 }
               }}
             />
           </div>
+
+          {formData.isInstallmentPayment && (
+            <>
+              <div className="space-y-2">
+                <Label>Data de Vencimento (1ª Parcela)</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full pl-3 text-left font-normal",
+                        !formData.date && "text-muted-foreground"
+                      )}
+                    >
+                      {formData.date ? (
+                        format(formData.date, "dd/MM/yyyy")
+                      ) : (
+                        <span>Selecione uma data</span>
+                      )}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={formData.date}
+                      onSelect={(d) => d && setFormData({...formData, date: d})}
+                      initialFocus
+                      locale={ptBR}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Número de Parcelas</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  value={formData.installments}
+                  onChange={(e) => handleInstallmentsChange(e.target.value)}
+                />
+              </div>
+            </>
+          )}
+
+
+          {formData.isInstallmentPayment && (
+            <>
+              {Number(formData.installments) > 1 && customInstallments.length === 0 && (
+                <div className="p-3 bg-slate-50 rounded-lg text-sm text-slate-600">
+                  <p>
+                    {formData.installment_amount && !isNaN(parseFloat(formData.installment_amount))
+                      ? `${formData.installments}x de R$ ${formatCurrency(formData.installment_amount)}`
+                      : `${formData.installments}x de R$ ${formatCurrency((parseFloat(formData.amount || 0) / Number(formData.installments || 1)))}`
+                    }
+                  </p>
+                </div>
+              )}
+
+              {customInstallments.length > 1 && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium">Detalhamento das Parcelas</Label>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setCustomInstallments([])}
+                      className="text-xs"
+                    >
+                      Usar valor padrão
+                    </Button>
+                  </div>
+                  <div className="max-h-60 overflow-y-auto space-y-2 border rounded-lg p-3 bg-slate-50 pr-2">
+                    {customInstallments.map((inst, idx) => (
+                      <div key={idx} className="bg-white p-2 rounded border space-y-2">
+                        <div className="text-sm font-medium text-slate-600">
+                          Parcela {idx + 1}
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="flex items-center gap-1">
+                            <span className="text-slate-600 text-sm">R$</span>
+                            <CurrencyInput
+                              placeholder="Valor"
+                              value={inst.amount}
+                              onChange={(e) => updateCustomInstallment(idx, 'amount', e.target.value)}
+                              className="text-sm flex-1"
+                            />
+                          </div>
+                          <Input
+                            type="date"
+                            value={inst.due_date}
+                            onChange={(e) => updateCustomInstallment(idx, 'due_date', e.target.value)}
+                            className="text-sm"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                    <div className="pt-2 border-t mt-2">
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="font-medium">Total das Parcelas:</span>
+                        <span className={`font-bold ${
+                          Math.abs(customInstallments.reduce((sum, inst) => sum + parseFloat(inst.amount || 0), 0) - parseFloat(formData.amount || 0)) < 0.01
+                            ? 'text-emerald-600'
+                            : 'text-rose-600'
+                        }`}>
+                          R$ {customInstallments.reduce((sum, inst) => sum + parseFloat(inst.amount || 0), 0).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          {formData.isInstallmentPayment && (
+            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+              <Label className="cursor-pointer">Já está pago?</Label>
+              <Switch 
+                checked={formData.status === 'pago'}
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    const today = new Date();
+                    setFormData({...formData, status: 'pago', paymentDate: today});
+                  } else {
+                    setFormData({...formData, status: 'pendente', paymentDate: null});
+                  }
+                }}
+              />
+            </div>
+          )}
 
           {formData.status === 'pago' && (
             <div className="space-y-2">
