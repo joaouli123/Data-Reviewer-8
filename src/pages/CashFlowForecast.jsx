@@ -188,7 +188,7 @@ export default function CashFlowForecastPage() {
             const tDate = parseISO(tDateStr);
             if (isWithinInterval(tDate, { start: dStart, end: dEnd })) {
               const amount = (parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0);
-              if (t.type === 'venda' && amount >= 0) {
+              if ((t.type === 'venda' || t.type === 'income') && amount >= 0) {
                 revenue += amount;
                 revenueDetails.push({ description: t.description, amount, date: t.date, category: t.type });
               } else if (t.type === 'compra' && amount >= 0) {
@@ -206,7 +206,7 @@ export default function CashFlowForecastPage() {
               const isPending = t.status === 'pendente' || t.status === 'agendado' || t.status === 'pending';
               if (isPending) {
                 const amount = (parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0);
-                if (t.type === 'venda' && amount >= 0) {
+                if ((t.type === 'venda' || t.type === 'income') && amount >= 0) {
                   revenue += amount;
                   revenueDetails.push({ description: `${t.description} (Agendado)`, amount, date: t.date, category: t.type });
                 } else if (t.type === 'compra' && amount >= 0) {
@@ -251,7 +251,7 @@ export default function CashFlowForecastPage() {
           const tDate = parseISO(tDateStr);
           if (isWithinInterval(tDate, { start: monthStart, end: monthEnd })) {
             const amount = (parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0);
-            if (t.type === 'venda' && amount >= 0) {
+            if ((t.type === 'venda' || t.type === 'income') && amount >= 0) {
               revenue += amount;
               revenueDetails.push({
                 description: t.description,
@@ -280,7 +280,7 @@ export default function CashFlowForecastPage() {
             const isPending = t.status === 'pendente' || t.status === 'agendado' || t.status === 'pending';
             if (isPending) {
               const amount = (parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0);
-              if (t.type === 'venda' && amount >= 0) {
+              if ((t.type === 'venda' || t.type === 'income') && amount >= 0) {
                 revenue += amount;
                 revenueDetails.push({
                   description: `${t.description} (Agendado)`,
@@ -371,7 +371,7 @@ export default function CashFlowForecastPage() {
     })
     .reduce((acc, t) => {
       const amount = (parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0);
-      return acc + (t.type === 'venda' ? amount : -amount);
+      return acc + ((t.type === 'venda' || t.type === 'income') ? amount : -amount);
     }, 0);
 
   // Calculate cumulative balance
