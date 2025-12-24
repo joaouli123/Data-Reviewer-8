@@ -8,6 +8,10 @@ import {
   insertCategorySchema,
   insertTransactionSchema,
   insertCashFlowSchema,
+  insertSaleSchema,
+  insertPurchaseSchema,
+  insertInstallmentSchema,
+  insertPurchaseInstallmentSchema,
   insertUserSchema,
   insertCompanySchema,
   insertSubscriptionSchema,
@@ -549,20 +553,22 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.post("/api/sales", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
-      const sale = await storage.createSale(req.user.companyId, req.body);
+      const data = insertSaleSchema.parse(req.body);
+      const sale = await storage.createSale(req.user.companyId, data);
       res.status(201).json(sale);
-    } catch (error) {
-      res.status(400).json({ error: "Invalid sale data" });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message || "Invalid sale data" });
     }
   });
 
   app.patch("/api/sales/:id", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
-      const sale = await storage.updateSale(req.user.companyId, req.params.id, req.body);
+      const data = insertSaleSchema.partial().parse(req.body);
+      const sale = await storage.updateSale(req.user.companyId, req.params.id, data);
       res.json(sale);
-    } catch (error) {
-      res.status(400).json({ error: "Invalid sale data" });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message || "Invalid sale data" });
     }
   });
 
@@ -601,20 +607,22 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.post("/api/purchases", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
-      const purchase = await storage.createPurchase(req.user.companyId, req.body);
+      const data = insertPurchaseSchema.parse(req.body);
+      const purchase = await storage.createPurchase(req.user.companyId, data);
       res.status(201).json(purchase);
-    } catch (error) {
-      res.status(400).json({ error: "Invalid purchase data" });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message || "Invalid purchase data" });
     }
   });
 
   app.patch("/api/purchases/:id", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
-      const purchase = await storage.updatePurchase(req.user.companyId, req.params.id, req.body);
+      const data = insertPurchaseSchema.partial().parse(req.body);
+      const purchase = await storage.updatePurchase(req.user.companyId, req.params.id, data);
       res.json(purchase);
-    } catch (error) {
-      res.status(400).json({ error: "Invalid purchase data" });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message || "Invalid purchase data" });
     }
   });
 
@@ -653,20 +661,22 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.post("/api/installments", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
-      const installment = await storage.createInstallment(req.user.companyId, req.body);
+      const data = insertInstallmentSchema.parse(req.body);
+      const installment = await storage.createInstallment(req.user.companyId, data);
       res.status(201).json(installment);
-    } catch (error) {
-      res.status(400).json({ error: "Invalid installment data" });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message || "Invalid installment data" });
     }
   });
 
   app.patch("/api/installments/:id", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
-      const installment = await storage.updateInstallment(req.user.companyId, req.params.id, req.body);
+      const data = insertInstallmentSchema.partial().parse(req.body);
+      const installment = await storage.updateInstallment(req.user.companyId, req.params.id, data);
       res.json(installment);
-    } catch (error) {
-      res.status(400).json({ error: "Invalid installment data" });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message || "Invalid installment data" });
     }
   });
 
@@ -705,20 +715,22 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.post("/api/purchase-installments", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
-      const installment = await storage.createPurchaseInstallment(req.user.companyId, req.body);
+      const data = insertPurchaseInstallmentSchema.parse(req.body);
+      const installment = await storage.createPurchaseInstallment(req.user.companyId, data);
       res.status(201).json(installment);
-    } catch (error) {
-      res.status(400).json({ error: "Invalid purchase installment data" });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message || "Invalid purchase installment data" });
     }
   });
 
   app.patch("/api/purchase-installments/:id", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
-      const installment = await storage.updatePurchaseInstallment(req.user.companyId, req.params.id, req.body);
+      const data = insertPurchaseInstallmentSchema.partial().parse(req.body);
+      const installment = await storage.updatePurchaseInstallment(req.user.companyId, req.params.id, data);
       res.json(installment);
-    } catch (error) {
-      res.status(400).json({ error: "Invalid purchase installment data" });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message || "Invalid purchase installment data" });
     }
   });
 
