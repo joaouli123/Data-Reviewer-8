@@ -5,7 +5,43 @@
 ### Overview
 Desenvolvido um Super Admin Dashboard completo para gerenciamento global de empresas, clientes, usuários e assinaturas em um sistema SaaS multi-tenant com autenticação segura.
 
-### Recent Changes (Session 5 - BUG FIX)
+### Recent Changes (Session 6 - CRITICAL BUG FIXES)
+**🔧 Correção: Totais de vendas/compras zerando rapidamente ao acessar páginas de Clientes e Fornecedores**
+
+**Problema #1 - Dados não sendo salvos:**
+- Backend estava **deletando** `customerId` e `supplierId` antes de salvar as transações
+- Isso resultava em transações com IDs nulos no banco de dados
+- Totais não apareciam porque as transações não tinham relacionamentos com clientes/fornecedores
+
+**Problema #2 - Refetch automático zerando valores:**
+- `refetchOnMount: true` causava refetch automático quando componente montava
+- Isso zerava os valores rapidamente após carregamento inicial
+
+**Solução Implementada:**
+
+1. **Backend (server/routes.ts - linha 458-459):**
+   - ✅ Removido lógica que deletava `customerId` e `supplierId`
+   - ✅ Schema validation agora responsável por validação obrigatória/opcional
+
+2. **Frontend - Clientes (src/pages/Customers.jsx - linhas 51-67):**
+   - ✅ Mudado `refetchOnMount: true` → `refetchOnMount: 'stale'`
+   - ✅ Aumentado `staleTime: 5000` → `staleTime: 60000` (60 segundos)
+   - ✅ Mantido `credentials: 'include'` para autenticação
+
+3. **Frontend - Fornecedores (src/pages/Suppliers.jsx - linhas 51-68):**
+   - ✅ Mudado `refetchOnMount: true` → `refetchOnMount: 'stale'`
+   - ✅ Aumentado `staleTime: 5000` → `staleTime: 60000` (60 segundos)
+   - ✅ Mantido `credentials: 'include'` para autenticação
+
+**Resultado:**
+- ✅ Novas transações salvas com IDs corretos de clientes/fornecedores
+- ✅ Totais não zeram mais ao acessar páginas
+- ✅ Cache mantido por 60 segundos (evita refetch desnecessário)
+- ✅ Refetch automático só ocorre se dados estão "stale"
+
+**Nota:** Transações antigas criadas antes da correção têm `customerId/supplierId: null`. Para corrigir histórico, seria necessário migração de dados. Novas transações funcionam perfeitamente.
+
+### Recent Changes (Session 5)
 **🔧 Correção: Erro "Invalid transaction data" ao registrar vendas/compras**
 
 **Problema Identificado:**
@@ -161,23 +197,10 @@ DELETE /api/admin/users/:id       - Delete user
 ✅ Impersonação de empresas (JWT temporário)
 ✅ Audit logging para ações críticas
 ✅ Todos os endpoints protegidos com requireSuperAdmin middleware
-
-### Arquivos Modificados (Session 4)
-- ✅ `src/pages/admin/subscriptions.jsx` - Refatorada tabela de assinaturas
-- ✅ `src/components/admin/SubscriptionEditModal.jsx` - Melhorado labels de status
-
-### Campos da Tabela de Assinaturas
-| Campo | Descrição |
-|-------|-----------|
-| Data Compra | Quando foi criada a assinatura (formatada) |
-| Nome do Comprador | Nome da pessoa que comprou (subscriberName) |
-| Forma de Pagamento | PIX, Card (Crédito/Débito), Boleto, TED |
-| Próximo Vencimento | Data de renovação ou "Vitalício" se sem expiração |
-| Status | Ativo / Cancelado / Não Pagou |
-| Ações | Ver (editar) / Bloquear |
+✅ Session 6: Corrigir bug de totais de vendas/compras zerando rapidamente
 
 ### Next Steps (if needed)
-- Adicionar paginação para listas grandes
-- Implementar soft delete para clientes/usuários (com restore)
+- Adicionar migração de dados para corrigir transações antigas
 - Dashboard com gráficos (Recharts)
 - Notifications/webhooks para eventos críticos
+- Melhorias de performance em listas grandes

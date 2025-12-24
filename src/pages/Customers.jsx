@@ -58,8 +58,8 @@ export default function CustomersPage() {
     },
     initialData: [],
     enabled: !!company?.id,
-    staleTime: 5000,
-    refetchOnMount: true,
+    staleTime: 60000,
+    refetchOnMount: 'stale',
     refetchOnWindowFocus: false
   });
 
