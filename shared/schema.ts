@@ -233,9 +233,9 @@ export const categories = pgTable("categories", {
 export const transactions = pgTable("transactions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   companyId: varchar("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
-  customerId: varchar("customer_id").references(() => customers.id),
-  supplierId: varchar("supplier_id").references(() => suppliers.id),
-  categoryId: varchar("category_id").references(() => categories.id),
+  customerId: varchar("customer_id").references(() => customers.id, { onDelete: "set null" }),
+  supplierId: varchar("supplier_id").references(() => suppliers.id, { onDelete: "set null" }),
+  categoryId: varchar("category_id").references(() => categories.id, { onDelete: "set null" }),
   type: text("type").notNull(),
   amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
   paidAmount: decimal("paid_amount", { precision: 15, scale: 2 }),
@@ -264,7 +264,7 @@ export const cashFlow = pgTable("cash_flow", {
 export const sales = pgTable("sales", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   companyId: varchar("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
-  customerId: varchar("customer_id").references(() => customers.id),
+  customerId: varchar("customer_id").references(() => customers.id, { onDelete: "set null" }),
   saleDate: timestamp("sale_date").notNull(),
   totalAmount: decimal("total_amount", { precision: 15, scale: 2 }).notNull(),
   paidAmount: decimal("paid_amount", { precision: 15, scale: 2 }).default("0"),
@@ -275,7 +275,7 @@ export const sales = pgTable("sales", {
 export const purchases = pgTable("purchases", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   companyId: varchar("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
-  supplierId: varchar("supplier_id").references(() => suppliers.id),
+  supplierId: varchar("supplier_id").references(() => suppliers.id, { onDelete: "set null" }),
   purchaseDate: timestamp("purchase_date").notNull(),
   totalAmount: decimal("total_amount", { precision: 15, scale: 2 }).notNull(),
   paidAmount: decimal("paid_amount", { precision: 15, scale: 2 }).default("0"),
@@ -286,7 +286,7 @@ export const purchases = pgTable("purchases", {
 export const installments = pgTable("installments", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   companyId: varchar("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
-  saleId: varchar("sale_id").references(() => sales.id),
+  saleId: varchar("sale_id").references(() => sales.id, { onDelete: "set null" }),
   amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
   dueDate: timestamp("due_date").notNull(),
   paid: boolean("paid").default(false),
@@ -296,7 +296,7 @@ export const installments = pgTable("installments", {
 export const purchaseInstallments = pgTable("purchase_installments", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   companyId: varchar("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
-  purchaseId: varchar("purchase_id").references(() => purchases.id),
+  purchaseId: varchar("purchase_id").references(() => purchases.id, { onDelete: "set null" }),
   amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
   dueDate: timestamp("due_date").notNull(),
   paid: boolean("paid").default(false),
