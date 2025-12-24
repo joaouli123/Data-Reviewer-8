@@ -307,7 +307,7 @@ export default function DashboardPage() {
             {metrics.filteredTransactions.length > 0 ? (
               <>
                 {metrics.filteredTransactions
-                  .sort((a, b) => parseISO(b.date.split('T')[0] + 'T12:00:00Z') - parseISO(a.date.split('T')[0] + 'T12:00:00Z'))
+                  .sort((a, b) => new Date(b.date) - new Date(a.date))
                   .slice(0, 5)
                   .map((t) => (
                     <div
