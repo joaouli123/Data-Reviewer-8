@@ -357,19 +357,42 @@ export const insertSupplierSchema = createInsertSchema(suppliers).omit({
 export const insertCategorySchema = createInsertSchema(categories).omit({
   id: true,
   createdAt: true,
+  companyId: true,
 });
 
 export const insertTransactionSchema = createInsertSchema(transactions).omit({
   id: true,
+  companyId: true,
 });
 
 export const insertCashFlowSchema = createInsertSchema(cashFlow).omit({
   id: true,
+  companyId: true,
 });
 
 export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({
   id: true,
   createdAt: true,
+});
+
+export const insertSaleSchema = createInsertSchema(sales).omit({
+  id: true,
+  companyId: true,
+});
+
+export const insertPurchaseSchema = createInsertSchema(purchases).omit({
+  id: true,
+  companyId: true,
+});
+
+export const insertInstallmentSchema = createInsertSchema(installments).omit({
+  id: true,
+  companyId: true,
+});
+
+export const insertPurchaseInstallmentSchema = createInsertSchema(purchaseInstallments).omit({
+  id: true,
+  companyId: true,
 });
 
 // ========== TYPES ==========
