@@ -56,9 +56,9 @@ async function resetAllTables() {
     console.log('👤 Criando usuário Super Admin...');
     const admin = await createUser(
       company.id,
-      'admin',
+      'superadmin',
       'admin@example.com',
-      'senha123456',
+      'superadmin',
       'Admin User',
       'admin',
       true // isSuperAdmin = true
@@ -79,8 +79,8 @@ async function resetAllTables() {
     console.log('✨ ✨ ✨  BANCO DE DADOS RESETADO COM SUCESSO!  ✨ ✨ ✨');
     console.log('='.repeat(70));
     console.log('\n🔐 USE ESTAS CREDENCIAIS PARA FAZER LOGIN:\n');
-    console.log(`   Usuário:  admin`);
-    console.log(`   Senha:    senha123456`);
+    console.log(`   Usuário:  superadmin`);
+    console.log(`   Senha:    superadmin`);
     console.log(`   Email:    admin@example.com`);
     console.log(`   Tipo:     Super Admin`);
     console.log('\n🏢 Empresa criada:');
