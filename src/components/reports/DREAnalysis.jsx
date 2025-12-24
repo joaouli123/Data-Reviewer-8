@@ -361,113 +361,135 @@ export default function DREAnalysis({ transactions, categories = [], period = 'c
         </div>
 
         {/* Forecast Section */}
-        {forecast && (
+        {forecast ? (
           <div className="space-y-6 pt-6 border-t">
             <h4 className="font-semibold text-slate-900 flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-primary" />
               Previsões Futuras (Próximos 3 Meses)
             </h4>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {forecast.forecast_months?.map((month, idx) => (
-                <div key={idx} className="p-4 bg-white rounded-lg border">
-                  <div className="flex items-center justify-between mb-3">
-                    <h5 className="font-semibold text-slate-900">{month.month}</h5>
-                    <Badge variant={
-                      month.confidence === 'high' ? 'default' :
-                      month.confidence === 'medium' ? 'secondary' : 'outline'
-                    }>
-                      {month.confidence === 'high' ? 'Alta' : month.confidence === 'medium' ? 'Média' : 'Baixa'} Confiança
-                    </Badge>
-                  </div>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-slate-600">Receita Bruta</span>
-                      <span className="font-medium text-emerald-600">
-                        R$ {month.receita_bruta.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-600">Custos/Despesas</span>
-                      <span className="font-medium text-rose-600">
-                        R$ {(month.custos_diretos + month.despesas_operacionais).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </span>
-                    </div>
-                    <div className="flex justify-between pt-2 border-t">
-                      <span className="font-semibold text-slate-900">Lucro Previsto</span>
-                      <span className={`font-bold ${month.lucro_previsto >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                        R$ {month.lucro_previsto.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </span>
-                    </div>
-                    <div className="text-xs text-slate-500">
-                      Margem: {month.margem_prevista.toFixed(1)}%
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Trend Analysis */}
-            <div className="p-4 bg-indigo-50 rounded-lg border border-blue-200">
-              <h5 className="font-semibold text-indigo-900 mb-2">Análise de Tendências</h5>
-              <p className="text-sm text-primary">{forecast.trend_analysis}</p>
-            </div>
-
-            {/* Growth Opportunities */}
-            {forecast.growth_opportunities?.length > 0 && (
-              <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200">
-                <h5 className="font-semibold text-emerald-900 mb-2 flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4" />
-                  Oportunidades de Crescimento
-                </h5>
-                <ul className="space-y-1">
-                  {forecast.growth_opportunities.map((opp, idx) => (
-                    <li key={idx} className="text-sm text-emerald-700 flex items-start gap-2">
-                      <span className="text-emerald-600 font-bold mt-0.5">•</span>
-                      {opp}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Risk Factors */}
-            {forecast.risk_factors?.length > 0 && (
-              <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
-                <h5 className="font-semibold text-amber-900 mb-2 flex items-center gap-2">
-                  <TrendingDown className="w-4 h-4" />
-                  Fatores de Risco
-                </h5>
-                <div className="space-y-2">
-                  {forecast.risk_factors.map((risk, idx) => (
-                    <div key={idx} className="flex items-start gap-2">
-                      <Badge variant={
-                        risk.impact === 'high' ? 'destructive' :
-                        risk.impact === 'medium' ? 'default' : 'secondary'
-                      } className="mt-0.5">
-                        {risk.impact === 'high' ? 'Alto' : risk.impact === 'medium' ? 'Médio' : 'Baixo'}
-                      </Badge>
-                      <span className="text-sm text-amber-700">{risk.factor}</span>
+            {forecast.forecast_months?.length > 0 ? (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {forecast.forecast_months.map((month, idx) => (
+                    <div key={idx} className="p-4 bg-white rounded-lg border">
+                      <div className="flex items-center justify-between mb-3">
+                        <h5 className="font-semibold text-slate-900">{month.month}</h5>
+                        <Badge variant={
+                          month.confidence === 'high' ? 'default' :
+                          month.confidence === 'medium' ? 'secondary' : 'outline'
+                        }>
+                          {month.confidence === 'high' ? 'Alta' : month.confidence === 'medium' ? 'Média' : 'Baixa'} Confiança
+                        </Badge>
+                      </div>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-slate-600">Receita Bruta</span>
+                          <span className="font-medium text-emerald-600">
+                            R$ {month.receita_bruta.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-600">Custos/Despesas</span>
+                          <span className="font-medium text-rose-600">
+                            R$ {(month.custos_diretos + month.despesas_operacionais).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                        <div className="flex justify-between pt-2 border-t">
+                          <span className="font-semibold text-slate-900">Lucro Previsto</span>
+                          <span className={`font-bold ${month.lucro_previsto >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                            R$ {month.lucro_previsto.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          Margem: {month.margem_prevista.toFixed(1)}%
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
 
-            {/* Recommendations */}
-            {forecast.recommendations?.length > 0 && (
-              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <h5 className="font-semibold text-blue-900 mb-2">Recomendações Estratégicas</h5>
-                <ul className="space-y-1">
-                  {forecast.recommendations.map((rec, idx) => (
-                    <li key={idx} className="text-sm text-blue-700 flex items-start gap-2">
-                      <span className="text-blue-600 font-bold mt-0.5">•</span>
-                      {rec}
-                    </li>
-                  ))}
-                </ul>
+                {/* Trend Analysis */}
+                <div className="p-4 bg-indigo-50 rounded-lg border border-blue-200">
+                  <h5 className="font-semibold text-indigo-900 mb-2">Análise de Tendências</h5>
+                  <p className="text-sm text-primary">{forecast.trend_analysis}</p>
+                </div>
+
+                {/* Growth Opportunities */}
+                {forecast.growth_opportunities?.length > 0 && (
+                  <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200">
+                    <h5 className="font-semibold text-emerald-900 mb-2 flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4" />
+                      Oportunidades de Crescimento
+                    </h5>
+                    <ul className="space-y-1">
+                      {forecast.growth_opportunities.map((opp, idx) => (
+                        <li key={idx} className="text-sm text-emerald-700 flex items-start gap-2">
+                          <span className="text-emerald-600 font-bold mt-0.5">•</span>
+                          {opp}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Risk Factors */}
+                {forecast.risk_factors?.length > 0 && (
+                  <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+                    <h5 className="font-semibold text-amber-900 mb-2 flex items-center gap-2">
+                      <TrendingDown className="w-4 h-4" />
+                      Fatores de Risco
+                    </h5>
+                    <div className="space-y-2">
+                      {forecast.risk_factors.map((risk, idx) => (
+                        <div key={idx} className="flex items-start gap-2">
+                          <Badge variant={
+                            risk.impact === 'high' ? 'destructive' :
+                            risk.impact === 'medium' ? 'default' : 'secondary'
+                          } className="mt-0.5">
+                            {risk.impact === 'high' ? 'Alto' : risk.impact === 'medium' ? 'Médio' : 'Baixo'}
+                          </Badge>
+                          <span className="text-sm text-amber-700">{risk.factor}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Recommendations */}
+                {forecast.recommendations?.length > 0 && (
+                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <h5 className="font-semibold text-blue-900 mb-2">Recomendações Estratégicas</h5>
+                    <ul className="space-y-1">
+                      {forecast.recommendations.map((rec, idx) => (
+                        <li key={idx} className="text-sm text-blue-700 flex items-start gap-2">
+                          <span className="text-blue-600 font-bold mt-0.5">•</span>
+                          {rec}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="p-8 text-center bg-slate-50 rounded-lg border border-dashed border-slate-300">
+                <TrendingUp className="w-8 h-8 text-slate-300 mx-auto mb-3" />
+                <h5 className="font-medium text-slate-700 mb-1">Dados insuficientes para previsão</h5>
+                <p className="text-sm text-slate-500 max-w-sm mx-auto">
+                  A IA precisa de pelo menos 3 a 6 meses de histórico de transações para identificar padrões e gerar uma análise de tendência confiável.
+                </p>
               </div>
             )}
+          </div>
+        ) : isAnalyzing && (
+          <div className="pt-6 border-t animate-pulse">
+            <div className="h-4 w-48 bg-slate-200 rounded mb-4" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div className="h-32 bg-slate-100 rounded" />
+              <div className="h-32 bg-slate-100 rounded" />
+              <div className="h-32 bg-slate-100 rounded" />
+            </div>
+            <div className="h-20 bg-slate-100 rounded" />
           </div>
         )}
       </CardContent>
