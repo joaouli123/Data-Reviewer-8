@@ -1531,6 +1531,90 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // ========== DEV ROUTES ==========
+  
+  // Reset database and seed with test users (DEV ONLY)
+  app.post("/api/dev/reset-and-seed", async (req, res) => {
+    try {
+      // Delete all data in reverse order of foreign keys
+      try {
+        await db.delete(users);
+      } catch (e) {
+        console.log('Users delete ok or no users');
+      }
+      
+      try {
+        await db.delete(subscriptions);
+      } catch (e) {
+        console.log('Subscriptions delete ok or no subscriptions');
+      }
+      
+      try {
+        await db.delete(companies);
+      } catch (e) {
+        console.log('Companies delete ok or no companies');
+      }
+
+      // Create company
+      const company = await createCompany('Test Company', '00.000.000/0000-00');
+
+      // Create 3 test users
+      const testUsers = [
+        { username: 'superadmin', email: 'superadmin@test.com', password: 'senha123456', name: 'Super Admin', role: 'admin', isSuperAdmin: true },
+        { username: 'admin', email: 'admin@test.com', password: 'senha123456', name: 'Admin User', role: 'admin', isSuperAdmin: false },
+        { username: 'operacional', email: 'operacional@test.com', password: 'senha123456', name: 'Operacional User', role: 'operational', isSuperAdmin: false }
+      ];
+
+      const credentials = [];
+      
+      for (const userData of testUsers) {
+        const user = await createUser(
+          company.id,
+          userData.username,
+          userData.email,
+          userData.password,
+          userData.name,
+          userData.role,
+          userData.isSuperAdmin
+        );
+
+        const token = generateToken({
+          userId: user.id,
+          companyId: company.id,
+          role: user.role,
+          isSuperAdmin: userData.isSuperAdmin,
+        });
+
+        try {
+          await createSession(user.id, company.id, token);
+        } catch (e) {
+          console.log('Session creation ok or already exists');
+        }
+
+        credentials.push({
+          username: userData.username,
+          password: userData.password,
+          email: userData.email,
+          role: userData.role
+        });
+      }
+
+      // Generate API key (simple format: company-id-random)
+      const apiKey = `${company.id.substring(0, 8)}-${Math.random().toString(36).substring(2, 10)}`;
+
+      res.json({
+        companyId: company.id,
+        apiKey: apiKey,
+        0: credentials[0],
+        1: credentials[1],
+        2: credentials[2]
+      });
+    } catch (error) {
+      console.error('Reset database error:', error);
+      res.status(500).json({ error: error.message || 'Failed to reset database' });
+    }
+  });
+
   // 404 fallback
   app.all("/api/*", (req, res) => {
     res.status(404).json({ error: "API route not found" });
