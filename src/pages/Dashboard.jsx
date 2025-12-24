@@ -48,12 +48,14 @@ export default function DashboardPage() {
   };
 
   // Fetch ALL transactions to show only periods with actual data
-  const { data: allTransactions = [] } = useQuery({
+  const { data: allTxData = [] } = useQuery({
     queryKey: ['/api/transactions', 'all', company?.id],
     queryFn: () => Transaction.list(),
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
     enabled: !!company?.id
   });
+
+  const allTransactions = Array.isArray(allTxData) ? allTxData : (allTxData?.data || []);
 
   // Calculate metrics based on date range
   const calculateMetrics = () => {

@@ -31,12 +31,14 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 export default function CashFlowForecastPage() {
   const { company } = useAuth();
-  const { data: transactions } = useQuery({
+  const { data: transactionsData } = useQuery({
     queryKey: ['/api/transactions', company?.id],
     queryFn: () => Transaction.list(),
     initialData: [],
     enabled: !!company?.id
   });
+
+  const transactions = Array.isArray(transactionsData) ? transactionsData : (transactionsData?.data || []);
 
   // Calculate min and max dates from all transactions and installments
   const getDateRange = () => {

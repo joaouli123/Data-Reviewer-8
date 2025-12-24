@@ -46,12 +46,14 @@ export default function ReportsPage() {
   });
   const [categoryFilter, setCategoryFilter] = useState('all');
 
-  const { data: transactions } = useQuery({
+  const { data: transactionsData } = useQuery({
     queryKey: ['/api/transactions', company?.id],
     queryFn: () => Transaction.list(),
     initialData: [],
     enabled: !!company?.id
   });
+
+  const transactions = Array.isArray(transactionsData) ? transactionsData : (transactionsData?.data || []);
 
   const { data: customers } = useQuery({
     queryKey: ['/api/customers', company?.id],

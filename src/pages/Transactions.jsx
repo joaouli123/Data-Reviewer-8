@@ -60,6 +60,8 @@ export default function TransactionsPage() {
     queryFn: () => Transaction.list(),
     initialData: [],
     enabled: !!company?.id
+
+  const transactions = Array.isArray(transactions) ? transactions : (transactions?.data || []);
   });
 
   const createMutation = useMutation({
