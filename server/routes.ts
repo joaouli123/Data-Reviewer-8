@@ -292,8 +292,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       await storage.deleteCustomer(req.user.companyId, req.params.id);
       res.status(204).end();
-    } catch (error) {
-      res.status(500).json({ error: "Failed to delete customer" });
+    } catch (error: any) {
+      console.error("Delete customer error:", error?.message || error);
+      res.status(500).json({ error: error?.message || "Failed to delete customer" });
     }
   });
 
@@ -347,8 +348,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       await storage.deleteSupplier(req.user.companyId, req.params.id);
       res.status(204).end();
-    } catch (error) {
-      res.status(500).json({ error: "Failed to delete supplier" });
+    } catch (error: any) {
+      console.error("Delete supplier error:", error?.message || error);
+      res.status(500).json({ error: error?.message || "Failed to delete supplier" });
     }
   });
 

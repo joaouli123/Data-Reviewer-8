@@ -186,6 +186,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteCustomer(companyId: string, id: string): Promise<void> {
+    // Delete related transactions first (sales/income for this customer)
+    await db
+      .delete(transactions)
+      .where(and(eq(transactions.companyId, companyId), eq(transactions.customerId, id)));
+    
+    // Then delete the customer
     await db
       .delete(customers)
       .where(and(eq(customers.companyId, companyId), eq(customers.id, id)));
@@ -224,6 +230,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteSupplier(companyId: string, id: string): Promise<void> {
+    // Delete related transactions first (purchases for this supplier)
+    await db
+      .delete(transactions)
+      .where(and(eq(transactions.companyId, companyId), eq(transactions.supplierId, id)));
+    
+    // Then delete the supplier
     await db
       .delete(suppliers)
       .where(and(eq(suppliers.companyId, companyId), eq(suppliers.id, id)));
