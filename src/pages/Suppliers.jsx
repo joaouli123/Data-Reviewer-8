@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Supplier, Purchase, Category } from '@/api/entities';
+import { Supplier, Purchase, Category, Transaction } from '@/api/entities';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -47,26 +47,28 @@ export default function SuppliersPage() {
 
   const transactionsQuery = useQuery({
     queryKey: ['/api/transactions', company?.id],
-    queryFn: () => {
-      // Direct API call with proper error handling
-      return fetch('/api/transactions', {
-        method: 'GET',
-        credentials: 'include'
-      }).then(res => {
-        if (!res.ok) throw new Error('Failed to fetch transactions');
-        return res.json();
-      });
+    queryFn: async () => {
+      try {
+        const data = await Transaction.list();
+        return data || [];
+      } catch (err) {
+        console.error('❌ Error fetching transactions:', err);
+        throw err;
+      }
     },
     initialData: [],
     enabled: !!company?.id,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchOnMount: false, // Never refetch on mount
-    refetchOnWindowFocus: false, // Never refetch on window focus
-    refetchInterval: false // Never refetch automatically
+    staleTime: 60 * 60 * 1000, // 1 hour
+    gcTime: 2 * 60 * 60 * 1000, // 2 hours
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchInterval: false,
+    retry: 3,
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000)
   });
 
   const { data: transactionsData = [] } = transactionsQuery;
-  const transactions = Array.isArray(transactionsData) ? transactionsData : (transactionsData?.data || []);
+  const transactions = Array.isArray(transactionsData) ? transactionsData : [];
 
   const saveMutation = useMutation({
     mutationFn: (data) => {
@@ -209,7 +211,7 @@ export default function SuppliersPage() {
                       </div>
                     </TableCell>
                     <TableCell className="text-slate-500 text-sm text-left">
-                      {getSupplierJoinDate(s)}
+                      -
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="text-primary600 font-semibold">
