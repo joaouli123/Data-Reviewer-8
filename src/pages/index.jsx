@@ -13,6 +13,7 @@ import UserPermissions from "./UserPermissions";
 import SuperAdmin from "./SuperAdmin";
 import SuperAdminDashboard from "./admin/super-dashboard";
 import AdminCustomers from "./admin/customers";
+import AdminSubscriptions from "./admin/subscriptions";
 import AdminUsers from "./admin/users";
 import AccessDenied from "./AccessDenied";
 import TeamPage from "./settings/Team";
@@ -43,8 +44,11 @@ export default function Pages() {
   if (user?.isSuperAdmin) {
     return (
       <Switch>
-        <Route path="/" component={SuperAdmin} />
-        <Route component={SuperAdmin} />
+        <Route path="/" component={SuperAdminDashboard} />
+        <Route path="/admin/customers" component={AdminCustomers} />
+        <Route path="/admin/subscriptions" component={AdminSubscriptions} />
+        <Route path="/admin/users" component={AdminUsers} />
+        <Route component={SuperAdminDashboard} />
       </Switch>
     );
   }

@@ -117,7 +117,11 @@ export const subscriptions = pgTable("subscriptions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   companyId: varchar("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
   plan: text("plan").notNull().default("basic"), // basic, pro, enterprise
-  status: text("status").notNull().default("active"), // active, suspended, cancelled
+  status: text("status").notNull().default("active"), // active, suspended, cancelled, blocked
+  subscriberName: text("subscriber_name"), // Name of the person who purchased
+  paymentMethod: text("payment_method"), // credit_card, debit_card, bank_transfer, pix, etc
+  amount: decimal("amount", { precision: 15, scale: 2 }), // Subscription value
+  isLifetime: boolean("is_lifetime").default(false), // If true, no expiration
   expiresAt: timestamp("expires_at"),
   createdAt: timestamp("created_at").notNull().default(sql`now()`),
   updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
