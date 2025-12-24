@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
-import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -183,9 +182,5 @@ function SuperDashboardContent() {
 }
 
 export default function SuperAdminDashboard() {
-  return (
-    <Layout>
-      <SuperDashboardContent />
-    </Layout>
-  );
+  return <SuperDashboardContent />;
 }

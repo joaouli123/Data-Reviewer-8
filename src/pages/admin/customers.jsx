@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
-import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -288,9 +287,5 @@ function CustomerActionsMenu({ customer, onView, onToggleStatus, onDelete, isSta
 }
 
 export default function AdminCustomers() {
-  return (
-    <Layout>
-      <CustomerListContent />
-    </Layout>
-  );
+  return <CustomerListContent />;
 }
