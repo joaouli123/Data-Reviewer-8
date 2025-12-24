@@ -52,6 +52,7 @@ export default function CustomersPage() {
     enabled: !!company?.id
   });
 
+  const transactions = Array.isArray(transactionsData) ? transactionsData : (transactionsData?.data || []);
 
   const saveMutation = useMutation({
     mutationFn: (data) => {
