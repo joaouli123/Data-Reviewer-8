@@ -19,7 +19,6 @@ import Pagination from '../components/Pagination';
 import { toast } from 'sonner';
 import { cn } from "@/lib/utils";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function TransactionsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -339,23 +338,6 @@ export default function TransactionsPage() {
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        {/* Status Tabs */}
-        <div className="border-b border-slate-200">
-          <Tabs value={statusFilter} onValueChange={setStatusFilter} className="w-full">
-            <TabsList className="w-full justify-start rounded-none bg-transparent border-b">
-              <TabsTrigger value="all" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
-                Todas ({txArray.length})
-              </TabsTrigger>
-              <TabsTrigger value="paid" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
-                Pagas ({txArray.filter(t => t.status === 'pago' || t.status === 'completed' || t.status === 'parcial').length})
-              </TabsTrigger>
-              <TabsTrigger value="pending" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
-                Pendentes ({txArray.filter(t => t.status === 'pendente').length})
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-
         {/* Filters */}
         <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex flex-col md:flex-row gap-4 justify-start">
             <div className="relative w-full md:w-[300px]">
@@ -389,6 +371,17 @@ export default function TransactionsPage() {
                         <SelectItem value="all">Todos</SelectItem>
                         <SelectItem value="income">Receitas</SelectItem>
                         <SelectItem value="expense">Despesas</SelectItem>
+                    </SelectContent>
+                </Select>
+
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-full md:w-[140px]">
+                        <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">Todos</SelectItem>
+                        <SelectItem value="paid">Pagas</SelectItem>
+                        <SelectItem value="pending">Pendentes</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
