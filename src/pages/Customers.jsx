@@ -62,7 +62,7 @@ export default function CustomersPage() {
       return Customer.create(data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/customers', company?.id] });
       setIsFormDialogOpen(false);
       setSelectedCustomer(null);
       toast.success(selectedCustomer ? 'Cliente atualizado!' : 'Cliente adicionado!', { duration: 5000 });
@@ -77,7 +77,7 @@ export default function CustomersPage() {
   const deleteMutation = useMutation({
     mutationFn: (id) => Customer.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/customers', company?.id] });
       toast.success('Cliente removido.', { duration: 5000 });
     }
   });

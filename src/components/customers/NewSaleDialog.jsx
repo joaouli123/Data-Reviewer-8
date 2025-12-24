@@ -52,7 +52,7 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
   const queryClient = useQueryClient();
 
   const { data: categories } = useQuery({
-    queryKey: ['categories'],
+    queryKey: ['/api/categories', company?.id],
     queryFn: () => Category.list(),
     initialData: []
   });
@@ -60,7 +60,7 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
   const createCategoryMutation = useMutation({
     mutationFn: (data) => Category.create(data),
     onSuccess: (newCat) => {
-      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/categories', company?.id] });
       setFormData((prev) => ({ ...prev, category: newCat.name }));
       setIsCreateCategoryModalOpen(false);
       toast.success('Categoria criada!', { duration: 5000 });
@@ -127,9 +127,8 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
       return Promise.all(promises);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions'], exact: false });
       queryClient.invalidateQueries({ queryKey: ['/api/transactions'], exact: false });
-      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/customers', company?.id] });
       onOpenChange(false);
       setFormData({
         description: '',

@@ -210,7 +210,6 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions'], exact: false });
       queryClient.invalidateQueries({ queryKey: ['/api/transactions'], exact: false });
       queryClient.invalidateQueries({ queryKey: ['/api/cash-flow'] });
       toast.success('Pagamento cancelado!', { duration: 5000 });
