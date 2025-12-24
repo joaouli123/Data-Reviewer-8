@@ -3,16 +3,17 @@
 ## Project Status: ✅ COMPLETE
 
 ### Overview
-Desenvolvido um Super Admin Dashboard completo para gerenciamento global de empresas, clientes e usuários em um sistema SaaS multi-tenant com autenticação segura.
+Desenvolvido um Super Admin Dashboard completo para gerenciamento global de empresas, clientes, usuários e assinaturas em um sistema SaaS multi-tenant com autenticação segura.
 
-### Recent Changes (Session 3)
-- ✅ Sidebar customizado: Super Admin vê apenas Dashboard, Clientes, Usuários
-- ✅ Perfil e Logout integrados na lista de navegação (abaixo de todos os itens)
-- ✅ Endpoints `/api/admin/customers` e `/api/admin/users` funcionando
-- ✅ Export Excel com UTC-8, data criação, nome, empresa, email, telefone, CPF/CNPJ
-- ✅ Modais de edição para clientes e usuários
-- ✅ Ações: Ativar, Bloquear, Excluir, Redefinir Senha, Ver Infos
-- ✅ Menu Layout.jsx unificado (mostrar navegação correta por user type)
+### Recent Changes (Session 4 - Página de Assinaturas)
+- ✅ Página de Assinaturas (`/admin/subscriptions`) com tabela completa
+- ✅ Colunas da tabela: Data Compra | Comprador | Forma Pagamento | Próximo Vencimento | Status | Ações
+- ✅ Suporte a "Vitalício" para assinaturas sem data de expiração
+- ✅ Status: Ativo | Cancelado | Não Pagou
+- ✅ Botões de ação: Ver (modal com edição) | Bloquear
+- ✅ Modal de edição com campos editáveis: Comprador, Plano, Forma Pagamento, Valor, Status
+- ✅ Busca por empresa, comprador ou forma de pagamento
+- ✅ Export Excel com dados de assinatura
 
 ### Architecture
 ```
@@ -78,7 +79,7 @@ DELETE /api/admin/users/:id       - Delete user
 ### Navigation Structure
 **Super Admin (isSuperAdmin = true)**
 - Dashboard (/) 
-- Clientes (/admin/customers)
+- Assinaturas (/admin/subscriptions)
 - Usuários (/admin/users)
 - [Divider]
 - Meu Perfil (/profile)
@@ -130,6 +131,20 @@ DELETE /api/admin/users/:id       - Delete user
 ✅ Impersonação de empresas (JWT temporário)
 ✅ Audit logging para ações críticas
 ✅ Todos os endpoints protegidos com requireSuperAdmin middleware
+
+### Arquivos Modificados (Session 4)
+- ✅ `src/pages/admin/subscriptions.jsx` - Refatorada tabela de assinaturas
+- ✅ `src/components/admin/SubscriptionEditModal.jsx` - Melhorado labels de status
+
+### Campos da Tabela de Assinaturas
+| Campo | Descrição |
+|-------|-----------|
+| Data Compra | Quando foi criada a assinatura (formatada) |
+| Nome do Comprador | Nome da pessoa que comprou (subscriberName) |
+| Forma de Pagamento | PIX, Card (Crédito/Débito), Boleto, TED |
+| Próximo Vencimento | Data de renovação ou "Vitalício" se sem expiração |
+| Status | Ativo / Cancelado / Não Pagou |
+| Ações | Ver (editar) / Bloquear |
 
 ### Next Steps (if needed)
 - Adicionar paginação para listas grandes

@@ -111,7 +111,7 @@ function SubscriptionListContent() {
   const filtered = subscriptions.filter(s =>
     (s.companyName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.subscriberName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.plan?.toLowerCase().includes(searchTerm.toLowerCase()))
+    s.paymentMethod?.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const isActive = (subscription) => {
@@ -144,7 +144,7 @@ function SubscriptionListContent() {
       {/* Search */}
       <div className="flex gap-3">
         <Input
-          placeholder="Buscar por empresa, comprador ou plano..."
+          placeholder="Buscar por empresa, comprador ou forma de pagamento..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="flex-1"
@@ -159,13 +159,10 @@ function SubscriptionListContent() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Data Assinatura</TableHead>
-                  <TableHead>Empresa</TableHead>
-                  <TableHead>Comprador</TableHead>
-                  <TableHead>Plano</TableHead>
-                  <TableHead>Valor</TableHead>
-                  <TableHead>Forma Pagamento</TableHead>
-                  <TableHead>Vencimento</TableHead>
+                  <TableHead>Data Compra</TableHead>
+                  <TableHead>Nome do Comprador</TableHead>
+                  <TableHead>Forma de Pagamento</TableHead>
+                  <TableHead>Próximo Vencimento</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
@@ -173,13 +170,13 @@ function SubscriptionListContent() {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan="9" className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan="6" className="text-center py-8 text-muted-foreground">
                       Carregando assinaturas...
                     </TableCell>
                   </TableRow>
                 ) : filtered.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan="9" className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan="6" className="text-center py-8 text-muted-foreground">
                       Nenhuma assinatura encontrada
                     </TableCell>
                   </TableRow>
@@ -189,20 +186,16 @@ function SubscriptionListContent() {
                       <TableCell className="text-sm" data-testid={`text-created-${s.id}`}>
                         {formatDateWithTimezone(s.createdAt)}
                       </TableCell>
-                      <TableCell className="font-medium">{s.companyName || 'N/A'}</TableCell>
-                      <TableCell>{s.subscriberName || '-'}</TableCell>
-                      <TableCell className="capitalize">{s.plan}</TableCell>
-                      <TableCell className="font-mono">
-                        {s.amount ? `R$ ${parseFloat(s.amount).toFixed(2)}` : '-'}
+                      <TableCell className="font-medium">{s.subscriberName || 'N/A'}</TableCell>
+                      <TableCell className="text-sm capitalize">
+                        {s.paymentMethod ? s.paymentMethod.replace('_', ' ') : '-'}
                       </TableCell>
-                      <TableCell className="text-sm">{s.paymentMethod || '-'}</TableCell>
                       <TableCell className="text-sm">
                         {s.isLifetime ? (
                           <Badge variant="outline">Vitalício</Badge>
                         ) : s.expiresAt ? (
                           <div>
                             {formatDateWithTimezone(s.expiresAt)}
-                            {isActive(s) ? '' : <span className="text-destructive"> (Expirada)</span>}
                           </div>
                         ) : (
                           '-'
@@ -213,7 +206,7 @@ function SubscriptionListContent() {
                           variant={isActive(s) ? 'default' : s.status === 'blocked' ? 'destructive' : 'secondary'}
                           data-testid={`badge-status-${s.id}`}
                         >
-                          {isActive(s) ? 'Ativa' : s.status === 'blocked' ? 'Bloqueada' : 'Inativa'}
+                          {isActive(s) ? 'Ativo' : s.status === 'blocked' ? 'Cancelado' : 'Não Pagou'}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">

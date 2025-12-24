@@ -139,9 +139,9 @@ export function SubscriptionEditModal({ subscription, open, onOpenChange, onSave
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="active">Ativa</SelectItem>
-                        <SelectItem value="blocked">Bloqueada</SelectItem>
-                        <SelectItem value="cancelled">Cancelada</SelectItem>
+                        <SelectItem value="active">Ativo</SelectItem>
+                        <SelectItem value="blocked">Cancelado</SelectItem>
+                        <SelectItem value="cancelled">Não Pagou</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -222,7 +222,7 @@ export function SubscriptionEditModal({ subscription, open, onOpenChange, onSave
                   <Badge 
                     variant={subscription?.status === 'active' ? 'default' : subscription?.status === 'blocked' ? 'destructive' : 'secondary'}
                   >
-                    {subscription?.status === 'active' ? 'Ativa' : subscription?.status === 'blocked' ? 'Bloqueada' : 'Cancelada'}
+                    {subscription?.status === 'active' ? 'Ativo' : subscription?.status === 'blocked' ? 'Cancelado' : 'Não Pagou'}
                   </Badge>
                 </p>
               </div>
