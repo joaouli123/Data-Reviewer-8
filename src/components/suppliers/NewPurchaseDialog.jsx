@@ -76,8 +76,17 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
 
   const createPurchaseMutation = useMutation({
     mutationFn: async (data) => {
-      const categories = await Category.list();
+      // Use categories from React Query cache (already fetched), don't re-fetch
       const cat = categories.find(c => c.name === data.category);
+      
+      if (!cat || !cat.id) {
+        throw new Error('Categoria selecionada não é válida. Recarregue a página e tente novamente.');
+      }
+      
+      // Validate that categoryId is a UUID format (not a timestamp)
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cat.id)) {
+        throw new Error('Erro no formato da categoria. Por favor, recarregue a página.');
+      }
       
       const installmentCount = parseInt(data.installments) || 1;
       // Parse currency values from Brazilian format (1.234,56) to number
