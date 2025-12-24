@@ -333,7 +333,7 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
                                     Recebido: R$ {parseFloat(installment.paidAmount || installment.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                   </p>
                                 )}
-                                {installment.interest && parseFloat(installment.interest) > 0 && (
+                                {parseFloat(installment.interest || 0) > 0 && (
                                   <p className="text-xs text-amber-600">
                                     Juros: R$ {parseFloat(installment.interest).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                   </p>
