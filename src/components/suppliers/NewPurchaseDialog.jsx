@@ -81,8 +81,11 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
       const cat = categories.find(c => c.name === data.category);
       
       const installmentCount = parseInt(data.installments) || 1;
-      const totalAmount = parseFloat(data.total_amount);
-      const installmentAmount = parseFloat(data.installment_amount) || (totalAmount / installmentCount);
+      // Parse currency values from Brazilian format (1.234,56) to number
+      const totalAmount = parseFloat(String(data.total_amount).replace(/\./g, '').replace(',', '.'));
+      const installmentAmount = data.installment_amount 
+        ? parseFloat(String(data.installment_amount).replace(/\./g, '').replace(',', '.'))
+        : (totalAmount / installmentCount);
       
       const installmentGroupId = `group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       // Convert YYYY-MM-DD to ISO date at noon UTC (avoids timezone issues)
@@ -106,11 +109,11 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
         
         const payload = {
           supplierId: supplier.id,
-          categoryId: cat?.id,
+          categoryId: cat.id,
           type: 'compra',
           date: dueDateISO,
           shift: 'manhã',
-          amount: String(installmentAmount.toFixed(2)),
+          amount: installmentAmount,
           description: `${data.description}${installmentCount > 1 ? ` (${i + 1}/${installmentCount})` : ''}`,
           status: data.status || 'pendente',
           paymentDate: paymentDateISO,
@@ -156,6 +159,13 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
     e.preventDefault();
     if (!formData.description || !formData.total_amount || !formData.category) {
       toast.error('Preencha todos os campos obrigatórios');
+      return;
+    }
+
+    // Validate that category exists and is found
+    const selectedCategory = categories.find(c => c.name === formData.category);
+    if (!selectedCategory) {
+      toast.error('Selecione uma categoria válida');
       return;
     }
     
