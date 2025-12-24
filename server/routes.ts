@@ -1017,6 +1017,97 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // ========== SEED ROUTE (DEV ONLY) ==========
+  // Use: POST /api/seed?companyId=YOUR_COMPANY_ID
+  app.post("/api/seed", async (req, res) => {
+    try {
+      const { companyId } = req.query;
+      
+      if (!companyId) {
+        return res.status(400).json({ 
+          error: "Use: POST /api/seed?companyId=YOUR_COMPANY_ID",
+          hint: "Get your company ID from /api/auth/me"
+        });
+      }
+
+      // Create users with different roles in the specified company
+      const admin = await createUser(
+        companyId as string,
+        "admin_teste",
+        "admin@teste.com",
+        "senha123456",
+        "João Admin",
+        "admin"
+      );
+
+      const manager = await createUser(
+        companyId as string,
+        "gerente_teste",
+        "gerente@teste.com",
+        "senha123456",
+        "Maria Gerente",
+        "manager"
+      );
+
+      const user = await createUser(
+        companyId as string,
+        "usuario_teste",
+        "usuario@teste.com",
+        "senha123456",
+        "Pedro Usuário",
+        "user"
+      );
+
+      const operational = await createUser(
+        companyId as string,
+        "operacional_teste",
+        "operacional@teste.com",
+        "senha123456",
+        "Ana Operacional",
+        "operational"
+      );
+
+      // Set permissions for non-admin users
+      await storage.updateUserPermissions(companyId as string, manager.id, {
+        view_dashboard: true,
+        view_transactions: true,
+        create_transactions: true,
+        edit_transactions: true,
+        view_reports: true,
+        manage_customers: true,
+        view_suppliers: true,
+        manage_suppliers: true,
+      });
+
+      await storage.updateUserPermissions(companyId as string, user.id, {
+        view_dashboard: true,
+        view_transactions: true,
+        create_transactions: true,
+        view_reports: true,
+        view_customers: true,
+        view_suppliers: true,
+      });
+
+      await storage.updateUserPermissions(companyId as string, operational.id, {
+        view_transactions: true,
+        create_transactions: true,
+        import_bank: true,
+      });
+
+      res.json({
+        message: "✅ Usuários de teste criados com sucesso!",
+        users: [
+          { username: "admin_teste", name: "João Admin", role: "admin", password: "senha123456" },
+          { username: "gerente_teste", name: "Maria Gerente", role: "manager", password: "senha123456" },
+          { username: "usuario_teste", name: "Pedro Usuário", role: "user", password: "senha123456" },
+          { username: "operacional_teste", name: "Ana Operacional", role: "operational", password: "senha123456" },
+        ],
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message || "Falha ao criar usuários de teste" });
+    }
+  });
+
   // 404 fallback
   app.all("/api/*", (req, res) => {
     res.status(404).json({ error: "API route not found" });
