@@ -1434,6 +1434,81 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // ========== SUPER ADMIN - GLOBAL SUBSCRIPTIONS ==========
+
+  // Get all subscriptions across all companies
+  app.get("/api/admin/subscriptions", authMiddleware, requireSuperAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user?.isSuperAdmin) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const subscriptions_list = await db.select().from(subscriptions).orderBy(desc(subscriptions.createdAt));
+      
+      const enriched = await Promise.all(
+        subscriptions_list.map(async (s) => {
+          const company = await storage.getCompany(s.companyId);
+          return { ...s, companyName: company?.name || 'N/A' };
+        })
+      );
+
+      res.json(enriched);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch subscriptions" });
+    }
+  });
+
+  // Update subscription
+  app.patch("/api/admin/subscriptions/:id", authMiddleware, requireSuperAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user?.isSuperAdmin) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const { plan, status, subscriberName, paymentMethod, amount, isLifetime, expiresAt } = req.body;
+      const subscription = await db
+        .select()
+        .from(subscriptions)
+        .where(eq(subscriptions.id, req.params.id));
+
+      if (!subscription.length) {
+        return res.status(404).json({ error: "Subscription not found" });
+      }
+
+      const result = await db
+        .update(subscriptions)
+        .set({ 
+          plan: plan || undefined, 
+          status: status || undefined, 
+          subscriberName: subscriberName || undefined, 
+          paymentMethod: paymentMethod || undefined, 
+          amount: amount || undefined, 
+          isLifetime: isLifetime !== undefined ? isLifetime : undefined, 
+          expiresAt: expiresAt || undefined 
+        })
+        .where(eq(subscriptions.id, req.params.id))
+        .returning();
+
+      res.json(result[0]);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update subscription" });
+    }
+  });
+
+  // Delete subscription
+  app.delete("/api/admin/subscriptions/:id", authMiddleware, requireSuperAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user?.isSuperAdmin) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      await db.delete(subscriptions).where(eq(subscriptions.id, req.params.id));
+      res.json({ message: "Subscription deleted" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete subscription" });
+    }
+  });
+
   // ========== SUPER ADMIN - GLOBAL USERS ==========
 
   // Get all users across all companies
