@@ -56,18 +56,18 @@ export default function Layout({ children }) {
             const isActive = pathname === item.path || (item.path !== '/' && pathname.startsWith(item.path));
             return (
                 <Link key={item.name} href={item.path} onClick={onNavigate}>
-                <div className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${isActive ? 'text-black shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
-                    style={{ backgroundColor: isActive ? '#E7AA1C' : 'transparent' }} data-testid={`link-nav-${item.name.toLowerCase()}`}>
-                    <item.icon className={`w-5 h-5 ${isActive ? 'text-black' : 'text-slate-400 group-hover:text-white'}`} />
+                <div className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${isActive ? 'text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
+                    style={{ backgroundColor: isActive ? '#005CB8' : 'transparent' }} data-testid={`link-nav-${item.name.toLowerCase()}`}>
+                    <item.icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
                     <span className="font-medium text-sm">{item.name}</span>
                 </div>
                 </Link>
             );
         })}
         <Link href="/profile" onClick={onNavigate}>
-          <div className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${pathname === '/profile' ? 'text-black shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
-              style={{ backgroundColor: pathname === '/profile' ? '#E7AA1C' : 'transparent' }} data-testid="link-nav-meu-perfil">
-              <User className={`w-5 h-5 ${pathname === '/profile' ? 'text-black' : 'text-slate-400 group-hover:text-white'}`} />
+          <div className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${pathname === '/profile' ? 'text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
+              style={{ backgroundColor: pathname === '/profile' ? '#005CB8' : 'transparent' }} data-testid="link-nav-meu-perfil">
+              <User className={`w-5 h-5 ${pathname === '/profile' ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
               <span className="font-medium text-sm">Meu Perfil</span>
           </div>
         </Link>
