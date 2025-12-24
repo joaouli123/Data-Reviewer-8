@@ -8,6 +8,13 @@
       "when": 1766195098803,
       "tag": "0000_careless_thunderbird",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1766560972728,
+      "tag": "0001_nervous_daimon_hellstrom",
+      "breakpoints": true
     }
   ]
 }
