@@ -35,14 +35,24 @@ export default function CustomersPage() {
     queryKey: ['/api/customers', company?.id],
     queryFn: () => Customer.list(),
     initialData: [],
-    enabled: !!company?.id
+    enabled: !!company?.id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes (cache garbage collection)
+    refetchOnMount: false, // Never refetch on mount
+    refetchOnWindowFocus: false, // Never refetch on window focus
+    refetchInterval: false // Never refetch automatically
   });
 
   const { data: categories = [] } = useQuery({
     queryKey: ['/api/categories', company?.id],
     queryFn: () => Category.list(),
     initialData: [],
-    enabled: !!company?.id
+    enabled: !!company?.id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchInterval: false
   });
 
   const transactionsQuery = useQuery({
