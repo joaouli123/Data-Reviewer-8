@@ -85,6 +85,13 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
       const [year, month, day] = data.sale_date.split('-');
       const baseDate = new Date(`${year}-${month}-${day}T12:00:00Z`);
       
+      // Get payment date if paid upfront
+      let paymentDateISO = null;
+      if (data.paymentDate) {
+        const [pYear, pMonth, pDay] = data.paymentDate.split('-');
+        paymentDateISO = new Date(`${pYear}-${pMonth}-${pDay}T12:00:00Z`).toISOString();
+      }
+      
       const promises = [];
       
       for (let i = 0; i < installmentCount; i++) {
@@ -100,7 +107,8 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
           shift: 'manhã',
           amount: String(installmentAmount.toFixed(2)),
           description: `${data.description}${installmentCount > 1 ? ` (${i + 1}/${installmentCount})` : ''}`,
-          status: 'pendente',
+          status: data.status || 'pendente',
+          paymentDate: paymentDateISO,
           installmentGroup: installmentGroupId,
           installmentNumber: i + 1,
           installmentTotal: installmentCount
@@ -131,10 +139,16 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
         category: '',
         sale_date: format(new Date(), 'yyyy-MM-dd'),
         installments: '1',
-        installment_amount: ''
+        installment_amount: '',
+        paymentDate: null,
+        status: 'pendente'
       });
       setCustomInstallments([]);
+      setIsPaidUpfront(false);
       toast.success('Venda registrada com sucesso!', { duration: 5000 });
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Erro ao registrar venda', { duration: 5000 });
     }
   });
 

@@ -89,6 +89,13 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
       const [year, month, day] = data.purchase_date.split('-');
       const baseDate = new Date(`${year}-${month}-${day}T12:00:00Z`);
       
+      // Get payment date if paid upfront
+      let paymentDateISO = null;
+      if (data.paymentDate) {
+        const [pYear, pMonth, pDay] = data.paymentDate.split('-');
+        paymentDateISO = new Date(`${pYear}-${pMonth}-${pDay}T12:00:00Z`).toISOString();
+      }
+      
       const promises = [];
       
       for (let i = 0; i < installmentCount; i++) {
@@ -104,7 +111,8 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
           shift: 'manhã',
           amount: String(installmentAmount.toFixed(2)),
           description: `${data.description}${installmentCount > 1 ? ` (${i + 1}/${installmentCount})` : ''}`,
-          status: 'pendente',
+          status: data.status || 'pendente',
+          paymentDate: paymentDateISO,
           installmentGroup: installmentGroupId,
           installmentNumber: i + 1,
           installmentTotal: installmentCount
@@ -135,9 +143,15 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
         category: '',
         purchase_date: format(new Date(), 'yyyy-MM-dd'),
         installments: 1,
-        installment_amount: ''
+        installment_amount: '',
+        paymentDate: null,
+        status: 'pendente'
       });
+      setIsPaidUpfront(false);
       onOpenChange(false);
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Erro ao registrar compra');
     }
   });
 
