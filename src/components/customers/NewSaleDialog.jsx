@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { CurrencyInput, formatCurrency, parseCurrency } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Category, Sale, Installment } from '@/api/entities';
 import { format, addMonths } from 'date-fns';
@@ -13,13 +14,16 @@ import { Plus } from 'lucide-react';
 import CreateCategoryModal from '../transactions/CreateCategoryModal';
 
 export default function NewSaleDialog({ customer, open, onOpenChange }) {
+  const [isPaidUpfront, setIsPaidUpfront] = useState(false);
   const [formData, setFormData] = useState({
     description: '',
     total_amount: '',
     category: '',
     sale_date: format(new Date(), 'yyyy-MM-dd'),
-    installments: '1',
-    installment_amount: ''
+    installments: isPaidUpfront ? 1 : '1',
+    installment_amount: '',
+    paymentDate: isPaidUpfront ? format(new Date(), 'yyyy-MM-dd') : null,
+    status: isPaidUpfront ? 'paid' : 'pendente'
   });
   const [customInstallments, setCustomInstallments] = useState([]);
   const [isCreateCategoryModalOpen, setIsCreateCategoryModalOpen] = useState(false);
@@ -218,31 +222,49 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Número de Parcelas</Label>
-              <Input
-                type="number"
-                min="1"
-                value={formData.installments}
-                onChange={(e) => handleInstallmentsChange(e.target.value)}
-              />
-            </div>
-            {Number(formData.installments) > 1 && (
-              <div className="space-y-2">
-                <Label>Valor da Parcela (opcional)</Label>
-                <div className="flex items-center gap-2">
-                  <span className="text-slate-600">R$</span>
-                  <CurrencyInput
-                    value={formData.installment_amount}
-                    onChange={(e) => setFormData({ ...formData, installment_amount: e.target.value })}
-                    placeholder={formatCurrency((parseFloat(formData.total_amount || 0) / Number(formData.installments || 1)))}
-                    className="flex-1"
-                  />
-                </div>
-              </div>
-            )}
+          <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+            <Label className="cursor-pointer">Recebido à vista?</Label>
+            <Switch 
+              checked={isPaidUpfront}
+              onCheckedChange={(checked) => {
+                setIsPaidUpfront(checked);
+                if (checked) {
+                  setFormData({...formData, installments: 1, status: 'paid', paymentDate: format(new Date(), 'yyyy-MM-dd')});
+                  setCustomInstallments([]);
+                } else {
+                  setFormData({...formData, installments: '1', status: 'pendente', paymentDate: null});
+                }
+              }}
+            />
           </div>
+
+          {!isPaidUpfront && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Número de Parcelas</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  value={formData.installments}
+                  onChange={(e) => handleInstallmentsChange(e.target.value)}
+                />
+              </div>
+              {Number(formData.installments) > 1 && (
+                <div className="space-y-2">
+                  <Label>Valor da Parcela (opcional)</Label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-600">R$</span>
+                    <CurrencyInput
+                      value={formData.installment_amount}
+                      onChange={(e) => setFormData({ ...formData, installment_amount: e.target.value })}
+                      placeholder={formatCurrency((parseFloat(formData.total_amount || 0) / Number(formData.installments || 1)))}
+                      className="flex-1"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {Number(formData.installments) > 1 && customInstallments.length === 0 && (
             <div className="p-3 bg-slate-50 rounded-lg text-sm text-slate-600">
