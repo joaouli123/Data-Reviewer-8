@@ -670,72 +670,104 @@ export default function Landing() {
       </section>
 
       {/* Pricing Section */}
-      <section className="py-24 bg-gray-50 dark:bg-gray-900">
+      <section className="py-24 bg-white dark:bg-black">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16 space-y-4">
             <h2 className="text-5xl font-bold">Escolha seu Plano</h2>
             <p className="text-xl text-gray-600 dark:text-gray-400">
-              Pagamento único ou mensal. Sua escolha.
+              Seja um assinante ou dono definitivo do sistema.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {plans.map((plan, idx) => (
-              <div
-                key={idx}
-                className={`rounded-2xl p-10 border-2 transition-all ${
-                  plan.highlighted
-                    ? "border-yellow-400 bg-gradient-to-br from-yellow-50 to-blue-50 dark:from-yellow-900/20 dark:to-blue-900/20 transform lg:scale-105 shadow-2xl"
-                    : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
-                }`}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-5xl mx-auto">
+            {/* Mensal Card */}
+            <div className="rounded-3xl p-10 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700">
+              <h3 className="text-3xl font-bold mb-2 text-gray-900 dark:text-white">MENSAL</h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-8 text-base">Flexibilidade total</p>
+
+              <div className="mb-8 space-y-2">
+                <div className="text-5xl font-bold text-gray-900 dark:text-white">
+                  R$ 97,00
+                  <span className="text-2xl text-gray-600 dark:text-gray-400 font-normal"> / mês</span>
+                </div>
+              </div>
+
+              <Button
+                size="lg"
+                variant="outline"
+                className="w-full mb-8 font-bold text-lg h-14 border-2 border-gray-300 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+                onClick={() => setLocation("/signup")}
+                data-testid="button-plan-mensal"
               >
-                {plan.highlighted && (
-                  <div className="mb-6 inline-block px-4 py-1 bg-yellow-400 text-black text-sm font-bold rounded-full">
-                    RECOMENDADO
+                ASSINAR MENSAL
+              </Button>
+
+              <div className="space-y-4">
+                {plans[0].features.map((feature, fidx) => (
+                  <div key={fidx} className="flex items-start gap-3">
+                    <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                    <span className="text-gray-700 dark:text-gray-300 text-sm">{feature}</span>
                   </div>
-                )}
+                ))}
+                <div className="flex items-start gap-3 pt-2">
+                  <div className="w-5 h-5 rounded-full border-2 border-red-500 flex-shrink-0 mt-0.5" />
+                  <span className="text-red-600 dark:text-red-400 text-sm font-medium">Sem acesso vitalício</span>
+                </div>
+              </div>
+            </div>
 
-                <h3 className="text-4xl font-bold mb-2">{plan.name}</h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-8 text-lg">{plan.subtitle}</p>
+            {/* Vitalício Card - HIGHLIGHTED */}
+            <div className="relative">
+              <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 z-20">
+                <div className="bg-yellow-400 text-black px-6 py-2 rounded-full font-bold text-sm shadow-lg">
+                  BEST-SELLER & VITALÍCIO
+                </div>
+              </div>
+              
+              <div className="rounded-3xl p-10 bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-2xl border-0">
+                <h3 className="text-3xl font-bold mb-2">VITALÍCIO</h3>
+                <p className="text-blue-100 mb-8 text-base">Economia brutal a longo prazo</p>
 
-                <div className="mb-8 space-y-1">
-                  {plan.originalPrice && (
-                    <div className="text-xl text-gray-500 line-through">
-                      De: R$ {plan.originalPrice}
+                <div className="mb-8 space-y-2">
+                  {plans[1].originalPrice && (
+                    <div className="text-lg text-blue-100 line-through">
+                      De: R$ {plans[1].originalPrice}
                     </div>
                   )}
-                  <div className="text-6xl font-bold">
-                    R$ {plan.price}
-                    <span className="text-2xl text-gray-600 dark:text-gray-400 font-normal">{plan.period}</span>
+                  <div className="space-y-1">
+                    <div className="text-base font-semibold text-blue-100">12x de</div>
+                    <div className="text-5xl font-bold text-white">
+                      R$ 99,70
+                    </div>
+                    <div className="text-sm text-blue-100">ou R$ 997,00 à vista</div>
                   </div>
-                  {plan.installments && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 pt-2">{plan.installments}</p>
-                  )}
                 </div>
 
                 <Button
                   size="lg"
-                  className={`w-full mb-8 font-bold text-lg h-14 ${
-                    plan.highlighted
-                      ? "bg-yellow-400 hover:bg-yellow-500 text-black"
-                      : "bg-blue-600 hover:bg-blue-700 text-white"
-                  }`}
+                  className="w-full mb-6 font-bold text-lg h-14 bg-white text-blue-600 hover:bg-blue-50"
                   onClick={() => setLocation("/signup")}
-                  data-testid={`button-plan-${plan.name.toLowerCase()}`}
+                  data-testid="button-plan-vitalicio"
                 >
-                  {plan.cta}
+                  QUERO O PLANO VITALÍCIO
                 </Button>
 
-                <div className="space-y-4">
-                  {plan.features.map((feature, fidx) => (
+                <div className="space-y-3 mb-6">
+                  {plans[1].features.map((feature, fidx) => (
                     <div key={fidx} className="flex items-start gap-3">
-                      <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                      <span className="text-gray-700 dark:text-gray-300">{feature}</span>
+                      <Check className="w-5 h-5 text-white flex-shrink-0 mt-0.5" />
+                      <span className="text-blue-50 text-sm">{feature}</span>
                     </div>
                   ))}
                 </div>
+
+                <div className="text-center pt-4 border-t border-blue-400">
+                  <p className="text-red-300 text-sm font-semibold">
+                    Oferta limitada para as próximas 50 contas.
+                  </p>
+                </div>
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </section>
