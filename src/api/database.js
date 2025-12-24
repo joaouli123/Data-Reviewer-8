@@ -1,7 +1,12 @@
 // Get stored auth token from localStorage (NOT data storage)
 const getAuthToken = () => {
   try {
-    return localStorage.getItem('auth_token');
+    const auth = localStorage.getItem('auth');
+    if (auth) {
+      const parsed = JSON.parse(auth);
+      return parsed.token;
+    }
+    return null;
   } catch (e) {
     return null;
   }
