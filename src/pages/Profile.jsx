@@ -12,6 +12,7 @@ import { queryClient } from '@/lib/queryClient';
 
 export default function ProfilePage() {
   const { user, updateUser } = useAuth();
+  const fileInputRef = useRef(null);
   const [previewUrl, setPreviewUrl] = useState(user?.avatar || '');
   
   const [formData, setFormData] = useState({
