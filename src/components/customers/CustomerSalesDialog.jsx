@@ -140,8 +140,8 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           status: status,
-          paidAmount: paidAmount ? parseFloat(paidAmount) : undefined,
-          interest: interest ? parseFloat(interest) : 0,
+          paidAmount: paidAmount ? paidAmount.toString() : undefined,
+          interest: interest ? interest.toString() : '0',
           paymentDate: formattedPaymentDate
         })
       });
