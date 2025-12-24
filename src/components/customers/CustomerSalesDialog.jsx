@@ -27,7 +27,7 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
   };
 
   const { data: transactionsData = [] } = useQuery({
-    queryKey: ['transactions'],
+    queryKey: ['/api/transactions'],
     queryFn: () => fetch('/api/transactions').then(res => res.json()),
     initialData: []
   });
