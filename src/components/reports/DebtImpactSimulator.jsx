@@ -19,6 +19,7 @@ export default function DebtImpactSimulator({ currentMetrics }) {
     installments: '12',
     interestRate: '0',
     purposeDescription: ''
+  });
 
   // Validate currentMetrics
   const metrics = currentMetrics || {};

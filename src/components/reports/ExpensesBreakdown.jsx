@@ -141,7 +141,7 @@ export default function ExpensesBreakdown({ opportunities, transactions, categor
             )}
           </div>
         </div>
-        )}
+      )}
       </CardContent>
     </Card>
   );
