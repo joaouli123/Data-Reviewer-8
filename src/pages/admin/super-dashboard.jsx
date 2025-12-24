@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 const apiRequest = async (url, options = {}) => {
   const token = JSON.parse(localStorage.getItem('auth') || '{}').token;
@@ -21,7 +23,46 @@ const apiRequest = async (url, options = {}) => {
   return response.json();
 };
 
+function getDateRange(period) {
+  const now = new Date();
+  const start = new Date();
+  
+  switch (period) {
+    case 'today':
+      start.setHours(0, 0, 0, 0);
+      break;
+    case '7days':
+      start.setDate(start.getDate() - 7);
+      break;
+    case '30days':
+      start.setDate(start.getDate() - 30);
+      break;
+    case '90days':
+      start.setDate(start.getDate() - 90);
+      break;
+    case 'all':
+    default:
+      return null;
+  }
+  
+  return { start, end: now };
+}
+
+function filterByPeriod(items, period) {
+  if (period === 'all') return items;
+  
+  const range = getDateRange(period);
+  if (!range) return items;
+  
+  return items.filter(item => {
+    const createdDate = new Date(item.createdAt);
+    return createdDate >= range.start && createdDate <= range.end;
+  });
+}
+
 function SuperDashboardContent() {
+  const [period, setPeriod] = useState('all');
+
   // Fetch data
   const { data: companies = [] } = useQuery({
     queryKey: ['/api/admin/companies'],
@@ -38,21 +79,72 @@ function SuperDashboardContent() {
     queryFn: () => apiRequest('/api/admin/customers'),
   });
 
+  // Filter by period
+  const filteredCompanies = filterByPeriod(companies, period);
+  const filteredUsers = filterByPeriod(users, period);
+  const filteredCustomers = filterByPeriod(customers, period);
+
   // Calculate metrics
-  const activeCompanies = companies.filter(c => c.subscriptionStatus === 'active').length;
-  const suspendedCompanies = companies.filter(c => c.subscriptionStatus === 'suspended').length;
-  const activeUsers = users.filter(u => u.status === 'active').length;
-  const inactiveUsers = users.filter(u => u.status === 'inactive').length;
-  const suspendedUsers = users.filter(u => u.status === 'suspended').length;
-  const activeCustomers = customers.filter(c => c.status === 'active').length;
+  const activeCompanies = filteredCompanies.filter(c => c.subscriptionStatus === 'active').length;
+  const suspendedCompanies = filteredCompanies.filter(c => c.subscriptionStatus === 'suspended').length;
+  const activeUsers = filteredUsers.filter(u => u.status === 'active').length;
+  const inactiveUsers = filteredUsers.filter(u => u.status === 'inactive').length;
+  const suspendedUsers = filteredUsers.filter(u => u.status === 'suspended').length;
+  const activeCustomers = filteredCustomers.filter(c => c.status === 'active').length;
   const churnRate = activeCompanies > 0 ? ((suspendedCompanies / activeCompanies) * 100).toFixed(1) : 0;
-  const avgUsersPerCompany = activeCompanies > 0 ? (users.length / activeCompanies).toFixed(1) : 0;
+  const avgUsersPerCompany = activeCompanies > 0 ? (filteredUsers.length / activeCompanies).toFixed(1) : 0;
 
   return (
     <div className="space-y-6 p-4 md:p-8">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Dashboard Super Admin</h1>
-        <p className="text-muted-foreground mt-1">Visão geral do sistema</p>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Dashboard Super Admin</h1>
+          <p className="text-muted-foreground mt-1">Visão geral do sistema</p>
+        </div>
+      </div>
+
+      {/* Period Filter */}
+      <div className="flex flex-wrap gap-2">
+        <Button 
+          variant={period === 'today' ? 'default' : 'outline'} 
+          onClick={() => setPeriod('today')}
+          size="sm"
+          data-testid="button-filter-today"
+        >
+          Hoje
+        </Button>
+        <Button 
+          variant={period === '7days' ? 'default' : 'outline'} 
+          onClick={() => setPeriod('7days')}
+          size="sm"
+          data-testid="button-filter-7days"
+        >
+          Últimos 7 dias
+        </Button>
+        <Button 
+          variant={period === '30days' ? 'default' : 'outline'} 
+          onClick={() => setPeriod('30days')}
+          size="sm"
+          data-testid="button-filter-30days"
+        >
+          Últimos 30 dias
+        </Button>
+        <Button 
+          variant={period === '90days' ? 'default' : 'outline'} 
+          onClick={() => setPeriod('90days')}
+          size="sm"
+          data-testid="button-filter-90days"
+        >
+          Últimos 90 dias
+        </Button>
+        <Button 
+          variant={period === 'all' ? 'default' : 'outline'} 
+          onClick={() => setPeriod('all')}
+          size="sm"
+          data-testid="button-filter-all"
+        >
+          Tudo
+        </Button>
       </div>
 
       {/* KPI Cards */}
@@ -62,7 +154,7 @@ function SuperDashboardContent() {
             <CardTitle className="text-sm font-medium">Total de Empresas</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{companies.length}</div>
+            <div className="text-2xl font-bold">{filteredCompanies.length}</div>
             <p className="text-xs text-muted-foreground mt-1">{activeCompanies} ativas</p>
           </CardContent>
         </Card>
@@ -84,7 +176,7 @@ function SuperDashboardContent() {
             <CardTitle className="text-sm font-medium">Usuários Totais</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{users.length}</div>
+            <div className="text-2xl font-bold">{filteredUsers.length}</div>
             <p className="text-xs text-muted-foreground mt-1">{activeUsers} ativos</p>
           </CardContent>
         </Card>
@@ -116,7 +208,7 @@ function SuperDashboardContent() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm">Outras</span>
-                <Badge variant="secondary">{companies.length - activeCompanies - suspendedCompanies}</Badge>
+                <Badge variant="secondary">{filteredCompanies.length - activeCompanies - suspendedCompanies}</Badge>
               </div>
             </div>
           </div>
