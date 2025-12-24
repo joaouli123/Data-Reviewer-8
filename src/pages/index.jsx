@@ -43,10 +43,8 @@ export default function Pages() {
   if (user?.isSuperAdmin) {
     return (
       <Switch>
-        <Route path="/" component={SuperAdminDashboard} />
-        <Route path="/admin/customers" component={AdminCustomers} />
-        <Route path="/admin/users" component={AdminUsers} />
-        <Route component={SuperAdminDashboard} />
+        <Route path="/" component={SuperAdmin} />
+        <Route component={SuperAdmin} />
       </Switch>
     );
   }
