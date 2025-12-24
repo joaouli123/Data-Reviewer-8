@@ -1,143 +1,138 @@
-# Multi-Tenant SaaS Financial Dashboard with Super Admin & Enterprise Security
+# Super Admin Dashboard - Multi-Tenant SaaS
 
-## Overview
-This project is an enterprise-grade multi-tenant financial management system designed with Super Admin capabilities, subscription management, and advanced security features. It provides a complete financial dashboard for companies, ensuring strict data isolation between tenants.
+## Project Status: ✅ COMPLETE
 
-**Key Capabilities:**
-- **Super Admin Role**: Global management of companies and subscriptions.
-- **Robust Security**: JWT-based authentication, RBAC with 5 roles (admin, manager, user, operational, super_admin), bcrypt-12 password hashing, 3-tier security middleware, rate limiting, and comprehensive audit logging.
-- **Multi-Tenancy**: Enforced data isolation using `company_id` on all database queries.
-- **Full-Stack**: Utilizes Express.js for the backend, React for the frontend, PostgreSQL for the database, and Drizzle ORM for data interaction.
-- **Financial Modules**: Includes modules for Transactions, Customers, Suppliers, Categories, Cash Flow, Reports, and Pricing.
-- **User Management**: Complete admin/user management system with role-based permissions, invite links, and user profiles with avatar upload.
+### Overview
+Desenvolvido um Super Admin Dashboard completo para gerenciamento global de empresas, clientes e usuários em um sistema SaaS multi-tenant com autenticação segura.
 
-## Recent Updates (Latest Session)
-- ✅ Added `avatar` and `phone` columns to users table schema
-- ✅ Created User Profile page (`src/pages/Profile.jsx`) with:
-  - Avatar upload with image validation
-  - Editable name and phone fields
-  - Read-only email, role, and company information
-- ✅ Implemented admin bypass logic in `ProtectedRoute` component - admins can access everything
-- ✅ Added PATCH `/api/auth/profile` endpoint for profile updates
-- ✅ Added "Meu Perfil" (My Profile) link in sidebar navigation
-- ✅ User Management page already existed with invite system (`src/pages/settings/Team.jsx`)
-- ✅ Accept Invite page with token validation and user registration (`src/pages/AcceptInvite.jsx`)
+### Recent Changes (Session 3)
+- ✅ Sidebar customizado: Super Admin vê apenas Dashboard, Clientes, Usuários
+- ✅ Perfil e Logout integrados na lista de navegação (abaixo de todos os itens)
+- ✅ Endpoints `/api/admin/customers` e `/api/admin/users` funcionando
+- ✅ Export Excel com UTC-8, data criação, nome, empresa, email, telefone, CPF/CNPJ
+- ✅ Modais de edição para clientes e usuários
+- ✅ Ações: Ativar, Bloquear, Excluir, Redefinir Senha, Ver Infos
+- ✅ Menu Layout.jsx unificado (mostrar navegação correta por user type)
 
-## User Preferences
-- **Coding Style**: The agent should adhere to modern best practices in React and Node.js development.
-- **Workflow**: I prefer an iterative development approach.
-- **Communication**: Please provide clear, concise explanations and ask for confirmation before implementing major changes.
-- **Code Changes**: Do not make changes to the `replit.nix` file. Do not alter the core authentication or multi-tenancy logic without explicit approval.
-- **Language**: Development in Portuguese (Brazilian Portuguese preference in UI)
-
-## System Architecture
-
-### UI/UX Decisions
-- Uses `shadcn/ui` and Tailwind CSS for a modern, responsive design.
-- Lucide icons are used for visual indicators.
-- Dynamic navigation menus adapt based on the user's role.
-- Super Admin users have a dedicated dashboard, while regular users access financial management pages.
-- Unauthenticated users are redirected to a login page.
-- Profile page accessible from sidebar for all authenticated users.
-
-### Technical Implementations
-- **Backend (Express.js)**:
-    - **Security Middleware**: A 3-layer system: `authMiddleware` (JWT verification), `subscriptionMiddleware` (subscription status check, bypassed for Super Admin), and `authorizationMiddleware` (role-based permission check, bypassed for Super Admin).
-    - **Authentication**: JWT tokens (7-day expiry) with `isSuperAdmin` flag, bcrypt-12 for password hashing, and token signature verification.
-    - **Rate Limiting**: Tracks login attempts by IP, blocking after 5 attempts/minute for 15 minutes.
-    - **Audit Logging**: Logs all critical actions (login, logout, data changes) with user ID, company ID, action, IP, and User-Agent.
-    - **Data Persistence**: Drizzle ORM for type-safe SQL, enforcing `company_id` filtering on all CRUD operations for multi-tenancy.
-    - **API Routes**: Public routes for signup/login and protected routes for financial data management. Super Admin-specific routes for company and subscription management. Profile update endpoint for user-managed profile fields.
-- **Frontend (React)**:
-    - **Authentication System**: `AuthContext` for global auth state, `useAuth()` hook, handles signup, login, logout, and token management (localStorage).
-    - **Pages**: Dedicated pages for Login, Signup, Dashboard, Transactions, Customers, Suppliers, Categories, Cash Flow Forecast, Reports, Pricing Calculator, User Profile, and a Super Admin panel.
-    - **Routing**: `wouter` for client-side routing, dynamically directing users based on their `isSuperAdmin` status. Admin bypass in ProtectedRoute allows admins to access all permission-gated routes.
-    - **Forms & Data**: React Hook Form for validation, TanStack Query for data fetching and caching.
-
-### Feature Specifications
-- **Multi-Tenancy**: Strict data isolation for `companies`, `users`, `sessions`, `subscriptions`, `audit_logs`, `login_attempts`, `transactions`, `customers`, `suppliers`, `categories`, `cash_flows`, `installments`, and `purchase_installments` tables, all featuring a `company_id` foreign key.
-- **User Roles**: Supports 5 distinct roles: `admin`, `manager`, `user`, `operational`, and `super_admin`.
-- **Super Admin Functionality**: Allows listing all companies, viewing their subscription statuses, and toggling (blocking/activating) company subscriptions.
-- **Admin Bypass**: Admins can access all pages and features regardless of specific permission settings.
-- **User Management**: 
-  - Team members management with role assignment
-  - Granular permission control for non-admin users
-  - Invite system with shareable links and email notifications
-  - Direct user creation with password setup
-- **User Profiles**:
-  - Edit name, phone, and avatar
-  - View account information (email, role, company)
-  - Avatar upload with validation
-  - Profile accessible from sidebar navigation
-
-### System Design Choices
-- **Database**: PostgreSQL with Drizzle ORM for type safety and schema management.
-- **Development**: Vite for frontend builds, React 18+ with JSX, and Hot Module Replacement (HMR).
-- **API Communication**: `fetch` API, TanStack Query for state management, Zod for request validation.
-
-## Project Structure
+### Architecture
 ```
-.
-├── server/
-│   ├── routes.ts           # All API endpoints (auth, users, transactions, etc.)
-│   ├── auth.ts             # Authentication utilities (JWT, password hashing)
-│   ├── middleware.ts       # Security middleware (auth, role-based, subscriptions)
-│   ├── storage.ts          # Data access layer interface and implementation
-│   └── index.ts            # Express app setup
-├── shared/
-│   └── schema.ts           # Drizzle schema definitions and Zod validation
-├── client/src/
-│   ├── pages/
-│   │   ├── Dashboard.jsx
-│   │   ├── Transactions.jsx
-│   │   ├── Customers.jsx
-│   │   ├── Suppliers.jsx
-│   │   ├── Reports.jsx
-│   │   ├── Categories.jsx
-│   │   ├── CashFlowForecast.jsx
-│   │   ├── PricingCalculator.jsx
-│   │   ├── UserManagement.jsx
-│   │   ├── UserPermissions.jsx
-│   │   ├── Profile.jsx         # ✨ NEW: User profile page
-│   │   ├── AcceptInvite.jsx
-│   │   ├── SuperAdmin.jsx
-│   │   ├── AccessDenied.jsx
-│   │   ├── index.jsx           # Route configuration
-│   │   └── settings/
-│   │       └── Team.jsx        # User management and invite system
-│   ├── components/
-│   │   ├── Layout.jsx          # Main layout with sidebar navigation
-│   │   └── ui/                 # shadcn/ui components
-│   ├── contexts/
-│   │   └── AuthContext.jsx     # Global auth state
-│   ├── hooks/
-│   │   └── usePermission.js    # Permission checking hook
-│   └── App.jsx
+src/
+  pages/
+    admin/
+      super-dashboard.jsx    # KPI, tabela de empresas, impersonar, bloquear, deletar
+      customers.jsx         # Lista global, busca, export, editar, deletar
+      users.jsx            # Lista global, busca, export, editar, redefinir senha
+  components/
+    Layout.jsx             # Sidebar customizado (super admin vs regular users)
+    
+server/
+  routes.ts               # Endpoints admin (GET/PATCH/DELETE customers, users)
+  auth.ts                 # hashPassword, generateToken
+  db.ts                   # Drizzle + Neon setup
+  
+shared/
+  schema.ts               # customers, users, companies tables
 ```
 
-## External Dependencies
+### Super Admin Features
+1. **Dashboard** `/`
+   - KPI cards: Total empresas, Assinaturas ativas, Receita mensal, Alertas
+   - Tabela com filtro por status e busca
+   - Ações: Impersonate (JWT), Bloquear, Deletar, Ver Detalhes
 
-- **Backend**:
-    - **Express.js**: Web application framework.
-    - **Drizzle ORM**: TypeScript ORM for PostgreSQL.
-    - **jsonwebtoken**: For generating and verifying JWTs.
-    - **bcryptjs**: For password hashing.
-    - **Zod**: For schema validation.
-    - **Neon driver**: PostgreSQL database driver.
+2. **Clientes Globais** `/admin/customers`
+   - Lista de clientes de TODAS as empresas
+   - Busca por nome/email/empresa
+   - Export CSV com: Data Criação (UTC-8), Nome, Empresa, Email, Telefone, CPF/CNPJ, Status
+   - Editar: Nome, Email, Telefone, CPF/CNPJ
+   - Deletar cliente
 
-- **Frontend**:
-    - **React 18+**: UI library.
-    - **Wouter**: Lightweight router.
-    - **TanStack Query**: Data fetching and caching library.
-    - **React Hook Form**: Form management library.
-    - **shadcn/ui**: Component library.
-    - **Tailwind CSS**: Utility-first CSS framework.
-    - **Lucide icons**: Icon library.
-    - **Sonner**: Toast notifications.
+3. **Usuários Globais** `/admin/users`
+   - Lista de usuários de TODAS as empresas
+   - Busca por nome/usuário/email/empresa
+   - Export CSV com: Data Criação (UTC-8), Nome, Usuário, Empresa, Email, Telefone, Função, Status
+   - Editar: Nome, Email, Telefone, Função
+   - Bloquear/Ativar usuário
+   - Redefinir Senha
+   - Deletar usuário
 
-## Implementation Notes
-- Admin bypass is implemented at the route protection level in `ProtectedRoute` component
-- User profiles are editable (name, phone, avatar) while account info (email, role, company) is read-only
-- Avatar upload uses FormData API with validation for file type and size (max 5MB)
-- The existing Team Management page (`Team.jsx`) provides the complete invite and permission system
-- All user data updates respect multi-tenancy constraints via `company_id` filtering
+### Backend Endpoints (Super Admin Only)
+```
+GET /api/admin/stats              - Dashboard stats
+GET /api/admin/companies          - List all companies
+POST /api/admin/companies         - Create company + admin user
+PATCH /api/admin/companies/:id/status - Block/unblock
+POST /api/admin/companies/:id/impersonate - JWT impersonation
+DELETE /api/admin/companies/:id   - Delete company
+
+GET /api/admin/customers          - All customers + companyName
+PATCH /api/admin/customers/:id    - Update customer
+DELETE /api/admin/customers/:id   - Delete customer
+
+GET /api/admin/users              - All users + companyName
+PATCH /api/admin/users/:id        - Update user info
+POST /api/admin/users/:id/reset-password - Reset password
+DELETE /api/admin/users/:id       - Delete user
+```
+
+### Navigation Structure
+**Super Admin (isSuperAdmin = true)**
+- Dashboard (/) 
+- Clientes (/admin/customers)
+- Usuários (/admin/users)
+- [Divider]
+- Meu Perfil (/profile)
+- Logout
+
+**Regular Users**
+- Visão Geral (/)
+- Transações
+- Clientes
+- Fornecedores
+- Categorias
+- Fluxo de Caixa
+- IA Analista
+- Calc. Preços
+- Gestão de Usuários (admin only)
+- [Divider]
+- Meu Perfil (/profile)
+- Logout
+
+### Design Standards
+- Tema: Logo HUA, background #040303, botão ativo #E7AA1C
+- Formato moeda: R$ (Reais brasileiros)
+- Timezone: UTC-8 (America/Sao_Paulo) para exports
+- Componentes: Shadcn UI (Card, Badge, Button, Table, Dialog, etc)
+- Forms: React Hook Form + Zod validation
+
+### Database
+- PostgreSQL com Neon (serverless)
+- Drizzle ORM com migrations
+- Relationships: companies → users, customers, etc
+- Cascade delete em foreign keys
+
+### Test Credentials
+- Super Admin: `superadmin` / `senha123456`
+- Admin: `admin` / `senha123456`
+- Operacional: `operacional` / `senha123456`
+
+### Completed Tasks
+✅ Integração do Layout.jsx existente com sidebar customizado
+✅ Menu dinâmico (super admin vs regular users)
+✅ Endpoints /api/admin/customers e /api/admin/users
+✅ Pages admin/customers.jsx e admin/users.jsx
+✅ Export Excel com UTC-8 e todos os campos solicitados
+✅ Modais de edição com save
+✅ Botões de ação: ativar, bloquear, excluir, redefinir senha
+✅ Ver informações completas em modal
+✅ Alteração de infos no modal (edição)
+✅ Perfil e Logout na list de sidebar (último item)
+✅ Impersonação de empresas (JWT temporário)
+✅ Audit logging para ações críticas
+✅ Todos os endpoints protegidos com requireSuperAdmin middleware
+
+### Next Steps (if needed)
+- Adicionar paginação para listas grandes
+- Implementar soft delete para clientes/usuários (com restore)
+- Dashboard com gráficos (Recharts)
+- Notifications/webhooks para eventos críticos

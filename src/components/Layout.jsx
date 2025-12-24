@@ -64,8 +64,19 @@ export default function Layout({ children }) {
                 </Link>
             );
         })}
+        <Link href="/profile" onClick={onNavigate}>
+          <div className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${pathname === '/profile' ? 'text-black shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
+              style={{ backgroundColor: pathname === '/profile' ? '#E7AA1C' : 'transparent' }} data-testid="link-nav-meu-perfil">
+              <User className={`w-5 h-5 ${pathname === '/profile' ? 'text-black' : 'text-slate-400 group-hover:text-white'}`} />
+              <span className="font-medium text-sm">Meu Perfil</span>
+          </div>
+        </Link>
+        <div onClick={handleLogout} className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group text-slate-400 hover:text-white hover:bg-white/10 cursor-pointer" data-testid="button-logout">
+          <LogOut className="w-5 h-5 text-slate-400 group-hover:text-white" />
+          <span className="font-medium text-sm">Logout</span>
+        </div>
       </nav>
-      <div className="pt-6 space-y-3 border-t border-slate-800">
+      <div className="pt-6 border-t border-slate-800">
         <div className="flex items-center gap-3 px-3 py-3 rounded-lg bg-slate-800/50">
           <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-blue-400 font-medium text-xs">{user?.name?.substring(0, 2).toUpperCase() || 'US'}</div>
           <div className="flex-1 min-w-0">
@@ -73,16 +84,6 @@ export default function Layout({ children }) {
             <p className="text-xs text-slate-400 truncate">{company?.name || 'Empresa'}</p>
           </div>
         </div>
-        <Link href="/profile" onClick={onNavigate}>
-          <Button variant="ghost" className="w-full justify-start gap-2 text-white hover:bg-white/10" data-testid="button-profile">
-            <User className="w-4 h-4" />
-            <span className="text-sm">Meu Perfil</span>
-          </Button>
-        </Link>
-        <Button variant="ghost" className="w-full justify-start gap-2 text-white hover:bg-white/10" onClick={handleLogout} data-testid="button-logout">
-          <LogOut className="w-4 h-4" />
-          <span className="text-sm">Logout</span>
-        </Button>
       </div>
     </div>
   );

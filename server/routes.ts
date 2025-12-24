@@ -12,6 +12,9 @@ import {
   insertCompanySchema,
   insertSubscriptionSchema,
   DEFAULT_CATEGORIES,
+  customers,
+  users,
+  companies,
 } from "../shared/schema";
 import {
   createCompany,
@@ -23,9 +26,12 @@ import {
   findUserById,
   findCompanyById,
   createAuditLog,
+  hashPassword,
 } from "./auth";
 import { setupVite } from "./vite";
 import { z } from "zod";
+import { db } from "./db";
+import { eq, desc } from "drizzle-orm";
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   // Health check (public)
