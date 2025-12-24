@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { useLocation } from 'wouter';
 import { queryClient } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -11,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Building2, Users, TrendingUp, AlertTriangle, Plus, MoreVertical, Eye, Lock, Trash2 } from 'lucide-react';
+import { Building2, Users, TrendingUp, AlertTriangle, Plus, MoreVertical, Eye, Lock, Trash2, LogOut, User } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
@@ -34,13 +35,23 @@ const apiRequest = async (url, options = {}) => {
   return response.json();
 };
 
+const formatCurrency = (value) => {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(value || 0);
+};
+
 export default function SuperAdminDashboard() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(null);
+
+  const auth = JSON.parse(localStorage.getItem('auth') || '{}');
 
   // Fetch stats
   const { data: stats = {} } = useQuery({
@@ -72,11 +83,11 @@ export default function SuperAdminDashboard() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/companies'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
-      toast({ title: 'Success', description: 'Company created successfully' });
+      toast({ title: 'Sucesso', description: 'Empresa criada com sucesso' });
       setCreateDialogOpen(false);
     },
     onError: (error) => {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
     },
   });
 
@@ -89,10 +100,10 @@ export default function SuperAdminDashboard() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/companies'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
-      toast({ title: 'Success', description: 'Company status updated' });
+      toast({ title: 'Sucesso', description: 'Status da empresa atualizado' });
     },
     onError: (error) => {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
     },
   });
 
@@ -104,11 +115,11 @@ export default function SuperAdminDashboard() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/companies'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
-      toast({ title: 'Success', description: 'Company deleted successfully' });
+      toast({ title: 'Sucesso', description: 'Empresa deletada com sucesso' });
       setDeleteConfirm(null);
     },
     onError: (error) => {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
     },
   });
 
@@ -123,243 +134,303 @@ export default function SuperAdminDashboard() {
         user: data.user,
         company: data.company,
       }));
-      toast({ title: 'Success', description: 'Accessing company dashboard' });
-      setTimeout(() => window.location.href = '/dashboard', 1000);
+      toast({ title: 'Sucesso', description: 'Acessando dashboard da empresa' });
+      setTimeout(() => window.location.href = '/', 1000);
     },
     onError: (error) => {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
     },
   });
 
+  const handleLogout = () => {
+    localStorage.removeItem('auth');
+    setLocation('/login');
+  };
+
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Super Admin Dashboard</h1>
-          <p className="text-muted-foreground">Manage all companies and subscriptions</p>
+    <div className="min-h-screen bg-background flex">
+      {/* Sidebar */}
+      <aside className="w-64 bg-card border-r border-border">
+        <div className="p-6">
+          <h1 className="text-2xl font-bold text-foreground">Admin</h1>
+          <p className="text-sm text-muted-foreground">Sistema de Gestão</p>
         </div>
 
-        {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <Card className="p-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">Total Companies</p>
-                <p className="text-3xl font-bold text-foreground">{stats.totalCompanies || 0}</p>
-              </div>
-              <Building2 className="h-8 w-8 text-primary opacity-50" />
-            </div>
-          </Card>
+        <nav className="px-4 space-y-2">
+          <div className="py-2 px-4 bg-primary/10 border-l-2 border-primary rounded">
+            <p className="text-sm font-medium text-foreground">Dashboard</p>
+          </div>
+        </nav>
 
-          <Card className="p-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">Active Subscriptions</p>
-                <p className="text-3xl font-bold text-foreground">{stats.activeSubscriptions || 0}</p>
-              </div>
-              <Users className="h-8 w-8 text-primary opacity-50" />
+        {/* Profile Section at Bottom */}
+        <div className="absolute bottom-0 left-0 right-0 w-64 border-t border-border p-4 space-y-4">
+          <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+            <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+              <User className="h-5 w-5" />
             </div>
-          </Card>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-foreground truncate">{auth.user?.username || 'Super Admin'}</p>
+              <p className="text-xs text-muted-foreground truncate">{auth.user?.email}</p>
+            </div>
+          </div>
 
-          <Card className="p-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">Monthly Revenue</p>
-                <p className="text-3xl font-bold text-foreground">${stats.monthlyRevenue || 0}</p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-green-500 opacity-50" />
-            </div>
-          </Card>
+          <Button
+            variant="outline"
+            className="w-full gap-2"
+            onClick={handleLogout}
+            data-testid="button-logout"
+          >
+            <LogOut className="h-4 w-4" />
+            Deslogar
+          </Button>
+        </div>
+      </aside>
 
-          <Card className="p-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">Alerts</p>
-                <p className="text-3xl font-bold text-foreground">{stats.alerts || 0}</p>
-              </div>
-              <AlertTriangle className="h-8 w-8 text-destructive opacity-50" />
-            </div>
-          </Card>
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        {/* Top Bar */}
+        <div className="border-b border-border bg-card px-8 py-4 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Super Admin Dashboard</h1>
+            <p className="text-muted-foreground">Gerencie todas as empresas e assinaturas</p>
+          </div>
         </div>
 
-        {/* Companies Table */}
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold">Companies Management</h2>
-            <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  New Company
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px]">
-                <DialogHeader>
-                  <DialogTitle>Create New Company</DialogTitle>
-                  <DialogDescription>Add a new company and its admin user</DialogDescription>
-                </DialogHeader>
-                <CreateCompanyForm onSuccess={() => setCreateDialogOpen(false)} />
-              </DialogContent>
-            </Dialog>
-          </div>
+        {/* Page Content */}
+        <div className="flex-1 overflow-auto p-8">
+          <div className="max-w-7xl mx-auto space-y-8">
+            {/* KPI Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card className="p-6">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-2">Total de Empresas</p>
+                    <p className="text-3xl font-bold text-foreground">{stats.totalCompanies || 0}</p>
+                  </div>
+                  <Building2 className="h-8 w-8 text-primary opacity-50" />
+                </div>
+              </Card>
 
-          {/* Filters */}
-          <div className="flex gap-4 mb-6">
-            <Input
-              placeholder="Search by name, document, or email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="flex-1"
-              data-testid="input-search-companies"
-            />
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="suspended">Suspended</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+              <Card className="p-6">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-2">Assinaturas Ativas</p>
+                    <p className="text-3xl font-bold text-foreground">{stats.activeSubscriptions || 0}</p>
+                  </div>
+                  <Users className="h-8 w-8 text-primary opacity-50" />
+                </div>
+              </Card>
 
-          {/* Table */}
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Company</TableHead>
-                  <TableHead>Owner</TableHead>
-                  <TableHead>Document</TableHead>
-                  <TableHead>Plan</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Users</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan="7" className="text-center py-8 text-muted-foreground">
-                      Loading...
-                    </TableCell>
-                  </TableRow>
-                ) : filteredCompanies.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan="7" className="text-center py-8 text-muted-foreground">
-                      No companies found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredCompanies.map((company) => (
-                    <TableRow key={company.id} data-testid={`row-company-${company.id}`}>
-                      <TableCell className="font-medium">{company.name}</TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium text-sm">{company.ownerName}</p>
-                          <p className="text-xs text-muted-foreground">{company.ownerEmail}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-mono text-sm">{company.document}</TableCell>
-                      <TableCell className="capitalize">{company.subscription?.plan || 'basic'}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={company.subscriptionStatus === 'active' ? 'default' : 'destructive'}
-                          className="capitalize"
-                          data-testid={`badge-status-${company.id}`}
-                        >
-                          {company.subscriptionStatus}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{company.userCount}</TableCell>
-                      <TableCell className="text-right">
-                        <CompanyActionsMenu
-                          company={company}
-                          onImpersonate={() => impersonateMutation.mutate(company.id)}
-                          onBlock={() => updateStatusMutation.mutate({ id: company.id, status: 'suspended' })}
-                          onDelete={() => setDeleteConfirm(company)}
-                          onDetails={() => setDetailsDialogOpen(company)}
-                        />
-                      </TableCell>
+              <Card className="p-6">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-2">Receita Mensal</p>
+                    <p className="text-3xl font-bold text-foreground">{formatCurrency(stats.monthlyRevenue)}</p>
+                  </div>
+                  <TrendingUp className="h-8 w-8 text-green-500 opacity-50" />
+                </div>
+              </Card>
+
+              <Card className="p-6">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-2">Alertas</p>
+                    <p className="text-3xl font-bold text-foreground">{stats.alerts || 0}</p>
+                  </div>
+                  <AlertTriangle className="h-8 w-8 text-destructive opacity-50" />
+                </div>
+              </Card>
+            </div>
+
+            {/* Companies Table */}
+            <Card className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold">Gestão de Empresas</h2>
+                <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="gap-2" data-testid="button-new-company">
+                      <Plus className="h-4 w-4" />
+                      Nova Empresa
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[500px]">
+                    <DialogHeader>
+                      <DialogTitle>Criar Nova Empresa</DialogTitle>
+                      <DialogDescription>Adicione uma nova empresa e seu usuário admin</DialogDescription>
+                    </DialogHeader>
+                    <CreateCompanyForm 
+                      onSuccess={() => setCreateDialogOpen(false)}
+                      isPending={createCompanyMutation.isPending}
+                      onSubmit={(data) => createCompanyMutation.mutate(data)}
+                    />
+                  </DialogContent>
+                </Dialog>
+              </div>
+
+              {/* Filters */}
+              <div className="flex gap-4 mb-6">
+                <Input
+                  placeholder="Buscar por nome, documento ou email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="flex-1"
+                  data-testid="input-search-companies"
+                />
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos Status</SelectItem>
+                    <SelectItem value="active">Ativo</SelectItem>
+                    <SelectItem value="suspended">Suspenso</SelectItem>
+                    <SelectItem value="cancelled">Cancelado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Table */}
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Empresa</TableHead>
+                      <TableHead>Dono</TableHead>
+                      <TableHead>Documento</TableHead>
+                      <TableHead>Plano</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Usuários</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {isLoading ? (
+                      <TableRow>
+                        <TableCell colSpan="7" className="text-center py-8 text-muted-foreground">
+                          Carregando...
+                        </TableCell>
+                      </TableRow>
+                    ) : filteredCompanies.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan="7" className="text-center py-8 text-muted-foreground">
+                          Nenhuma empresa encontrada
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredCompanies.map((company) => (
+                        <TableRow key={company.id} data-testid={`row-company-${company.id}`}>
+                          <TableCell className="font-medium">{company.name}</TableCell>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium text-sm">{company.ownerName}</p>
+                              <p className="text-xs text-muted-foreground">{company.ownerEmail}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-mono text-sm">{company.document}</TableCell>
+                          <TableCell className="capitalize">{company.subscription?.plan || 'basic'}</TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={company.subscriptionStatus === 'active' ? 'default' : 'destructive'}
+                              className="capitalize"
+                              data-testid={`badge-status-${company.id}`}
+                            >
+                              {company.subscriptionStatus === 'active' ? 'Ativo' : 'Suspenso'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{company.userCount}</TableCell>
+                          <TableCell className="text-right">
+                            <CompanyActionsMenu
+                              company={company}
+                              onImpersonate={() => impersonateMutation.mutate(company.id)}
+                              onBlock={() => updateStatusMutation.mutate({ 
+                                id: company.id, 
+                                status: company.subscriptionStatus === 'active' ? 'suspended' : 'active' 
+                              })}
+                              onDelete={() => setDeleteConfirm(company)}
+                              onDetails={() => setDetailsDialogOpen(company)}
+                              isBlockLoading={updateStatusMutation.isPending}
+                              isImpersonateLoading={impersonateMutation.isPending}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </Card>
+
+            {/* Details Dialog */}
+            {detailsDialogOpen && (
+              <Dialog open={!!detailsDialogOpen} onOpenChange={() => setDetailsDialogOpen(null)}>
+                <DialogContent className="sm:max-w-[500px]">
+                  <DialogHeader>
+                    <DialogTitle>{detailsDialogOpen.name}</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Documento</p>
+                      <p className="text-lg font-medium">{detailsDialogOpen.document}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Dono</p>
+                      <p className="text-lg font-medium">{detailsDialogOpen.ownerName}</p>
+                      <p className="text-sm">{detailsDialogOpen.ownerEmail}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Plano</p>
+                      <p className="text-lg font-medium capitalize">{detailsDialogOpen.subscription?.plan}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Status</p>
+                      <Badge className="capitalize mt-2">{detailsDialogOpen.subscriptionStatus}</Badge>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Usuários</p>
+                      <p className="text-lg font-medium">{detailsDialogOpen.userCount}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Criada em</p>
+                      <p className="text-sm">{new Date(detailsDialogOpen.createdAt).toLocaleDateString('pt-BR')}</p>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
+
+            {/* Delete Confirmation */}
+            {deleteConfirm && (
+              <AlertDialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Deletar Empresa?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Tem certeza que deseja deletar <strong>{deleteConfirm.name}</strong>? Esta ação não pode ser desfeita e vai deletar todos os dados associados.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <div className="bg-destructive/10 border border-destructive/20 rounded p-4 mb-4">
+                    <p className="text-sm text-destructive font-medium">Aviso: Isso vai deletar permanentemente todos os dados da empresa.</p>
+                  </div>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => deleteCompanyMutation.mutate(deleteConfirm.id)}
+                    disabled={deleteCompanyMutation.isPending}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    data-testid="button-confirm-delete"
+                  >
+                    {deleteCompanyMutation.isPending ? 'Deletando...' : 'Deletar Empresa'}
+                  </AlertDialogAction>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </div>
-        </Card>
-
-        {/* Details Dialog */}
-        {detailsDialogOpen && (
-          <Dialog open={!!detailsDialogOpen} onOpenChange={() => setDetailsDialogOpen(null)}>
-            <DialogContent className="sm:max-w-[500px]">
-              <DialogHeader>
-                <DialogTitle>{detailsDialogOpen.name}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Document</p>
-                  <p className="text-lg font-medium">{detailsDialogOpen.document}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Owner</p>
-                  <p className="text-lg font-medium">{detailsDialogOpen.ownerName}</p>
-                  <p className="text-sm">{detailsDialogOpen.ownerEmail}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Plan</p>
-                  <p className="text-lg font-medium capitalize">{detailsDialogOpen.subscription?.plan}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Status</p>
-                  <Badge className="capitalize mt-2">{detailsDialogOpen.subscriptionStatus}</Badge>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Users</p>
-                  <p className="text-lg font-medium">{detailsDialogOpen.userCount}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Created</p>
-                  <p className="text-sm">{new Date(detailsDialogOpen.createdAt).toLocaleDateString()}</p>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        )}
-
-        {/* Delete Confirmation */}
-        {deleteConfirm && (
-          <AlertDialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete Company?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Are you sure you want to delete <strong>{deleteConfirm.name}</strong>? This action cannot be undone and will delete all associated data.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <div className="bg-destructive/10 border border-destructive/20 rounded p-4 mb-4">
-                <p className="text-sm text-destructive font-medium">Warning: This will permanently delete all company data.</p>
-              </div>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={() => deleteCompanyMutation.mutate(deleteConfirm.id)}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                data-testid="button-confirm-delete"
-              >
-                Delete Company
-              </AlertDialogAction>
-            </AlertDialogContent>
-          </AlertDialog>
-        )}
+        </div>
       </div>
     </div>
   );
 }
 
-function CompanyActionsMenu({ company, onImpersonate, onBlock, onDelete, onDetails }) {
+function CompanyActionsMenu({ company, onImpersonate, onBlock, onDelete, onDetails, isBlockLoading, isImpersonateLoading }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -368,31 +439,41 @@ function CompanyActionsMenu({ company, onImpersonate, onBlock, onDelete, onDetai
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={onDetails}>
+        <DropdownMenuItem onClick={onDetails} data-testid={`action-details-${company.id}`}>
           <Eye className="h-4 w-4 mr-2" />
-          View Details
+          Ver Detalhes
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={onImpersonate}>
+        <DropdownMenuItem 
+          onClick={onImpersonate}
+          disabled={isImpersonateLoading}
+          data-testid={`action-impersonate-${company.id}`}
+        >
           <Eye className="h-4 w-4 mr-2" />
-          Access as Admin
+          {isImpersonateLoading ? 'Acessando...' : 'Acessar como Admin'}
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={onBlock}
+          disabled={isBlockLoading}
           className={company.subscriptionStatus === 'suspended' ? 'text-green-600' : 'text-orange-600'}
+          data-testid={`action-block-${company.id}`}
         >
           <Lock className="h-4 w-4 mr-2" />
-          {company.subscriptionStatus === 'suspended' ? 'Unblock' : 'Block'}
+          {isBlockLoading ? 'Processando...' : (company.subscriptionStatus === 'suspended' ? 'Desbloquear' : 'Bloquear')}
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={onDelete} className="text-destructive">
+        <DropdownMenuItem 
+          onClick={onDelete}
+          className="text-destructive"
+          data-testid={`action-delete-${company.id}`}
+        >
           <Trash2 className="h-4 w-4 mr-2" />
-          Delete
+          Deletar
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
 }
 
-function CreateCompanyForm({ onSuccess }) {
+function CreateCompanyForm({ onSuccess, isPending, onSubmit }) {
   const { toast } = useToast();
   const form = useForm({
     defaultValues: {
@@ -405,31 +486,15 @@ function CreateCompanyForm({ onSuccess }) {
     },
   });
 
-  const mutation = useMutation({
-    mutationFn: (data) => apiRequest('/api/admin/companies', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/companies'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
-      toast({ title: 'Success', description: 'Company created successfully' });
-      onSuccess();
-    },
-    onError: (error) => {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
-    },
-  });
-
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="companyName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Company Name</FormLabel>
+              <FormLabel>Nome da Empresa</FormLabel>
               <FormControl>
                 <Input placeholder="Acme Corp" {...field} data-testid="input-company-name" />
               </FormControl>
@@ -455,9 +520,9 @@ function CreateCompanyForm({ onSuccess }) {
           name="adminName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Admin Name</FormLabel>
+              <FormLabel>Nome do Admin</FormLabel>
               <FormControl>
-                <Input placeholder="John Doe" {...field} data-testid="input-admin-name" />
+                <Input placeholder="João Silva" {...field} data-testid="input-admin-name" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -468,9 +533,9 @@ function CreateCompanyForm({ onSuccess }) {
           name="adminEmail"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Admin Email</FormLabel>
+              <FormLabel>Email do Admin</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="admin@acme.com" {...field} data-testid="input-admin-email" />
+                <Input type="email" placeholder="admin@empresa.com" {...field} data-testid="input-admin-email" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -481,7 +546,7 @@ function CreateCompanyForm({ onSuccess }) {
           name="adminPassword"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Initial Password</FormLabel>
+              <FormLabel>Senha Inicial</FormLabel>
               <FormControl>
                 <Input type="password" placeholder="••••••••" {...field} data-testid="input-admin-password" />
               </FormControl>
@@ -494,23 +559,23 @@ function CreateCompanyForm({ onSuccess }) {
           name="plan"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Plan</FormLabel>
+              <FormLabel>Plano</FormLabel>
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger data-testid="select-plan">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="basic">Basic ($0)</SelectItem>
-                  <SelectItem value="pro">Pro ($99/mo)</SelectItem>
-                  <SelectItem value="enterprise">Enterprise ($299/mo)</SelectItem>
+                  <SelectItem value="basic">Basic (Gratuito)</SelectItem>
+                  <SelectItem value="pro">Pro (R$ 99/mês)</SelectItem>
+                  <SelectItem value="enterprise">Enterprise (R$ 299/mês)</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full" disabled={mutation.isPending} data-testid="button-create-company">
-          {mutation.isPending ? 'Creating...' : 'Create Company'}
+        <Button type="submit" className="w-full" disabled={isPending} data-testid="button-create-company">
+          {isPending ? 'Criando...' : 'Criar Empresa'}
         </Button>
       </form>
     </Form>
