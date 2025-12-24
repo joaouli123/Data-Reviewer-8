@@ -67,6 +67,7 @@ export default function DREAnalysis({ transactions, categories = [], period = 'c
     const despesasOperacionais = despesasOperacionaisBreakdown.reduce((sum, [, val]) => sum + val, 0);
     
     const lucroOperacional = receitaLiquida - despesasOperacionais;
+    const margemLiquida = receitaBruta > 0 ? (lucroOperacional / receitaBruta) * 100 : 0;
 
     // Group by payment method
     const paymentMethodStats = {};
@@ -91,6 +92,7 @@ export default function DREAnalysis({ transactions, categories = [], period = 'c
         total: despesasOperacionais,
         breakdown: despesasOperacionaisBreakdown
           .map(([cat, val]) => [cat || 'Sem Categoria', val || 0])
+          .sort((a, b) => b[1] - a[1]) // Sort by value descending
       },
       lucroOperacional,
       margemLiquida,
