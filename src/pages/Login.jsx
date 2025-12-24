@@ -23,8 +23,9 @@ export default function Login() {
 
     try {
       setLoading(true);
-      await login(username, password);
-      toast.success("Login realizado com sucesso!");
+      const data = await login(username, password);
+      const userName = data.user?.name || "usuário";
+      toast.success(`Seja bem vindo, ${userName}!`);
       setLocation("/");
     } catch (error) {
       toast.error(error.message);
