@@ -1290,16 +1290,50 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  // Profile update route with avatar upload
+  // Avatar upload route
+  app.post("/api/auth/avatar", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      
+      // Check if avatar data URL is provided
+      const { avatarDataUrl } = req.body;
+      if (!avatarDataUrl) {
+        return res.status(400).json({ error: "No avatar provided" });
+      }
+      
+      // Save avatar data URL directly (base64)
+      const updated = await storage.updateUser(req.user.companyId, req.user.id, { avatar: avatarDataUrl });
+      
+      res.json({
+        user: {
+          id: updated.id,
+          username: updated.username,
+          email: updated.email,
+          name: updated.name,
+          phone: updated.phone,
+          avatar: updated.avatar,
+          role: updated.role,
+          companyId: updated.companyId,
+          permissions: updated.permissions ? JSON.parse(updated.permissions) : {}
+        }
+      });
+    } catch (error: any) {
+      console.error("Avatar upload error:", error);
+      res.status(500).json({ error: error.message || "Failed to upload avatar" });
+    }
+  });
+
+  // Profile update route
   app.patch("/api/auth/profile", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
 
-      const { name, phone } = req.body;
+      const { name, phone, avatar } = req.body;
       const updateData: any = {};
       
       if (name !== undefined) updateData.name = name;
       if (phone !== undefined) updateData.phone = phone;
+      if (avatar !== undefined) updateData.avatar = avatar;
       
       const updated = await storage.updateUser(req.user.companyId, req.user.id, updateData);
       
@@ -1316,8 +1350,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           permissions: updated.permissions ? JSON.parse(updated.permissions) : {}
         }
       });
-    } catch (error) {
-      res.status(500).json({ error: "Failed to update profile" });
+    } catch (error: any) {
+      console.error("Profile update error:", error);
+      res.status(500).json({ error: error.message || "Failed to update profile" });
     }
   });
 

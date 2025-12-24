@@ -56,6 +56,7 @@ export default function ProfilePage() {
         body: JSON.stringify({
           name: data.name || '',
           phone: data.phone || '',
+          avatar: data.avatar,
         }),
       });
       
@@ -76,7 +77,7 @@ export default function ProfilePage() {
     }
   });
 
-  const handleAvatarChange = (e) => {
+  const handleAvatarChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     
@@ -90,12 +91,44 @@ export default function ProfilePage() {
       return;
     }
     
+    // Show preview immediately
     const reader = new FileReader();
     reader.onload = (event) => {
       setPreviewUrl(event.target?.result || '');
     };
     reader.readAsDataURL(file);
-    toast.info('Função de avatar implementada em breve');
+    
+    // Convert to data URL and upload
+    const dataUrlReader = new FileReader();
+    dataUrlReader.onload = async (event) => {
+      const dataUrl = event.target?.result;
+      if (dataUrl) {
+        try {
+          const token = JSON.parse(localStorage.getItem('auth') || '{}').token;
+          const res = await fetch('/api/auth/avatar', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ avatarDataUrl: dataUrl }),
+          });
+          
+          if (!res.ok) {
+            const error = await res.json();
+            toast.error(error.error || 'Falha ao fazer upload');
+            return;
+          }
+          
+          const result = await res.json();
+          updateUser(result.user);
+          toast.success('Foto atualizada com sucesso!');
+        } catch (error) {
+          toast.error(error?.message || 'Falha ao fazer upload');
+        }
+      }
+    };
+    dataUrlReader.readAsDataURL(file);
   };
 
   const handleInputChange = (e) => {
@@ -111,7 +144,10 @@ export default function ProfilePage() {
       return;
     }
     
-    await updateProfileMutation.mutateAsync(formData);
+    await updateProfileMutation.mutateAsync({
+      ...formData,
+      avatar: previewUrl || user?.avatar,
+    });
   };
 
   const getInitials = (name) => {
