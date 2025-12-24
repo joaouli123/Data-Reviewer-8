@@ -3,6 +3,7 @@ import { useLocation, Link } from 'wouter';
 import { LayoutDashboard, Receipt, Users, Settings, Menu, X, Brain, Building2, TrendingUp, Tag, LogOut, User } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermission } from '@/hooks/usePermission';
 import LogoHUA from '@assets/Logo_HUA_1766187037233.png';
@@ -78,7 +79,10 @@ export default function Layout({ children }) {
       </nav>
       <div className="pt-6 border-t border-slate-800">
         <div className="flex items-center gap-3 px-3 py-3 rounded-lg bg-slate-800/50">
-          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-blue-400 font-medium text-xs">{user?.name?.substring(0, 2).toUpperCase() || 'US'}</div>
+          <Avatar className="w-8 h-8 flex-shrink-0">
+            <AvatarImage src={user?.avatar} alt={user?.name} />
+            <AvatarFallback className="bg-primary/20 text-blue-400 font-medium text-xs">{user?.name?.substring(0, 2).toUpperCase() || 'US'}</AvatarFallback>
+          </Avatar>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-white truncate">{user?.name || 'Usuário'}</p>
             <p className="text-xs text-slate-400 truncate">{company?.name || 'Empresa'}</p>
