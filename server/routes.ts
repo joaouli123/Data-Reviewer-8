@@ -190,7 +190,10 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         user: { 
           id: user.id, 
           username: user.username, 
-          email: user.email, 
+          email: user.email,
+          name: user.name,
+          phone: user.phone,
+          avatar: user.avatar,
           role: user.role,
           isSuperAdmin: user.isSuperAdmin,
           companyId: user.companyId,
@@ -1046,26 +1049,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  // Get current user with Super Admin flag
-  app.get("/api/auth/me", authMiddleware, async (req: AuthenticatedRequest, res) => {
-    try {
-      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
-
-      const user = await findUserById(req.user.id);
-      const company = await findCompanyById(req.user.companyId);
-
-      if (!user || !company) {
-        return res.status(404).json({ error: "User or company not found" });
-      }
-
-      res.json({
-        user: { id: user.id, username: user.username, email: user.email, role: user.role, isSuperAdmin: user.isSuperAdmin },
-        company: { id: company.id, name: company.name },
-      });
-    } catch (error) {
-      res.status(500).json({ error: "Failed to fetch user" });
-    }
-  });
 
   // ========== PROTECTED ROUTES WITH SUBSCRIPTION CHECK ==========
 
