@@ -73,33 +73,49 @@ export default function CashFlowForecastPage() {
   // Calculate min and max dates from all transactions and installments
   const getDateRange = () => {
     const today = startOfDay(new Date());
-    let allDates = [];
     
-    if (transactions.length > 0) {
+    // Always start from at least 6 months ago for better context
+    let minDate = new Date(today);
+    minDate.setMonth(minDate.getMonth() - 6);
+    minDate = startOfDay(minDate);
+    
+    // Always end at least 6 months from now for forecasting
+    let maxDate = new Date(today);
+    maxDate.setMonth(maxDate.getMonth() + 6);
+    maxDate = endOfDay(maxDate);
+    
+    // If we have transaction data, expand the range to include oldest and newest transactions
+    if (transactions && transactions.length > 0) {
+      let transactionDates = [];
       transactions.forEach(t => {
         if (t.date) {
           const dateStr = t.date.split('T')[0];
           if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-            allDates.push(dateStr);
+            transactionDates.push(dateStr);
           }
         }
       });
+      
+      if (transactionDates.length > 0) {
+        transactionDates.sort();
+        const oldestTransaction = parseISO(transactionDates[0]);
+        const newestTransaction = parseISO(transactionDates[transactionDates.length - 1]);
+        
+        // Expand min date if there are older transactions
+        if (oldestTransaction < minDate) {
+          minDate = oldestTransaction;
+        }
+        
+        // Expand max date if there are newer transactions
+        if (newestTransaction > maxDate) {
+          maxDate = new Date(newestTransaction);
+          maxDate.setMonth(maxDate.getMonth() + 3); // Add 3 more months after newest transaction
+          maxDate = endOfDay(maxDate);
+        }
+      }
     }
     
-    if (allDates.length === 0) {
-      const thirtyDaysFromNow = new Date(today);
-      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-      return { minDate: today, maxDate: thirtyDaysFromNow };
-    }
-    
-    allDates.sort();
-    const minDateStr = allDates[0];
-    let maxDate = parseISO(allDates[allDates.length - 1]);
-    const minDate = parseISO(minDateStr);
-    
-    const sixMonthsFromToday = new Date(today);
-    sixMonthsFromToday.setMonth(sixMonthsFromToday.getMonth() + 6);
-    
+    // Check pending installments for future dates
     if (saleInstallments && saleInstallments.length > 0) {
       saleInstallments.forEach(inst => {
         if (!inst.paid && inst.due_date) {
@@ -128,10 +144,6 @@ export default function CashFlowForecastPage() {
           }
         }
       });
-    }
-    
-    if (maxDate < sixMonthsFromToday) {
-      maxDate = sixMonthsFromToday;
     }
     
     return { minDate, maxDate };
@@ -347,8 +359,8 @@ export default function CashFlowForecastPage() {
 
   const cashFlowData = calculateCashFlow();
   
-  // Filter chart data to show only periods with transactions
-  const chartData = cashFlowData.filter(item => item.receita > 0 || item.despesa > 0);
+  // Show all periods in the range, even empty ones (for complete view)
+  const chartData = cashFlowData;
 
   // Calculate opening balance (all transactions before start date)
   const openingBalance = transactions
@@ -372,16 +384,16 @@ export default function CashFlowForecastPage() {
     };
   });
   
-  // Filter for balanced view (only show periods with transactions)
-  const chartDataWithBalance = cashFlowWithBalance.filter(item => item.receita > 0 || item.despesa > 0);
+  // Show all periods in the range for complete cash flow view
+  const chartDataWithBalance = cashFlowWithBalance;
 
   const totalRevenue = cashFlowData.reduce((acc, item) => acc + item.receita, 0);
   const totalExpense = cashFlowData.reduce((acc, item) => acc + item.despesa, 0);
   const netCashFlow = totalRevenue - totalExpense;
   const finalBalance = openingBalance + netCashFlow;
 
-  // Filter out empty periods (only show periods with transactions)
-  const filteredCashFlow = chartDataWithBalance;
+  // Show all periods for complete cash flow analysis
+  const filteredCashFlow = cashFlowWithBalance;
 
   // Reset pagination when no results
   const validCurrentPage = filteredCashFlow.length === 0 ? 1 : currentPage;
