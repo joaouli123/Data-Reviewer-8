@@ -260,6 +260,26 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // Get customer sales
+  app.get("/api/customers/:id/sales", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      const transactions = await storage.getTransactions(req.user.companyId);
+      // Filter for this customer's sales
+      const sales = (transactions || [])
+        .filter(t => String(t.customerId || '') === String(req.params.id) && (t.type === 'venda' || t.type === 'income'))
+        .map(t => ({
+          ...t,
+          amount: t.amount ? parseFloat(t.amount.toString()) : 0,
+          paidAmount: t.paidAmount ? parseFloat(t.paidAmount.toString()) : null,
+          interest: t.interest ? parseFloat(t.interest.toString()) : 0
+        }));
+      res.json(sales);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch customer sales" });
+    }
+  });
+
   app.delete("/api/customers/:id", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
