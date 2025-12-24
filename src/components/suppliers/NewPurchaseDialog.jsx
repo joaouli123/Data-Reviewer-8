@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { format, addMonths, parseISO } from 'date-fns';
 import { Plus } from 'lucide-react';
 import CreateCategoryModal from '../transactions/CreateCategoryModal';
+import { apiRequest } from '@/lib/queryClient';
 
 export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
   const [isPaidUpfront, setIsPaidUpfront] = useState(false);
@@ -118,13 +119,9 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
           installmentTotal: installmentCount
         };
         
-        const promise = fetch('/api/transactions', {
+        const promise = apiRequest('/api/transactions', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
-        }).then(res => {
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          return res.json();
         });
         
         promises.push(promise);
