@@ -13,11 +13,18 @@ import UserPermissions from "./UserPermissions";
 import SuperAdmin from "./SuperAdmin";
 import AccessDenied from "./AccessDenied";
 import TeamPage from "./settings/Team";
+import Profile from "./Profile";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePermission } from "@/hooks/usePermission";
 
 function ProtectedRoute({ component: Component, permission }) {
+  const { user } = useAuth();
   const { hasPermission } = usePermission();
+
+  // Admin bypass: admins can access everything
+  if (user?.role === "admin") {
+    return <Component />;
+  }
 
   if (permission && !hasPermission(permission)) {
     return <AccessDenied />;
@@ -38,6 +45,7 @@ export default function Pages() {
     <Layout>
       <Switch>
         <Route path="/" component={Dashboard} />
+        <Route path="/profile" component={Profile} />
         <Route path="/transactions">{() => <ProtectedRoute component={Transactions} permission="view_transactions" />}</Route>
         <Route path="/customers">{() => <ProtectedRoute component={Customers} permission="view_customers" />}</Route>
         <Route path="/reports">{() => <ProtectedRoute component={Reports} permission="view_reports" />}</Route>

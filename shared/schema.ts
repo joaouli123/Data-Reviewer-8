@@ -131,6 +131,8 @@ export const users = pgTable("users", {
   email: text("email"),
   password: text("password").notNull(),
   name: text("name"),
+  phone: text("phone"),
+  avatar: text("avatar"), // URL to avatar image
   role: text("role").notNull().default("user"), // admin, manager, user, operational
   isSuperAdmin: boolean("is_super_admin").notNull().default(false), // Flag for Super Admin
   permissions: text("permissions").default(sql`'{}'::jsonb`), // JSON: {view_reports: true, manage_transactions: true, ...}

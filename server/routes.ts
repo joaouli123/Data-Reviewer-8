@@ -986,6 +986,37 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // Profile update route with avatar upload
+  app.patch("/api/auth/profile", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+
+      const { name, phone } = req.body;
+      const updateData: any = {};
+      
+      if (name !== undefined) updateData.name = name;
+      if (phone !== undefined) updateData.phone = phone;
+      
+      const updated = await storage.updateUser(req.user.companyId, req.user.id, updateData);
+      
+      res.json({
+        user: {
+          id: updated.id,
+          username: updated.username,
+          email: updated.email,
+          name: updated.name,
+          phone: updated.phone,
+          avatar: updated.avatar,
+          role: updated.role,
+          companyId: updated.companyId,
+          permissions: updated.permissions ? JSON.parse(updated.permissions) : {}
+        }
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update profile" });
+    }
+  });
+
   // 404 fallback
   app.all("/api/*", (req, res) => {
     res.status(404).json({ error: "API route not found" });

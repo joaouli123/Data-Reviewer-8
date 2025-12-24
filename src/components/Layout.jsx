@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useLocation, Link } from 'wouter';
-import { LayoutDashboard, Receipt, Users, Settings, Menu, X, Brain, Building2, TrendingUp, Tag, LogOut } from 'lucide-react';
+import { LayoutDashboard, Receipt, Users, Settings, Menu, X, Brain, Building2, TrendingUp, Tag, LogOut, User } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from '@/contexts/AuthContext';
@@ -62,6 +62,12 @@ export default function Layout({ children }) {
             <p className="text-xs text-slate-400 truncate">{company?.name || 'Empresa'}</p>
           </div>
         </div>
+        <Link href="/profile" onClick={onNavigate}>
+          <Button variant="ghost" className="w-full justify-start gap-2 text-white hover:bg-white/10" data-testid="button-profile">
+            <User className="w-4 h-4" />
+            <span className="text-sm">Meu Perfil</span>
+          </Button>
+        </Link>
         <Button variant="ghost" className="w-full justify-start gap-2 text-white hover:bg-white/10" onClick={handleLogout} data-testid="button-logout">
           <LogOut className="w-4 h-4" />
           <span className="text-sm">Logout</span>
