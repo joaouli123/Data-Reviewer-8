@@ -329,9 +329,16 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
                                   </p>
                                 )}
                                 {(installment.paidAmount || installment.amount) && (
-                                  <p className="text-xs text-slate-500">
-                                    Recebido: R$ {parseFloat(installment.paidAmount || installment.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                                  </p>
+                                  <div className="flex flex-col items-end gap-0.5">
+                                    <p className="text-xs text-slate-500">
+                                      Recebido: R$ {parseFloat(installment.paidAmount || installment.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                    </p>
+                                    {installment.paymentMethod && (
+                                      <p className="text-xs text-slate-400">
+                                        Forma: {installment.paymentMethod}
+                                      </p>
+                                    )}
+                                  </div>
                                 )}
                                 {parseFloat(installment.interest || 0) > 0 && (
                                   <p className="text-xs text-amber-600">
