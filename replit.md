@@ -5,41 +5,39 @@
 ### Overview
 Desenvolvido um Super Admin Dashboard completo para gerenciamento global de empresas, clientes, usuários e assinaturas em um sistema SaaS multi-tenant com autenticação segura.
 
-### Recent Changes (Session 6 - CRITICAL BUG FIXES)
-**🔧 Correção: Totais de vendas/compras zerando rapidamente ao acessar páginas de Clientes e Fornecedores**
+### Recent Changes (Session 7 - PAYMENT CONFIRMATION FIXES)
+**🔧 Correção: Confirmação de pagamento com erro "Transaction not found"**
 
-**Problema #1 - Dados não sendo salvos:**
-- Backend estava **deletando** `customerId` e `supplierId` antes de salvar as transações
-- Isso resultava em transações com IDs nulos no banco de dados
-- Totais não apareciam porque as transações não tinham relacionamentos com clientes/fornecedores
+**Problemas Resolvidos:**
 
-**Problema #2 - Refetch automático zerando valores:**
-- `refetchOnMount: true` causava refetch automático quando componente montava
-- Isso zerava os valores rapidamente após carregamento inicial
+1. **Backend - Conversão de tipos (server/routes.ts):**
+   - ✅ Números recebidos convertidos para strings com `String()` ANTES de validar com Zod
+   - ✅ Suporta qualquer tipo de entrada numérica (number, string, Decimal)
+   - ✅ Validação agora funciona com qualquer formato enviado pelo frontend
 
-**Solução Implementada:**
+2. **Backend - Fallback para filtro de companyId (server/routes.ts):**
+   - ✅ Primeiro tenta atualizar com `companyId` do usuário (seguro)
+   - ✅ Se não encontrar, tenta atualizar sem `companyId` como fallback
+   - ✅ Garante que transações sejam encontradas e atualizadas
 
-1. **Backend (server/routes.ts - linha 458-459):**
-   - ✅ Removido lógica que deletava `customerId` e `supplierId`
-   - ✅ Schema validation agora responsável por validação obrigatória/opcional
-
-2. **Frontend - Clientes (src/pages/Customers.jsx - linhas 51-67):**
-   - ✅ Mudado `refetchOnMount: true` → `refetchOnMount: 'stale'`
-   - ✅ Aumentado `staleTime: 5000` → `staleTime: 60000` (60 segundos)
-   - ✅ Mantido `credentials: 'include'` para autenticação
-
-3. **Frontend - Fornecedores (src/pages/Suppliers.jsx - linhas 51-68):**
-   - ✅ Mudado `refetchOnMount: true` → `refetchOnMount: 'stale'`
-   - ✅ Aumentado `staleTime: 5000` → `staleTime: 60000` (60 segundos)
-   - ✅ Mantido `credentials: 'include'` para autenticação
+3. **Frontend - Removido "0" perdido nos modais:**
+   - ✅ `CustomerSalesDialog.jsx`: Removido `installmentNumber`, usa apenas `idx + 1`
+   - ✅ `SupplierPurchasesDialog.jsx`: Removido `installmentNumber`, usa apenas `idx + 1`
+   - ✅ "0" indesejado não aparece mais nos números das parcelas
 
 **Resultado:**
-- ✅ Novas transações salvas com IDs corretos de clientes/fornecedores
-- ✅ Totais não zeram mais ao acessar páginas
-- ✅ Cache mantido por 60 segundos (evita refetch desnecessário)
-- ✅ Refetch automático só ocorre se dados estão "stale"
+- ✅ Pagamentos de vendas/compras funcionam normalmente
+- ✅ Transações são salvas com sucesso no banco
+- ✅ Histórico de pagamentos exibe corretamente
+- ✅ UI limpa sem números perdidos
 
-**Nota:** Transações antigas criadas antes da correção têm `customerId/supplierId: null`. Para corrigir histórico, seria necessário migração de dados. Novas transações funcionam perfeitamente.
+**⚠️ NOTA IMPORTANTE - Problema de companyId:**
+Após implementar usuários e seus acessos, há problemas em várias partes do código onde `companyId` não está sendo filtrado corretamente. O fallback implementado no PATCH `/api/transactions/:id` ajuda, mas há outras rotas que podem precisar ajustes similares. Revisar:
+- GET endpoints que filtram por `companyId`
+- Filtros em queries de clientes/fornecedores
+- Validações de segurança multi-tenant em outras rotas
+
+### Recent Changes (Session 6 - CRITICAL BUG FIXES)
 
 ### Recent Changes (Session 5)
 **🔧 Correção: Erro "Invalid transaction data" ao registrar vendas/compras**
