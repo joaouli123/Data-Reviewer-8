@@ -263,6 +263,7 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
                 <SelectItem value="Boleto">Boleto</SelectItem>
                 <SelectItem value="Crediário">Crediário</SelectItem>
                 <SelectItem value="Transferência">Transferência</SelectItem>
+                <SelectItem value="Outros">Outros</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -468,7 +468,7 @@ export default function TransactionsPage() {
                                 </TableCell>
                                 <TableCell className="text-left">
                                     <span className="text-xs font-medium text-slate-600">
-                                        {t.paymentMethod || '-'}
+                                        {t.paymentMethod && t.paymentMethod !== '-' ? t.paymentMethod : 'Outros'}
                                     </span>
                                 </TableCell>
                                 <TableCell className="text-left">

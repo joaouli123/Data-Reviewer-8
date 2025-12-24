@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Sparkles, Loader2, TrendingUp, TrendingDown } from 'lucide-react';
+import { FileText, Sparkles, Loader2, TrendingUp, TrendingDown, Wallet, ChevronDown, ChevronRight } from 'lucide-react';
 
 import { toast } from 'sonner';
 import { subMonths, format } from 'date-fns';
@@ -12,6 +12,11 @@ import { ptBR } from 'date-fns/locale';
 export default function DREAnalysis({ transactions, categories = [], period = 'currentYear' }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [forecast, setForecast] = useState(null);
+  const [expandedSections, setExpandedSections] = useState({ revenue: false, directCosts: false });
+
+  const toggleSection = (section) => {
+    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
 
   const calculateDRE = () => {
     // Group by category
@@ -72,7 +77,7 @@ export default function DREAnalysis({ transactions, categories = [], period = 'c
     // Group by payment method
     const paymentMethodStats = {};
     transactions.forEach(t => {
-      const method = t.paymentMethod || 'Não Informado';
+      const method = t.paymentMethod && t.paymentMethod !== '-' ? t.paymentMethod : 'Outros';
       if (!paymentMethodStats[method]) {
         paymentMethodStats[method] = { income: 0, expense: 0 };
       }
@@ -226,18 +231,66 @@ export default function DREAnalysis({ transactions, categories = [], period = 'c
       <CardContent className="space-y-6">
         {/* DRE Table */}
         <div className="space-y-3">
-          <div className="flex justify-between items-center p-3 bg-emerald-50 rounded-lg border border-emerald-200">
-            <span className="font-semibold text-emerald-900">Receita Bruta</span>
-            <span className="text-lg font-bold text-emerald-700">
-              R$ {dre.receitaBruta.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-            </span>
+          <div className="space-y-1">
+            <button 
+              onClick={() => toggleSection('revenue')}
+              className="w-full flex justify-between items-center p-3 bg-emerald-50 rounded-lg border border-emerald-200 hover:bg-emerald-100 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                {expandedSections.revenue ? <ChevronDown className="w-4 h-4 text-emerald-900" /> : <ChevronRight className="w-4 h-4 text-emerald-900" />}
+                <span className="font-semibold text-emerald-900">Receita Bruta</span>
+              </div>
+              <span className="text-lg font-bold text-emerald-700">
+                R$ {dre.receitaBruta.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              </span>
+            </button>
+            
+            {expandedSections.revenue && (
+              <div className="pl-6 space-y-1 animate-in slide-in-from-top-1 duration-200">
+                {Object.entries(dre.paymentMethodStats)
+                  .filter(([, stats]) => stats.income > 0)
+                  .map(([method, stats]) => (
+                    <div key={method} className="flex justify-between items-center p-2 bg-white rounded border border-emerald-100 text-sm">
+                      <span className="text-emerald-800">{method}</span>
+                      <span className="font-medium text-emerald-700">R$ {stats.income.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                  ))}
+              </div>
+            )}
           </div>
 
-          <div className="flex justify-between items-center p-3 bg-white rounded-lg border pl-8">
-            <span className="text-slate-700">(-) Custos Diretos</span>
-            <span className="text-slate-900 font-semibold">
-              R$ {dre.custosDiretos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-            </span>
+          <div className="space-y-1">
+            <button 
+              onClick={() => toggleSection('directCosts')}
+              className="w-full flex justify-between items-center p-3 bg-white rounded-lg border hover:bg-slate-50 transition-colors pl-8"
+            >
+              <div className="flex items-center gap-2">
+                {expandedSections.directCosts ? <ChevronDown className="w-4 h-4 text-slate-700" /> : <ChevronRight className="w-4 h-4 text-slate-700" />}
+                <span className="text-slate-700">(-) Custos Diretos</span>
+              </div>
+              <span className="text-slate-900 font-semibold">
+                R$ {dre.custosDiretos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              </span>
+            </button>
+
+            {expandedSections.directCosts && (
+              <div className="pl-12 space-y-1 animate-in slide-in-from-top-1 duration-200">
+                {Object.entries(dre.expenses)
+                  .filter(([cat]) => 
+                    cat.toLowerCase().includes('custo') || 
+                    cat.toLowerCase().includes('compra') ||
+                    cat.toLowerCase().includes('fornecedor') ||
+                    cat.toLowerCase().includes('mercadoria') ||
+                    cat.toLowerCase().includes('frete')
+                  )
+                  .map(([cat, val]) => (
+                    <div key={cat} className="flex justify-between items-center p-2 bg-white rounded border border-slate-100 text-sm">
+                      <span className="text-slate-600 capitalize">{cat}</span>
+                      <span className="text-slate-900">R$ {val.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                  ))}
+              </div>
+            )}
           </div>
 
           <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border border-blue-200">

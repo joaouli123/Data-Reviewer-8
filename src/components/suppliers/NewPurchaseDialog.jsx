@@ -277,6 +277,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
                 <SelectItem value="Boleto">Boleto</SelectItem>
                 <SelectItem value="Crediário">Crediário</SelectItem>
                 <SelectItem value="Transferência">Transferência</SelectItem>
+                <SelectItem value="Outros">Outros</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -344,13 +345,18 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
                   <SelectTrigger className="flex-1" required>
                     <SelectValue placeholder="Selecione a categoria" />
                   </SelectTrigger>
-                  <SelectContent>
-                    {expenseCategories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.name}>
-                        {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
+                <SelectContent>
+                  <SelectItem value="Insumos">Insumos</SelectItem>
+                  <SelectItem value="Matéria-prima">Matéria-prima</SelectItem>
+                  <SelectItem value="Equipamentos">Equipamentos</SelectItem>
+                  <SelectItem value="Serviços">Serviços</SelectItem>
+                  <SelectItem value="Infraestrutura">Infrasestrutura</SelectItem>
+                  {expenseCategories.filter(c => !['Insumos', 'Matéria-prima', 'Equipamentos', 'Serviços', 'Infraestrutura'].includes(c.name)).map((cat) => (
+                    <SelectItem key={cat.id} value={cat.name}>
+                      {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
                 </Select>
                 <Button 
                   type="button" 

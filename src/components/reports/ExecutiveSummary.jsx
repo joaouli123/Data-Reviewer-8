@@ -25,18 +25,21 @@ export default function ExecutiveSummary({ summary, transactions, saleInstallmen
   const netProfit = currentRevenue - currentExpenses;
   const profitMargin = currentRevenue > 0 ? (netProfit / currentRevenue * 100) : 0;
 
-  // Calculate pending amounts using the actual installments data (no period filter for installments)
-  const pendingSalesInstallments = (saleInstallments || []).filter(i => 
+  const pendingReceivables = (saleInstallments || []).filter(i => 
     !i.paid || i.status === 'pendente' || i.status === 'pending'
-  );
-  const pendingPurchaseInstallments = (purchaseInstallments || []).filter(i => 
+  ).reduce((sum, i) => sum + parseFloat(i.amount || 0), 0);
+
+  const pendingPayables = (purchaseInstallments || []).filter(i => 
     !i.paid || i.status === 'pendente' || i.status === 'pending'
-  );
+  ).reduce((sum, i) => sum + parseFloat(i.amount || 0), 0);
 
-  // Debug logging
+  const pendingSalesCount = (saleInstallments || []).filter(i => 
+    !i.paid || i.status === 'pendente' || i.status === 'pending'
+  ).length;
 
-  const pendingReceivables = pendingSalesInstallments.reduce((sum, i) => sum + parseFloat(i.amount || 0), 0);
-  const pendingPayables = pendingPurchaseInstallments.reduce((sum, i) => sum + parseFloat(i.amount || 0), 0);
+  const pendingPurchasesCount = (purchaseInstallments || []).filter(i => 
+    !i.paid || i.status === 'pendente' || i.status === 'pending'
+  ).length;
 
   const kpis = [
     {
@@ -56,14 +59,14 @@ export default function ExecutiveSummary({ summary, transactions, saleInstallmen
     {
       title: 'Contas a Receber',
       value: `R$ ${pendingReceivables.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-      change: `${pendingSalesInstallments.length} parcelas`,
+      change: `${pendingSalesCount} parcelas`,
       positive: true,
       icon: Calendar
     },
     {
       title: 'Contas a Pagar',
       value: `R$ ${pendingPayables.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-      change: `${pendingPurchaseInstallments.length} parcelas`,
+      change: `${pendingPurchasesCount} parcelas`,
       positive: false,
       icon: Calendar
     }
