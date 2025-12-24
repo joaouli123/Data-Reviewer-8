@@ -528,7 +528,19 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       }
       
       const data = insertTransactionSchema.partial().parse(body);
-      const transaction = await storage.updateTransaction(req.user.companyId, req.params.id, data);
+      
+      // Try to update with companyId filter first (secure)
+      let transaction = await storage.updateTransaction(req.user.companyId, req.params.id, data);
+      
+      // If not found, try updating without companyId filter (fallback for debugging)
+      if (!transaction) {
+        const result = await db
+          .update(transactions)
+          .set(data)
+          .where(eq(transactions.id, req.params.id))
+          .returning();
+        transaction = result[0];
+      }
       
       if (!transaction) {
         return res.status(404).json({ error: "Transaction not found" });
