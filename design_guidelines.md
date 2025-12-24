@@ -24,10 +24,10 @@
 - Card padding: p-8
 
 ### Color Palette
-- **Primary (Yellow):** #FFBB00 for CTAs, highlights, key metrics
-- **Primary Hover:** #E5A800
+- **Primary (Blue):** #005CB8 for CTAs, highlights, key metrics
+- **Primary Hover:** #0047A3
 - **Background:** #0A0A0A (dark base), #141414 (elevated surfaces)
-- **Accent Blue:** #0066FF for links, secondary actions, trust indicators
+- **Accent Blue:** #005CB8 for links, secondary actions, trust indicators
 - **Text Primary:** #FFFFFF (white on dark)
 - **Text Secondary:** #A3A3A3 (gray-400)
 - **Borders:** #2A2A2A subtle divisions
