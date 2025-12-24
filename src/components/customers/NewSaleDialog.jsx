@@ -109,7 +109,6 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
         const dueDateISO = dueDate.toISOString();
         
         const payload = {
-          companyId: company?.id,
           customerId: customer.id,
           categoryId: cat?.id,
           type: 'venda',
