@@ -21,8 +21,10 @@ export default function DREAnalysis({ transactions, categories = [], period = 'c
     transactions.forEach(t => {
       // Find category name from categories list if it's a UUID
       let categoryName = 'Sem Categoria';
-      if (t.categoryId) {
-        const catObj = categories.find(c => c.id === t.categoryId);
+      const catId = t.categoryId || t.category;
+      
+      if (catId) {
+        const catObj = categories.find(c => c.id === catId || c.name === catId);
         categoryName = catObj ? catObj.name : (t.category || 'Sem Categoria');
       } else {
         categoryName = t.category || 'Sem Categoria';
@@ -62,8 +64,7 @@ export default function DREAnalysis({ transactions, categories = [], period = 'c
     const lucroOperacional = receitaLiquida - despesasOperacionais;
     const margemLiquida = receitaBruta > 0 ? (lucroOperacional / receitaBruta) * 100 : 0;
 
-    const despesasOperacionaisBreakdown = Object.entries(expenses)
-      .filter(([cat]) => !cat.toLowerCase().includes('custo') && !cat.toLowerCase().includes('compra'));
+    const despesasOperacionaisBreakdown = Object.entries(expenses);
 
     return {
       receitaBruta,
@@ -104,19 +105,25 @@ export default function DREAnalysis({ transactions, categories = [], period = 'c
         });
       }
 
-      const prompt = `Analise a DRE histórica e gere previsões detalhadas:
-
-DRE Atual:
-- Receita Bruta: R$ ${dre.receitaBruta.toFixed(2)}
-- Custos Diretos: R$ ${dre.custosDiretos.toFixed(2)}
-- Receita Líquida: R$ ${dre.receitaLiquida.toFixed(2)}
-- Despesas Operacionais: R$ ${dre.despesasOperacionais.total.toFixed(2)}
-- Lucro Operacional: R$ ${dre.lucroOperacional.toFixed(2)}
-- Margem Líquida: ${dre.margemLiquida.toFixed(1)}%
-
-Histórico (últimos 6 meses): ${JSON.stringify(historicalData)}
-
-Gere previsões para os próximos 3 meses com análise de tendências.`;
+      const prompt = `Atue como um analista financeiro. Analise a DRE e gere previsões:
+      
+      DRE ATUAL:
+      - Receita Bruta: R$ ${dre.receitaBruta.toFixed(2)}
+      - Custos Diretos: R$ ${dre.custosDiretos.toFixed(2)}
+      - Receita Líquida: R$ ${dre.receitaLiquida.toFixed(2)}
+      - Despesas Operacionais: R$ ${dre.despesasOperacionais.total.toFixed(2)}
+      - Lucro Operacional: R$ ${dre.lucroOperacional.toFixed(2)}
+      
+      HISTÓRICO (6 meses): ${JSON.stringify(historicalData)}
+      
+      CATEGORIAS DE DESPESA: ${JSON.stringify(Object.keys(dre.expenses))}
+      
+      Gere um JSON com:
+      1. forecast_months: 3 meses de previsão (month, receita_bruta, custos_diretos, despesas_operacionais, lucro_previsto, margem_prevista, confidence).
+      2. trend_analysis: texto curto sobre a tendência.
+      3. growth_opportunities: lista de strings.
+      4. risk_factors: lista de {factor, impact}.
+      5. recommendations: lista de strings.`;
 
       const response = await InvokeLLM(prompt, {
         properties: {
