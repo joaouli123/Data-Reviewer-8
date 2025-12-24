@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import { subMonths, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-export default function DREAnalysis({ transactions, period = 'currentYear' }) {
+export default function DREAnalysis({ transactions, categories = [], period = 'currentYear' }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [forecast, setForecast] = useState(null);
 
@@ -19,17 +19,24 @@ export default function DREAnalysis({ transactions, period = 'currentYear' }) {
     const expenses = {};
     
     transactions.forEach(t => {
-      const category = (!t.categoryId ? 'Sem Categoria' : (t.categoryId || 'Sem Categoria')).toString().trim();
+      // Find category name from categories list if it's a UUID
+      let categoryName = 'Sem Categoria';
+      if (t.categoryId) {
+        const catObj = categories.find(c => c.id === t.categoryId);
+        categoryName = catObj ? catObj.name : (t.category || 'Sem Categoria');
+      } else {
+        categoryName = t.category || 'Sem Categoria';
+      }
+      categoryName = categoryName.toString().trim();
       
-      // Get category object to determine type if needed, though we mainly rely on transaction type
       const amount = Math.abs(parseFloat(t.amount || 0));
       const interest = parseFloat(t.interest || 0);
       const totalAmount = amount + interest;
 
       if (t.type === 'venda' || t.type === 'income') {
-        revenues[category] = (revenues[category] || 0) + totalAmount;
+        revenues[categoryName] = (revenues[categoryName] || 0) + totalAmount;
       } else if (t.type === 'compra' || t.type === 'expense') {
-        expenses[category] = (expenses[category] || 0) + totalAmount;
+        expenses[categoryName] = (expenses[categoryName] || 0) + totalAmount;
       }
     });
 
