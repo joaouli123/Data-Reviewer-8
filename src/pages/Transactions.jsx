@@ -27,6 +27,7 @@ export default function TransactionsPage() {
   const [typeFilter, setTypeFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('paid'); // 'all', 'paid', 'pending'
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState('all');
   // Initialize with local date (not UTC) to respect user timezone
   const getInitialDateRange = () => {
     const today = new Date();
@@ -147,7 +148,7 @@ export default function TransactionsPage() {
       categoryMap[cat.id] = cat.name || 'Sem Categoria';
     });
     
-    const headers = ['Data', 'Descrição', 'Tipo', 'Categoria', 'Valor'];
+    const headers = ['Data', 'Descrição', 'Tipo', 'Categoria', 'Forma de Pagamento', 'Valor'];
     const csvContent = [
       headers.join(','),
       ...filteredTransactions.map(t => {
@@ -165,8 +166,9 @@ export default function TransactionsPage() {
         
         // Ensure no undefined values
         const description = t.description || '';
+        const paymentMethod = t.paymentMethod || '-';
         
-        return `${dateStr},"${description}",${typeLabel},${categoryName},${formattedAmount}`;
+        return `${dateStr},"${description}",${typeLabel},${categoryName},${paymentMethod},${formattedAmount}`;
       })
     ].join('\n');
 
@@ -228,7 +230,9 @@ export default function TransactionsPage() {
                             (t.category && t.category.toLowerCase().includes(searchTerm.toLowerCase()));
       const matchesDate = tDate >= startTime && tDate <= endTime;
 
-      return matchesType && matchesCategory && matchesSearch && matchesDate;
+      const matchesPaymentMethod = paymentMethodFilter === 'all' || t.paymentMethod === paymentMethodFilter;
+
+      return matchesType && matchesCategory && matchesSearch && matchesDate && matchesPaymentMethod;
     })
     .sort((a, b) => {
       // Sort by relevant date (paymentDate for paid, date for pending)
@@ -405,6 +409,22 @@ export default function TransactionsPage() {
                         <SelectItem value="pending">Pendentes</SelectItem>
                     </SelectContent>
                 </Select>
+
+                <Select value={paymentMethodFilter} onValueChange={setPaymentMethodFilter}>
+                    <SelectTrigger className="w-full md:w-[160px]">
+                        <SelectValue placeholder="Forma de Pagamento" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">Todas as Formas</SelectItem>
+                        <SelectItem value="Dinheiro">Dinheiro</SelectItem>
+                        <SelectItem value="Pix">Pix</SelectItem>
+                        <SelectItem value="Cartão de Crédito">Cartão de Crédito</SelectItem>
+                        <SelectItem value="Cartão de Débito">Cartão de Débito</SelectItem>
+                        <SelectItem value="Boleto">Boleto</SelectItem>
+                        <SelectItem value="Crediário">Crediário</SelectItem>
+                        <SelectItem value="Transferência">Transferência</SelectItem>
+                    </SelectContent>
+                </Select>
             </div>
         </div>
 
@@ -415,6 +435,7 @@ export default function TransactionsPage() {
                         <TableHead className="pl-6 text-left">Data</TableHead>
                         <TableHead className="text-left">Descrição</TableHead>
                         <TableHead className="text-left">Categoria</TableHead>
+                        <TableHead className="text-left">Forma</TableHead>
                         <TableHead className="text-left">Status</TableHead>
                         <TableHead className="text-right">Valor</TableHead>
                         <TableHead className="text-right pr-6">Ações</TableHead>
@@ -437,6 +458,11 @@ export default function TransactionsPage() {
                                     <Badge variant="secondary" className="capitalize font-normal bg-slate-100 text-slate-600 hover:bg-slate-200">
                                         {categories.find(c => c.id === t.categoryId)?.name || t.category}
                                     </Badge>
+                                </TableCell>
+                                <TableCell className="text-left">
+                                    <span className="text-xs font-medium text-slate-600">
+                                        {t.paymentMethod || '-'}
+                                    </span>
                                 </TableCell>
                                 <TableCell className="text-left">
                                     <Badge 
