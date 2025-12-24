@@ -7,11 +7,13 @@ import { Input } from "@/components/ui/input";
 import { toast } from 'sonner';
 import { AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function PaymentEditDialog({ isOpen, onClose, transaction, onConfirm, isLoading, title = "Editar Pagamento", amountLabel = "Valor Pago" }) {
   const [paidAmount, setPaidAmount] = useState(0);
   const [interest, setInterest] = useState(0);
   const [paymentDate, setPaymentDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [paymentMethod, setPaymentMethod] = useState('');
 
   // Reset values when transaction changes or dialog opens
   useEffect(() => {
@@ -19,6 +21,7 @@ export default function PaymentEditDialog({ isOpen, onClose, transaction, onConf
       setPaidAmount(transaction.paidAmount ? parseFloat(transaction.paidAmount) : parseFloat(transaction.amount || 0));
       setInterest(transaction.interest ? parseFloat(transaction.interest) : 0);
       setPaymentDate(transaction.paymentDate ? format(new Date(transaction.paymentDate), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'));
+      setPaymentMethod(transaction.paymentMethod || '');
     }
   }, [transaction]);
 
@@ -35,10 +38,15 @@ export default function PaymentEditDialog({ isOpen, onClose, transaction, onConf
       toast.error('Data de pagamento é obrigatória');
       return;
     }
+    if (!paymentMethod) {
+      toast.error('Forma de pagamento é obrigatória');
+      return;
+    }
     onConfirm({
       paidAmount: paidAmount.toString(),
       interest: interest.toString(),
-      paymentDate: paymentDate
+      paymentDate: paymentDate,
+      paymentMethod: paymentMethod
     });
   };
 
@@ -105,6 +113,26 @@ export default function PaymentEditDialog({ isOpen, onClose, transaction, onConf
               data-testid="input-payment-date"
             />
             <p className="text-xs text-slate-500">Data em que o pagamento foi realizado</p>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Forma de Pagamento</Label>
+            <Select 
+              value={paymentMethod} 
+              onValueChange={setPaymentMethod}
+            >
+              <SelectTrigger className="w-full" required>
+                <SelectValue placeholder="Selecione a forma..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Dinheiro">Dinheiro</SelectItem>
+                <SelectItem value="Pix">Pix</SelectItem>
+                <SelectItem value="Cartão de Crédito">Cartão de Crédito</SelectItem>
+                <SelectItem value="Cartão de Débito">Cartão de Débito</SelectItem>
+                <SelectItem value="Boleto">Boleto</SelectItem>
+                <SelectItem value="Transferência">Transferência</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="p-3 bg-slate-50 rounded-lg space-y-2 border border-slate-200">

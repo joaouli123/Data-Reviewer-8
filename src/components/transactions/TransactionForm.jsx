@@ -38,6 +38,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
     installment_amount: '',
     status: 'pago',
     paymentDate: new Date(),
+    paymentMethod: '',
     entityType: 'none',
     customerId: '',
     supplierId: ''
@@ -213,6 +214,11 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
         toast.error('Selecione um fornecedor', { duration: 5000 });
         return;
     }
+
+    if (formData.status === 'pago' && !formData.paymentMethod) {
+        toast.error('Selecione a forma de pagamento', { duration: 5000 });
+        return;
+    }
     
     // Get selected category to determine if value should be negative
     const selectedCategory = categories.find(c => c.id === formData.categoryId);
@@ -291,6 +297,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
           type: formData.type,
           description: formData.description,
           status: formData.status,
+          paymentMethod: formData.status === 'pago' ? formData.paymentMethod : undefined,
           installmentGroup: installmentGroupId,
           installmentNumber: i + 1,
           installmentTotal: installmentCount
@@ -316,7 +323,8 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
         shift: 'turno1',
         type: formData.type,
         description: formData.description,
-        status: formData.status
+        status: formData.status,
+        paymentMethod: formData.status === 'pago' ? formData.paymentMethod : undefined
       };
       
       // Only add customer/supplier if selected and has value
@@ -517,10 +525,34 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
                 });
                 if (checked) {
                   setCustomInstallments([]);
+                } else {
+                  setFormData(prev => ({ ...prev, paymentMethod: '' }));
                 }
               }}
             />
           </div>
+
+          {formData.status === 'pago' && (
+            <div className="space-y-2">
+              <Label>Forma de Pagamento</Label>
+              <Select 
+                value={formData.paymentMethod} 
+                onValueChange={(v) => setFormData({...formData, paymentMethod: v})}
+              >
+                <SelectTrigger className="w-full" required>
+                  <SelectValue placeholder="Selecione a forma..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Dinheiro">Dinheiro</SelectItem>
+                  <SelectItem value="Pix">Pix</SelectItem>
+                  <SelectItem value="Cartão de Crédito">Cartão de Crédito</SelectItem>
+                  <SelectItem value="Cartão de Débito">Cartão de Débito</SelectItem>
+                  <SelectItem value="Boleto">Boleto</SelectItem>
+                  <SelectItem value="Transferência">Transferência</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {formData.status !== 'pago' && (
             <>

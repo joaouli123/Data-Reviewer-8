@@ -26,7 +26,8 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
     installments: 1,
     installment_amount: '',
     status: 'pago',
-    paymentDate: format(new Date(), 'yyyy-MM-dd')
+    paymentDate: format(new Date(), 'yyyy-MM-dd'),
+    paymentMethod: ''
   });
   const [customInstallments, setCustomInstallments] = useState([]);
   const [isCreateCategoryModalOpen, setIsCreateCategoryModalOpen] = useState(false);
@@ -49,7 +50,8 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
         installments: 1,
         installment_amount: '',
         status: 'pago',
-        paymentDate: format(new Date(), 'yyyy-MM-dd')
+        paymentDate: format(new Date(), 'yyyy-MM-dd'),
+        paymentMethod: ''
       });
       setCustomInstallments([]);
     }
@@ -122,6 +124,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
           amount: String(installmentAmount.toFixed(2)),
           description: `${data.description}${installmentCount > 1 ? ` (${i + 1}/${installmentCount})` : ''}`,
           status: data.status || 'pendente',
+          paymentMethod: data.status === 'pago' ? data.paymentMethod : undefined,
           installmentGroup: installmentGroupId,
           installmentNumber: i + 1,
           installmentTotal: installmentCount
@@ -149,7 +152,8 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
         purchase_date: format(new Date(), 'yyyy-MM-dd'),
         installments: 1,
         installment_amount: '',
-        status: 'pendente'
+        status: 'pendente',
+        paymentMethod: ''
       });
       onOpenChange(false);
     },
@@ -170,6 +174,11 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
     }
     if (!formData.category) {
       toast.error('Selecione uma categoria', { duration: 5000 });
+      return;
+    }
+
+    if (formData.status === 'pago' && !formData.paymentMethod) {
+      toast.error('Selecione a forma de pagamento');
       return;
     }
 
@@ -256,10 +265,34 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
                 });
                 if (checked) {
                   setCustomInstallments([]);
+                } else {
+                  setFormData(prev => ({ ...prev, paymentMethod: '' }));
                 }
               }}
             />
           </div>
+
+          {formData.status === 'pago' && (
+            <div className="space-y-2">
+              <Label>Forma de Pagamento</Label>
+              <Select 
+                value={formData.paymentMethod} 
+                onValueChange={(v) => setFormData({...formData, paymentMethod: v})}
+              >
+                <SelectTrigger className="w-full" required>
+                  <SelectValue placeholder="Selecione a forma..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Dinheiro">Dinheiro</SelectItem>
+                  <SelectItem value="Pix">Pix</SelectItem>
+                  <SelectItem value="Cartão de Crédito">Cartão de Crédito</SelectItem>
+                  <SelectItem value="Cartão de Débito">Cartão de Débito</SelectItem>
+                  <SelectItem value="Boleto">Boleto</SelectItem>
+                  <SelectItem value="Transferência">Transferência</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label>Valor Total</Label>

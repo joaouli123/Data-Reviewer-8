@@ -248,6 +248,7 @@ export const transactions = pgTable("transactions", {
   installmentGroup: text("installment_group"),
   installmentNumber: integer("installment_number"),
   installmentTotal: integer("installment_total"),
+  paymentMethod: text("payment_method"),
 });
 
 export const cashFlow = pgTable("cash_flow", {
