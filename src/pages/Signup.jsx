@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
+import { Building2, FileText, User, UserCheck, Mail, Lock, CheckCircle2, UserPlus } from "lucide-react";
+import { formatCNPJ } from "@/utils/masks";
 
 export default function Signup() {
   const [formData, setFormData] = useState({
@@ -22,24 +24,30 @@ export default function Signup() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    
+    if (name === "companyDocument") {
+      const formatted = formatCNPJ(value);
+      setFormData((prev) => ({ ...prev, [name]: formatted }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (Object.values(formData).some((v) => !v)) {
-      toast.error("Please fill in all fields");
+      toast.error("Por favor, preencha todos os campos");
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      toast.error("Passwords do not match");
+      toast.error("As senhas não coincidem");
       return;
     }
 
     if (formData.password.length < 6) {
-      toast.error("Password must be at least 6 characters");
+      toast.error("A senha deve ter no mínimo 6 caracteres");
       return;
     }
 
@@ -53,7 +61,7 @@ export default function Signup() {
         formData.password,
         formData.name
       );
-      toast.success("Account created successfully!");
+      toast.success("Conta criada com sucesso!");
       setLocation("/");
     } catch (error) {
       toast.error(error.message);
@@ -63,116 +71,149 @@ export default function Signup() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md p-6">
-        <h1 className="text-2xl font-bold mb-6">Create Account</h1>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted/30 p-4">
+      <Card className="w-full max-w-md p-8 shadow-lg">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold">Criar Conta</h1>
+          <p className="text-sm text-muted-foreground mt-2">Registre-se para começar a usar</p>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">Company Name</label>
-            <Input
-              type="text"
-              name="companyName"
-              value={formData.companyName}
-              onChange={handleChange}
-              placeholder="Your company name"
-              disabled={loading}
-              data-testid="input-company-name"
-            />
+          <div className="space-y-2">
+            <label className="block text-sm font-medium">Empresa</label>
+            <div className="relative">
+              <Building2 className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+              <Input
+                type="text"
+                name="companyName"
+                value={formData.companyName}
+                onChange={handleChange}
+                placeholder="Nome da empresa"
+                disabled={loading}
+                data-testid="input-company-name"
+                className="pl-10"
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">Company Document (CNPJ/CPF)</label>
-            <Input
-              type="text"
-              name="companyDocument"
-              value={formData.companyDocument}
-              onChange={handleChange}
-              placeholder="00.000.000/0000-00"
-              disabled={loading}
-              data-testid="input-company-document"
-            />
+          <div className="space-y-2">
+            <label className="block text-sm font-medium">CNPJ/CPF</label>
+            <div className="relative">
+              <FileText className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+              <Input
+                type="text"
+                name="companyDocument"
+                value={formData.companyDocument}
+                onChange={handleChange}
+                placeholder="00.000.000/0000-00"
+                disabled={loading}
+                data-testid="input-company-document"
+                className="pl-10"
+                maxLength="18"
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">Full Name</label>
-            <Input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="Your full name"
-              disabled={loading}
-              data-testid="input-name"
-            />
+          <div className="space-y-2">
+            <label className="block text-sm font-medium">Nome Completo</label>
+            <div className="relative">
+              <User className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+              <Input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="Seu nome completo"
+                disabled={loading}
+                data-testid="input-name"
+                className="pl-10"
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">Username</label>
-            <Input
-              type="text"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              placeholder="Choose a username"
-              disabled={loading}
-              data-testid="input-username"
-            />
+          <div className="space-y-2">
+            <label className="block text-sm font-medium">Usuário</label>
+            <div className="relative">
+              <UserCheck className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+              <Input
+                type="text"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                placeholder="Escolha um usuário"
+                disabled={loading}
+                data-testid="input-username"
+                className="pl-10"
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">Email</label>
-            <Input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="your@email.com"
-              disabled={loading}
-              data-testid="input-email"
-            />
+          <div className="space-y-2">
+            <label className="block text-sm font-medium">Email</label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+              <Input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="seu@email.com"
+                disabled={loading}
+                data-testid="input-email"
+                className="pl-10"
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">Password</label>
-            <Input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="At least 6 characters"
-              disabled={loading}
-              data-testid="input-password"
-            />
+          <div className="space-y-2">
+            <label className="block text-sm font-medium">Senha</label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+              <Input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Mínimo 6 caracteres"
+                disabled={loading}
+                data-testid="input-password"
+                className="pl-10"
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">Confirm Password</label>
-            <Input
-              type="password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              placeholder="Confirm password"
-              disabled={loading}
-              data-testid="input-confirm-password"
-            />
+          <div className="space-y-2">
+            <label className="block text-sm font-medium">Confirmar Senha</label>
+            <div className="relative">
+              <CheckCircle2 className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+              <Input
+                type="password"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                placeholder="Confirme sua senha"
+                disabled={loading}
+                data-testid="input-confirm-password"
+                className="pl-10"
+              />
+            </div>
           </div>
 
           <Button
             type="submit"
             disabled={loading}
-            className="w-full"
+            className="w-full mt-6"
             data-testid="button-signup"
           >
-            {loading ? "Creating account..." : "Sign Up"}
+            <UserPlus className="w-4 h-4 mr-2" />
+            {loading ? "Criando conta..." : "Criar Conta"}
           </Button>
         </form>
 
-        <p className="mt-4 text-center text-sm">
-          Already have an account?{" "}
-          <a href="/login" className="text-primary hover:underline">
-            Login
+        <p className="mt-6 text-center text-sm text-muted-foreground">
+          Já tem conta?{" "}
+          <a href="/login" className="text-primary font-medium hover:underline">
+            Entrar
           </a>
         </p>
       </Card>
