@@ -118,21 +118,7 @@ export default function SuppliersPage() {
   const getSupplierPurchases = (supplierId) => {
     return transactions
       .filter(t => t.supplierId === supplierId && t.type === 'compra')
-      .reduce((acc, t) => acc + (parseFloat(t.amount || 0) + parseFloat(t.interest || 0)), 0);
-  };
-
-  const getSupplierJoinDate = (supplier) => {
-    if (supplier.join_date) {
-      return format(parseISO(supplier.join_date), "MMM yyyy", { locale: ptBR });
-    }
-    
-    const supplierTransactions = transactions.filter(t => t.supplierId === supplier.id);
-    if (supplierTransactions.length > 0) {
-      const earliestDate = new Date(Math.min(...supplierTransactions.map(t => new Date(t.date))));
-      return format(earliestDate, "MMM yyyy", { locale: ptBR });
-    }
-    
-    return '-';
+      .reduce((acc, t) => acc + parseFloat(t.amount || 0), 0);
   };
 
   const filteredSuppliers = suppliers

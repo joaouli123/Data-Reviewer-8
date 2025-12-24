@@ -117,26 +117,9 @@ export default function CustomersPage() {
 
   // Calculate customer sales from transactions
   const getCustomerSales = (customerId) => {
-    if (!Array.isArray(transactions)) return 0;
     return transactions
       .filter(t => t.customerId === customerId && t.type === 'venda')
-      .reduce((acc, t) => acc + (parseFloat(t.amount || 0) + parseFloat(t.interest || 0)), 0);
-  };
-
-  // Get customer join date - use join_date if available, otherwise use first transaction date
-  const getCustomerJoinDate = (customer) => {
-    if (customer.join_date) {
-      return format(parseISO(customer.join_date), "MMM yyyy", { locale: ptBR });
-    }
-    
-    if (!Array.isArray(transactions)) return '-';
-    const customerTransactions = transactions.filter(t => t.customerId === customer.id);
-    if (customerTransactions.length > 0) {
-      const earliestDate = new Date(Math.min(...customerTransactions.map(t => parseISO(t.date.split('T')[0] + 'T12:00:00Z'))));
-      return format(earliestDate, "MMM yyyy", { locale: ptBR });
-    }
-    
-    return '-';
+      .reduce((acc, t) => acc + parseFloat(t.amount || 0), 0);
   };
 
   const filteredCustomers = customers
@@ -224,7 +207,7 @@ export default function CustomersPage() {
                                     </div>
                                 </TableCell>
                                 <TableCell className="text-slate-500 text-sm text-left">
-                                    {getCustomerJoinDate(c)}
+                                    -
                                 </TableCell>
                                 <TableCell className="text-right">
                                     <div className="text-emerald-600 font-semibold">
