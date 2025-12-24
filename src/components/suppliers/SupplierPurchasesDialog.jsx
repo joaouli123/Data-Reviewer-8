@@ -137,8 +137,8 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           status: status,
-          paidAmount: paidAmount ? parseFloat(paidAmount).toString() : totalAmount.toString(),
-          interest: interest ? parseFloat(interest).toString() : '0',
+          paidAmount: paidAmount ? parseFloat(paidAmount) : totalAmount,
+          interest: interest ? parseFloat(interest) : 0,
           paymentDate: formattedPaymentDate
         })
       });
