@@ -1,0 +1,74 @@
+Com certeza. Entendi perfeitamente. Você quer o "Manual de Arquitetura" para passar para a IA, focado na lógica de negócio e regras, sem o código em si.
+
+Aqui está o passo a passo lógico para corrigir o bloqueio do seu Admin e implementar as páginas de Equipe e Perfil.
+
+1. Instruções para Corrigir o "Admin Bloqueado"
+O problema atual é que seu sistema está tratando o Admin como um funcionário comum que precisa de "permissões marcadas".
+
+Passe estas instruções para a IA:
+
+A Regra Mestre (Bypass): No Frontend, especificamente no componente que decide quem pode ver o quê (Guardas de Rota ou Sidebar), a lógica deve ser alterada.
+
+Lógica atual: "O usuário tem a permissão X?"
+
+Lógica nova: "O usuário é Admin? SE SIM, libera tudo. SE NÃO, verifique se tem a permissão X."
+
+Correção do Menu Lateral: Instrua a IA a atualizar o componente Sidebar ou Layout. Os links de "Configurações" (Usuários) devem aparecer automaticamente se o role (cargo) do usuário for admin, sem checar nenhuma outra checkbox.
+
+2. Instruções para a Página de Gestão de Usuários
+Esta é a tela onde você cria seus funcionários.
+
+Passe estas instruções de requisitos para a IA:
+
+A. Banco de Dados (Alteração necessária):
+
+Adicionar uma coluna do tipo JSON chamada permissions na tabela de usuários.
+
+Por que: Isso permite salvar configurações flexíveis como {"ver_relatorios": false, "editar_clientes": true} sem criar 50 colunas no banco.
+
+B. Interface da Página (UI):
+
+Criar uma tabela listando: Avatar, Nome, Email, Cargo (Admin/Operacional) e Status.
+
+Botão "Novo Usuário" que abre uma janela (Modal/Dialog).
+
+C. Lógica de Criação (O Formulário): O formulário deve ter um "Interruptor Mestre" (Switch) perguntando: "Este usuário é Admin?"
+
+Se for Admin: Esconda todas as opções de permissão. Ele terá acesso total automaticamente.
+
+Se for Operacional: Mostre uma lista de "Checkboxes" (caixas de seleção) para o dono da empresa marcar o que o funcionário pode fazer:
+
+[ ] Acessar Extratos
+
+[ ] Cadastrar Clientes
+
+[ ] Ver Relatórios de Lucro
+
+[ ] Usar Calculadora de Preços
+
+D. Lógica do Convite (Invite Link):
+
+Ao invés de definir senha, permitir uma aba "Convidar por Link".
+
+O sistema deve gerar uma URL única (ex: app.com/convite/token-xyz).
+
+Esse link deve levar a uma página pública de registro onde o e-mail já vem preenchido e bloqueado, e o funcionário só cria a senha dele.
+
+3. Instruções para a Página de Perfil
+Esta página é para o usuário cuidar dos dados dele.
+
+Passe estas instruções para a IA:
+
+A. Separação de Segurança:
+
+Instrua a IA a dividir o formulário em dois tipos de campos:
+
+Campos Bloqueados (Read-only): E-mail, Cargo e Empresa. O usuário vê (cor cinza), mas não clica nem edita. Isso é vital para segurança.
+
+Campos Editáveis: Nome, Telefone, Avatar (Foto) e Endereço.
+
+B. Lógica do Avatar:
+
+O upload da foto não deve ser enviado como JSON simples. Instrua a IA a configurar o envio do formulário como FormData (Multipart), pois é o padrão para envio de arquivos (imagens).
+
+Adicionar um "Preview": Assim que o usuário selecionar a foto no computador, ela deve aparecer na tela antes mesmo de salvar.
