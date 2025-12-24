@@ -4,28 +4,25 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CurrencyInput, formatCurrency, parseCurrency } from "@/components/ui/currency-input";
+import { CurrencyInput, formatCurrency } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from '@/components/ui/switch';
 import { Category, Purchase, PurchaseInstallment } from '@/api/entities';
 import { toast } from 'sonner';
-import { format, addMonths, parseISO } from 'date-fns';
+import { format, addMonths } from 'date-fns';
 import { Plus } from 'lucide-react';
 import CreateCategoryModal from '../transactions/CreateCategoryModal';
 import { apiRequest } from '@/lib/queryClient';
 
 export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
-  const [isPaidUpfront, setIsPaidUpfront] = useState(false);
   const [formData, setFormData] = useState({
     description: '',
     total_amount: '',
     category: '',
     purchase_date: format(new Date(), 'yyyy-MM-dd'),
-    installments: isPaidUpfront ? 1 : 1,
+    installments: 1,
     installment_amount: '',
-    paymentDate: isPaidUpfront ? format(new Date(), 'yyyy-MM-dd') : null,
-    status: isPaidUpfront ? 'paid' : 'pendente'
+    status: 'pendente'
   });
   const [customInstallments, setCustomInstallments] = useState([]);
   const [isCreateCategoryModalOpen, setIsCreateCategoryModalOpen] = useState(false);
@@ -93,13 +90,6 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
       const [year, month, day] = data.purchase_date.split('-');
       const baseDate = new Date(`${year}-${month}-${day}T12:00:00Z`);
       
-      // Get payment date if paid upfront
-      let paymentDateISO = null;
-      if (data.paymentDate) {
-        const [pYear, pMonth, pDay] = data.paymentDate.split('-');
-        paymentDateISO = new Date(`${pYear}-${pMonth}-${pDay}T12:00:00Z`).toISOString();
-      }
-      
       const promises = [];
       
       for (let i = 0; i < installmentCount; i++) {
@@ -116,7 +106,6 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
           amount: installmentAmount,
           description: `${data.description}${installmentCount > 1 ? ` (${i + 1}/${installmentCount})` : ''}`,
           status: data.status || 'pendente',
-          paymentDate: paymentDateISO,
           installmentGroup: installmentGroupId,
           installmentNumber: i + 1,
           installmentTotal: installmentCount
@@ -144,10 +133,8 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
         purchase_date: format(new Date(), 'yyyy-MM-dd'),
         installments: 1,
         installment_amount: '',
-        paymentDate: null,
         status: 'pendente'
       });
-      setIsPaidUpfront(false);
       onOpenChange(false);
     },
     onError: (error) => {
@@ -257,33 +244,15 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
             />
           </div>
 
-          <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
-            <Label className="cursor-pointer">Pago à vista?</Label>
-            <Switch 
-              checked={isPaidUpfront}
-              onCheckedChange={(checked) => {
-                setIsPaidUpfront(checked);
-                if (checked) {
-                  setFormData({...formData, installments: 1, status: 'paid', paymentDate: format(new Date(), 'yyyy-MM-dd')});
-                  setCustomInstallments([]);
-                } else {
-                  setFormData({...formData, installments: 1, status: 'pendente', paymentDate: null});
-                }
-              }}
+          <div className="space-y-2">
+            <Label>Número de Parcelas</Label>
+            <Input
+              type="number"
+              min="1"
+              value={formData.installments}
+              onChange={(e) => handleInstallmentsChange(e.target.value)}
             />
           </div>
-
-          {!isPaidUpfront && (
-            <div className="space-y-2">
-              <Label>Número de Parcelas</Label>
-              <Input
-                type="number"
-                min="1"
-                value={formData.installments}
-                onChange={(e) => handleInstallmentsChange(e.target.value)}
-              />
-            </div>
-          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">

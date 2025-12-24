@@ -2,10 +2,9 @@ import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CurrencyInput, formatCurrency, parseCurrency } from "@/components/ui/currency-input";
+import { CurrencyInput, formatCurrency } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Category, Sale, Installment } from '@/api/entities';
 import { format, addMonths } from 'date-fns';
@@ -14,16 +13,14 @@ import { Plus } from 'lucide-react';
 import CreateCategoryModal from '../transactions/CreateCategoryModal';
 
 export default function NewSaleDialog({ customer, open, onOpenChange }) {
-  const [isPaidUpfront, setIsPaidUpfront] = useState(false);
   const [formData, setFormData] = useState({
     description: '',
     total_amount: '',
     category: '',
     sale_date: format(new Date(), 'yyyy-MM-dd'),
-    installments: isPaidUpfront ? 1 : '1',
+    installments: '1',
     installment_amount: '',
-    paymentDate: isPaidUpfront ? format(new Date(), 'yyyy-MM-dd') : null,
-    status: isPaidUpfront ? 'paid' : 'pendente'
+    status: 'pendente'
   });
   const [customInstallments, setCustomInstallments] = useState([]);
   const [isCreateCategoryModalOpen, setIsCreateCategoryModalOpen] = useState(false);
@@ -85,13 +82,6 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
       const [year, month, day] = data.sale_date.split('-');
       const baseDate = new Date(`${year}-${month}-${day}T12:00:00Z`);
       
-      // Get payment date if paid upfront
-      let paymentDateISO = null;
-      if (data.paymentDate) {
-        const [pYear, pMonth, pDay] = data.paymentDate.split('-');
-        paymentDateISO = new Date(`${pYear}-${pMonth}-${pDay}T12:00:00Z`).toISOString();
-      }
-      
       const promises = [];
       
       for (let i = 0; i < installmentCount; i++) {
@@ -108,7 +98,6 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
           amount: String(installmentAmount.toFixed(2)),
           description: `${data.description}${installmentCount > 1 ? ` (${i + 1}/${installmentCount})` : ''}`,
           status: data.status || 'pendente',
-          paymentDate: paymentDateISO,
           installmentGroup: installmentGroupId,
           installmentNumber: i + 1,
           installmentTotal: installmentCount
@@ -140,11 +129,9 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
         sale_date: format(new Date(), 'yyyy-MM-dd'),
         installments: '1',
         installment_amount: '',
-        paymentDate: null,
         status: 'pendente'
       });
       setCustomInstallments([]);
-      setIsPaidUpfront(false);
       toast.success('Venda registrada com sucesso!', { duration: 5000 });
     },
     onError: (error) => {
@@ -236,24 +223,7 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
             </div>
           </div>
 
-          <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
-            <Label className="cursor-pointer">Recebido à vista?</Label>
-            <Switch 
-              checked={isPaidUpfront}
-              onCheckedChange={(checked) => {
-                setIsPaidUpfront(checked);
-                if (checked) {
-                  setFormData({...formData, installments: 1, status: 'paid', paymentDate: format(new Date(), 'yyyy-MM-dd')});
-                  setCustomInstallments([]);
-                } else {
-                  setFormData({...formData, installments: '1', status: 'pendente', paymentDate: null});
-                }
-              }}
-            />
-          </div>
-
-          {!isPaidUpfront && (
-            <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Número de Parcelas</Label>
                 <Input
@@ -278,7 +248,6 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
                 </div>
               )}
             </div>
-          )}
 
           {Number(formData.installments) > 1 && customInstallments.length === 0 && (
             <div className="p-3 bg-slate-50 rounded-lg text-sm text-slate-600">
