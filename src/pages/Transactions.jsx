@@ -425,8 +425,12 @@ export default function TransactionsPage() {
                         paginatedTransactions.map((t) => (
                             <TableRow key={t.id} className="hover:bg-slate-50/50 group">
                                 <TableCell className="font-medium text-slate-600 pl-6 text-left">
-                                    {/* Parse date using UTC to avoid timezone issues */}
-                                    {format(parseISO(t.date.split('T')[0] + 'T12:00:00Z'), "dd/MM/yyyy", { locale: ptBR })}
+                                    {/* For paid transactions, show payment date; otherwise show due date */}
+                                    {(() => {
+                                      const isPaid = t.status === 'pago' || t.status === 'completed';
+                                      const dateToDisplay = isPaid && t.paymentDate ? t.paymentDate : t.date;
+                                      return format(parseISO(dateToDisplay.split('T')[0] + 'T12:00:00Z'), "dd/MM/yyyy", { locale: ptBR });
+                                    })()}
                                 </TableCell>
                                 <TableCell className="font-medium text-slate-900 text-left">{t.description}</TableCell>
                                 <TableCell className="text-left">
