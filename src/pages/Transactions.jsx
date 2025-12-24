@@ -453,7 +453,14 @@ export default function TransactionsPage() {
                                       return format(parseISO(dateToDisplay.split('T')[0] + 'T12:00:00Z'), "dd/MM/yyyy", { locale: ptBR });
                                     })()}
                                 </TableCell>
-                                <TableCell className="font-medium text-slate-900 text-left">{t.description}</TableCell>
+                                <TableCell className="font-medium text-slate-900 text-left">
+                                    {t.description}
+                                    {t.installmentNumber && t.installmentTotal && (
+                                        <span className="ml-2 text-xs text-slate-500 font-normal">
+                                            ({t.installmentNumber}/{t.installmentTotal})
+                                        </span>
+                                    )}
+                                </TableCell>
                                 <TableCell className="text-left">
                                     <Badge variant="secondary" className="capitalize font-normal bg-slate-100 text-slate-600 hover:bg-slate-200">
                                         {categories.find(c => c.id === t.categoryId)?.name || t.category}
