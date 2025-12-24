@@ -36,18 +36,21 @@ export default function CustomersPage() {
     queryFn: () => Customer.list(),
     initialData: [],
     enabled: !!company?.id
+  });
 
   const { data: categories = [] } = useQuery({
     queryKey: ['/api/categories', company?.id],
     queryFn: () => Category.list(),
     initialData: [],
     enabled: !!company?.id
+  });
 
   const { data: transactionsData = [] } = useQuery({
     queryKey: ['/api/transactions', company?.id],
     queryFn: () => fetch('/api/transactions').then(res => res.json()),
     initialData: [],
     enabled: !!company?.id
+  });
 
 
   const saveMutation = useMutation({
@@ -63,8 +66,7 @@ export default function CustomersPage() {
       setSelectedCustomer(null);
       toast.success(selectedCustomer ? 'Cliente atualizado!' : 'Cliente adicionado!', { duration: 5000 });
     }
-
-
+  });
 
   const deleteMutation = useMutation({
     mutationFn: (id) => Customer.delete(id),
@@ -72,6 +74,7 @@ export default function CustomersPage() {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       toast.success('Cliente removido.', { duration: 5000 });
     }
+  });
 
   const handleFormSubmit = (data) => {
     if (selectedCustomer) {
