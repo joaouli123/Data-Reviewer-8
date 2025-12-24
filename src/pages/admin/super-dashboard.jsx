@@ -55,7 +55,9 @@ function filterByPeriod(items, period) {
   if (!range) return items;
   
   return items.filter(item => {
-    const createdDate = new Date(item.createdAt);
+    // Support both camelCase (createdAt) and snake_case (created_at)
+    const dateStr = item.createdAt || item.created_at;
+    const createdDate = new Date(dateStr);
     return createdDate >= range.start && createdDate <= range.end;
   });
 }
