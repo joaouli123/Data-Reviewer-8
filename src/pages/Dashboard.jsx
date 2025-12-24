@@ -31,7 +31,7 @@ export default function DashboardPage() {
 
   const [dateRange, setDateRange] = useState(getInitialDateRange());
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const { company } = useAuth();
+  const { company, user } = useAuth();
   const queryClient = useQueryClient();
 
   const createMutation = useMutation({
@@ -196,8 +196,8 @@ export default function DashboardPage() {
       {/* Header com Filtro de Data */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Visão Geral</h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-1">Bem-vindo de volta ao seu painel financeiro.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Bem vindo, {user?.name}!</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">Visão Geral do seu painel financeiro.</p>
           {metrics.openingBalance !== 0 && (
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-2">
               Saldo Inicial: <span className={metrics.openingBalance >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'} style={{fontWeight: 'bold'}}>
