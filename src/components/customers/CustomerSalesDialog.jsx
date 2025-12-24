@@ -28,17 +28,18 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
     return expandedGroups[groupId] !== false;
   };
 
-  const { data: transactionsData = [] } = useQuery({
-    queryKey: ['/api/transactions', company?.id],
-    queryFn: () => {
+  // Fetch transactions specific to this customer when modal opens
+  const { data: transactionsData = [], isLoading } = useQuery({
+    queryKey: ['/api/transactions', customer?.id],
+    queryFn: async () => {
       const Transaction = require('@/api/entities').Transaction;
-      return Transaction.list();
+      const allTransactions = await Transaction.list();
+      return allTransactions;
     },
-    initialData: [],
-    enabled: !!company?.id,
+    enabled: !!customer?.id && open,
     staleTime: 0,
-    refetchOnMount: true,
-    refetchOnWindowFocus: true
+    refetchOnMount: false,
+    refetchOnWindowFocus: false
   });
 
   const transactions = Array.isArray(transactionsData) ? transactionsData : (transactionsData?.data || []);
@@ -256,6 +257,16 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
           </div>
         </div>
 
+        {isLoading && (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-300 mx-auto mb-2"></div>
+              <p className="text-sm text-slate-500">Carregando transações...</p>
+            </div>
+          </div>
+        )}
+
+        {!isLoading && (
         <div className="space-y-6 mt-4">
           {groupedSales.length > 0 ? (
               groupedSales.map((group) => (
@@ -373,6 +384,7 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
               </div>
             )}
         </div>
+        )}
 
         <PaymentEditDialog
           isOpen={paymentEditOpen}

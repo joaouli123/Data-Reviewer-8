@@ -512,6 +512,18 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const body = req.body;
       if (typeof body.date === "string") body.date = new Date(body.date);
       if (typeof body.paymentDate === "string") body.paymentDate = new Date(body.paymentDate);
+      
+      // Ensure numeric fields are numbers
+      if (body.paidAmount !== undefined && body.paidAmount !== null) {
+        body.paidAmount = typeof body.paidAmount === "string" ? parseFloat(body.paidAmount) : body.paidAmount;
+      }
+      if (body.interest !== undefined && body.interest !== null) {
+        body.interest = typeof body.interest === "string" ? parseFloat(body.interest) : body.interest;
+      }
+      if (body.amount !== undefined && body.amount !== null) {
+        body.amount = typeof body.amount === "string" ? parseFloat(body.amount) : body.amount;
+      }
+      
       const data = insertTransactionSchema.partial().parse(body);
       const transaction = await storage.updateTransaction(req.user.companyId, req.params.id, data);
       res.json({
@@ -520,8 +532,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         paidAmount: transaction.paidAmount ? parseFloat(transaction.paidAmount.toString()) : null,
         interest: transaction.interest ? parseFloat(transaction.interest.toString()) : 0
       });
-    } catch (error) {
-      res.status(400).json({ error: "Invalid transaction data" });
+    } catch (error: any) {
+      console.error("Patch transaction error:", error);
+      res.status(400).json({ 
+        error: "Invalid transaction data",
+        details: error.errors?.[0]?.message || error.message 
+      });
     }
   });
 
