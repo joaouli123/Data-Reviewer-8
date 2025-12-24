@@ -97,11 +97,11 @@ function SuperDashboardContent() {
   const avgUsersPerCompany = activeCompanies > 0 ? (filteredUsers.length / activeCompanies).toFixed(1) : 0;
 
   return (
-    <div className="space-y-6 p-4 md:p-8">
+    <div className="space-y-8 p-4 md:p-8">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Dashboard Super Admin</h1>
-          <p className="text-muted-foreground mt-1">Visão geral do sistema</p>
+          <h1 className="text-4xl font-bold text-foreground">Dashboard Super Admin</h1>
+          <p className="text-sm text-muted-foreground mt-2">Visão geral do sistema</p>
         </div>
       </div>
 
@@ -150,7 +150,7 @@ function SuperDashboardContent() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium">Total de Empresas</CardTitle>
@@ -195,7 +195,7 @@ function SuperDashboardContent() {
       </div>
 
       {/* Status Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="p-6">
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground uppercase tracking-wide font-semibold mb-4">Status das Empresas</p>

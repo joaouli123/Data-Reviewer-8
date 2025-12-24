@@ -112,9 +112,9 @@ function CustomerListContent() {
   );
 
   return (
-    <div className="space-y-6 p-4 md:p-8">
+    <div className="space-y-8 p-4 md:p-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
         <div>
           <h1 className="text-4xl font-bold text-foreground">Clientes do Sistema</h1>
           <p className="text-sm text-muted-foreground mt-2">Gerencie todos os clientes de todas as empresas</p>
@@ -135,13 +135,13 @@ function CustomerListContent() {
           placeholder="Buscar por nome, email ou empresa..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="flex-1"
+          className="flex-1 bg-background border border-input"
           data-testid="input-search-customers"
         />
       </div>
 
       {/* Table */}
-      <Card>
+      <Card className="border-border/40">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
