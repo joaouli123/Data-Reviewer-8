@@ -19,7 +19,6 @@ export function UserEditModal({ user, open, onOpenChange, onSave, isPending }) {
       role: user?.role || 'user',
       status: user?.status || 'active',
     },
-  });
 
   const onSubmit = async (data) => {
     await onSave({

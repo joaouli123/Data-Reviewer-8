@@ -120,7 +120,6 @@ export default function ReportsPage() {
       ...t,
       category: categoryName // Ensure category is the name, not ID
     };
-  });
 
   const handleStartAnalysis = () => {
     setModalOpen(true);

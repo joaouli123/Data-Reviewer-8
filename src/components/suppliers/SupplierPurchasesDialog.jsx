@@ -30,9 +30,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
     queryKey: ['transactions'],
     queryFn: () => fetch('/api/transactions').then(res => res.json()),
     initialData: []
-  });
 
-  const transactions = Array.isArray(transactionsData) ? transactionsData : (transactionsData.data || []);
   const purchases = transactions.filter(t => t.supplierId === supplier?.id && t.type === 'compra');
   
   // Group purchases by installment group
@@ -171,7 +169,6 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
     onError: (error) => {
       toast.error(error.message);
     }
-  });
 
   const cancelPaymentMutation = useMutation({
     mutationFn: async (purchaseId) => {
@@ -217,7 +214,6 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
     onError: (error) => {
       toast.error(error.message);
     }
-  });
 
   if (!supplier) return null;
 

@@ -107,7 +107,6 @@ function dispatch(action) {
   memoryState = reducer(memoryState, action);
   listeners.forEach((listener) => {
     listener(memoryState);
-  });
 }
 
 function toast({ ...props }) {
@@ -132,7 +131,6 @@ function toast({ ...props }) {
         if (!open) dismiss();
       },
     },
-  });
 
   return {
     id,

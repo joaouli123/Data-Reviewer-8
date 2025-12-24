@@ -11,7 +11,6 @@ export default function ExpensesBreakdown({ opportunities, transactions, categor
   const categoryMap = {};
   categories.forEach(cat => {
     categoryMap[cat.id] = cat.name || 'Sem Categoria';
-  });
 
   // Debug: Log transactions being filtered
   const expenseTransactions = transactions.filter(t => {
@@ -19,7 +18,6 @@ export default function ExpensesBreakdown({ opportunities, transactions, categor
     const catId = t.categoryId;
     const cat = categories.find(c => c.id === catId);
     return cat && cat.type === 'saida';
-  });
 
   // Calculate expenses by category
   const expensesByCategory = expenseTransactions

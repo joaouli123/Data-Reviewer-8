@@ -24,7 +24,6 @@ export default function QuickActionsFAB() {
     onError: (error) => {
       toast.error(`Erro ao criar transação: ${error.message}`);
     }
-  });
 
   const handleTransactionSubmit = (data) => {
     createTransactionMutation.mutate(data);

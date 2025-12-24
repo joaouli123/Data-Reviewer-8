@@ -126,7 +126,6 @@ export default function CashFlowForecastPage() {
     startDate: minDate,
     endDate: maxDate,
     label: 'Todo período'
-  });
   const [expandedMonths, setExpandedMonths] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
@@ -136,28 +135,24 @@ export default function CashFlowForecastPage() {
     queryFn: () => Installment.list(),
     initialData: [],
     enabled: !!company?.id
-  });
 
   const { data: purchaseInstallments } = useQuery({
     queryKey: ['/api/purchase-installments', company?.id],
     queryFn: () => PurchaseInstallment.list(),
     initialData: [],
     enabled: !!company?.id
-  });
 
   const { data: sales } = useQuery({
     queryKey: ['/api/sales', company?.id],
     queryFn: () => Sale.list(),
     initialData: [],
     enabled: !!company?.id
-  });
 
   const { data: purchases } = useQuery({
     queryKey: ['/api/purchases', company?.id],
     queryFn: () => Purchase.list(),
     initialData: [],
     enabled: !!company?.id
-  });
 
   const calculateCashFlow = () => {
     if (!dateRange.startDate || !dateRange.endDate) return [];
@@ -373,7 +368,6 @@ export default function CashFlowForecastPage() {
       ...item,
       saldoAcumulado: cumulativeBalance
     };
-  });
   
   // Filter for balanced view (only show periods with transactions)
   const chartDataWithBalance = cashFlowWithBalance.filter(item => item.receita > 0 || item.despesa > 0);

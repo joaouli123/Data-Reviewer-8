@@ -20,7 +20,6 @@ export default function QuickActionsWidget() {
       setTransactionFormOpen(false);
       toast.success('Transação criada!', { duration: 5000 });
     }
-  });
 
   const handleTransactionSubmit = (data) => {
     createTransactionMutation.mutate(data);

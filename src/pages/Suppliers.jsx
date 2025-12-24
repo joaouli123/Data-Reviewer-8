@@ -36,23 +36,19 @@ export default function SuppliersPage() {
     queryFn: () => Supplier.list(),
     initialData: [],
     enabled: !!company?.id
-  });
 
   const { data: expenseCategories = [] } = useQuery({
     queryKey: ['/api/categories', company?.id],
     queryFn: () => Category.list(),
     initialData: [],
     enabled: !!company?.id
-  });
 
   const { data: transactionsData = [] } = useQuery({
     queryKey: ['/api/transactions', company?.id],
     queryFn: () => fetch('/api/transactions').then(res => res.json()),
     initialData: [],
     enabled: !!company?.id
-  });
 
-  const transactions = Array.isArray(transactionsData) ? transactionsData : (transactionsData.data || []);
 
   const saveMutation = useMutation({
     mutationFn: (data) => {
@@ -67,7 +63,6 @@ export default function SuppliersPage() {
       setSelectedSupplier(null);
       toast.success(selectedSupplier ? 'Fornecedor atualizado!' : 'Fornecedor adicionado!', { duration: 5000 });
     }
-  });
 
   const deleteMutation = useMutation({
     mutationFn: (id) => Supplier.delete(id),
@@ -75,7 +70,6 @@ export default function SuppliersPage() {
       queryClient.invalidateQueries({ queryKey: ['/api/suppliers', company?.id] });
       toast.success('Fornecedor removido.', { duration: 5000 });
     }
-  });
 
   const handleFormSubmit = (data) => {
     saveMutation.mutate(data);

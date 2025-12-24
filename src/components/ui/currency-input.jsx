@@ -47,7 +47,6 @@ const CurrencyInput = forwardRef(({
       return numValue > 0 ? formatCurrency(numValue) : '';
     }
     return '';
-  });
 
   // Update whenever value prop changes
   useEffect(() => {
