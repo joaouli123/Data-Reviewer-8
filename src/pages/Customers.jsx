@@ -47,12 +47,20 @@ export default function CustomersPage() {
 
   const { data: transactionsData = [] } = useQuery({
     queryKey: ['/api/transactions', company?.id],
-    queryFn: () => fetch('/api/transactions').then(res => res.json()),
+    queryFn: () => {
+      return fetch('/api/transactions', {
+        method: 'GET',
+        credentials: 'include'
+      }).then(res => {
+        if (!res.ok) throw new Error('Failed to fetch transactions');
+        return res.json();
+      });
+    },
     initialData: [],
     enabled: !!company?.id,
-    staleTime: 0,
+    staleTime: 5000,
     refetchOnMount: true,
-    refetchOnWindowFocus: true
+    refetchOnWindowFocus: false
   });
 
   const transactions = Array.isArray(transactionsData) ? transactionsData : (transactionsData?.data || []);
