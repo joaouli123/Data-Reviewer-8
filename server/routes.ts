@@ -411,11 +411,16 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const body = req.body;
       if (typeof body.date === "string") body.date = new Date(body.date);
+      // Convert amount to string for decimal validation
+      if (body.amount && typeof body.amount === "number") {
+        body.amount = body.amount.toString();
+      }
       const data = insertTransactionSchema.parse(body);
       const transaction = await storage.createTransaction(req.user.companyId, data);
       res.status(201).json(transaction);
-    } catch (error) {
-      res.status(400).json({ error: "Invalid transaction data" });
+    } catch (error: any) {
+      console.error("Transaction validation error:", error.message || error);
+      res.status(400).json({ error: "Invalid transaction data", details: error.message });
     }
   });
 

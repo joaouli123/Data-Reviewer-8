@@ -103,7 +103,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
           type: 'compra',
           date: dueDateISO,
           shift: 'manhã',
-          amount: installmentAmount,
+          amount: String(installmentAmount.toFixed(2)),
           description: `${data.description}${installmentCount > 1 ? ` (${i + 1}/${installmentCount})` : ''}`,
           status: data.status || 'pendente',
           installmentGroup: installmentGroupId,

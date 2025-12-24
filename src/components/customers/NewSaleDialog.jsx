@@ -10,6 +10,7 @@ import { Category, Sale, Installment } from '@/api/entities';
 import { format, addMonths } from 'date-fns';
 import { toast } from 'sonner';
 import { Plus } from 'lucide-react';
+import { apiRequest } from '@/lib/queryClient';
 import CreateCategoryModal from '../transactions/CreateCategoryModal';
 
 export default function NewSaleDialog({ customer, open, onOpenChange }) {
@@ -103,13 +104,9 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
           installmentTotal: installmentCount
         };
         
-        const promise = fetch('/api/transactions', {
+        const promise = apiRequest('/api/transactions', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
-        }).then(res => {
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          return res.json();
         });
         
         promises.push(promise);
