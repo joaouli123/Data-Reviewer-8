@@ -422,7 +422,7 @@ export default function ReportsPage() {
             </TabsContent>
 
             <TabsContent value="dre" className="space-y-6 mt-6">
-              <DREAnalysis transactions={filteredTransactions} />
+              <DREAnalysis transactions={filteredTransactions} categories={categories} />
             </TabsContent>
 
             <TabsContent value="working-capital" className="space-y-6 mt-6">
