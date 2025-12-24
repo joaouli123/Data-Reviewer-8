@@ -29,17 +29,24 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
   };
 
   const { data: transactionsData = [] } = useQuery({
-    queryKey: ['/api/transactions', company?.id],
-    queryFn: () => fetch('/api/transactions').then(res => res.json()),
+    queryKey: ['/api/transactions', company?.id, customer?.id],
+    queryFn: async () => {
+      const response = await fetch('/api/transactions');
+      if (!response.ok) throw new Error('Failed to fetch transactions');
+      const data = await response.json();
+      return Array.isArray(data) ? data : (data?.data || []);
+    },
     initialData: [],
-    enabled: !!company?.id,
+    enabled: !!company?.id && !!customer?.id,
     staleTime: 0,
     refetchOnMount: true,
     refetchOnWindowFocus: true
   });
 
-  const transactions = Array.isArray(transactionsData) ? transactionsData : (transactionsData?.data || []);
-  const sales = transactions.filter(t => t.customerId === customer?.id && t.type === 'venda');
+  const sales = (Array.isArray(transactionsData) ? transactionsData : []).filter(t => 
+    String(t.customerId || '') === String(customer?.id || '') && 
+    String(t.type || '').toLowerCase() === 'venda'
+  );
   
   // Group sales by installment group
   const groupedSales = React.useMemo(() => {
