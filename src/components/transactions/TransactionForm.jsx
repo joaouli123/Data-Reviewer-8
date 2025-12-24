@@ -16,6 +16,7 @@ import { CurrencyInput, formatCurrency, parseCurrency } from "@/components/ui/cu
 import { Switch } from "@/components/ui/switch";
 import CreateCategoryModal from './CreateCategoryModal';
 import { useAuth } from '@/contexts/AuthContext';
+import { Customer, Supplier } from '@/api/entities';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -36,13 +37,28 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
     installments: 1,
     installment_amount: '',
     status: 'pago',
-    paymentDate: new Date()
+    paymentDate: new Date(),
+    entityType: 'none',
+    customerId: '',
+    supplierId: ''
   });
 
-  // Fetch Categories
+  // Fetch Categories, Customers, Suppliers
   const { data: categories } = useQuery({
     queryKey: ['/api/categories', company?.id],
     queryFn: () => Category.list(),
+    initialData: []
+  });
+
+  const { data: customers } = useQuery({
+    queryKey: ['/api/customers', company?.id],
+    queryFn: () => Customer.list(),
+    initialData: []
+  });
+
+  const { data: suppliers } = useQuery({
+    queryKey: ['/api/suppliers', company?.id],
+    queryFn: () => Supplier.list(),
     initialData: []
   });
 
@@ -98,7 +114,10 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
           installments: 1,
           installment_amount: '',
           status: 'pago',
-          paymentDate: new Date()
+          paymentDate: new Date(),
+          entityType: 'none',
+          customerId: '',
+          supplierId: ''
         });
         setCustomInstallments([]);
       }
@@ -198,6 +217,8 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
           date: dueDateISO,
           paymentDate: paymentDateISO,
           shift: 'turno1',
+          customerId: formData.entityType === 'customer' ? formData.customerId : undefined,
+          supplierId: formData.entityType === 'supplier' ? formData.supplierId : undefined,
           installmentGroup: installmentGroupId,
           installmentNumber: i + 1,
           installmentTotal: installmentCount
@@ -213,7 +234,9 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
         amount: amount,
         date: isoDate,
         paymentDate: paymentDateISO,
-        shift: 'turno1'
+        shift: 'turno1',
+        customerId: formData.entityType === 'customer' ? formData.customerId : undefined,
+        supplierId: formData.entityType === 'supplier' ? formData.supplierId : undefined
       });
     }
   };
@@ -259,6 +282,65 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           
+          <div className="space-y-2">
+            <Label>Cliente ou Fornecedor</Label>
+            <Select 
+              value={formData.entityType} 
+              onValueChange={(v) => setFormData({...formData, entityType: v, customerId: '', supplierId: '', type: v === 'customer' ? 'venda' : 'compra'})}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecione..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Nenhum</SelectItem>
+                <SelectItem value="customer">Cliente</SelectItem>
+                <SelectItem value="supplier">Fornecedor</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {formData.entityType === 'customer' && (
+            <div className="space-y-2">
+              <Label>Cliente</Label>
+              <Select 
+                value={formData.customerId} 
+                onValueChange={(v) => setFormData({...formData, customerId: v})}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecione um cliente..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {customers.map((cust) => (
+                    <SelectItem key={cust.id} value={cust.id}>
+                      {cust.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {formData.entityType === 'supplier' && (
+            <div className="space-y-2">
+              <Label>Fornecedor</Label>
+              <Select 
+                value={formData.supplierId} 
+                onValueChange={(v) => setFormData({...formData, supplierId: v})}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecione um fornecedor..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {suppliers.map((supp) => (
+                    <SelectItem key={supp.id} value={supp.id}>
+                      {supp.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label>Valor (R$)</Label>
             <CurrencyInput 

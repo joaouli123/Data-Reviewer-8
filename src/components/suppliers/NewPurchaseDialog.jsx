@@ -14,6 +14,7 @@ import { Plus } from 'lucide-react';
 import CreateCategoryModal from '../transactions/CreateCategoryModal';
 import { apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/contexts/AuthContext';
+import { Switch } from '@/components/ui/switch';
 
 export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
   const { company } = useAuth();
@@ -24,7 +25,8 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
     purchase_date: format(new Date(), 'yyyy-MM-dd'),
     installments: 1,
     installment_amount: '',
-    status: 'pendente'
+    status: 'pago',
+    paymentDate: format(new Date(), 'yyyy-MM-dd')
   });
   const [customInstallments, setCustomInstallments] = useState([]);
   const [isCreateCategoryModalOpen, setIsCreateCategoryModalOpen] = useState(false);
@@ -35,7 +37,8 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
       setFormData(prev => ({
         ...prev,
         category: supplier?.category || '',
-        purchase_date: format(new Date(), 'yyyy-MM-dd')
+        purchase_date: format(new Date(), 'yyyy-MM-dd'),
+        paymentDate: format(new Date(), 'yyyy-MM-dd')
       }));
     } else {
       setFormData({
@@ -44,7 +47,9 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
         category: '',
         purchase_date: format(new Date(), 'yyyy-MM-dd'),
         installments: 1,
-        installment_amount: ''
+        installment_amount: '',
+        status: 'pago',
+        paymentDate: format(new Date(), 'yyyy-MM-dd')
       });
       setCustomInstallments([]);
     }
@@ -255,15 +260,35 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label>Número de Parcelas</Label>
-            <Input
-              type="number"
-              min="1"
-              value={formData.installments}
-              onChange={(e) => handleInstallmentsChange(e.target.value)}
+          <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900 border border-emerald-200 dark:border-emerald-700">
+            <Label className="cursor-pointer">Pago à Vista</Label>
+            <Switch 
+              checked={formData.status === 'pago'}
+              onCheckedChange={(checked) => {
+                setFormData({
+                  ...formData, 
+                  status: checked ? 'pago' : 'pendente',
+                  paymentDate: checked ? format(new Date(), 'yyyy-MM-dd') : null,
+                  installments: checked ? 1 : formData.installments
+                });
+                if (checked) {
+                  setCustomInstallments([]);
+                }
+              }}
             />
           </div>
+
+          {formData.status !== 'pago' && (
+            <div className="space-y-2">
+              <Label>Número de Parcelas</Label>
+              <Input
+                type="number"
+                min="1"
+                value={formData.installments}
+                onChange={(e) => handleInstallmentsChange(e.target.value)}
+              />
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -301,7 +326,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
             </div>
           </div>
 
-          {formData.installments > 1 && (
+          {formData.status !== 'pago' && formData.installments > 1 && (
             <div className="space-y-2">
               <Label>Valor da Parcela (opcional)</Label>
               <div className="flex items-center gap-2">
@@ -316,7 +341,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
             </div>
           )}
 
-          {Number(formData.installments) > 1 && customInstallments.length === 0 && (
+          {formData.status !== 'pago' && Number(formData.installments) > 1 && customInstallments.length === 0 && (
             <div className="p-3 bg-slate-50 rounded-lg text-sm text-slate-600 mt-6">
               <p>
                 {formData.installment_amount && !isNaN(parseFloat(formData.installment_amount))
@@ -333,7 +358,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
             </div>
           )}
 
-          {customInstallments.length > 1 && (
+          {formData.status !== 'pago' && customInstallments.length > 1 && (
             <div className="space-y-3 mt-6">
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium">Detalhamento das Parcelas</Label>
