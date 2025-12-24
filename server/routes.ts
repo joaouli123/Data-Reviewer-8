@@ -395,7 +395,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const transactions = await storage.getTransactions(req.user.companyId);
-      res.json(transactions);
+      // Convert Decimal fields to numbers for JSON serialization
+      const converted = transactions.map(t => ({
+        ...t,
+        amount: t.amount ? parseFloat(t.amount.toString()) : 0,
+        paidAmount: t.paidAmount ? parseFloat(t.paidAmount.toString()) : null,
+        interest: t.interest ? parseFloat(t.interest.toString()) : 0
+      }));
+      res.json(converted);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch transactions" });
     }
@@ -406,7 +413,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const transaction = await storage.getTransaction(req.user.companyId, req.params.id);
       if (!transaction) return res.status(404).json({ error: "Transaction not found" });
-      res.json(transaction);
+      res.json({
+        ...transaction,
+        amount: transaction.amount ? parseFloat(transaction.amount.toString()) : 0,
+        paidAmount: transaction.paidAmount ? parseFloat(transaction.paidAmount.toString()) : null,
+        interest: transaction.interest ? parseFloat(transaction.interest.toString()) : 0
+      });
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch transaction" });
     }
@@ -423,7 +435,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       }
       const data = insertTransactionSchema.parse(body);
       const transaction = await storage.createTransaction(req.user.companyId, data);
-      res.status(201).json(transaction);
+      res.status(201).json({
+        ...transaction,
+        amount: transaction.amount ? parseFloat(transaction.amount.toString()) : 0,
+        paidAmount: transaction.paidAmount ? parseFloat(transaction.paidAmount.toString()) : null,
+        interest: transaction.interest ? parseFloat(transaction.interest.toString()) : 0
+      });
     } catch (error: any) {
       console.error("Transaction validation error:", error.message || error);
       res.status(400).json({ error: "Invalid transaction data", details: error.message });
@@ -438,7 +455,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       if (typeof body.paymentDate === "string") body.paymentDate = new Date(body.paymentDate);
       const data = insertTransactionSchema.partial().parse(body);
       const transaction = await storage.updateTransaction(req.user.companyId, req.params.id, data);
-      res.json(transaction);
+      res.json({
+        ...transaction,
+        amount: transaction.amount ? parseFloat(transaction.amount.toString()) : 0,
+        paidAmount: transaction.paidAmount ? parseFloat(transaction.paidAmount.toString()) : null,
+        interest: transaction.interest ? parseFloat(transaction.interest.toString()) : 0
+      });
     } catch (error) {
       res.status(400).json({ error: "Invalid transaction data" });
     }
@@ -458,7 +480,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const transactions = await storage.getTransactionsByShift(req.user.companyId, req.params.shift);
-      res.json(transactions);
+      const converted = transactions.map(t => ({
+        ...t,
+        amount: t.amount ? parseFloat(t.amount.toString()) : 0,
+        paidAmount: t.paidAmount ? parseFloat(t.paidAmount.toString()) : null,
+        interest: t.interest ? parseFloat(t.interest.toString()) : 0
+      }));
+      res.json(converted);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch transactions" });
     }
