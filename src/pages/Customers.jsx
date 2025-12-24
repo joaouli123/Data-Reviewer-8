@@ -13,6 +13,7 @@ import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { cn } from "@/lib/utils";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import CustomerSalesDialog from '../components/customers/CustomerSalesDialog';
 import NewSaleDialog from '../components/customers/NewSaleDialog';
 import CustomerFormDialog from '../components/customers/CustomerFormDialog';
@@ -24,6 +25,7 @@ export default function CustomersPage() {
   const [isNewSaleDialogOpen, setIsNewSaleDialogOpen] = useState(false);
   const [isSalesViewDialogOpen, setIsSalesViewDialogOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [customerToDelete, setCustomerToDelete] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
@@ -229,7 +231,7 @@ export default function CustomersPage() {
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem 
                                                     className="text-rose-600 focus:text-rose-700 focus:bg-rose-50 cursor-pointer"
-                                                    onClick={() => deleteMutation.mutate(c.id)}
+                                                    onClick={() => setCustomerToDelete(c)}
                                                 >
                                                     <Trash2 className="w-4 h-4 mr-2" /> Remover
                                                 </DropdownMenuItem>
@@ -281,6 +283,34 @@ export default function CustomersPage() {
         open={isSalesViewDialogOpen}
         onOpenChange={setIsSalesViewDialogOpen}
       />
+
+      <AlertDialog open={!!customerToDelete} onOpenChange={(open) => !open && setCustomerToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover Cliente</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja remover o cliente <strong>{customerToDelete?.name}</strong>? 
+              <br /><br />
+              <span className="text-rose-600 font-semibold">Aviso: Isso vai deletar todo o histórico de vendas e transações associadas a este cliente. Esta ação não pode ser desfeita.</span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => {
+                if (customerToDelete) {
+                  deleteMutation.mutate(customerToDelete.id, {
+                    onSettled: () => setCustomerToDelete(null)
+                  });
+                }
+              }}
+              className="bg-rose-600 hover:bg-rose-700"
+            >
+              Sim, remover tudo
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

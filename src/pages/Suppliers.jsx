@@ -13,6 +13,7 @@ import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { cn } from "@/lib/utils";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import NewPurchaseDialog from '../components/suppliers/NewPurchaseDialog';
 import SupplierPurchasesDialog from '../components/suppliers/SupplierPurchasesDialog';
 import SupplierFormDialog from '../components/suppliers/SupplierFormDialog';
@@ -24,6 +25,7 @@ export default function SuppliersPage() {
   const [isNewPurchaseDialogOpen, setIsNewPurchaseDialogOpen] = useState(false);
   const [isPurchasesViewDialogOpen, setIsPurchasesViewDialogOpen] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
+  const [supplierToDelete, setSupplierToDelete] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
@@ -256,7 +258,7 @@ export default function SuppliersPage() {
                             </DropdownMenuItem>
                             <DropdownMenuItem 
                               className="text-rose-600 focus:text-rose-700 focus:bg-rose-50 cursor-pointer"
-                              onClick={() => deleteMutation.mutate(s.id)}
+                              onClick={() => setSupplierToDelete(s)}
                             >
                               <Trash2 className="w-4 h-4 mr-2" /> Remover
                             </DropdownMenuItem>
@@ -308,6 +310,34 @@ export default function SuppliersPage() {
         open={isPurchasesViewDialogOpen}
         onOpenChange={setIsPurchasesViewDialogOpen}
       />
+
+      <AlertDialog open={!!supplierToDelete} onOpenChange={(open) => !open && setSupplierToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover Fornecedor</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja remover o fornecedor <strong>{supplierToDelete?.name}</strong>? 
+              <br /><br />
+              <span className="text-rose-600 font-semibold">Aviso: Isso vai deletar todo o histórico de compras e transações associadas a este fornecedor. Esta ação não pode ser desfeita.</span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => {
+                if (supplierToDelete) {
+                  deleteMutation.mutate(supplierToDelete.id, {
+                    onSettled: () => setSupplierToDelete(null)
+                  });
+                }
+              }}
+              className="bg-rose-600 hover:bg-rose-700"
+            >
+              Sim, remover tudo
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
