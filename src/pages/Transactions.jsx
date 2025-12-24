@@ -445,7 +445,7 @@ export default function TransactionsPage() {
                                                 ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
                                                 : t.status === 'parcial'
                                                 ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-                                                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                                : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
                                         }`}
                                     >
                                         {t.status === 'pago' || t.status === 'completed' ? 'Pago' : t.status === 'parcial' ? 'Parcial' : 'Pendente'}
