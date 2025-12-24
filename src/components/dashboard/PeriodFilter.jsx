@@ -126,11 +126,23 @@ export default function PeriodFilter({
         ? `${format(start, 'MMM/yy', { locale: ptBR })} - ${format(end, 'MMM/yy', { locale: ptBR })}`
         : `${format(start, 'dd/MM/yyyy')} - ${format(end, 'dd/MM/yyyy')}`;
       
-      const newRange = {
-        startDate: isMonthMode ? startOfMonth(start) : startOfDay(start),
-        endDate: isMonthMode ? endOfMonth(end) : endOfDay(end),
-        label: label
-      };
+      let newRange;
+      if (isMonthMode) {
+        newRange = {
+          startDate: startOfMonth(start),
+          endDate: endOfMonth(end),
+          label: label
+        };
+      } else {
+        // For day mode, convert to UTC to match the behavior of hardcoded periods
+        const startStr = format(start, 'yyyy-MM-dd');
+        const endStr = format(end, 'yyyy-MM-dd');
+        newRange = {
+          startDate: new Date(startStr + 'T00:00:00Z'),
+          endDate: new Date(endStr + 'T23:59:59Z'),
+          label: label
+        };
+      }
       
       setPeriod('custom');
       setCustomLabel(label);
