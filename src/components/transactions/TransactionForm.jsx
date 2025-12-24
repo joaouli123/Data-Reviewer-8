@@ -97,12 +97,35 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
         let amountValue = parseFloat(initialData.amount) || parseFloat(initialData.paidAmount) || 0;
         amountValue = Math.abs(amountValue);
         
+        // Determine entity type from saved data
+        let entityType = 'none';
+        let customerId = '';
+        let supplierId = '';
+        
+        if (initialData.customerId) {
+          entityType = 'customer';
+          customerId = initialData.customerId;
+        } else if (initialData.supplierId) {
+          entityType = 'supplier';
+          supplierId = initialData.supplierId;
+        }
+        
+        // Get payment date
+        let paymentDate = null;
+        if (initialData.paymentDate) {
+          paymentDate = new Date(initialData.paymentDate);
+        }
+        
         setFormData({
           ...initialData,
           categoryId: categoryId || initialData.categoryId || '',
           type: initialData.type || (selectedCategory?.type === 'entrada' ? 'venda' : 'compra'),
           date: new Date(initialData.date),
-          amount: amountValue > 0 ? amountValue.toString() : '' // Don't show 0 if both are empty
+          amount: amountValue > 0 ? amountValue.toString() : '',
+          entityType: entityType,
+          customerId: customerId,
+          supplierId: supplierId,
+          paymentDate: paymentDate
         });
       } else {
         setFormData({
@@ -220,8 +243,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
           ? parseFloat(customInstallments[i].amount) 
           : parseFloat(amount) / installmentCount;
         
-        transactions.push({
-          ...formData,
+        const payload = {
           companyId: company?.id,
           categoryId: formData.categoryId,
           category: selectedCategory?.name || '',
@@ -229,17 +251,27 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
           date: dueDateISO,
           paymentDate: paymentDateISO,
           shift: 'turno1',
-          customerId: formData.entityType === 'customer' ? formData.customerId : undefined,
-          supplierId: formData.entityType === 'supplier' ? formData.supplierId : undefined,
+          type: formData.type,
+          description: formData.description,
+          status: formData.status,
           installmentGroup: installmentGroupId,
           installmentNumber: i + 1,
           installmentTotal: installmentCount
-        });
+        };
+        
+        // Only add customer/supplier if selected
+        if (formData.entityType === 'customer' && formData.customerId) {
+          payload.customerId = formData.customerId;
+        }
+        if (formData.entityType === 'supplier' && formData.supplierId) {
+          payload.supplierId = formData.supplierId;
+        }
+        
+        transactions.push(payload);
       }
       onSubmit(transactions);
     } else {
-      onSubmit({
-        ...formData,
+      const payload = {
         companyId: company?.id,
         categoryId: formData.categoryId,
         category: selectedCategory?.name || '',
@@ -247,9 +279,20 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
         date: isoDate,
         paymentDate: paymentDateISO,
         shift: 'turno1',
-        customerId: formData.entityType === 'customer' ? formData.customerId : undefined,
-        supplierId: formData.entityType === 'supplier' ? formData.supplierId : undefined
-      });
+        type: formData.type,
+        description: formData.description,
+        status: formData.status
+      };
+      
+      // Only add customer/supplier if selected
+      if (formData.entityType === 'customer' && formData.customerId) {
+        payload.customerId = formData.customerId;
+      }
+      if (formData.entityType === 'supplier' && formData.supplierId) {
+        payload.supplierId = formData.supplierId;
+      }
+      
+      onSubmit(payload);
     }
   };
 
