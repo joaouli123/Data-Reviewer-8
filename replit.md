@@ -5,6 +5,27 @@
 ### Overview
 Desenvolvido um Super Admin Dashboard completo para gerenciamento global de empresas, clientes, usuários e assinaturas em um sistema SaaS multi-tenant com autenticação segura.
 
+### Recent Changes (Session 5 - BUG FIX)
+**🔧 Correção: Erro "Invalid transaction data" ao registrar vendas/compras**
+
+**Problema Identificado:**
+O erro "Invalid transaction data" ocorria ao tentar registrar uma venda de cliente ou compra de fornecedor porque o campo `companyId` (obrigatório na schema) estava faltando no payload enviado pelo frontend.
+
+**Causa Raiz:**
+- `NewSaleDialog.jsx`: Não estava incluindo `companyId` no payload da transação
+- `NewPurchaseDialog.jsx`: Mesmo problema para compras
+
+**Solução Implementada:**
+1. ✅ Importado `useAuth()` em ambos os componentes
+2. ✅ Extraído `company` do contexto de autenticação
+3. ✅ Adicionado `companyId: company?.id` ao payload antes de enviar para `/api/transactions`
+
+**Arquivos Corrigidos:**
+- `src/components/customers/NewSaleDialog.jsx` - adicionado companyId ao payload de venda
+- `src/components/suppliers/NewPurchaseDialog.jsx` - adicionado companyId ao payload de compra
+
+**Status:** ✅ Resolvido - Vendas e compras podem ser registradas normalmente
+
 ### Recent Changes (Session 4)
 **Página de Assinaturas:**
 - ✅ Página de Assinaturas (`/admin/subscriptions`) com tabela completa

@@ -12,8 +12,10 @@ import { toast } from 'sonner';
 import { Plus } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import CreateCategoryModal from '../transactions/CreateCategoryModal';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function NewSaleDialog({ customer, open, onOpenChange }) {
+  const { company } = useAuth();
   const [formData, setFormData] = useState({
     description: '',
     total_amount: '',
@@ -91,6 +93,7 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
         const dueDateISO = dueDate.toISOString();
         
         const payload = {
+          companyId: company?.id,
           customerId: customer.id,
           categoryId: cat?.id,
           type: 'venda',
