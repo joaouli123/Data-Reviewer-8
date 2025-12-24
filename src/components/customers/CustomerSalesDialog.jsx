@@ -316,9 +316,9 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
                                     {format(parseISO(installment.paymentDate), "dd/MM/yyyy")}
                                   </p>
                                 )}
-                                {installment.paidAmount && (
+                                {(installment.paidAmount || installment.amount) && (
                                   <p className="text-xs text-slate-500">
-                                    Recebido: R$ {parseFloat(installment.paidAmount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                    Recebido: R$ {parseFloat(installment.paidAmount || installment.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                   </p>
                                 )}
                                 {installment.interest && parseFloat(installment.interest) > 0 && (

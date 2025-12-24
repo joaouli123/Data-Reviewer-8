@@ -137,7 +137,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           status: status,
-          paidAmount: paidAmount ? parseFloat(paidAmount).toString() : undefined,
+          paidAmount: paidAmount ? parseFloat(paidAmount).toString() : totalAmount.toString(),
           interest: interest ? parseFloat(interest).toString() : '0',
           paymentDate: formattedPaymentDate
         })
@@ -316,9 +316,9 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                                     {format(parseISO(installment.paymentDate), "dd/MM/yyyy")}
                                   </p>
                                 )}
-                                {installment.paidAmount && (
+                                {(installment.paidAmount || installment.amount) && (
                                   <p className="text-xs text-slate-500">
-                                    Pago: R$ {parseFloat(installment.paidAmount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                    Pago: R$ {parseFloat(installment.paidAmount || installment.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                   </p>
                                 )}
                                 {installment.interest && parseFloat(installment.interest) > 0 && (
