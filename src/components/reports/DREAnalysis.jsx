@@ -35,13 +35,21 @@ export default function DREAnalysis({ transactions, period = 'currentYear' }) {
 
     const receitaBruta = Object.values(revenues).reduce((sum, v) => sum + v, 0);
     const custosDiretos = Object.entries(expenses)
-      .filter(([cat]) => cat.toLowerCase().includes('custo') || cat.toLowerCase().includes('compra'))
+      .filter(([cat]) => 
+        cat.toLowerCase().includes('custo') || 
+        cat.toLowerCase().includes('compra') ||
+        cat.toLowerCase().includes('fornecedor')
+      )
       .reduce((sum, [, val]) => sum + val, 0);
     
     const receitaLiquida = receitaBruta - custosDiretos;
     
     const despesasOperacionais = Object.entries(expenses)
-      .filter(([cat]) => !cat.toLowerCase().includes('custo') && !cat.toLowerCase().includes('compra'))
+      .filter(([cat]) => 
+        !cat.toLowerCase().includes('custo') && 
+        !cat.toLowerCase().includes('compra') &&
+        !cat.toLowerCase().includes('fornecedor')
+      )
       .reduce((sum, [, val]) => sum + val, 0);
     
     const lucroOperacional = receitaLiquida - despesasOperacionais;
@@ -243,7 +251,7 @@ Gere previsões para os próximos 3 meses com análise de tendências.`;
             </h4>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {forecast.forecast_months.map((month, idx) => (
+              {forecast.forecast_months?.map((month, idx) => (
                 <div key={idx} className="p-4 bg-white rounded-lg border">
                   <div className="flex items-center justify-between mb-3">
                     <h5 className="font-semibold text-slate-900">{month.month}</h5>
