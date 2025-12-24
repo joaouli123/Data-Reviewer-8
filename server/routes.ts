@@ -1626,32 +1626,255 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     try {
       console.log('\n🔴 RESET VIA API INICIADO...\n');
       
-      // Delete ALL tables in correct order
-      console.log('🧹 Deletando todas as tabelas...');
-      await db.delete(loginAttempts).catch(() => {});
-      await db.delete(auditLogs).catch(() => {});
-      await db.delete(sessions).catch(() => {});
-      await db.delete(invitations).catch(() => {});
-      await db.delete(installments).catch(() => {});
-      await db.delete(purchaseInstallments).catch(() => {});
-      await db.delete(purchases).catch(() => {});
-      await db.delete(sales).catch(() => {});
-      await db.delete(transactions).catch(() => {});
-      await db.delete(cashFlow).catch(() => {});
-      await db.delete(categories).catch(() => {});
-      await db.delete(customers).catch(() => {});
-      await db.delete(suppliers).catch(() => {});
-      await db.delete(subscriptions).catch(() => {});
-      await db.delete(users).catch(() => {});
-      await db.delete(companies).catch(() => {});
-      console.log('✅ Tabelas deletadas\n');
+      // Step 1: Try to create all tables (if they don't exist)
+      try {
+        console.log('📋 Criando tabelas (se não existirem)...');
+        // Try to insert/delete minimal data to test table existence
+        await db.select().from(companies).limit(1);
+        console.log('✅ Tabelas existem, deletando dados...\n');
+        
+        // Delete ALL tables in correct order
+        await db.delete(loginAttempts).catch(() => {});
+        await db.delete(auditLogs).catch(() => {});
+        await db.delete(sessions).catch(() => {});
+        await db.delete(invitations).catch(() => {});
+        await db.delete(installments).catch(() => {});
+        await db.delete(purchaseInstallments).catch(() => {});
+        await db.delete(purchases).catch(() => {});
+        await db.delete(sales).catch(() => {});
+        await db.delete(transactions).catch(() => {});
+        await db.delete(cashFlow).catch(() => {});
+        await db.delete(categories).catch(() => {});
+        await db.delete(customers).catch(() => {});
+        await db.delete(suppliers).catch(() => {});
+        await db.delete(subscriptions).catch(() => {});
+        await db.delete(users).catch(() => {});
+        await db.delete(companies).catch(() => {});
+      } catch (tableError) {
+        console.log('⚠️  Tabelas não existem, criando do zero...');
+        
+        // Create all tables by running SQL directly
+        const createTablesSQL = `
+          -- Companies table
+          CREATE TABLE IF NOT EXISTS "companies" (
+            "id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+            "name" text NOT NULL,
+            "document" text NOT NULL UNIQUE,
+            "subscription_status" text NOT NULL DEFAULT 'active',
+            "created_at" timestamp NOT NULL DEFAULT now(),
+            "updated_at" timestamp NOT NULL DEFAULT now()
+          );
 
-      // Create company
+          -- Subscriptions table
+          CREATE TABLE IF NOT EXISTS "subscriptions" (
+            "id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+            "company_id" varchar NOT NULL REFERENCES "companies"("id") ON DELETE CASCADE,
+            "plan" text NOT NULL DEFAULT 'basic',
+            "status" text NOT NULL DEFAULT 'active',
+            "subscriber_name" text,
+            "payment_method" text,
+            "amount" numeric(15, 2),
+            "is_lifetime" boolean DEFAULT false,
+            "expires_at" timestamp,
+            "created_at" timestamp NOT NULL DEFAULT now(),
+            "updated_at" timestamp NOT NULL DEFAULT now()
+          );
+
+          -- Users table
+          CREATE TABLE IF NOT EXISTS "users" (
+            "id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+            "company_id" varchar REFERENCES "companies"("id") ON DELETE CASCADE,
+            "username" text NOT NULL UNIQUE,
+            "email" text,
+            "password" text NOT NULL,
+            "name" text,
+            "phone" text,
+            "avatar" text,
+            "role" text NOT NULL DEFAULT 'user',
+            "is_super_admin" boolean NOT NULL DEFAULT false,
+            "permissions" text DEFAULT '{}',
+            "status" text NOT NULL DEFAULT 'active',
+            "created_at" timestamp NOT NULL DEFAULT now(),
+            "updated_at" timestamp NOT NULL DEFAULT now()
+          );
+
+          -- Sessions table
+          CREATE TABLE IF NOT EXISTS "sessions" (
+            "id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+            "user_id" varchar NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+            "company_id" varchar NOT NULL REFERENCES "companies"("id") ON DELETE CASCADE,
+            "token" text NOT NULL UNIQUE,
+            "expires_at" timestamp NOT NULL,
+            "created_at" timestamp NOT NULL DEFAULT now()
+          );
+
+          -- Categories table
+          CREATE TABLE IF NOT EXISTS "categories" (
+            "id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+            "company_id" varchar NOT NULL REFERENCES "companies"("id") ON DELETE CASCADE,
+            "name" text NOT NULL,
+            "type" text NOT NULL,
+            "created_at" timestamp NOT NULL DEFAULT now()
+          );
+
+          -- Customers table
+          CREATE TABLE IF NOT EXISTS "customers" (
+            "id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+            "company_id" varchar NOT NULL REFERENCES "companies"("id") ON DELETE CASCADE,
+            "name" text NOT NULL,
+            "contact" text,
+            "email" text,
+            "phone" text,
+            "category" text,
+            "status" text NOT NULL DEFAULT 'ativo',
+            "created_at" timestamp NOT NULL DEFAULT now()
+          );
+
+          -- Suppliers table
+          CREATE TABLE IF NOT EXISTS "suppliers" (
+            "id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+            "company_id" varchar NOT NULL REFERENCES "companies"("id") ON DELETE CASCADE,
+            "name" text NOT NULL,
+            "contact" text,
+            "email" text,
+            "phone" text,
+            "cnpj" text,
+            "category" text,
+            "payment_terms" text,
+            "status" text NOT NULL DEFAULT 'ativo',
+            "created_at" timestamp NOT NULL DEFAULT now()
+          );
+
+          -- Transactions table
+          CREATE TABLE IF NOT EXISTS "transactions" (
+            "id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+            "company_id" varchar NOT NULL REFERENCES "companies"("id") ON DELETE CASCADE,
+            "customer_id" varchar REFERENCES "customers"("id"),
+            "supplier_id" varchar REFERENCES "suppliers"("id"),
+            "category_id" varchar REFERENCES "categories"("id"),
+            "type" text NOT NULL,
+            "amount" numeric(15, 2) NOT NULL,
+            "paid_amount" numeric(15, 2),
+            "interest" numeric(15, 2) DEFAULT '0',
+            "payment_date" timestamp,
+            "description" text,
+            "date" timestamp NOT NULL,
+            "shift" text NOT NULL,
+            "status" text NOT NULL DEFAULT 'pendente',
+            "installment_group" text,
+            "installment_number" integer,
+            "installment_total" integer
+          );
+
+          -- Cash Flow table
+          CREATE TABLE IF NOT EXISTS "cash_flow" (
+            "id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+            "company_id" varchar NOT NULL REFERENCES "companies"("id") ON DELETE CASCADE,
+            "date" timestamp NOT NULL,
+            "inflow" numeric(15, 2) NOT NULL DEFAULT '0',
+            "outflow" numeric(15, 2) NOT NULL DEFAULT '0',
+            "balance" numeric(15, 2) NOT NULL,
+            "description" text,
+            "shift" text NOT NULL
+          );
+
+          -- Sales table
+          CREATE TABLE IF NOT EXISTS "sales" (
+            "id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+            "company_id" varchar NOT NULL REFERENCES "companies"("id") ON DELETE CASCADE,
+            "customer_id" varchar REFERENCES "customers"("id"),
+            "sale_date" timestamp NOT NULL,
+            "total_amount" numeric(15, 2) NOT NULL,
+            "paid_amount" numeric(15, 2) DEFAULT '0',
+            "installment_count" integer DEFAULT 1,
+            "status" text NOT NULL DEFAULT 'pendente'
+          );
+
+          -- Purchases table
+          CREATE TABLE IF NOT EXISTS "purchases" (
+            "id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+            "company_id" varchar NOT NULL REFERENCES "companies"("id") ON DELETE CASCADE,
+            "supplier_id" varchar REFERENCES "suppliers"("id"),
+            "purchase_date" timestamp NOT NULL,
+            "total_amount" numeric(15, 2) NOT NULL,
+            "paid_amount" numeric(15, 2) DEFAULT '0',
+            "installment_count" integer DEFAULT 1,
+            "status" text NOT NULL DEFAULT 'pendente'
+          );
+
+          -- Installments table
+          CREATE TABLE IF NOT EXISTS "installments" (
+            "id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+            "company_id" varchar NOT NULL REFERENCES "companies"("id") ON DELETE CASCADE,
+            "sale_id" varchar REFERENCES "sales"("id"),
+            "amount" numeric(15, 2) NOT NULL,
+            "due_date" timestamp NOT NULL,
+            "paid" boolean DEFAULT false,
+            "paid_date" timestamp
+          );
+
+          -- Purchase Installments table
+          CREATE TABLE IF NOT EXISTS "purchase_installments" (
+            "id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+            "company_id" varchar NOT NULL REFERENCES "companies"("id") ON DELETE CASCADE,
+            "purchase_id" varchar REFERENCES "purchases"("id"),
+            "amount" numeric(15, 2) NOT NULL,
+            "due_date" timestamp NOT NULL,
+            "paid" boolean DEFAULT false,
+            "paid_date" timestamp
+          );
+
+          -- Invitations table
+          CREATE TABLE IF NOT EXISTS "invitations" (
+            "id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+            "company_id" varchar NOT NULL REFERENCES "companies"("id") ON DELETE CASCADE,
+            "token" text NOT NULL UNIQUE,
+            "email" text NOT NULL,
+            "role" text NOT NULL DEFAULT 'user',
+            "permissions" text DEFAULT '{}',
+            "expires_at" timestamp NOT NULL,
+            "accepted_at" timestamp,
+            "accepted_by" varchar REFERENCES "users"("id") ON DELETE SET NULL,
+            "created_at" timestamp NOT NULL DEFAULT now(),
+            "created_by" varchar NOT NULL REFERENCES "users"("id") ON DELETE CASCADE
+          );
+
+          -- Audit Logs table
+          CREATE TABLE IF NOT EXISTS "audit_logs" (
+            "id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+            "user_id" varchar NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+            "company_id" varchar NOT NULL REFERENCES "companies"("id") ON DELETE CASCADE,
+            "action" text NOT NULL,
+            "resource_type" text NOT NULL,
+            "resource_id" varchar,
+            "details" text,
+            "ip_address" text,
+            "user_agent" text,
+            "status" text NOT NULL DEFAULT 'success',
+            "created_at" timestamp NOT NULL DEFAULT now()
+          );
+
+          -- Login Attempts table
+          CREATE TABLE IF NOT EXISTS "login_attempts" (
+            "id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+            "ip_address" text NOT NULL,
+            "username" text,
+            "success" boolean NOT NULL DEFAULT false,
+            "created_at" timestamp NOT NULL DEFAULT now()
+          );
+        `;
+        
+        // Execute SQL to create tables
+        await db.execute(createTablesSQL);
+        console.log('✅ Todas as tabelas criadas do zero\n');
+      }
+
+      // Step 2: Create company
       console.log('🏢 Criando empresa...');
       const company = await createCompany('HUA Consultoria', '00.000.000/0000-00');
-      console.log(`✅ Empresa criada\n`);
+      console.log(`✅ Empresa criada: ${company.id}\n`);
 
-      // Create test users with companyId
+      // Step 3: Create test users with companyId
       console.log('👤 Criando usuários de teste...');
       const testCredentials = [
         { 
@@ -1708,10 +1931,11 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           role: cred.role,
           name: cred.name
         });
+        console.log(`  ✅ ${cred.name} (${cred.role})`);
       }
       console.log(`✅ ${createdUsers.length} usuários criados\n`);
 
-      // Create default categories
+      // Step 4: Create default categories
       console.log('📂 Criando categorias padrão...');
       const defaultCategories = [
         { name: 'Vendas', type: 'entrada' },
@@ -1729,9 +1953,16 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       }
       console.log(`✅ ${defaultCategories.length} categorias criadas\n`);
 
-      console.log('='.repeat(60));
-      console.log('✨ BANCO RESETADO COM SUCESSO!');
-      console.log('='.repeat(60) + '\n');
+      console.log('='.repeat(70));
+      console.log('✨ BANCO COMPLETAMENTE RESETADO COM SUCESSO!');
+      console.log('='.repeat(70));
+      console.log('\n📋 PARA FAZER LOGIN, USE:\n');
+      for (const user of createdUsers) {
+        console.log(`   👤 ${user.name}`);
+        console.log(`      Usuário: ${user.username}`);
+        console.log(`      Senha: ${user.password}\n`);
+      }
+      console.log('='.repeat(70) + '\n');
 
       return res.json({
         success: true,
