@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,9 +28,13 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
   };
 
   const { data: transactionsData = [] } = useQuery({
-    queryKey: ['transactions'],
+    queryKey: ['/api/transactions', company?.id],
     queryFn: () => fetch('/api/transactions').then(res => res.json()),
-    initialData: []
+    initialData: [],
+    enabled: !!company?.id,
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true
   });
 
   const transactions = Array.isArray(transactionsData) ? transactionsData : (transactionsData?.data || []);

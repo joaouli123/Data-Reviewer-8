@@ -32,7 +32,10 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
     queryKey: ['/api/transactions', company?.id],
     queryFn: () => fetch('/api/transactions').then(res => res.json()),
     initialData: [],
-    enabled: !!company?.id
+    enabled: !!company?.id,
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true
   });
 
   const transactions = Array.isArray(transactionsData) ? transactionsData : (transactionsData?.data || []);
