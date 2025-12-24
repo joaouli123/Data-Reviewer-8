@@ -191,9 +191,12 @@ Forneça uma análise detalhada e recomendações para gestão de endividamento.
 
   const metrics = calculateDebtMetrics();
 
+  const debtServiceRatioActual = metrics.debtServiceRatio;
+  const debtToRevenueRatioActual = metrics.debtToRevenueRatio;
+
   const healthStatus = 
-    metrics.debtServiceRatio <= 30 ? 'healthy' :
-    metrics.debtServiceRatio <= 50 ? 'warning' : 'critical';
+    (debtServiceRatioActual <= 30 && debtToRevenueRatioActual <= 30) ? 'healthy' :
+    (debtServiceRatioActual <= 50 && debtToRevenueRatioActual <= 100) ? 'warning' : 'critical';
 
   const statusConfig = {
     healthy: { color: 'bg-emerald-100 text-emerald-700 border-emerald-200', label: 'Saudável' },
@@ -258,9 +261,9 @@ Forneça uma análise detalhada e recomendações para gestão de endividamento.
                 </p>
               </div>
               <div>
-                <p className="text-sm font-medium mb-1">Índice de Cobertura</p>
+                <p className="text-sm font-medium mb-1">Índice Dívida/Rec.</p>
                 <p className="text-3xl font-bold">
-                  {isNaN(metrics.debtServiceRatio) ? '0,0' : metrics.debtServiceRatio.toFixed(1)}%
+                  {isNaN(metrics.debtToRevenueRatio) ? '0,0' : metrics.debtToRevenueRatio.toFixed(1)}%
                 </p>
               </div>
             </div>
