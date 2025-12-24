@@ -1564,9 +1564,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       ];
 
       try {
-        console.log('Attempting to create company in database...');
+        console.log('Clearing existing data...');
+        // Delete all companies and their related data (cascades will handle the rest)
+        await db.delete(companies);
+        console.log('Existing data cleared');
         
-        const company = await createCompany('Test Company', '00.000.000/0000-00');
+        console.log('Attempting to create company in database...');
+        const uniqueDoc = `00.000.000/0000-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+        const company = await createCompany('Test Company', uniqueDoc);
         console.log(`Company created: ${company.id}`);
 
         const createdUsers = [];
