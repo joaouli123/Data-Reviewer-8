@@ -296,7 +296,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                       <div key={installment.id} className="flex items-center justify-between gap-4 px-5 py-4">
                         <div className="flex items-center gap-4">
                           <div className="flex items-center justify-center w-7 h-7 rounded-full border-2 border-slate-300 text-slate-500 text-sm font-medium flex-shrink-0">
-                            {installment.installmentNumber || (idx + 1)}
+                            {idx + 1}
                           </div>
                           <div>
                             <p className="font-semibold text-slate-900">
