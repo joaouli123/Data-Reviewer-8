@@ -773,29 +773,29 @@ export default function Landing() {
       </section>
 
       {/* Guarantee Section */}
-      <section className="py-24 bg-gradient-to-r from-blue-600 to-blue-800">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-white text-center space-y-8">
-          <div className="flex justify-center">
-            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-              <Shield className="w-8 h-8" />
-            </div>
-          </div>
-          <h2 className="text-5xl font-bold">Garantia de 7 Dias</h2>
-          <p className="text-xl opacity-90 max-w-2xl mx-auto">
-            Entre no sistema, importe seus dados, teste a gestão de equipe, faça lançamentos. Se não gostar, devolvemos 100% do seu dinheiro. Sem perguntas, sem letras miúdas.
-          </p>
-          <div className="flex justify-center gap-4 pt-4 flex-wrap">
-            <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full">
-              <Check className="w-5 h-5" />
-              Reembolso integral
-            </div>
-            <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full">
-              <Check className="w-5 h-5" />
-              Sem burocracia
-            </div>
-            <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full">
-              <Check className="w-5 h-5" />
-              Sem perguntas
+      <section className="py-24 bg-gray-50 dark:bg-gray-900">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl p-12 shadow-xl border border-gray-100 dark:border-gray-700">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+              {/* Icon */}
+              <div className="flex justify-center md:justify-start">
+                <div className="w-24 h-24 bg-blue-100 dark:bg-blue-900/30 rounded-3xl flex items-center justify-center flex-shrink-0">
+                  <Shield className="w-12 h-12 text-blue-600 dark:text-blue-400" />
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="md:col-span-2 space-y-4">
+                <h2 className="text-4xl font-bold text-gray-900 dark:text-white">
+                  Risco Zero para Você.
+                </h2>
+                <p className="text-gray-700 dark:text-gray-300">
+                  Sabemos que trocar de sistema é uma decisão importante. Por isso, oferecemos uma <span className="font-bold text-gray-900 dark:text-white">Garantia Incondicional de 7 Dias.</span>
+                </p>
+                <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                  Entre, cadastre seus dados, teste a gestão de equipe, faça lançamentos. Se você achar que o sistema não é para você, devolvemos 100% do seu dinheiro. Sem perguntas, sem letras miúdas.
+                </p>
+              </div>
             </div>
           </div>
         </div>
