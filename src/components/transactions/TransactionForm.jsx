@@ -262,7 +262,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
           </div>
 
           <div className="space-y-2">
-            <Label>Data da Transação</Label>
+            <Label>Data de Vencimento (1ª Parcela)</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
