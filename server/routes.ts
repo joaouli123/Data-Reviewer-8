@@ -1538,12 +1538,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     try {
       console.log('Starting database reset...');
       
-      // Generate test data
-      const companyId = `cmp_${Math.random().toString(36).substring(2, 15)}`;
-      const apiKey = `${companyId.substring(0, 8)}-${Math.random().toString(36).substring(2, 10)}`;
-
-      // Create 3 test users
-      const credentials = [
+      const apiKey = `api_${Math.random().toString(36).substring(2, 15)}`;
+      const testCredentials = [
         { 
           username: 'superadmin', 
           password: 'senha123456', 
@@ -1567,16 +1563,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         }
       ];
 
-      // Try to create in database if tables exist
       try {
         console.log('Attempting to create company in database...');
         
-        // Try to create company
         const company = await createCompany('Test Company', '00.000.000/0000-00');
         console.log(`Company created: ${company.id}`);
 
-        // Try to create users
-        for (const cred of credentials) {
+        const createdUsers = [];
+        for (const cred of testCredentials) {
           try {
             const user = await createUser(
               company.id,
@@ -1602,58 +1596,80 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
             } catch (e) {
               console.log(`Session creation skipped for ${cred.username}`);
             }
+
+            createdUsers.push({
+              id: user.id,
+              username: cred.username,
+              password: cred.password,
+              email: cred.email,
+              role: cred.role,
+              name: cred.name
+            });
           } catch (userError) {
             console.warn(`User creation warning for ${cred.username}:`, userError.message);
+            createdUsers.push({
+              username: cred.username,
+              password: cred.password,
+              email: cred.email,
+              role: cred.role,
+              name: cred.name,
+              error: userError.message
+            });
           }
         }
 
-        // Return with actual company ID
         return res.json({
+          success: true,
           companyId: company.id,
           apiKey: apiKey,
-          0: credentials[0],
-          1: credentials[1],
-          2: credentials[2]
+          users: createdUsers
         });
       } catch (dbError) {
-        console.log('Database operations failed, returning test credentials anyway:', dbError.message);
+        console.log('Database operations failed:', dbError.message);
         
-        // Return generated credentials even if database fails
-        res.json({
-          companyId: companyId,
+        return res.json({
+          success: false,
+          error: dbError.message,
           apiKey: apiKey,
-          0: credentials[0],
-          1: credentials[1],
-          2: credentials[2],
-          _note: 'Database save failed, but you can use these test credentials to login manually'
+          users: testCredentials.map(c => ({
+            username: c.username,
+            password: c.password,
+            email: c.email,
+            role: c.role,
+            name: c.name
+          })),
+          message: 'Database creation failed, but test credentials are available above'
         });
       }
     } catch (error) {
       console.error('Reset database error:', error.message);
       
-      // Last resort: return hardcoded test credentials
-      res.json({
-        companyId: 'cmp_test_123456789',
-        apiKey: 'cmp_test-abcd1234',
-        0: { 
-          username: 'superadmin', 
-          password: 'senha123456', 
-          email: 'superadmin@test.com', 
-          role: 'admin'
-        },
-        1: { 
-          username: 'admin', 
-          password: 'senha123456', 
-          email: 'admin@test.com', 
-          role: 'admin'
-        },
-        2: { 
-          username: 'operacional', 
-          password: 'senha123456', 
-          email: 'operacional@test.com', 
-          role: 'operational'
-        },
-        _note: 'Database error - use these default test credentials'
+      res.status(500).json({
+        success: false,
+        error: error.message,
+        users: [
+          { 
+            username: 'superadmin', 
+            password: 'senha123456', 
+            email: 'superadmin@test.com', 
+            role: 'admin',
+            name: 'Super Admin'
+          },
+          { 
+            username: 'admin', 
+            password: 'senha123456', 
+            email: 'admin@test.com', 
+            role: 'admin',
+            name: 'Admin User'
+          },
+          { 
+            username: 'operacional', 
+            password: 'senha123456', 
+            email: 'operacional@test.com', 
+            role: 'operational',
+            name: 'Operacional User'
+          }
+        ]
       });
     }
   });
