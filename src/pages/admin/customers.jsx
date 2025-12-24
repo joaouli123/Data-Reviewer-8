@@ -3,7 +3,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -100,92 +100,106 @@ function CustomerListContent() {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Clientes do Sistema</h1>
-        <Button onClick={() => exportToExcel(customers)} className="gap-2">
+    <div className="space-y-6 p-4 sm:p-6 md:p-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Clientes do Sistema</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">Gerencie todos os clientes de todas as empresas</p>
+        </div>
+        <Button onClick={() => exportToExcel(customers)} className="gap-2 w-full sm:w-auto">
           <Download className="h-4 w-4" />
           Exportar Excel
         </Button>
       </div>
 
-      <div className="flex gap-4">
+      {/* Filtro */}
+      <div className="flex flex-col sm:flex-row gap-3">
         <Input
           placeholder="Buscar por nome, email ou empresa..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="flex-1"
+          data-testid="input-search-customers"
         />
       </div>
 
+      {/* Tabela */}
       <Card>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Empresa</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Telefone</TableHead>
-                <TableHead>CPF/CNPJ</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan="7" className="text-center py-8">Carregando...</TableCell>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Empresa</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Telefone</TableHead>
+                  <TableHead>CPF/CNPJ</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
-              ) : filtered.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan="7" className="text-center py-8">Nenhum cliente encontrado</TableCell>
-                </TableRow>
-              ) : (
-                filtered.map((c) => (
-                  <TableRow key={c.id}>
-                    <TableCell className="font-medium">{c.name}</TableCell>
-                    <TableCell>{c.companyName}</TableCell>
-                    <TableCell>{c.email || '-'}</TableCell>
-                    <TableCell>{c.phone || '-'}</TableCell>
-                    <TableCell>{c.contact || '-'}</TableCell>
-                    <TableCell>
-                      <Badge variant={c.status === 'ativo' ? 'default' : 'destructive'}>
-                        {c.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setSelectedCustomer(c)}>
-                            <Eye className="h-4 w-4 mr-2" />
-                            Ver/Editar
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setDeleteConfirm(c)} className="text-destructive">
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Deletar
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan="7" className="text-center py-8 text-muted-foreground">
+                      Carregando...
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
+                ) : filtered.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan="7" className="text-center py-8 text-muted-foreground">
+                      Nenhum cliente encontrado
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filtered.map((c) => (
+                    <TableRow key={c.id} data-testid={`row-customer-${c.id}`}>
+                      <TableCell className="font-medium">{c.name}</TableCell>
+                      <TableCell>{c.companyName}</TableCell>
+                      <TableCell>{c.email || '-'}</TableCell>
+                      <TableCell>{c.phone || '-'}</TableCell>
+                      <TableCell>{c.contact || '-'}</TableCell>
+                      <TableCell>
+                        <Badge variant={c.status === 'ativo' ? 'default' : 'destructive'}>
+                          {c.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" data-testid={`button-actions-${c.id}`}>
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setSelectedCustomer(c)} data-testid={`action-edit-${c.id}`}>
+                              <Eye className="h-4 w-4 mr-2" />
+                              Ver/Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setDeleteConfirm(c)} className="text-destructive" data-testid={`action-delete-${c.id}`}>
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Deletar
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
       </Card>
 
       {selectedCustomer && (
         <Dialog open={!!selectedCustomer} onOpenChange={() => setSelectedCustomer(null)}>
-          <DialogContent>
+          <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle>Editar Cliente</DialogTitle>
+              <DialogDescription>Altere as informações do cliente abaixo</DialogDescription>
             </DialogHeader>
             <EditCustomerForm customer={selectedCustomer} onSave={(data) => updateMutation.mutate(data)} />
           </DialogContent>
@@ -197,10 +211,16 @@ function CustomerListContent() {
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Deletar Cliente?</AlertDialogTitle>
-              <AlertDialogDescription>Esta ação não pode ser desfeita</AlertDialogDescription>
+              <AlertDialogDescription>
+                Tem certeza que deseja deletar <strong>{deleteConfirm.name}</strong>? Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={() => deleteMutation.mutate(deleteConfirm.id)} className="bg-destructive">
+            <AlertDialogAction 
+              onClick={() => deleteMutation.mutate(deleteConfirm.id)} 
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="button-confirm-delete"
+            >
               Deletar
             </AlertDialogAction>
           </AlertDialogContent>
@@ -218,7 +238,6 @@ function EditCustomerForm({ customer, onSave }) {
       email: customer.email || '',
       phone: customer.phone || '',
       contact: customer.contact || '',
-      category: customer.category || '',
       status: customer.status,
     },
   });
@@ -254,7 +273,7 @@ function EditCustomerForm({ customer, onSave }) {
             <FormMessage />
           </FormItem>
         )} />
-        <Button type="submit" className="w-full">Salvar</Button>
+        <Button type="submit" className="w-full">Salvar Alterações</Button>
       </form>
     </Form>
   );
