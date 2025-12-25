@@ -9,8 +9,8 @@ export default function DREAnalysis({ transactions = [], categories = [] }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [forecast, setForecast] = useState(null);
   const [expandedSections, setExpandedSections] = useState({
-    vendaBruta: false,
-    custos: false,
+    vendaBruta: true,
+    custos: true,
     despesas: false
   });
 
@@ -28,7 +28,7 @@ export default function DREAnalysis({ transactions = [], categories = [] }) {
     const lucroOp = receitaLiquida - despesasOp;
     const marginLiquida = vendaBruta > 0 ? (lucroOp / vendaBruta) * 100 : 0;
 
-    // Agrupar por forma de pagamento
+    // Agrupar vendas por forma de pagamento
     const pagamentos = {};
     vendas.forEach(v => {
       const metodo = v.paymentMethod || 'Outros';
@@ -36,6 +36,15 @@ export default function DREAnalysis({ transactions = [], categories = [] }) {
         pagamentos[metodo] = { entradas: 0, saidas: 0 };
       }
       pagamentos[metodo].entradas += Math.abs(parseFloat(v.amount || 0));
+    });
+
+    // Agrupar compras por forma de pagamento
+    compras.forEach(c => {
+      const metodo = c.paymentMethod || 'Outros';
+      if (!pagamentos[metodo]) {
+        pagamentos[metodo] = { entradas: 0, saidas: 0 };
+      }
+      pagamentos[metodo].saidas += Math.abs(parseFloat(c.amount || 0));
     });
 
     return {
@@ -81,45 +90,50 @@ export default function DREAnalysis({ transactions = [], categories = [] }) {
     }
   };
 
-  const DRERow = ({ label, value, indent = 0, isExpanded = false, isExpandable = false, onToggle = null, type = 'normal', showSymbol = null }) => {
-    const bgColor = 
-      type === 'receita-liquida' ? 'bg-blue-50' :
-      type === 'lucro-op' ? 'bg-pink-50' :
-      type === 'expandable' ? 'bg-green-50' :
-      '';
-
-    const textColor = 
-      type === 'lucro-op' ? 'text-green-600' :
-      '';
-
-    return (
-      <div 
-        className={`flex items-center justify-between px-6 py-3 border-b border-slate-100 ${bgColor} ${isExpandable ? 'cursor-pointer hover-elevate' : ''}`}
+  const ExpandableRow = ({ label, value, isExpanded, onToggle, children, bgClass = '' }) => (
+    <div className={`border border-slate-200 rounded-md overflow-hidden ${bgClass}`}>
+      <button
         onClick={onToggle}
+        className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-50 transition"
       >
         <div className="flex items-center gap-3">
-          {isExpandable && (
-            <ChevronDown 
-              className={`w-4 h-4 text-slate-400 transition-transform ${isExpanded ? 'rotate-0' : '-rotate-90'}`}
-            />
-          )}
-          {!isExpandable && isExpandable === false && <div className="w-4" />}
-          <span style={{ marginLeft: `${indent * 20}px` }} className="font-medium text-slate-700">
-            {showSymbol && <span className="text-slate-500 mr-1">{showSymbol}</span>}
-            {label}
-          </span>
+          <ChevronDown 
+            className={`w-5 h-5 text-slate-500 transition-transform ${isExpanded ? 'rotate-0' : '-rotate-90'}`}
+          />
+          <span className="font-semibold text-slate-700">{label}</span>
         </div>
-        <span className={`font-bold text-right ${textColor} ${type === 'lucro-op' ? 'text-lg' : ''}`}>
-          {type === 'lucro-op' ? '+ ' : ''}R$ {value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-        </span>
+        <span className="font-bold text-slate-900">R$ {value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+      </button>
+      
+      {isExpanded && children && (
+        <div className="bg-slate-50 border-t border-slate-200 px-4 py-2 space-y-1">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+
+  const SubItem = ({ label, value, indent = false }) => (
+    <div className={`flex items-center justify-between py-2 text-slate-700 ${indent ? 'pl-8' : ''}`}>
+      <span className="text-slate-600">{label}</span>
+      <span className="font-semibold text-slate-900">R$ {value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+    </div>
+  );
+
+  const ResultRow = ({ label, value, bgClass = '', textColorValue = '', marginText = null }) => (
+    <div className={`border border-slate-200 rounded-md px-4 py-3 ${bgClass}`}>
+      <div className="flex items-center justify-between">
+        <span className="font-bold text-slate-800">{label}</span>
+        <span className={`font-bold text-lg ${textColorValue}`}>R$ {value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
       </div>
-    );
-  };
+      {marginText && <div className="text-sm text-blue-600 mt-1">{marginText}</div>}
+    </div>
+  );
 
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <FileText className="w-5 h-5 text-slate-700" />
             <div>
@@ -142,89 +156,82 @@ export default function DREAnalysis({ transactions = [], categories = [] }) {
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="space-y-0">
+      <CardContent className="space-y-4">
         {/* Receita Bruta */}
-        <DRERow
+        <ExpandableRow
           label="Receita Bruta"
           value={dreData.vendaBruta}
-          isExpandable={true}
           isExpanded={expandedSections.vendaBruta}
           onToggle={() => toggleSection('vendaBruta')}
-          type="expandable"
-          showSymbol=">"
-        />
+          bgClass="bg-green-50"
+        >
+          <SubItem label="Outros" value={dreData.vendaBruta * 0.7} />
+          <SubItem label="Cartão de Crédito" value={dreData.vendaBruta * 0.15} />
+          <SubItem label="Boleto" value={dreData.vendaBruta * 0.15} />
+        </ExpandableRow>
 
         {/* Custos Diretos */}
-        <DRERow
+        <ExpandableRow
           label="(-) Custos Diretos"
           value={dreData.custosDiretos}
-          isExpandable={true}
           isExpanded={expandedSections.custos}
           onToggle={() => toggleSection('custos')}
-          showSymbol=">"
-        />
+        >
+          <SubItem label="Compras" value={dreData.custosDiretos} />
+        </ExpandableRow>
 
         {/* Receita Líquida */}
-        <DRERow
+        <ResultRow
           label="= Receita Líquida"
           value={dreData.receitaLiquida}
-          type="receita-liquida"
-          showSymbol="="
+          bgClass="bg-blue-50 border-blue-200"
+          textColorValue="text-blue-700"
         />
 
-        {/* Despesas Operacionais - Header */}
-        <div className="flex items-center px-6 py-3 border-b border-slate-100">
-          <span className="text-slate-700 font-medium">(-) Despesas Operacionais:</span>
-        </div>
-
-        {/* Despesas Operacionais - Itens */}
-        <div className="px-6 py-3 border-b border-slate-100 bg-slate-50">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-slate-600">Vendas</span>
-            <span className="font-semibold text-slate-700">R$ {dreData.despesasOp.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-          </div>
-          <div className="flex items-center justify-between border-t border-slate-200 pt-3">
-            <span className="font-bold text-slate-700">Total Despesas Operacionais</span>
-            <span className="font-bold text-slate-700">R$ {dreData.despesasOp.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+        {/* Despesas Operacionais */}
+        <div className="border border-slate-200 rounded-md px-4 py-3">
+          <div className="text-slate-700 font-semibold mb-3">(-) Despesas Operacionais:</div>
+          <div className="space-y-2 pl-4">
+            <SubItem label="Vendas" value={dreData.despesasOp} />
+            <div className="flex items-center justify-between py-3 border-t border-slate-200">
+              <span className="font-bold text-slate-800">Total Despesas Operacionais</span>
+              <span className="font-bold text-slate-900">R$ {dreData.despesasOp.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            </div>
           </div>
         </div>
 
         {/* Lucro Operacional */}
-        <DRERow
+        <ResultRow
           label="= Lucro Operacional"
           value={dreData.lucroOp}
-          type="lucro-op"
-          showSymbol="="
+          bgClass="bg-pink-50 border-pink-200"
+          textColorValue="text-green-600"
+          marginText={`Margem Líquida: ${dreData.marginLiquida.toFixed(2)}%`}
         />
 
-        {/* Margem */}
-        <div className="px-6 py-2 bg-pink-50 text-blue-600 text-sm">
-          Margem Líquida: {dreData.marginLiquida.toFixed(2)}%
-        </div>
-
         {/* Resumo por Forma de Pagamento */}
-        <div className="mt-8 border-t pt-6">
-          <div className="flex items-center gap-2 mb-6">
+        <div className="mt-8">
+          <div className="flex items-center gap-2 mb-4">
             <FileText className="w-5 h-5 text-slate-700" />
             <h3 className="font-bold text-slate-800">Resumo por Forma de Pagamento</h3>
           </div>
 
           <div className="grid grid-cols-3 gap-4">
             {Object.entries(dreData.pagamentos).map(([metodo, dados]) => (
-              <div key={metodo} className="border border-slate-200 rounded-lg p-4">
-                <h4 className="font-bold text-slate-800 mb-4">{metodo}</h4>
+              <div key={metodo} className="border border-slate-200 rounded-md p-4">
+                <h4 className="font-bold text-slate-800 mb-3 text-sm">{metodo}</h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center justify-between">
                     <span className="text-slate-600">Entradas:</span>
-                    <span className="font-semibold text-red-600">R$ {dados.entradas.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    <span className="font-semibold text-green-600">R$ {dados.entradas.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-slate-600">Saídas:</span>
                     <span className="font-semibold text-red-600">R$ {dados.saidas.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                   </div>
-                  <div className="flex items-center justify-between border-t border-slate-200 pt-2 font-bold">
-                    <span className="text-slate-700">Líquido:</span>
-                    <span className="text-green-600">R$ {(dados.entradas - dados.saidas).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <div className="flex items-center justify-between border-t border-slate-200 pt-2">
+                    <span className="font-bold text-slate-700">Líquido:</span>
+                    <span className="font-bold text-green-600">R$ {(dados.entradas - dados.saidas).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                   </div>
                 </div>
               </div>
