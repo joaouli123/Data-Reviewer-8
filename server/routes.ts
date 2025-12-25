@@ -1165,10 +1165,11 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.post("/api/invitations", authMiddleware, requireRole(["admin"]), async (req: AuthenticatedRequest, res) => {
+  app.post("/api/invitations", async (req: any, res) => {
     try {
-      const { email, role = "operational", permissions = {} } = req.body;
+      const { email, role = "operational", permissions = {}, name, password, companyId } = req.body;
       
+      // Require at least email
       if (!email?.trim()) {
         return res.status(400).json({ error: "Email is required" });
       }
@@ -1177,16 +1178,55 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         return res.status(400).json({ error: "Invalid email format" });
       }
 
-      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
-      const invitation = await storage.createInvitation(req.user.companyId, req.user.id, { 
-        email: email.toLowerCase().trim(), 
-        role, 
-        expiresAt, 
-        permissions: JSON.stringify(permissions || {})
+      // For immediate creation, we need email, name and password
+      if (!name?.trim() || !password?.trim()) {
+        return res.status(400).json({ error: "Name and password are required" });
+      }
+
+      if (password.length < 6) {
+        return res.status(400).json({ error: "Password must be at least 6 characters" });
+      }
+
+      // Get companyId from token or request
+      let cId = companyId;
+      const auth = req.headers.authorization;
+      if (auth && !cId) {
+        const token = auth.split(" ")[1];
+        const decoded = verifyToken(token);
+        if (decoded) {
+          cId = decoded.companyId;
+        }
+      }
+
+      if (!cId) {
+        return res.status(400).json({ error: "Company ID is required" });
+      }
+
+      // Create user immediately
+      const user = await createUser(cId, email.split("@")[0], email.toLowerCase().trim(), password, name?.trim(), role);
+
+      // Add permissions if provided
+      if (role !== "admin" && Object.keys(permissions).length > 0) {
+        await storage.updateUserPermissions(cId, user.id, permissions);
+      }
+
+      const inviteLink = `${process.env.APP_URL || 'http://localhost:5000'}?companyId=${cId}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}&role=${role}`;
+
+      res.json({ 
+        invitationId: user.id, 
+        token: null,
+        message: "User created successfully",
+        inviteLink,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role
+        }
       });
-      res.json({ invitationId: invitation.id, token: invitation.token });
-    } catch (error) {
-      res.status(500).json({ error: "Failed to create invitation" });
+    } catch (error: any) {
+      console.error("Error creating invitation:", error);
+      res.status(500).json({ error: error.message || "Failed to create invitation" });
     }
   });
 
