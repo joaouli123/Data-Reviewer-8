@@ -8,15 +8,15 @@ import { Wallet, TrendingUp, TrendingDown, AlertTriangle, Sparkles, Loader2 } fr
 import { toast } from 'sonner';
 import { addMonths, format } from 'date-fns';
 
-export default function WorkingCapitalAnalysis({ transactions, saleInstallments, purchaseInstallments }) {
+export default function WorkingCapitalAnalysis({ transactions, saleInstallments, purchaseInstallments, dateRange }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState(null);
 
   const calculateWorkingCapital = () => {
-    const now = new Date();
-    // Use end of day for today to include all current transactions
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-    const next30Days = new Date(startOfToday.getTime() + 31 * 24 * 60 * 60 * 1000);
+    // Usar a data de início do filtro como "Hoje" para o cálculo
+    const now = dateRange?.startDate ? new Date(dateRange.startDate) : new Date();
+    const startOfAnchor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    const next30Days = new Date(startOfAnchor.getTime() + 31 * 24 * 60 * 60 * 1000);
 
     // Fallback: Calculate from transactions if installments are empty
     let currentReceivables = 0;
@@ -28,7 +28,7 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
         .filter(i => {
           if (i.paid) return false;
           const dueDate = new Date(i.due_date);
-          return dueDate >= startOfToday && dueDate <= next30Days;
+          return dueDate >= startOfAnchor && dueDate <= next30Days;
         })
         .reduce((sum, i) => sum + parseFloat(i.amount || 0), 0);
     } else {
@@ -37,7 +37,7 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
         .filter(t => {
           if ((t.type !== 'venda' && t.type !== 'income') || t.status !== 'pendente') return false;
           const transDate = new Date(t.date);
-          return transDate >= startOfToday && transDate <= next30Days;
+          return transDate >= startOfAnchor && transDate <= next30Days;
         })
         .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
     }
@@ -48,7 +48,7 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
         .filter(i => {
           if (i.paid) return false;
           const dueDate = new Date(i.due_date);
-          return dueDate >= startOfToday && dueDate <= next30Days;
+          return dueDate >= startOfAnchor && dueDate <= next30Days;
         })
         .reduce((sum, i) => sum + parseFloat(i.amount || 0), 0);
     } else {
@@ -57,7 +57,7 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
         .filter(t => {
           if ((t.type !== 'compra' && t.type !== 'expense') || t.status !== 'pendente') return false;
           const transDate = new Date(t.date);
-          return transDate >= startOfToday && transDate <= next30Days;
+          return transDate >= startOfAnchor && transDate <= next30Days;
         })
         .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
     }

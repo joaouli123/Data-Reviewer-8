@@ -430,6 +430,7 @@ export default function ReportsPage() {
                 transactions={filteredTransactions}
                 saleInstallments={saleInstallments}
                 purchaseInstallments={purchaseInstallments}
+                dateRange={dateRange}
               />
             </TabsContent>
 
@@ -438,6 +439,7 @@ export default function ReportsPage() {
                 transactions={filteredTransactions}
                 purchases={purchases}
                 purchaseInstallments={purchaseInstallments}
+                dateRange={dateRange}
               />
               {(() => {
                 // Calculate metrics with fallbacks

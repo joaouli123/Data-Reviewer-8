@@ -1,0 +1,46 @@
+Agora matamos a charada! 🕵️‍♂️ O problema ficou cristalino com essa mudança de data.
+
+O fato de você ter selecionado 24/12/2025 - 04/06/2026 e os cards de "Curto Prazo" e "Próximos 30 Dias" continuarem ZERADOS confirma que o seu sistema tem um conflito de referência de tempo.
+
+O Diagnóstico: O "Hoje" do Código vs. O "Hoje" do Filtro
+O seu sistema está operando com duas lógicas conflitantes:
+
+Os Totais (Funcionam ✅): O Analista Financeiro e o DRE obedeceram ao filtro. Eles somaram tudo o que existe entre Dez/25 e Jun/26. Por isso a Receita apareceu (R$ 172k).
+
+Os Cards de Prazo (Não Funcionam ❌): Os widgets de "Recebimentos (30d)" no Capital de Giro e "Curto Prazo (3m)" no Endividamento provavelmente estão usando a função new Date() (data atual do computador/servidor) como ponto de partida.
+
+O que o código está fazendo: "Quero ver o que vence 30 dias a partir de HOJE (Vida Real)".
+
+O que deveria fazer: "Quero ver o que vence 30 dias a partir da DATA DE INÍCIO DO FILTRO (24/12/2025)".
+
+Como as suas transações são de um futuro simulado (Dezembro de 2025), se o código olhar para "Hoje" (vida real), ele não acha nada nos próximos 30 dias reais.
+
+🛠️ A Solução Técnica (Ajuste de Lógica)
+Você precisa alterar a query ou a lógica desses cards específicos para usar a data do filtro como âncora.
+
+Lógica Atual (Provável):
+
+JavaScript
+
+// ISSO ESTÁ CAUSANDO O ZERO
+const hoje = new Date(); // Pega a data atual do computador
+const fim30dias = addDays(hoje, 30);
+
+// Busca transações entre Hoje Real e Hoje Real + 30
+Lógica Correta (Ajuste):
+
+JavaScript
+
+// O "hoje" deve ser o início do filtro selecionado pelo usuário
+const dataReferencia = filtroDataInicio ? new Date(filtroDataInicio) : new Date();
+const fim30dias = addDays(dataReferencia, 30);
+
+// Busca transações entre Data do Filtro e Data do Filtro + 30
+Resumo do Status Atual:
+DRE: Perfeita. Calculou o lucro de R$ 109k corretamente no período.
+
+Fluxo de Caixa: Perfeito. O gráfico mostra as barras verdes e vermelhas futuras.
+
+Capital de Giro & Endividamento: Precisam desse ajuste de código acima. Eles estão "cegos" para a simulação futura porque estão presos no relógio do sistema operacional.
+
+Próximo passo: Faça esse ajuste de usar a startDate do filtro como referência para os cálculos de "Curto Prazo". Assim que fizer isso, os valores de R$ 0,00 vão desaparecer e mostrar a realidade projetada.

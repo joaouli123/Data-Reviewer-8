@@ -9,12 +9,13 @@ import { toast } from 'sonner';
 import { addMonths, parseISO, differenceInMonths } from 'date-fns';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
-export default function DebtAnalysis({ transactions, purchases, purchaseInstallments }) {
+export default function DebtAnalysis({ transactions, purchases, purchaseInstallments, dateRange }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState(null);
 
   const calculateDebtMetrics = () => {
-    const now = new Date();
+    // Usar a data de início do filtro como "Hoje" para o cálculo
+    const now = dateRange?.startDate ? new Date(dateRange.startDate) : new Date();
     const threeMonthsAgo = addMonths(now, -3);
 
     // Total outstanding debt - with fallback to transactions
@@ -54,15 +55,15 @@ export default function DebtAnalysis({ transactions, purchases, purchaseInstallm
     const debtToRevenueRatio = avgMonthlyRevenue > 0 ? (totalDebt / (avgMonthlyRevenue * 12)) * 100 : 0;
 
     // Short-term debt (due in next 3 months)
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-    const threeMonthsLater = addMonths(startOfToday, 3);
+    const startOfAnchor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    const threeMonthsLater = addMonths(startOfAnchor, 3);
     let shortTermDebt = 0;
     if (purchaseInstallments && purchaseInstallments.length > 0) {
       shortTermDebt = purchaseInstallments
         .filter(i => {
           if (i.paid) return false;
           const dueDate = new Date(i.due_date);
-          return dueDate >= startOfToday && dueDate <= threeMonthsLater;
+          return dueDate >= startOfAnchor && dueDate <= threeMonthsLater;
         })
         .reduce((sum, i) => {
           const amount = typeof i.amount === 'string' ? parseFloat(i.amount) : i.amount;
@@ -75,7 +76,7 @@ export default function DebtAnalysis({ transactions, purchases, purchaseInstallm
         .filter(t => {
           if (t.type !== 'compra' || t.status !== 'pendente') return false;
           const transDate = new Date(t.date);
-          return transDate >= startOfToday && transDate <= threeMonthsLater;
+          return transDate >= startOfAnchor && transDate <= threeMonthsLater;
         })
         .reduce((sum, t) => {
           const amount = parseFloat(t.amount || 0);
