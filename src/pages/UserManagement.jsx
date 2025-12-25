@@ -14,18 +14,42 @@ export default function UserManagementPage() {
   const [, setLocation] = useLocation();
   const [isInviteOpen, setIsInviteOpen] = useState(false);
 
-  const { data: users = [] } = useQuery({
+  const { data: users = [], isLoading, error } = useQuery({
     queryKey: ['/api/users'],
     queryFn: async () => {
       const token = JSON.parse(localStorage.getItem('auth') || '{}').token;
+      console.log('[DEBUG] Fetching users from /api/users...');
       const res = await fetch('/api/users', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (!res.ok) throw new Error('Failed to fetch users');
-      return res.json();
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to fetch users');
+      }
+      const data = await res.json();
+      console.log('[DEBUG] Received users:', data);
+      return data;
     }
   });
 
+  // ... (no changes to inviteMutation and deleteUserMutation)
+
+  if (isLoading) {
+    return (
+      <div className="p-6 flex justify-center items-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <span className="ml-2 text-slate-500">Carregando usuários...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 text-center text-red-500">
+        <p>Erro ao carregar usuários: {error.message}</p>
+      </div>
+    );
+  }
   const inviteMutation = useMutation({
     mutationFn: async (data) => {
       const token = JSON.parse(localStorage.getItem('auth') || '{}').token;
@@ -104,7 +128,7 @@ export default function UserManagementPage() {
                       <span className="inline-block px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded-md capitalize">
                         {user.role === 'admin' ? 'Admin' : user.role === 'manager' ? 'Gerente' : user.role === 'operational' ? 'Operacional' : 'Usuário'}
                       </span>
-                      {user.status && <span className="inline-block px-2 py-1 bg-emerald-100 text-emerald-700 text-xs rounded-md">Ativo</span>}
+                      <span className="inline-block px-2 py-1 bg-emerald-100 text-emerald-700 text-xs rounded-md">Ativo</span>
                     </div>
                   </div>
                   <div className="flex gap-2">
