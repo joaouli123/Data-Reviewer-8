@@ -67,20 +67,25 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
         .reduce((sum, i) => sum + parseFloat(i.amount || 0), 0);
     } else if (Array.isArray(transactions)) {
       const vendas = transactions.filter(t => t.type === 'venda' || t.type === 'income');
-      console.log(`📊 Filtered ${vendas.length} venda transactions out of ${transactions.length}`);
+      console.log(`📊 Filtered ${vendas.length} venda transactions out of ${transactions.length}. anchorTime=${anchorTime}, endTime=${endTime}`);
       
+      let countInRange = 0;
       currentReceivables = vendas
-        .filter(t => {
-          if (!t.date) return false;
+        .filter((t, idx) => {
+          if (!t.date) {
+            console.log(`❌ Venda ${idx} has no date`);
+            return false;
+          }
           const tTime = toTime(t.date);
           const inRange = tTime !== null && tTime >= anchorTime && tTime <= endTime;
-          if (inRange && currentReceivables < 1000) { // Log first few matching
-            console.log(`✅ Venda in range:`, { date: t.date, tTime, anchorTime, endTime, amount: t.amount });
+          if (inRange) countInRange++;
+          if (idx < 3 || inRange) {
+            console.log(`🔍 Venda ${idx}: date=${t.date}, tTime=${tTime}, inRange=${inRange}, amount=${t.amount}`);
           }
           return inRange;
         })
         .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
-      console.log(`💰 Total Receivables: ${currentReceivables}`);
+      console.log(`💰 Total Receivables: ${currentReceivables} (${countInRange} transactions in range)`);
     }
 
     // 2. Calcular Pagamentos (30 dias)
