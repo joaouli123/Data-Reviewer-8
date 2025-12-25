@@ -29,8 +29,6 @@ export default function CustomersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const [sortColumn, setSortColumn] = useState('name');
-  const [sortDirection, setSortDirection] = useState('asc');
   
   const { company } = useAuth();
   const queryClient = useQueryClient();
@@ -122,40 +120,17 @@ export default function CustomersPage() {
     return customer?.totalSales || 0;
   };
 
-  const handleSort = (column) => {
-    if (sortColumn === column) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortColumn(column);
-      setSortDirection('asc');
-    }
-  };
-
-  const getSortIcon = (column) => {
-    if (sortColumn !== column) return ' ▼▲';
-    return sortDirection === 'asc' ? ' ↑' : ' ↓';
-  };
-
   const filteredCustomers = customers
     .filter(c => 
       c.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
       c.email?.toLowerCase().includes(searchTerm.toLowerCase())
     )
+    // Sort by ID descending to show newest first
     .sort((a, b) => {
-      let aVal, bVal;
-      
-      switch(sortColumn) {
-        case 'name':
-          aVal = (a.name || '').toLowerCase();
-          bVal = (b.name || '').toLowerCase();
-          return sortDirection === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
-        case 'sales':
-          aVal = getCustomerSales(a);
-          bVal = getCustomerSales(b);
-          return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
-        default:
-          return 0;
+      if (typeof a.id === 'string' && typeof b.id === 'string') {
+        return b.id.localeCompare(a.id);
       }
+      return (b.id || 0) - (a.id || 0);
     });
 
   const startIndex = (currentPage - 1) * pageSize;
@@ -199,10 +174,10 @@ export default function CustomersPage() {
             <Table>
                 <TableHeader className="bg-slate-50">
                     <TableRow>
-                        <TableHead className="pl-6 text-left cursor-pointer hover:bg-slate-100 select-none" onClick={() => handleSort('name')}>Nome{getSortIcon('name')}</TableHead>
+                        <TableHead className="pl-6 text-left">Nome</TableHead>
                         <TableHead className="text-left">Contato</TableHead>
                         <TableHead className="text-left">Desde</TableHead>
-                        <TableHead className="text-right cursor-pointer hover:bg-slate-100 select-none" onClick={() => handleSort('sales')}>Total em Vendas{getSortIcon('sales')}</TableHead>
+                        <TableHead className="text-right">Total em Vendas</TableHead>
                         <TableHead className="text-right pr-6">Ações</TableHead>
                     </TableRow>
                 </TableHeader>

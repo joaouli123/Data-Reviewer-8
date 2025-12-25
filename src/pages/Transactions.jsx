@@ -28,8 +28,6 @@ export default function TransactionsPage() {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('paid'); // 'all', 'paid', 'pending'
   const [paymentMethodFilter, setPaymentMethodFilter] = useState('all');
-  const [sortColumn, setSortColumn] = useState('date');
-  const [sortDirection, setSortDirection] = useState('desc');
   // Initialize with local date (not UTC) to respect user timezone
   const getInitialDateRange = () => {
     const today = new Date();
@@ -192,21 +190,6 @@ export default function TransactionsPage() {
     document.body.removeChild(link);
   };
 
-  // Sorting handler
-  const handleSort = (column) => {
-    if (sortColumn === column) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortColumn(column);
-      setSortDirection('asc');
-    }
-  };
-
-  const getSortIcon = (column) => {
-    if (sortColumn !== column) return ' ▼▲';
-    return sortDirection === 'asc' ? ' ↑' : ' ↓';
-  };
-
   // Filter Logic
   const txArray = Array.isArray(transactions) ? transactions : (transactions?.data || []);
   const filteredTransactions = txArray
@@ -252,36 +235,12 @@ export default function TransactionsPage() {
       return matchesType && matchesCategory && matchesSearch && matchesDate && matchesPaymentMethod;
     })
     .sort((a, b) => {
-      let aVal, bVal;
-      
-      switch(sortColumn) {
-        case 'date':
-          const aIsPaid = a.status === 'pago' || a.status === 'completed';
-          const bIsPaid = b.status === 'pago' || b.status === 'completed';
-          aVal = new Date(aIsPaid && a.paymentDate ? a.paymentDate : a.date);
-          bVal = new Date(bIsPaid && b.paymentDate ? b.paymentDate : b.date);
-          break;
-        case 'description':
-          aVal = (a.description || '').toLowerCase();
-          bVal = (b.description || '').toLowerCase();
-          break;
-        case 'category':
-          aVal = (a.category || '').toLowerCase();
-          bVal = (b.category || '').toLowerCase();
-          break;
-        case 'amount':
-          aVal = parseFloat(a.amount || 0);
-          bVal = parseFloat(b.amount || 0);
-          break;
-        default:
-          aVal = new Date(a.date);
-          bVal = new Date(b.date);
-      }
-      
-      if (typeof aVal === 'string') {
-        return sortDirection === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
-      }
-      return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+      // Sort by relevant date (paymentDate for paid, date for pending)
+      const aIsPaid = a.status === 'pago' || a.status === 'completed';
+      const bIsPaid = b.status === 'pago' || b.status === 'completed';
+      const aDate = aIsPaid && a.paymentDate ? a.paymentDate : a.date;
+      const bDate = bIsPaid && b.paymentDate ? b.paymentDate : b.date;
+      return new Date(bDate) - new Date(aDate);
     });
 
   // Calculate Balances
@@ -473,12 +432,12 @@ export default function TransactionsPage() {
             <Table>
                 <TableHeader className="bg-slate-50">
                     <TableRow>
-                        <TableHead className="pl-6 text-left cursor-pointer hover:bg-slate-100 select-none" onClick={() => handleSort('date')}>Data{getSortIcon('date')}</TableHead>
-                        <TableHead className="text-left cursor-pointer hover:bg-slate-100 select-none" onClick={() => handleSort('description')}>Descrição{getSortIcon('description')}</TableHead>
-                        <TableHead className="text-left cursor-pointer hover:bg-slate-100 select-none" onClick={() => handleSort('category')}>Categoria{getSortIcon('category')}</TableHead>
+                        <TableHead className="pl-6 text-left">Data</TableHead>
+                        <TableHead className="text-left">Descrição</TableHead>
+                        <TableHead className="text-left">Categoria</TableHead>
                         <TableHead className="text-left">Forma</TableHead>
                         <TableHead className="text-left">Status</TableHead>
-                        <TableHead className="text-right cursor-pointer hover:bg-slate-100 select-none" onClick={() => handleSort('amount')}>Valor{getSortIcon('amount')}</TableHead>
+                        <TableHead className="text-right">Valor</TableHead>
                         <TableHead className="text-right pr-6">Ações</TableHead>
                     </TableRow>
                 </TableHeader>
