@@ -46,7 +46,8 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
     } else if (Array.isArray(transactions)) {
       currentReceivables = transactions
         .filter(t => {
-          if ((t.type !== 'venda' && t.type !== 'income') || t.status !== 'pendente' || !t.date) return false;
+          if ((t.type !== 'venda' && t.type !== 'income') || !t.date) return false;
+          // Include both pending and other statuses for receivables (contas a receber)
           const tTime = toTime(t.date);
           return tTime !== null && tTime >= anchorTime && tTime <= endTime;
         })
@@ -65,7 +66,8 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
     } else if (Array.isArray(transactions)) {
       currentPayables = transactions
         .filter(t => {
-          if ((t.type !== 'compra' && t.type !== 'expense') || t.status !== 'pendente' || !t.date) return false;
+          if ((t.type !== 'compra' && t.type !== 'expense') || !t.date) return false;
+          // Include both pending and other statuses for payables (contas a pagar)
           const tTime = toTime(t.date);
           return tTime !== null && tTime >= anchorTime && tTime <= endTime;
         })
