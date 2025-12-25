@@ -29,8 +29,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 
 export default function ReportsPage() {
   const { company } = useAuth();
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisResult, setAnalysisResult] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
@@ -188,20 +186,20 @@ export default function ReportsPage() {
       }));
 
       const prompt = `
-        Atue como um consultor financeiro sênior para pequenas empresas. 
+        Atue como um consultor financeiro sênior para pequenas empresas. Use uma linguagem humana, amigável e direta, como se estivesse conversando com o dono do negócio.
         
         Dados de Transações (últimos 6 meses):
-        \${JSON.stringify(simpleTransactions)}
+        ${JSON.stringify(simpleTransactions)}
 
         Dados de Clientes (Resumo):
-        \${JSON.stringify(simpleCustomers)}
+        ${JSON.stringify(simpleCustomers)}
 
         Gere uma análise estratégica detalhada contendo:
-        1. Sumário executivo do desempenho.
-        2. Previsão de fluxo de caixa para os próximos 3 meses (estimativa baseada no histórico).
-        3. Oportunidades específicas de redução de despesas por categoria.
-        4. Sugestões para aumentar receita baseadas no comportamento dos clientes e vendas.
-        5. Alertas de anomalias se houver.
+        1. Sumário executivo (O Pulso): Fale sobre o que já aconteceu de forma humana. Ex: "Você fechou o mês com um lucro ótimo!" em vez de "Lucro líquido atingiu X".
+        2. O Radar (Futuro): Previsão de fluxo de caixa para os próximos 3 meses.
+        3. Oportunidades: Sugestões práticas de redução de custos.
+        4. Crescimento: Estratégias para vender mais.
+        5. Alertas: Se houver riscos imediatos.
       `;
 
       const response = await InvokeLLM(prompt, {
