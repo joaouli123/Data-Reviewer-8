@@ -13,88 +13,38 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
   const [analysis, setAnalysis] = useState(null);
 
   const calculateWorkingCapital = () => {
-    // NUCLEAR FIX: Use string comparison (YYYY-MM-DD) to avoid timezone issues completely
-    const dateToString = (d) => {
-      if (!d) return '';
-      const date = new Date(d);
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    };
+    // Use ONLY filtered transactions (already filtered by dateRange)
+    const vendas = Array.isArray(transactions)
+      ? transactions.filter(t => t.type === 'venda' || t.type === 'income')
+      : [];
+    
+    const compras = Array.isArray(transactions)
+      ? transactions.filter(t => t.type === 'compra' || t.type === 'expense')
+      : [];
 
-    const startStr = dateToString(dateRange?.startDate);
-    const endStr = dateToString(dateRange?.endDate);
+    // Receivables = sum of all revenue in the period
+    const currentReceivables = vendas.reduce((sum, t) => {
+      const amount = Math.abs(parseFloat(t.amount || 0));
+      return sum + (isNaN(amount) ? 0 : amount);
+    }, 0);
 
-    console.log("💰 WC Analysis:", {
-      period: `${startStr} to ${endStr}`,
-      dataPoints: Array.isArray(transactions) ? transactions.length : 0
-    });
+    // Payables = sum of all expenses in the period
+    const currentPayables = compras.reduce((sum, t) => {
+      const amount = Math.abs(parseFloat(t.amount || 0));
+      return sum + (isNaN(amount) ? 0 : amount);
+    }, 0);
 
-    let currentReceivables = 0;
-    let currentPayables = 0;
-
-    const sales = Array.isArray(saleInstallments) ? saleInstallments : (saleInstallments?.data || []);
-    const payables = Array.isArray(purchaseInstallments) ? purchaseInstallments : (purchaseInstallments?.data || []);
-
-    // 1. Calcular Recebimentos
-    if (sales.length > 0) {
-      currentReceivables = sales
-        .filter(i => {
-          if (i.paid || !i.due_date) return false;
-          const iStr = dateToString(i.due_date);
-          return iStr >= startStr && iStr <= endStr;
-        })
-        .reduce((sum, i) => sum + parseFloat(i.amount || 0), 0);
-    } else if (Array.isArray(transactions)) {
-      const vendas = transactions.filter(t => t.type === 'venda' || t.type === 'income');
-      
-      currentReceivables = vendas
-        .filter(t => {
-          if (!t.date) return false;
-          const tStr = dateToString(t.date);
-          return tStr >= startStr && tStr <= endStr;
-        })
-        .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
-    }
-
-    // 2. Calcular Pagamentos
-    if (payables.length > 0) {
-      currentPayables = payables
-        .filter(i => {
-          if (i.paid || !i.due_date) return false;
-          const iStr = dateToString(i.due_date);
-          return iStr >= startStr && iStr <= endStr;
-        })
-        .reduce((sum, i) => sum + parseFloat(i.amount || 0), 0);
-    } else if (Array.isArray(transactions)) {
-      const compras = transactions.filter(t => t.type === 'compra' || t.type === 'expense');
-      
-      currentPayables = compras
-        .filter(t => {
-          if (!t.date) return false;
-          const tStr = dateToString(t.date);
-          return tStr >= startStr && tStr <= endStr;
-        })
-        .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
-    }
-
-    // Working Capital
+    // Working Capital = Receivables - Payables
     const workingCapital = currentReceivables - currentPayables;
 
-    // Average monthly expenses (use entire transaction range for baseline)
-    const allExpenses = (Array.isArray(transactions) ? transactions : [])
-      .filter(t => t.type === 'compra' || t.type === 'expense')
-      .reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
-    
-    // Estimate based on number of months in period
+    // Average monthly expenses
     const startDate = new Date(dateRange?.startDate);
     const endDate = new Date(dateRange?.endDate);
     const daysInPeriod = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
     const monthsInPeriod = Math.max(1, Math.round(daysInPeriod / 30));
-    const avgMonthlyExpenses = monthsInPeriod > 0 ? allExpenses / monthsInPeriod : allExpenses;
+    const avgMonthlyExpenses = currentPayables / monthsInPeriod;
 
-    // Recommended working capital (2 months of expenses)
+    // Recommended working capital (2 months of expenses as buffer)
     const recommendedWorkingCapital = avgMonthlyExpenses * 2;
 
     return {

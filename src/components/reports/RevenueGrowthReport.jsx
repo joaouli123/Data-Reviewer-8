@@ -7,6 +7,11 @@ import { format, subMonths, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export default function RevenueGrowthReport({ strategies, transactions, customers }) {
+  // Filter only revenue transactions from the already-filtered data
+  const revenueTransactions = Array.isArray(transactions) 
+    ? transactions.filter(t => t.type === 'venda' || t.type === 'income')
+    : [];
+
   // Calculate revenue trend (last 6 months)
   const revenueByMonth = [];
   for (let i = 5; i >= 0; i--) {
@@ -14,16 +19,15 @@ export default function RevenueGrowthReport({ strategies, transactions, customer
     const monthKey = format(date, 'yyyy-MM');
     const monthLabel = format(date, 'MMM', { locale: ptBR }).toUpperCase();
     
-    const monthRevenue = transactions
-      .filter(t => (t.type === 'venda' || t.type === 'income') && typeof t.date === 'string' && t.date.startsWith(monthKey))
+    const monthRevenue = revenueTransactions
+      .filter(t => typeof t.date === 'string' && t.date.startsWith(monthKey))
       .reduce((acc, t) => acc + Math.abs(parseFloat(t.amount || 0)), 0);
     
     revenueByMonth.push({ name: monthLabel, receita: monthRevenue });
   }
 
   // Calculate KPIs
-  const totalRevenue = transactions
-    .filter(t => t.type === 'venda' || t.type === 'income')
+  const totalRevenue = revenueTransactions
     .reduce((acc, t) => acc + Math.abs(parseFloat(t.amount || 0)), 0);
 
   const last3MonthsRevenue = revenueByMonth.slice(-3).reduce((acc, m) => acc + m.receita, 0);
@@ -32,13 +36,13 @@ export default function RevenueGrowthReport({ strategies, transactions, customer
     ? ((last3MonthsRevenue - previous3MonthsRevenue) / previous3MonthsRevenue) * 100 
     : 0;
 
-  const revenueTransactionCount = transactions.filter(t => t.type === 'venda' || t.type === 'income').length;
+  const revenueTransactionCount = revenueTransactions.length;
   const avgTicket = revenueTransactionCount > 0 ? totalRevenue / revenueTransactionCount : 0;
-  const activeCustomers = customers && customers.length > 0 ? customers.filter(c => c.status === 'active').length : 0;
+  const activeCustomers = Array.isArray(customers) ? customers.filter(c => c.status === 'active').length : 0;
 
   // Customer segmentation
-  const customerRevenue = transactions
-    .filter(t => (t.type === 'venda' || t.type === 'income') && t.customer_id)
+  const customerRevenue = revenueTransactions
+    .filter(t => t.customer_id)
     .reduce((acc, t) => {
       acc[t.customer_id] = (acc[t.customer_id] || 0) + Math.abs(parseFloat(t.amount || 0));
       return acc;

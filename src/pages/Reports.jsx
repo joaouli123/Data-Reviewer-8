@@ -201,38 +201,29 @@ export default function ReportsPage() {
 
     setIsAnalyzing(true);
     try {
+      // OPÇÃO C: Análise Simplificada (2-3 segundos)
+      // Calcular métricas localmente sem chamar IA para cada detalhe
+      const totalRevenue = recentTransactions
+        .filter(t => t.type === 'venda' || t.type === 'income')
+        .reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
       
-      // Simplify data to save tokens
-      const simpleTransactions = recentTransactions.map(t => ({
-        date: t.date,
-        amount: t.amount,
-        type: t.type,
-        category: t.category,
-        description: t.description
-      }));
+      const totalExpense = recentTransactions
+        .filter(t => t.type === 'compra' || t.type === 'expense')
+        .reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
 
-      const simpleCustomers = customers.map(c => ({
-        status: c.status,
-        join_date: c.join_date,
-        ltv: c.ltv
-      }));
+      const profit = totalRevenue - totalExpense;
 
-      const prompt = `
-        Atue como um consultor financeiro sênior para pequenas empresas. Use uma linguagem humana, amigável e direta, como se estivesse conversando com o dono do negócio.
+      // Ultra-simplified prompt para análise rápida
+      const prompt = `Você é consultor financeiro. Analise MUITO BREVEMENTE (2-3 linhas máximo para cada seção):
+        Receita: R$ ${totalRevenue.toFixed(0)} | Despesa: R$ ${totalExpense.toFixed(0)} | Lucro: R$ ${profit.toFixed(0)}
+        Transações: ${recentTransactions.length} | Clientes: ${customers.length}
         
-        Dados de Transações (últimos 6 meses):
-        ${JSON.stringify(simpleTransactions)}
-
-        Dados de Clientes (Resumo):
-        ${JSON.stringify(simpleCustomers)}
-
-        Gere uma análise estratégica detalhada contendo:
-        1. Sumário executivo (O Pulso): Fale sobre o que já aconteceu de forma humana. Ex: "Você fechou o mês com um lucro ótimo!" em vez de "Lucro líquido atingiu X".
-        2. O Radar (Futuro): Previsão de fluxo de caixa para os próximos 3 meses.
-        3. Oportunidades: Sugestões práticas de redução de custos.
-        4. Crescimento: Estratégias para vender mais.
-        5. Alertas: Se houver riscos imediatos.
-      `;
+        Resuma em linguagem conversacional:
+        1. Como está o negócio AGORA (1 frase)
+        2. O que vai acontecer nos próximos 3 meses (2 frases)
+        3. 1 sugestão de corte de custos
+        4. 1 estratégia para vender mais
+        5. 1 risco iminente (se houver)`;
 
       const response = await InvokeLLM(prompt, {
         properties: {
@@ -242,45 +233,23 @@ export default function ReportsPage() {
             items: {
               type: "object",
               properties: {
-                month: { type: "string", description: "Nome do mês futuro" },
+                month: { type: "string" },
                 predicted_revenue: { type: "number" },
-                predicted_expense: { type: "number" },
-                reasoning: { type: "string" }
+                predicted_expense: { type: "number" }
               }
             }
           },
           expense_reduction_opportunities: {
             type: "array",
-            items: {
-              type: "object",
-              properties: {
-                category: { type: "string" },
-                suggestion: { type: "string" },
-                potential_savings: { type: "string" }
-              }
-            }
+            items: { type: "object", properties: { suggestion: { type: "string" } } }
           },
           revenue_growth_suggestions: {
             type: "array",
-            items: {
-              type: "object",
-              properties: {
-                strategy: { type: "string" },
-                rationale: { type: "string" },
-                target_customer_segment: { type: "string" }
-              }
-            }
+            items: { type: "object", properties: { strategy: { type: "string" } } }
           },
           anomalies: {
             type: "array",
-            items: {
-              type: "object",
-              properties: {
-                title: { type: "string" },
-                description: { type: "string" },
-                severity: { type: "string", enum: ["high", "medium", "low"] },
-              }
-            }
+            items: { type: "object", properties: { title: { type: "string" } } }
           }
         }
       });
