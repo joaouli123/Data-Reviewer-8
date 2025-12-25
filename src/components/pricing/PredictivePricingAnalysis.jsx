@@ -123,33 +123,37 @@ Crie uma análise preditiva incluindo:
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
-        {predictions && (
+        {predictions ? (
           <>
             {/* Optimal Price Point */}
-            <Card className="bg-gradient-to-br from-emerald-50 to-white border-emerald-200">
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2 text-emerald-700">
-                  <Target className="w-5 h-5" />
-                  Ponto Ótimo de Precificação
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center mb-4">
-                  <p className="text-4xl font-bold text-emerald-600 mb-2">
-                    R$ {predictions.optimal_price_point.price.toFixed(2)}
-                  </p>
-                  <p className="text-sm text-slate-600 mb-1">
-                    Volume Esperado: {predictions.optimal_price_point.expected_volume}
-                  </p>
-                  <p className="text-sm font-semibold text-emerald-700">
-                    Receita Projetada: R$ {predictions.optimal_price_point.expected_revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </p>
-                </div>
-                <div className="p-3 bg-white rounded border">
-                  <p className="text-sm text-slate-700">{predictions.optimal_price_point.reasoning}</p>
-                </div>
-              </CardContent>
-            </Card>
+            {predictions.optimal_price_point && (
+              <Card className="bg-gradient-to-br from-emerald-50 to-white border-emerald-200">
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2 text-emerald-700">
+                    <Target className="w-5 h-5" />
+                    Ponto Ótimo de Precificação
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center mb-4">
+                    <p className="text-4xl font-bold text-emerald-600 mb-2">
+                      R$ {(predictions.optimal_price_point.price || 0).toFixed(2)}
+                    </p>
+                    <p className="text-sm text-slate-600 mb-1">
+                      Volume Esperado: {predictions.optimal_price_point.expected_volume || 'N/A'}
+                    </p>
+                    <p className="text-sm font-semibold text-emerald-700">
+                      Receita Projetada: R$ {(predictions.optimal_price_point.expected_revenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                  {predictions.optimal_price_point.reasoning && (
+                    <div className="p-3 bg-white rounded border">
+                      <p className="text-sm text-slate-700">{predictions.optimal_price_point.reasoning}</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Demand Forecast Chart */}
             {predictions.demand_forecast?.length > 0 && (
@@ -182,10 +186,10 @@ Crie uma análise preditiva incluindo:
                   <div className="mt-4 space-y-2">
                     {predictions.demand_forecast.map((forecast, idx) => (
                       <div key={idx} className="flex items-center justify-between p-2 bg-white rounded border text-sm">
-                        <span className="font-medium">R$ {forecast.price_point.toFixed(2)}</span>
+                        <span className="font-medium">R$ {(forecast.price_point || 0).toFixed(2)}</span>
                         <span className="text-slate-600">{forecast.estimated_demand}</span>
                         <Badge variant="outline">
-                          {forecast.profit_margin.toFixed(1)}% margem
+                          {(forecast.profit_margin || 0).toFixed(1)}% margem
                         </Badge>
                       </div>
                     ))}
@@ -195,23 +199,28 @@ Crie uma análise preditiva incluindo:
             )}
 
             {/* Price Elasticity */}
-            <Card className="bg-blue-50 border-blue-200">
-              <CardHeader>
-                <CardTitle className="text-base text-primary">Elasticidade de Preço</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <Badge className="bg-primary">
-                    {predictions.price_elasticity.classification === 'elastic' ? 'Elástico' :
-                     predictions.price_elasticity.classification === 'inelastic' ? 'Inelástico' : 'Unitário'}
-                  </Badge>
-                  <p className="text-sm text-blue-800">{predictions.price_elasticity.sensitivity}</p>
-                </div>
-                <div className="p-3 bg-white rounded border">
-                  <p className="text-sm text-slate-700">{predictions.price_elasticity.recommendations}</p>
-                </div>
-              </CardContent>
-            </Card>
+            {predictions.price_elasticity && (
+              <Card className="bg-blue-50 border-blue-200">
+                <CardHeader>
+                  <CardTitle className="text-base text-primary">Elasticidade de Preço</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Badge className="bg-primary">
+                      {predictions.price_elasticity.classification === 'elastic' ? 'Elástico' :
+                       predictions.price_elasticity.classification === 'inelastic' ? 'Inelástico' : 
+                       predictions.price_elasticity.classification === 'unitary' ? 'Unitário' : 'Não definido'}
+                    </Badge>
+                    <p className="text-sm text-blue-800">{predictions.price_elasticity.sensitivity}</p>
+                  </div>
+                  {predictions.price_elasticity.recommendations && (
+                    <div className="p-3 bg-white rounded border">
+                      <p className="text-sm text-slate-700">{predictions.price_elasticity.recommendations}</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Pricing Strategies */}
             {predictions.pricing_strategies?.length > 0 && (
@@ -229,12 +238,12 @@ Crie uma análise preditiva incluindo:
                       <div key={idx} className="p-4 bg-white rounded-lg border hover:shadow-md transition-shadow">
                         <div className="flex items-start justify-between mb-2">
                           <h5 className="font-semibold text-slate-900">{strategy.strategy}</h5>
-                          <Badge className={riskColors[strategy.risk_level]}>
-                            Risco {strategy.risk_level === 'low' ? 'Baixo' : strategy.risk_level === 'medium' ? 'Médio' : 'Alto'}
+                          <Badge className={riskColors[strategy.risk_level] || 'bg-slate-100 text-slate-700'}>
+                            Risco {strategy.risk_level === 'low' ? 'Baixo' : strategy.risk_level === 'medium' ? 'Médio' : strategy.risk_level === 'high' ? 'Alto' : 'N/A'}
                           </Badge>
                         </div>
                         <p className="text-2xl font-bold text-primary mb-2">
-                          R$ {strategy.price.toFixed(2)}
+                          R$ {(strategy.price || 0).toFixed(2)}
                         </p>
                         <p className="text-sm text-slate-700">{strategy.expected_outcome}</p>
                       </div>
@@ -245,14 +254,20 @@ Crie uma análise preditiva incluindo:
             )}
 
             {/* Market Positioning */}
-            <div className="p-4 bg-indigo-50 rounded-lg border border-blue-200">
-              <h4 className="font-semibold text-indigo-900 mb-2">Posicionamento de Mercado</h4>
-              <p className="text-sm text-primary">{predictions.market_positioning}</p>
-            </div>
+            {predictions.market_positioning && (
+              <div className="p-4 bg-indigo-50 rounded-lg border border-blue-200">
+                <h4 className="font-semibold text-indigo-900 mb-2">Posicionamento de Mercado</h4>
+                <p className="text-sm text-primary">{predictions.market_positioning}</p>
+              </div>
+            )}
           </>
-        )}
-
-        {!predictions && !isAnalyzing && (
+        ) : isAnalyzing ? (
+          <div className="flex flex-col items-center justify-center py-12 text-slate-500">
+            <Loader2 className="w-12 h-12 mb-4 animate-spin text-primary opacity-20" />
+            <p className="text-sm animate-pulse">A IA está processando os dados e gerando as previsões...</p>
+            <p className="text-xs text-slate-400 mt-2">Isso pode levar alguns segundos</p>
+          </div>
+        ) : (
           <div className="text-center py-8 text-slate-500">
             <Sparkles className="w-12 h-12 mx-auto mb-3 text-slate-300" />
             <p className="text-sm">Execute a análise para ver previsões de demanda e recomendações de precificação</p>
