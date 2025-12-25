@@ -471,6 +471,22 @@ export default function ReportsPage() {
               />
             </TabsContent>
 
+            <TabsContent value="revenue" className="space-y-6 mt-6">
+              <RevenueGrowthReport 
+                strategies={analysisResult.revenue_growth_suggestions}
+                transactions={filteredTransactions}
+                customers={customers}
+              />
+            </TabsContent>
+
+            <TabsContent value="expenses" className="space-y-6 mt-6">
+              <ExpensesBreakdown 
+                opportunities={analysisResult.expense_reduction_opportunities}
+                transactions={filteredTransactions}
+                categories={categories}
+              />
+            </TabsContent>
+
             <TabsContent value="working-capital" className="space-y-6 mt-6">
               <WorkingCapitalAnalysis 
                 transactions={filteredTransactions}
