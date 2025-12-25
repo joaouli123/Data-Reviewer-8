@@ -16,7 +16,7 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
     // Usar a data de início do filtro como "Hoje" para o cálculo
     const now = dateRange?.startDate ? new Date(dateRange.startDate) : new Date();
     const startOfAnchor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-    const next30Days = new Date(startOfAnchor.getTime() + 31 * 24 * 60 * 60 * 1000);
+    const next30Days = new Date(startOfAnchor.getTime() + 30 * 24 * 60 * 60 * 1000);
 
     // Fallback: Calculate from transactions if installments are empty
     let currentReceivables = 0;

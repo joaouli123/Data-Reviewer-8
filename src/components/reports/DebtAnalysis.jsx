@@ -91,8 +91,10 @@ export default function DebtAnalysis({ transactions, purchases, purchaseInstallm
     // Monthly debt payment
     let monthlyDebtPayment = 0;
     if (purchaseInstallments && purchaseInstallments.length > 0) {
+      const startOfAnchor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+      const nextMonth = addMonths(startOfAnchor, 1);
       monthlyDebtPayment = purchaseInstallments
-        .filter(i => !i.paid && new Date(i.due_date) <= addMonths(now, 1))
+        .filter(i => !i.paid && new Date(i.due_date) >= startOfAnchor && new Date(i.due_date) <= nextMonth)
         .reduce((sum, i) => {
           const amount = typeof i.amount === 'string' ? parseFloat(i.amount) : i.amount;
           const interest = typeof i.interest === 'string' ? parseFloat(i.interest) : (i.interest || 0);
