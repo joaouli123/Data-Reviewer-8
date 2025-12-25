@@ -97,11 +97,15 @@ export default function UserManagementPage() {
 
   const deleteUserMutation = useMutation({
     mutationFn: async (userId) => {
-      const token = JSON.parse(localStorage.getItem('auth') || '{}').token;
+      const auth = JSON.parse(localStorage.getItem('auth') || '{}');
+      const token = auth.token;
       console.log(`[DEBUG] Attempting to delete user: ${userId}`);
       const res = await fetch(`/api/users/${userId}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}` 
+        }
       });
       if (!res.ok) {
         const errData = await res.json();

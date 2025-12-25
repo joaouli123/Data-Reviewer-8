@@ -1233,15 +1233,28 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.delete("/api/users/:userId", authMiddleware, requireRole(["admin"]), async (req: AuthenticatedRequest, res) => {
+  app.delete("/api/users/:userId", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+
+      // O admin SEMPRE tem permissão. Outros papéis precisam da permissão granular.
+      const isAdmin = req.user.role === "admin";
+      const userPermissions = req.user.permissions || {};
+      const canManageUsers = !!userPermissions[PERMISSIONS.MANAGE_USERS];
+
+      if (!isAdmin && !canManageUsers) {
+        return res.status(403).json({ error: "Você não tem permissão para excluir usuários" });
+      }
+
       // Prevent admin from deleting themselves
       if (req.params.userId === req.user.id) {
-        return res.status(400).json({ error: "Cannot delete your own account" });
+        return res.status(400).json({ error: "Você não pode excluir sua própria conta" });
       }
+
       await storage.deleteUser(req.user.companyId, req.params.userId);
       res.json({ message: "User deleted" });
     } catch (error) {
+      console.error("Delete user error:", error);
       res.status(500).json({ error: "Failed to delete user" });
     }
   });
