@@ -1,8 +1,8 @@
-import { invokeGemini } from './geminiClient';
+import { invokeOpenAI } from './openaiClient';
 
 // Integrations locais sem dependências externas
 export const Core = {
-  InvokeLLM: invokeGemini,
+  InvokeLLM: invokeOpenAI,
   SendEmail: async () => null,
   UploadFile: async () => null,
   GenerateImage: async () => null,
@@ -11,7 +11,7 @@ export const Core = {
   UploadPrivateFile: async () => null,
 };
 
-export const InvokeLLM = invokeGemini;
+export const InvokeLLM = invokeOpenAI;
 export const SendEmail = Core.SendEmail;
 export const UploadFile = Core.UploadFile;
 export const GenerateImage = Core.GenerateImage;
