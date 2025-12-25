@@ -513,8 +513,8 @@ Forneça:
 
           <Tabs defaultValue="cashflow" className="w-full">
             <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 h-auto gap-1 p-1 bg-slate-100 rounded-lg">
-              <TabsTrigger value="cashflow" className="text-xs sm:text-sm">Radar</TabsTrigger>
-              <TabsTrigger value="dre" className="text-xs sm:text-sm">Pulso</TabsTrigger>
+              <TabsTrigger value="cashflow" className="text-xs sm:text-sm">Fluxo de Caixa</TabsTrigger>
+              <TabsTrigger value="dre" className="text-xs sm:text-sm">DRE</TabsTrigger>
               <TabsTrigger value="revenue" className="text-xs sm:text-sm">Receitas</TabsTrigger>
               <TabsTrigger value="expenses" className="text-xs sm:text-sm">Despesas</TabsTrigger>
               <TabsTrigger value="working-capital" className="text-xs sm:text-sm">Capital</TabsTrigger>
