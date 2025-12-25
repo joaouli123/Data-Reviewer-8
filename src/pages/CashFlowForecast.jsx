@@ -158,7 +158,7 @@ export default function CashFlowForecastPage() {
   });
   const [expandedMonths, setExpandedMonths] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(10);
 
   const calculateCashFlow = () => {
     if (!dateRange.startDate || !dateRange.endDate) return [];

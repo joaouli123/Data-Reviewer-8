@@ -21,7 +21,7 @@ export default function CategoriesPage() {
   const [editingCategory, setEditingCategory] = useState(null);
   const [formData, setFormData] = useState({ name: '', type: 'entrada' });
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(10);
 
   const { data: categories } = useQuery({
     queryKey: ['/api/categories', company?.id],

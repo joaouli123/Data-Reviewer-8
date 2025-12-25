@@ -47,7 +47,7 @@ export default function TransactionsPage() {
   const [reconciliationOpen, setReconciliationOpen] = useState(false);
   const [statementData, setStatementData] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(10);
 
   const { company } = useAuth();
   const queryClient = useQueryClient();

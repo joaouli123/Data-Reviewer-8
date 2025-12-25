@@ -12,7 +12,7 @@ export default function Pagination({
 }) {
   const totalPages = Math.ceil(totalItems / pageSize);
   
-  const pageSizeOptions = [20, 50, 100];
+  const pageSizeOptions = [10, 50, 100];
 
   const handlePreviousPage = () => {
     if (currentPage > 1) {
