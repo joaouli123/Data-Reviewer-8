@@ -54,11 +54,16 @@ export default function DebtAnalysis({ transactions, purchases, purchaseInstallm
     const debtToRevenueRatio = avgMonthlyRevenue > 0 ? (totalDebt / (avgMonthlyRevenue * 12)) * 100 : 0;
 
     // Short-term debt (due in next 3 months)
-    const threeMonthsLater = addMonths(now, 3);
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    const threeMonthsLater = addMonths(startOfToday, 3);
     let shortTermDebt = 0;
     if (purchaseInstallments && purchaseInstallments.length > 0) {
       shortTermDebt = purchaseInstallments
-        .filter(i => !i.paid && new Date(i.due_date) <= threeMonthsLater)
+        .filter(i => {
+          if (i.paid) return false;
+          const dueDate = new Date(i.due_date);
+          return dueDate >= startOfToday && dueDate <= threeMonthsLater;
+        })
         .reduce((sum, i) => {
           const amount = typeof i.amount === 'string' ? parseFloat(i.amount) : i.amount;
           const interest = typeof i.interest === 'string' ? parseFloat(i.interest) : (i.interest || 0);
@@ -67,7 +72,11 @@ export default function DebtAnalysis({ transactions, purchases, purchaseInstallm
     } else {
       // Fallback: calculate from recent pending purchases
       shortTermDebt = transactions
-        .filter(t => t.type === 'compra' && t.status === 'pendente' && new Date(t.date) >= now)
+        .filter(t => {
+          if (t.type !== 'compra' || t.status !== 'pendente') return false;
+          const transDate = new Date(t.date);
+          return transDate >= startOfToday && transDate <= threeMonthsLater;
+        })
         .reduce((sum, t) => {
           const amount = parseFloat(t.amount || 0);
           const interest = parseFloat(t.interest || 0);
