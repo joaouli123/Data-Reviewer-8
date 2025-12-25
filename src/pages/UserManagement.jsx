@@ -15,7 +15,7 @@ export default function UserManagementPage() {
   const [isInviteOpen, setIsInviteOpen] = useState(false);
 
   const { data: users = [] } = useQuery({
-    queryKey: ['/api/users', company?.id],
+    queryKey: ['/api/users'],
     queryFn: async () => {
       const token = JSON.parse(localStorage.getItem('auth') || '{}').token;
       const res = await fetch('/api/users', {
@@ -23,8 +23,7 @@ export default function UserManagementPage() {
       });
       if (!res.ok) throw new Error('Failed to fetch users');
       return res.json();
-    },
-    enabled: !!company?.id
+    }
   });
 
   const inviteMutation = useMutation({
@@ -42,7 +41,7 @@ export default function UserManagementPage() {
       return res.json();
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/users', company?.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
       setIsInviteOpen(false);
       toast.success('Convite enviado!');
       return data;
@@ -59,7 +58,7 @@ export default function UserManagementPage() {
       if (!res.ok) throw new Error('Failed to delete user');
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/users', company?.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
       toast.success('Usuário removido!');
     }
   });
