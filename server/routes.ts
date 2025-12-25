@@ -15,6 +15,7 @@ import {
   insertUserSchema,
   insertCompanySchema,
   insertSubscriptionSchema,
+  PERMISSIONS,
   DEFAULT_CATEGORIES,
   customers,
   users,
@@ -1111,7 +1112,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   // ========== USER MANAGEMENT ==========
-  app.get("/api/users", authMiddleware, requireRole("admin", "manager"), async (req: AuthenticatedRequest, res) => {
+  app.get("/api/users", authMiddleware, requireRole(["admin", "manager"]), async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const currentCompanyId = req.user.companyId;
@@ -1123,10 +1124,36 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       // Garantir isolamento multi-tenant extra e converter permissões
       const formattedUsers = usersList
         .filter(u => u.companyId === currentCompanyId)
-        .map(u => ({
-          ...u,
-          permissions: typeof u.permissions === 'string' ? JSON.parse(u.permissions) : (u.permissions || {})
-        }));
+        .map(u => {
+          let perms: any = {};
+          try {
+            perms = u.permissions ? (typeof u.permissions === 'string' ? JSON.parse(u.permissions) : u.permissions) : {};
+          } catch (e) {
+            console.error("Error parsing permissions for user", u.id, e);
+          }
+
+          // Se for admin, garante todas as permissões
+          if (u.role === 'admin') {
+            Object.values(PERMISSIONS).forEach(p => perms[p] = true);
+          } else if (u.role === 'operational' && Object.keys(perms).length === 0) {
+            // Padrão para operacional se não tiver nada salvo
+            perms = {
+              [PERMISSIONS.VIEW_TRANSACTIONS]: true,
+              [PERMISSIONS.CREATE_TRANSACTIONS]: true,
+              [PERMISSIONS.IMPORT_BANK]: true,
+              [PERMISSIONS.VIEW_CUSTOMERS]: true,
+              [PERMISSIONS.MANAGE_CUSTOMERS]: true,
+              [PERMISSIONS.VIEW_SUPPLIERS]: true,
+              [PERMISSIONS.MANAGE_SUPPLIERS]: true,
+              [PERMISSIONS.PRICE_CALC]: true,
+            };
+          }
+
+          return {
+            ...u,
+            permissions: perms
+          };
+        });
       
       res.json(formattedUsers);
     } catch (error) {
