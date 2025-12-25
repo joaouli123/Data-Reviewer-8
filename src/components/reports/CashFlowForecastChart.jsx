@@ -47,12 +47,12 @@ export default function CashFlowForecastChart({ forecast }) {
           <BarChart data={chartData}>
             <defs>
               <linearGradient id="colorReceita" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
-                <stop offset="95%" stopColor="#10b981" stopOpacity={0.3}/>
+                <stop offset="5%" stopColor="#86efac" stopOpacity={0.6}/>
+                <stop offset="95%" stopColor="#bbf7d0" stopOpacity={0.3}/>
               </linearGradient>
               <linearGradient id="colorDespesa" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.8}/>
-                <stop offset="95%" stopColor="#f43f5e" stopOpacity={0.3}/>
+                <stop offset="5%" stopColor="#fca5a5" stopOpacity={0.6}/>
+                <stop offset="95%" stopColor="#fecaca" stopOpacity={0.3}/>
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
@@ -91,7 +91,7 @@ export default function CashFlowForecastChart({ forecast }) {
             <div key={idx} className="p-3 bg-slate-50 rounded-lg border border-slate-100">
               <div className="flex items-center justify-between mb-1">
                 <span className="font-semibold text-slate-700">{item.month}</span>
-                <span className={`font-bold ${(item.predicted_revenue - item.predicted_expense) >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                <span className={`font-bold ${(item.predicted_revenue - item.predicted_expense) >= 0 ? 'text-teal-700' : 'text-red-600'}`}>
                   {(item.predicted_revenue - item.predicted_expense) >= 0 ? '+' : ''}
                   R$ {(item.predicted_revenue - item.predicted_expense).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </span>
