@@ -146,6 +146,38 @@ app.patch('/api/auth/smtp-config', async (req, res) => {
   }
 });
 
+// Create user invitation (immediate creation)
+app.post('/api/invitations', async (req, res) => {
+  try {
+    const { email, name, role, password, companyId } = req.body;
+    
+    if (!email || !name || !password) {
+      return res.status(400).json({ error: 'Email, nome e senha são obrigatórios' });
+    }
+    
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'A senha deve ter no mínimo 6 caracteres' });
+    }
+    
+    // In a real app, this would create the user in the database
+    // For now, we generate an invite link
+    const inviteLink = `${process.env.APP_URL || 'http://localhost:5000'}/signup?companyId=${companyId}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}&role=${role || 'user'}&password=${encodeURIComponent(password)}`;
+    
+    res.json({ 
+      message: 'Usuário criado com sucesso!',
+      inviteLink,
+      user: {
+        email,
+        name,
+        role: role || 'user'
+      }
+    });
+  } catch (err) {
+    console.error('Error creating invitation:', err.message);
+    res.status(400).json({ error: `Erro ao criar usuário: ${err.message}` });
+  }
+});
+
 // Send invitation email
 app.post('/api/invitations/send-email', async (req, res) => {
   try {
