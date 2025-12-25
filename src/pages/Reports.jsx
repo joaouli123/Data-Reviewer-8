@@ -282,11 +282,17 @@ Forneça:
         response.cash_flow_forecast = generateDefaultForecast(allRevenue, allExpense, allTransactions.length);
       }
 
+      // Ensure other arrays exist
+      if (!response.expense_reduction_opportunities) response.expense_reduction_opportunities = [];
+      if (!response.revenue_growth_suggestions) response.revenue_growth_suggestions = [];
+      if (!response.anomalies) response.anomalies = [];
+
       setAnalysisResult(response);
       toast.success("Análise completa gerada com sucesso!", { duration: 5000 });
     } catch (error) {
-      console.error("Erro na análise:", error);
+      console.error("❌ Erro na análise:", error);
       toast.error("Erro ao gerar análise. Tente novamente.", { duration: 5000 });
+      setAnalysisResult(null);
     } finally {
       setIsAnalyzing(false);
     }
@@ -318,7 +324,7 @@ Forneça:
 
   return (
     <div className="space-y-8 max-w-6xl mx-auto p-4 sm:p-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-2 flex-wrap">
             <Brain className="w-6 sm:w-8 h-6 sm:h-8 text-blue-600" />
@@ -333,70 +339,82 @@ Forneça:
             )}
           </div>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
-          <div className="flex bg-slate-100 p-1 rounded-lg gap-1 mr-2">
+        
+        <div className="flex flex-col gap-3">
+          {/* Quick period buttons */}
+          <div className="flex flex-wrap gap-2 bg-slate-100 p-2 rounded-lg w-fit">
             <Button 
               variant="ghost" 
               size="sm" 
-              className={`text-xs h-8 px-4 transition-all ${dateRange.label === 'Este Mês' ? 'bg-blue-600 text-white shadow-sm hover:bg-blue-700' : 'text-slate-600 hover:bg-slate-200'}`}
+              className={`text-xs h-8 px-3 transition-all whitespace-nowrap ${dateRange.label === 'Este Mês' ? 'bg-blue-600 text-white shadow-sm hover:bg-blue-700' : 'text-slate-600 hover:bg-slate-200'}`}
               onClick={() => setQuickPeriod('this-month')}
+              disabled={isAnalyzing}
+              data-testid="button-period-month"
             >
               Este Mês
             </Button>
             <Button 
               variant="ghost" 
               size="sm" 
-              className={`text-xs h-8 px-4 transition-all ${dateRange.label === 'Próximos 3 Meses' ? 'bg-blue-600 text-white shadow-sm hover:bg-blue-700' : 'text-slate-600 hover:bg-slate-200'}`}
+              className={`text-xs h-8 px-3 transition-all whitespace-nowrap ${dateRange.label === 'Próximos 3 Meses' ? 'bg-blue-600 text-white shadow-sm hover:bg-blue-700' : 'text-slate-600 hover:bg-slate-200'}`}
               onClick={() => setQuickPeriod('next-3-months')}
+              disabled={isAnalyzing}
+              data-testid="button-period-3months"
             >
-              Próximos 3 Meses
+              Próx. 3M
             </Button>
             <Button 
               variant="ghost" 
               size="sm" 
-              className={`text-xs h-8 px-4 transition-all ${dateRange.label === 'Ano Atual' ? 'bg-blue-600 text-white shadow-sm hover:bg-blue-700' : 'text-slate-600 hover:bg-slate-200'}`}
+              className={`text-xs h-8 px-3 transition-all whitespace-nowrap ${dateRange.label === 'Ano Atual' ? 'bg-blue-600 text-white shadow-sm hover:bg-blue-700' : 'text-slate-600 hover:bg-slate-200'}`}
               onClick={() => setQuickPeriod('year')}
+              disabled={isAnalyzing}
+              data-testid="button-period-year"
             >
               Ano Atual
             </Button>
           </div>
-          <ReportExporter 
-            reportData={{
-              summary: analysisResult ? {
-                receita_total: filteredTransactions.filter(t => t.type === 'venda').reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0),
-                despesas_total: filteredTransactions.filter(t => t.type === 'compra').reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0),
-                periodo: dateRange.label
-              } : null,
-              transactions: transactionsWithCategories,
-              forecast: analysisResult?.cash_flow_forecast,
-              expenses: analysisResult?.expense_reduction_opportunities,
-              revenue: analysisResult?.revenue_growth_suggestions,
-              debt: analysisResult?.debt_metrics,
-              working_capital: analysisResult?.working_capital_metrics
-            }}
-            analysisResult={analysisResult}
-            reportType="general"
-            className="flex-1 sm:flex-none"
-          />
-          <Button 
-            onClick={handleStartAnalysis} 
-            disabled={isAnalyzing}
-            className="bg-primary hover:bg-primary text-white px-6 w-full sm:w-auto"
-            size="lg"
-            data-testid="button-new-analysis"
-          >
-            {isAnalyzing ? (
-              <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                Analisando...
-              </>
-            ) : (
-              <>
-                <Filter className="w-5 h-5 mr-2" />
-                Filtro Avançado
-              </>
-            )}
-          </Button>
+
+          {/* Action buttons */}
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <ReportExporter 
+              reportData={{
+                summary: analysisResult ? {
+                  receita_total: filteredTransactions.filter(t => t.type === 'venda').reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0),
+                  despesas_total: filteredTransactions.filter(t => t.type === 'compra').reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0),
+                  periodo: dateRange.label
+                } : null,
+                transactions: transactionsWithCategories,
+                forecast: analysisResult?.cash_flow_forecast,
+                expenses: analysisResult?.expense_reduction_opportunities,
+                revenue: analysisResult?.revenue_growth_suggestions,
+                debt: analysisResult?.debt_metrics,
+                working_capital: analysisResult?.working_capital_metrics
+              }}
+              analysisResult={analysisResult}
+              reportType="general"
+              className="w-full sm:w-auto"
+            />
+            <Button 
+              onClick={handleStartAnalysis} 
+              disabled={isAnalyzing}
+              className="bg-primary hover:bg-primary text-white px-6 w-full sm:w-auto"
+              size="lg"
+              data-testid="button-new-analysis"
+            >
+              {isAnalyzing ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Analisando...
+                </>
+              ) : (
+                <>
+                  <Filter className="w-4 h-4 mr-2" />
+                  Filtro Avançado
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -494,13 +512,13 @@ Forneça:
           />
 
           <Tabs defaultValue="cashflow" className="w-full">
-            <TabsList className="grid w-full grid-cols-6">
-              <TabsTrigger value="cashflow">O Radar (Futuro)</TabsTrigger>
-              <TabsTrigger value="dre">O Pulso (DRE)</TabsTrigger>
-              <TabsTrigger value="revenue">Receitas</TabsTrigger>
-              <TabsTrigger value="expenses">Despesas</TabsTrigger>
-              <TabsTrigger value="working-capital">Capital de Giro</TabsTrigger>
-              <TabsTrigger value="debt">Endividamento</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 h-auto gap-1 p-1 bg-slate-100 rounded-lg">
+              <TabsTrigger value="cashflow" className="text-xs sm:text-sm">Radar</TabsTrigger>
+              <TabsTrigger value="dre" className="text-xs sm:text-sm">Pulso</TabsTrigger>
+              <TabsTrigger value="revenue" className="text-xs sm:text-sm">Receitas</TabsTrigger>
+              <TabsTrigger value="expenses" className="text-xs sm:text-sm">Despesas</TabsTrigger>
+              <TabsTrigger value="working-capital" className="text-xs sm:text-sm">Capital</TabsTrigger>
+              <TabsTrigger value="debt" className="text-xs sm:text-sm">Dívidas</TabsTrigger>
             </TabsList>
 
             <TabsContent value="dre" className="space-y-6 mt-6">
