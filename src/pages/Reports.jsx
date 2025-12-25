@@ -191,14 +191,16 @@ export default function ReportsPage() {
   };
 
   const generateAllAnalysesQuick = async () => {
-    if (filteredTransactions.length === 0) {
+    // Recalculate transactions with current dateRange to ensure updated data
+    const recentTransactions = getFilteredTransactions();
+    
+    if (recentTransactions.length === 0) {
       toast.error("Não há dados suficientes para análise.", { duration: 5000 });
       return;
     }
 
     setIsAnalyzing(true);
     try {
-      const recentTransactions = filteredTransactions;
       
       // Simplify data to save tokens
       const simpleTransactions = recentTransactions.map(t => ({
