@@ -179,12 +179,6 @@ export default function UserManagementPage() {
       </div>
 
       <Card className="border-border/40 shadow-sm overflow-hidden">
-        <CardHeader className="bg-slate-50/50 border-b border-border/40 py-4">
-          <CardTitle className="text-lg font-semibold flex items-center gap-2">
-            <UserCircle className="w-5 h-5 text-[#E7AA1C]" />
-            Membros da Equipe
-          </CardTitle>
-        </CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader className="bg-slate-50/30">
