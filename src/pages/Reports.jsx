@@ -47,7 +47,7 @@ export default function ReportsPage() {
         break;
       case 'next-3-months':
         start = startOfDay(today);
-        end = endOfMonth(subMonths(today, -2));
+        end = endOfMonth(subMonths(today, -3));
         label = 'Próximos 3 Meses';
         break;
       case 'year':
