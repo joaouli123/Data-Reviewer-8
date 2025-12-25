@@ -46,7 +46,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { InviteUserModal } from "@/components/users/InviteUserModal";
+import InviteUserModal from "@/components/users/InviteUserModal";
 import { PERMISSIONS } from "../../shared/schema";
 
 export default function UserManagement() {
