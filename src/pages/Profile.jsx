@@ -587,13 +587,14 @@ export default function ProfilePage() {
             Configuração de Email (SMTP)
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg mb-4">
+        <CardContent className="space-y-4">
+          <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
             <p className="text-sm text-amber-800">
               Configure as credenciais SMTP para habilitar o envio de convites por email.
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-4 space-y-4">
+          
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="smtpHost">Host SMTP</Label>
               <Input
@@ -601,7 +602,6 @@ export default function ProfilePage() {
                 placeholder="smtp.gmail.com"
                 value={smtpConfig.host}
                 onChange={(e) => setSmtpConfig({ ...smtpConfig, host: e.target.value })}
-                disabled
                 data-testid="input-smtp-host"
               />
             </div>
@@ -613,7 +613,6 @@ export default function ProfilePage() {
                 placeholder="587"
                 value={smtpConfig.port}
                 onChange={(e) => setSmtpConfig({ ...smtpConfig, port: e.target.value })}
-                disabled
                 data-testid="input-smtp-port"
               />
             </div>
@@ -625,7 +624,6 @@ export default function ProfilePage() {
                 placeholder="seu-email@gmail.com"
                 value={smtpConfig.user}
                 onChange={(e) => setSmtpConfig({ ...smtpConfig, user: e.target.value })}
-                disabled
                 data-testid="input-smtp-user"
               />
             </div>
@@ -638,7 +636,6 @@ export default function ProfilePage() {
                 placeholder="Sua senha"
                 value={smtpConfig.password}
                 onChange={(e) => setSmtpConfig({ ...smtpConfig, password: e.target.value })}
-                disabled
                 data-testid="input-smtp-password"
               />
             </div>
@@ -651,14 +648,38 @@ export default function ProfilePage() {
                 placeholder="noreply@sua-empresa.com"
                 value={smtpConfig.fromEmail}
                 onChange={(e) => setSmtpConfig({ ...smtpConfig, fromEmail: e.target.value })}
-                disabled
                 data-testid="input-smtp-from"
               />
             </div>
           </div>
-          <p className="text-xs text-slate-500 mt-4">
-            A configuração de SMTP será habilitada em breve. Por enquanto, use "Copiar Link" ou "Enviar Email" na gestão de usuários.
-          </p>
+
+          <div className="flex gap-3 pt-2">
+            <Button 
+              type="button"
+              onClick={async () => {
+                try {
+                  const token = JSON.parse(localStorage.getItem('auth') || '{}').token;
+                  const res = await fetch('/api/auth/smtp-config', {
+                    method: 'PATCH',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify(smtpConfig),
+                  });
+                  if (!res.ok) throw new Error('Falha ao salvar');
+                  toast.success('Configuração SMTP salva!');
+                } catch (error) {
+                  toast.error('Erro ao salvar configuração SMTP');
+                }
+              }}
+              disabled={updateProfileMutation.isPending}
+              data-testid="button-save-smtp"
+            >
+              <Save className="w-4 h-4 mr-2" />
+              Salvar Configuração SMTP
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
