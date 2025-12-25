@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 
 const COLORS = ['#ef4444', '#f59e0b', '#f97316', '#ec4899', '#0065BA', '#0065BA', '#3b82f6'];
 
-export default function ExpensesBreakdown({ opportunities, transactions, categories = [] }) {
+export default function ExpensesBreakdown({ opportunities = [], transactions, categories = [] }) {
   // Create a map of categoryId to category name for quick lookup
   const categoryMap = {};
   categories.forEach(cat => {
@@ -36,10 +36,13 @@ export default function ExpensesBreakdown({ opportunities, transactions, categor
       return acc;
     }, {});
 
-  const chartData = Object.entries(expensesByCategory).map(([name, value]) => ({
-    name: name.charAt(0).toUpperCase() + name.slice(1),
-    value
-  })).sort((a, b) => b.value - a.value);
+  const chartData = Object.entries(expensesByCategory).map(([name, value]) => {
+    const safeName = name || 'Sem Categoria';
+    return {
+      name: safeName.charAt(0).toUpperCase() + safeName.slice(1),
+      value
+    };
+  }).sort((a, b) => b.value - a.value);
 
   const totalExpenses = chartData.reduce((acc, item) => acc + item.value, 0);
 
@@ -118,22 +121,25 @@ export default function ExpensesBreakdown({ opportunities, transactions, categor
               <h4 className="font-semibold text-slate-900">Onde Cortar Custos</h4>
             </div>
             
-            {opportunities.map((opp, idx) => (
-              <div key={idx} className="p-4 rounded-lg bg-rose-50 border border-rose-100 hover:shadow-md transition-shadow">
-                <div className="flex items-start justify-between mb-2">
-                  <Badge variant="outline" className="bg-white text-rose-700 border-rose-200 font-medium">
-                    {opp.category.charAt(0).toUpperCase() + opp.category.slice(1)}
-                  </Badge>
-                  <div className="flex items-center gap-1 text-rose-600 font-bold text-sm bg-white px-2 py-1 rounded border border-rose-200">
-                    <TrendingDown className="w-3 h-3" />
-                    {opp.potential_savings}
+            {opportunities && Array.isArray(opportunities) && opportunities.length > 0 && opportunities.map((opp, idx) => {
+              const safeCategory = (opp?.category || 'Categoria Desconhecida').toString();
+              return (
+                <div key={idx} className="p-4 rounded-lg bg-rose-50 border border-rose-100 hover:shadow-md transition-shadow">
+                  <div className="flex items-start justify-between mb-2">
+                    <Badge variant="outline" className="bg-white text-rose-700 border-rose-200 font-medium">
+                      {safeCategory.charAt(0).toUpperCase() + safeCategory.slice(1)}
+                    </Badge>
+                    <div className="flex items-center gap-1 text-rose-600 font-bold text-sm bg-white px-2 py-1 rounded border border-rose-200">
+                      <TrendingDown className="w-3 h-3" />
+                      {opp?.potential_savings || 'N/A'}
+                    </div>
                   </div>
+                  <p className="text-sm text-rose-900 leading-relaxed">{opp?.suggestion || ''}</p>
                 </div>
-                <p className="text-sm text-rose-900 leading-relaxed">{opp.suggestion}</p>
-              </div>
-            ))}
+              );
+            })}
 
-            {opportunities.length === 0 && (
+            {(!opportunities || opportunities.length === 0) && (
               <p className="text-slate-500 italic text-sm">
                 Nenhuma oportunidade clara de redução identificada. Suas despesas parecem otimizadas.
               </p>
