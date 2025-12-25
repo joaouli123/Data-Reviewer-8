@@ -330,31 +330,55 @@ export default function UserManagementPage() {
           
           <div className="flex-1 overflow-y-auto p-6 space-y-8">
             {Object.entries({
-              "Transações": [PERMISSIONS.VIEW_TRANSACTIONS, PERMISSIONS.CREATE_TRANSACTIONS, PERMISSIONS.EDIT_TRANSACTIONS, PERMISSIONS.DELETE_TRANSACTIONS, PERMISSIONS.IMPORT_BANK],
-              "Relatórios": [PERMISSIONS.VIEW_REPORTS, PERMISSIONS.VIEW_PROFIT, PERMISSIONS.EXPORT_REPORTS],
-              "Entidades": [PERMISSIONS.VIEW_CUSTOMERS, PERMISSIONS.MANAGE_CUSTOMERS, PERMISSIONS.VIEW_SUPPLIERS, PERMISSIONS.MANAGE_SUPPLIERS],
-              "Sistema": [PERMISSIONS.MANAGE_USERS, PERMISSIONS.INVITE_USERS, PERMISSIONS.VIEW_SETTINGS, PERMISSIONS.MANAGE_SETTINGS]
+              "TRANSAÇÕES": [
+                { id: PERMISSIONS.VIEW_TRANSACTIONS, label: "View Transactions" },
+                { id: PERMISSIONS.CREATE_TRANSACTIONS, label: "Create Transactions" },
+                { id: PERMISSIONS.EDIT_TRANSACTIONS, label: "Edit Transactions" },
+                { id: PERMISSIONS.DELETE_TRANSACTIONS, label: "Delete Transactions" },
+                { id: PERMISSIONS.IMPORT_BANK, label: "Import Bank" }
+              ],
+              "RELATÓRIOS": [
+                { id: PERMISSIONS.VIEW_REPORTS, label: "View Reports" },
+                { id: PERMISSIONS.VIEW_PROFIT, label: "View Profit" },
+                { id: PERMISSIONS.EXPORT_REPORTS, label: "Export Reports" }
+              ],
+              "ENTIDADES": [
+                { id: PERMISSIONS.VIEW_CUSTOMERS, label: "View Customers" },
+                { id: PERMISSIONS.MANAGE_CUSTOMERS, label: "Manage Customers" },
+                { id: PERMISSIONS.VIEW_SUPPLIERS, label: "View Suppliers" },
+                { id: PERMISSIONS.MANAGE_SUPPLIERS, label: "Manage Suppliers" }
+              ],
+              "SISTEMA": [
+                { id: PERMISSIONS.PRICE_CALC, label: "Cálculo de Preços" },
+                { id: PERMISSIONS.MANAGE_USERS, label: "Manage Users" },
+                { id: PERMISSIONS.INVITE_USERS, label: "Invite Users" },
+                { id: PERMISSIONS.VIEW_SETTINGS, label: "View Settings" },
+                { id: PERMISSIONS.MANAGE_SETTINGS, label: "Manage Settings" }
+              ]
             }).map(([group, perms]) => (
               <div key={group} className="space-y-4">
-                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">{group}</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-1">{group}</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-4">
                   {perms.map(perm => (
                     <div 
-                      key={perm} 
-                      className="flex items-center space-x-3 p-3 rounded-md border border-slate-100 hover:bg-slate-50 cursor-pointer transition-colors"
-                      onClick={() => togglePermission(perm)}
+                      key={perm.id} 
+                      className="flex items-center space-x-3 cursor-pointer group"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        togglePermission(perm.id);
+                      }}
                     >
                       <Checkbox 
-                        id={perm} 
-                        checked={!!selectedUser?.permissions?.[perm]} 
-                        onCheckedChange={() => togglePermission(perm)}
-                        className="data-[state=checked]:bg-[#E7AA1C] data-[state=checked]:border-[#E7AA1C]"
+                        id={perm.id} 
+                        checked={!!selectedUser?.permissions?.[perm.id]} 
+                        onCheckedChange={() => togglePermission(perm.id)}
+                        className="w-5 h-5 border-slate-300 rounded data-[state=checked]:bg-[#E7AA1C] data-[state=checked]:border-[#E7AA1C] transition-all"
                       />
                       <label 
-                        htmlFor={perm} 
-                        className="text-sm font-medium leading-none cursor-pointer select-none text-slate-700"
+                        htmlFor={perm.id} 
+                        className="text-sm font-medium leading-none cursor-pointer select-none text-slate-600 group-hover:text-slate-900 transition-colors"
                       >
-                        {perm.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                        {perm.label}
                       </label>
                     </div>
                   ))}

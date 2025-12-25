@@ -37,6 +37,9 @@ export const PERMISSIONS = {
   MANAGE_USERS: "manage_users",
   INVITE_USERS: "invite_users",
   
+  // Cálculo de Preços
+  PRICE_CALC: "price_calc",
+  
   // Configurações
   VIEW_SETTINGS: "view_settings",
   MANAGE_SETTINGS: "manage_settings",
@@ -99,6 +102,7 @@ export const DEFAULT_PERMISSIONS = {
     [PERMISSIONS.MANAGE_CUSTOMERS]: true,
     [PERMISSIONS.VIEW_SUPPLIERS]: true,
     [PERMISSIONS.MANAGE_SUPPLIERS]: true,
+    [PERMISSIONS.PRICE_CALC]: true,
     [PERMISSIONS.MANAGE_USERS]: false,
     [PERMISSIONS.INVITE_USERS]: false,
     [PERMISSIONS.VIEW_SETTINGS]: false,
