@@ -62,20 +62,7 @@ Sugira 4-5 relatórios mais relevantes que devem ser gerados, com justificativa 
 
       const response = await InvokeLLM(prompt, schema);
       
-      // Garantir que temos os dados corretos
-      let suggestedReports = response?.suggested_reports || [];
-      
-      // Se não temos sugestões, usar default
-      if (!suggestedReports || suggestedReports.length === 0) {
-        suggestedReports = [
-          { report_name: "Fluxo de Caixa Projetado", priority: "high", reason: "Prever problemas de liquidez nos próximos 3 meses", key_insight: "Crítico para planejamento financeiro" },
-          { report_name: "Análise de Despesas por Categoria", priority: "high", reason: "Identificar oportunidades de redução de custos", key_insight: "Potencial de 15% em economia" },
-          { report_name: "Comparativo Cliente-Fornecedor", priority: "medium", reason: "Entender relações comerciais principais", key_insight: "Concentração em 2 clientes" },
-          { report_name: "Sazonalidade de Vendas", priority: "medium", reason: "Padrões de receita ao longo dos meses", key_insight: "Picos identificados em Q1 e Q4" }
-        ];
-      }
-      
-      setSuggestions(suggestedReports);
+      setSuggestions(response.suggested_reports);
       toast.success('Sugestões geradas com sucesso!');
     } catch (error) {
       console.error('Erro ao gerar sugestões:', error);

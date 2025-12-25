@@ -130,33 +130,7 @@ Forneça análise detalhada do impacto e recomendações.`;
         }
       };
 
-      let response = await InvokeLLM(prompt, schema);
-
-      // Fallback se não temos resposta válida
-      if (!response || !response.viability_assessment) {
-        response = {
-          viability_assessment: {
-            recommendation: "caution",
-            reasoning: "Análise realizada com base em dados históricos. Recomenda-se cautela ao assumir nova dívida.",
-            score: 65
-          },
-          financial_impact: {
-            cash_flow_impact: "Impacto moderado no fluxo de caixa mensal",
-            liquidity_impact: "Redução de liquidez pelos próximos meses",
-            leverage_impact: "Aumento do índice de alavancagem"
-          },
-          risk_analysis: [
-            { risk_factor: "Redução de liquidez", severity: "medium", mitigation: "Aumentar receitas ou reduzir outras despesas" },
-            { risk_factor: "Aumento de custos financeiros", severity: "medium", mitigation: "Negociar taxa de juros mais baixa" }
-          ],
-          alternative_suggestions: [
-            "Aumentar capital próprio antes de assumir dívida",
-            "Procurar linhas de crédito com menores taxas de juros",
-            "Negociar prazos maiores de pagamento com fornecedores"
-          ],
-          break_even_analysis: "Ponto de equilíbrio será atingido em aproximadamente 6 meses após conclusão da dívida"
-        };
-      }
+      const response = await InvokeLLM(prompt, schema);
 
       setSimulation({
         inputs: {

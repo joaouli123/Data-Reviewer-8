@@ -91,32 +91,7 @@ Forneça recomendações específicas para melhorar a gestão do capital de giro
         }
       };
 
-      let response = await InvokeLLM(prompt, schema);
-
-      // Fallback se não temos resposta válida
-      if (!response || !response.assessment) {
-        response = {
-          assessment: "Capital de giro em níveis aceitáveis. Recomenda-se monitorar para evitar deficit.",
-          recommendations: [
-            {
-              action: "Otimizar ciclo de recebimento de clientes",
-              impact: "Reduz necessidade de capital de giro em até 20%",
-              priority: "high"
-            },
-            {
-              action: "Negociar prazos com fornecedores",
-              impact: "Melhora o fluxo de caixa sem custos adicionais",
-              priority: "high"
-            },
-            {
-              action: "Manter reserva de caixa de 2 meses",
-              impact: "Garante segurança financeira",
-              priority: "medium"
-            }
-          ],
-          risk_level: "low"
-        };
-      }
+      const response = await InvokeLLM(prompt, schema);
 
       setAnalysis(response);
       toast.success('Análise concluída!');
