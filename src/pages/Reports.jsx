@@ -139,28 +139,35 @@ export default function ReportsPage() {
     enabled: !!company?.id
   });
 
-  // FIX: Normalize dates to YYYY-MM-DD at midnight to ignore timezone issues
-  const dateToNumber = (d) => {
-    if (!d) return 0;
+  // NUCLEAR FIX: Use string comparison (YYYY-MM-DD) to avoid timezone issues completely
+  const dateToString = (d) => {
+    if (!d) return '';
     const date = new Date(d);
-    // Zero out the hours to ignore timezone differences
-    date.setHours(0, 0, 0, 0);
-    return date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   // Filter transactions based on period and category
   const getFilteredTransactions = () => {
     let filtered = [...transactions];
     
-    // Period filter using UTC date conversion
-    const startNum = dateToNumber(dateRange.startDate);
-    const endNum = dateToNumber(dateRange.endDate);
+    // Period filter using string date comparison (immune to timezone issues)
+    const startStr = dateToString(dateRange.startDate);
+    const endStr = dateToString(dateRange.endDate);
+    
+    console.log("📋 Period Filter:", { startStr, endStr, transactionCount: transactions.length });
     
     filtered = filtered.filter(t => {
       if (!t.date) return false;
-      const tNum = dateToNumber(t.date);
-      return tNum >= startNum && tNum <= endNum;
+      const tStr = dateToString(t.date);
+      const isInRange = tStr >= startStr && tStr <= endStr;
+      if (isInRange) console.log(`✅ Transaction included: ${t.description} (${tStr})`);
+      return isInRange;
     });
+    
+    console.log(`📊 Filtered transactions: ${filtered.length} from ${transactions.length}`);
     
     // Category filter
     if (categoryFilter !== 'all') {
