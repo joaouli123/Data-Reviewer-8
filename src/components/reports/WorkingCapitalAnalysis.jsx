@@ -26,12 +26,9 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
     const startStr = dateToString(dateRange?.startDate);
     const endStr = dateToString(dateRange?.endDate);
 
-    console.log("🔍 WorkingCapital Debug (STRING COMPARISON):", {
-      startStr,
-      endStr,
-      startDate: dateRange?.startDate,
-      endDate: dateRange?.endDate,
-      transactionsCount: Array.isArray(transactions) ? transactions.length : 0
+    console.log("💰 WC Analysis:", {
+      period: `${startStr} to ${endStr}`,
+      dataPoints: Array.isArray(transactions) ? transactions.length : 0
     });
 
     let currentReceivables = 0;
@@ -46,7 +43,6 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
         .filter(i => {
           if (i.paid || !i.due_date) return false;
           const iStr = dateToString(i.due_date);
-          console.log(`📊 Receivable check: ${iStr} between ${startStr} and ${endStr}`);
           return iStr >= startStr && iStr <= endStr;
         })
         .reduce((sum, i) => sum + parseFloat(i.amount || 0), 0);
@@ -57,13 +53,9 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
         .filter(t => {
           if (!t.date) return false;
           const tStr = dateToString(t.date);
-          const isInRange = tStr >= startStr && tStr <= endStr;
-          if (isInRange) console.log(`✅ Sale included: ${t.description} (${tStr})`);
-          return isInRange;
+          return tStr >= startStr && tStr <= endStr;
         })
         .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
-      
-      console.log(`💰 Total Receivables: R$ ${currentReceivables} from ${vendas.length} sales`);
     }
 
     // 2. Calcular Pagamentos
@@ -72,7 +64,6 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
         .filter(i => {
           if (i.paid || !i.due_date) return false;
           const iStr = dateToString(i.due_date);
-          console.log(`📊 Payable check: ${iStr} between ${startStr} and ${endStr}`);
           return iStr >= startStr && iStr <= endStr;
         })
         .reduce((sum, i) => sum + parseFloat(i.amount || 0), 0);
@@ -83,13 +74,9 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
         .filter(t => {
           if (!t.date) return false;
           const tStr = dateToString(t.date);
-          const isInRange = tStr >= startStr && tStr <= endStr;
-          if (isInRange) console.log(`✅ Purchase included: ${t.description} (${tStr})`);
-          return isInRange;
+          return tStr >= startStr && tStr <= endStr;
         })
         .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
-      
-      console.log(`💰 Total Payables: R$ ${currentPayables} from ${compras.length} purchases`);
     }
 
     // Working Capital

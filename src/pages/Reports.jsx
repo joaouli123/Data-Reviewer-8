@@ -157,17 +157,13 @@ export default function ReportsPage() {
     const startStr = dateToString(dateRange.startDate);
     const endStr = dateToString(dateRange.endDate);
     
-    console.log("📋 Period Filter:", { startStr, endStr, transactionCount: transactions.length });
-    
     filtered = filtered.filter(t => {
       if (!t.date) return false;
       const tStr = dateToString(t.date);
-      const isInRange = tStr >= startStr && tStr <= endStr;
-      if (isInRange) console.log(`✅ Transaction included: ${t.description} (${tStr})`);
-      return isInRange;
+      return tStr >= startStr && tStr <= endStr;
     });
     
-    console.log(`📊 Filtered transactions: ${filtered.length} from ${transactions.length}`);
+    console.log(`✅ Filtered ${filtered.length} transactions (${startStr} to ${endStr})`);
     
     // Category filter
     if (categoryFilter !== 'all') {
