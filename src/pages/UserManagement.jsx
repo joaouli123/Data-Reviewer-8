@@ -3,7 +3,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Trash2, Plus, Settings, Mail } from 'lucide-react';
+import { Trash2, Plus, Settings, Mail, Loader2 } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { toast } from 'sonner';
 import { queryClient } from '@/lib/queryClient';
@@ -32,24 +32,6 @@ export default function UserManagementPage() {
     }
   });
 
-  // ... (no changes to inviteMutation and deleteUserMutation)
-
-  if (isLoading) {
-    return (
-      <div className="p-6 flex justify-center items-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <span className="ml-2 text-slate-500">Carregando usuários...</span>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-6 text-center text-red-500">
-        <p>Erro ao carregar usuários: {error.message}</p>
-      </div>
-    );
-  }
   const inviteMutation = useMutation({
     mutationFn: async (data) => {
       const token = JSON.parse(localStorage.getItem('auth') || '{}').token;
@@ -86,6 +68,23 @@ export default function UserManagementPage() {
       toast.success('Usuário removido!');
     }
   });
+
+  if (isLoading) {
+    return (
+      <div className="p-6 flex justify-center items-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <span className="ml-2 text-slate-500">Carregando usuários...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 text-center text-red-500">
+        <p>Erro ao carregar usuários: {error.message}</p>
+      </div>
+    );
+  }
 
   const handleInvite = async (data) => {
     return inviteMutation.mutateAsync(data);
