@@ -1,10 +1,30 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { TrendingUp } from 'lucide-react';
+import { TrendingUp, Sparkles } from 'lucide-react';
 
 export default function CashFlowForecastChart({ forecast }) {
-  if (!forecast || forecast.length === 0) return null;
+  if (!forecast || forecast.length === 0) {
+    return (
+      <Card className="border-slate-200 shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-primary">
+            <TrendingUp className="w-5 h-5" />
+            Previsão de Fluxo de Caixa
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center justify-center py-10 text-center">
+          <div className="bg-slate-50 p-4 rounded-full mb-4">
+            <Sparkles className="w-8 h-8 text-slate-300" />
+          </div>
+          <h3 className="text-lg font-semibold text-slate-900 mb-1">Dados Insuficientes para Previsão</h3>
+          <p className="text-sm text-slate-500 max-w-xs">
+            A IA precisa de pelo menos 3 a 6 meses de histórico de transações para gerar projeções precisas.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const chartData = forecast.map(item => ({
     name: item.month,
