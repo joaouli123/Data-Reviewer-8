@@ -323,60 +323,61 @@ Forneça:
   };
 
   return (
-    <div className="space-y-8 max-w-6xl mx-auto p-4 sm:p-6">
-      <div className="flex flex-col gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-2 flex-wrap">
-            <Brain className="w-6 sm:w-8 h-6 sm:h-8 text-blue-600" />
+    <div className="space-y-6 max-w-6xl mx-auto p-4 sm:p-6">
+      {/* Header Section */}
+      <div>
+        <div className="mb-4">
+          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 flex items-center gap-3 mb-2">
+            <Brain className="w-8 h-8 text-blue-600" />
             IA Analista Financeiro
           </h1>
-          <div className="flex items-center gap-2 mt-2 flex-wrap">
-            <p className="text-xs sm:text-sm text-slate-500">Insights inteligentes para o seu negócio baseados em dados reais.</p>
-            {dateRange && (
-              <Badge variant="secondary" className="text-xs" data-testid="badge-period-selected">
-                {dateRange.label}
-              </Badge>
-            )}
-          </div>
+          <p className="text-sm text-slate-600">Insights inteligentes para o seu negócio baseados em dados reais.</p>
         </div>
-        
-        <div className="flex flex-col gap-3">
-          {/* Quick period buttons */}
-          <div className="flex flex-wrap gap-2 bg-slate-100 p-2 rounded-lg w-fit">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className={`text-xs h-8 px-3 transition-all whitespace-nowrap ${dateRange.label === 'Este Mês' ? 'bg-blue-600 text-white shadow-sm hover:bg-blue-700' : 'text-slate-600 hover:bg-slate-200'}`}
-              onClick={() => setQuickPeriod('this-month')}
-              disabled={isAnalyzing}
-              data-testid="button-period-month"
-            >
-              Este Mês
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className={`text-xs h-8 px-3 transition-all whitespace-nowrap ${dateRange.label === 'Próximos 3 Meses' ? 'bg-blue-600 text-white shadow-sm hover:bg-blue-700' : 'text-slate-600 hover:bg-slate-200'}`}
-              onClick={() => setQuickPeriod('next-3-months')}
-              disabled={isAnalyzing}
-              data-testid="button-period-3months"
-            >
-              Próx. 3M
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className={`text-xs h-8 px-3 transition-all whitespace-nowrap ${dateRange.label === 'Ano Atual' ? 'bg-blue-600 text-white shadow-sm hover:bg-blue-700' : 'text-slate-600 hover:bg-slate-200'}`}
-              onClick={() => setQuickPeriod('year')}
-              disabled={isAnalyzing}
-              data-testid="button-period-year"
-            >
-              Ano Atual
-            </Button>
+
+        {/* Controls Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 bg-slate-50 border border-slate-200 rounded-lg p-4">
+          {/* Period Selector */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-slate-500 uppercase">Período:</span>
+            <div className="flex gap-1.5 flex-wrap">
+              <Button 
+                variant={dateRange.label === 'Este Mês' ? 'default' : 'outline'}
+                size="sm" 
+                className="text-xs whitespace-nowrap"
+                onClick={() => setQuickPeriod('this-month')}
+                disabled={isAnalyzing}
+                data-testid="button-period-month"
+              >
+                Este Mês
+              </Button>
+              <Button 
+                variant={dateRange.label === 'Próximos 3 Meses' ? 'default' : 'outline'}
+                size="sm" 
+                className="text-xs whitespace-nowrap"
+                onClick={() => setQuickPeriod('next-3-months')}
+                disabled={isAnalyzing}
+                data-testid="button-period-3months"
+              >
+                Próx. 3M
+              </Button>
+              <Button 
+                variant={dateRange.label === 'Ano Atual' ? 'default' : 'outline'}
+                size="sm" 
+                className="text-xs whitespace-nowrap"
+                onClick={() => setQuickPeriod('year')}
+                disabled={isAnalyzing}
+                data-testid="button-period-year"
+              >
+                Ano Atual
+              </Button>
+            </div>
           </div>
 
-          {/* Action buttons */}
-          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          {/* Spacer */}
+          <div className="hidden sm:block flex-1" />
+
+          {/* Action Buttons */}
+          <div className="flex gap-2 flex-wrap sm:flex-nowrap">
             <ReportExporter 
               reportData={{
                 summary: analysisResult ? {
@@ -393,19 +394,18 @@ Forneça:
               }}
               analysisResult={analysisResult}
               reportType="general"
-              className="w-full sm:w-auto"
             />
             <Button 
               onClick={handleStartAnalysis} 
               disabled={isAnalyzing}
-              className="bg-primary hover:bg-primary text-white px-6 w-full sm:w-auto"
-              size="lg"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-6 whitespace-nowrap"
+              size="sm"
               data-testid="button-new-analysis"
             >
               {isAnalyzing ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Analisando...
+                  Analisando
                 </>
               ) : (
                 <>
