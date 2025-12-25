@@ -64,6 +64,9 @@ export default function ReportsPage() {
       endDate: end,
       label
     });
+
+    // Ação imediata: dispara a análise com o novo período
+    setTimeout(() => generateAllAnalysesQuick(), 100);
   };
 
   const [tempDateRange, setTempDateRange] = useState({
@@ -294,7 +297,7 @@ export default function ReportsPage() {
             <Button 
               variant="ghost" 
               size="sm" 
-              className={`text-xs h-8 ${dateRange.label === 'Este Mês' ? 'bg-white shadow-sm' : ''}`}
+              className={`text-xs h-8 px-4 transition-all ${dateRange.label === 'Este Mês' ? 'bg-blue-600 text-white shadow-sm hover:bg-blue-700' : 'text-slate-600 hover:bg-slate-200'}`}
               onClick={() => setQuickPeriod('this-month')}
             >
               Este Mês
@@ -302,7 +305,7 @@ export default function ReportsPage() {
             <Button 
               variant="ghost" 
               size="sm" 
-              className={`text-xs h-8 ${dateRange.label === 'Próximos 3 Meses' ? 'bg-white shadow-sm' : ''}`}
+              className={`text-xs h-8 px-4 transition-all ${dateRange.label === 'Próximos 3 Meses' ? 'bg-blue-600 text-white shadow-sm hover:bg-blue-700' : 'text-slate-600 hover:bg-slate-200'}`}
               onClick={() => setQuickPeriod('next-3-months')}
             >
               Próximos 3 Meses
@@ -310,7 +313,7 @@ export default function ReportsPage() {
             <Button 
               variant="ghost" 
               size="sm" 
-              className={`text-xs h-8 ${dateRange.label === 'Ano Atual' ? 'bg-white shadow-sm' : ''}`}
+              className={`text-xs h-8 px-4 transition-all ${dateRange.label === 'Ano Atual' ? 'bg-blue-600 text-white shadow-sm hover:bg-blue-700' : 'text-slate-600 hover:bg-slate-200'}`}
               onClick={() => setQuickPeriod('year')}
             >
               Ano Atual
@@ -348,8 +351,8 @@ export default function ReportsPage() {
               </>
             ) : (
               <>
-                <Sparkles className="w-5 h-5 mr-2" />
-                Gerar Nova Análise
+                <Filter className="w-5 h-5 mr-2" />
+                Filtro Avançado
               </>
             )}
           </Button>
@@ -361,11 +364,11 @@ export default function ReportsPage() {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-blue-600" />
-              Configurar Nova Análise
+              <Filter className="w-5 h-5 text-blue-600" />
+              Filtro Avançado
             </DialogTitle>
             <DialogDescription>
-              Selecione o período e a categoria para que nossa IA gere os insights.
+              Selecione um período personalizado e categoria para uma análise detalhada.
             </DialogDescription>
           </DialogHeader>
 
