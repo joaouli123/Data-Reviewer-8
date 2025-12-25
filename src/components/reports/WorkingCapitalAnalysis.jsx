@@ -105,9 +105,9 @@ Forneça recomendações específicas para melhorar a gestão do capital de giro
                        wc.workingCapital >= wc.recommendedWorkingCapital * 0.7 ? 'warning' : 'critical';
 
   const statusConfig = {
-    healthy: { color: 'bg-emerald-100 text-emerald-700 border-emerald-200', label: 'Saudável' },
-    warning: { color: 'bg-amber-100 text-amber-700 border-amber-200', label: 'Atenção' },
-    critical: { color: 'bg-rose-100 text-rose-700 border-rose-200', label: 'Crítico' }
+    healthy: { color: 'bg-green-50 text-teal-700 border-green-200', label: 'Saudável' },
+    warning: { color: 'bg-yellow-50 text-amber-700 border-yellow-200', label: 'Atenção' },
+    critical: { color: 'bg-pink-50 text-red-600 border-pink-200', label: 'Crítico' }
   };
 
   return (
@@ -170,32 +170,32 @@ Forneça recomendações específicas para melhorar a gestão do capital de giro
 
           {/* Breakdown */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200">
+            <div className="p-4 bg-green-50 rounded-lg border border-green-200">
               <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="w-4 h-4 text-emerald-600" />
-                <p className="text-sm font-medium text-emerald-700">Recebimentos (30d)</p>
+                <TrendingUp className="w-4 h-4 text-teal-700" />
+                <p className="text-sm font-medium text-teal-700">Recebimentos (30d)</p>
               </div>
-              <p className="text-2xl font-bold text-emerald-700">
+              <p className="text-2xl font-bold text-teal-700">
                 R$ {wc.currentReceivables.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </p>
             </div>
 
-            <div className="p-4 bg-rose-50 rounded-lg border border-rose-200">
+            <div className="p-4 bg-pink-50 rounded-lg border border-pink-200">
               <div className="flex items-center gap-2 mb-2">
-                <TrendingDown className="w-4 h-4 text-rose-600" />
-                <p className="text-sm font-medium text-rose-700">Pagamentos (30d)</p>
+                <TrendingDown className="w-4 h-4 text-red-600" />
+                <p className="text-sm font-medium text-red-600">Pagamentos (30d)</p>
               </div>
-              <p className="text-2xl font-bold text-rose-700">
+              <p className="text-2xl font-bold text-red-600">
                 R$ {wc.currentPayables.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </p>
             </div>
 
-            <div className="p-4 bg-indigo-50 rounded-lg border border-blue-200">
+            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
               <div className="flex items-center gap-2 mb-2">
-                <Wallet className="w-4 h-4 text-primary" />
-                <p className="text-sm font-medium text-primary">Despesa Mensal Média</p>
+                <Wallet className="w-4 h-4 text-blue-700" />
+                <p className="text-sm font-medium text-blue-700">Despesa Mensal Média</p>
               </div>
-              <p className="text-2xl font-bold text-primary">
+              <p className="text-2xl font-bold text-blue-700">
                 R$ {wc.avgMonthlyExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </p>
             </div>
@@ -203,15 +203,15 @@ Forneça recomendações específicas para melhorar a gestão do capital de giro
 
           {/* Deficit/Surplus */}
           {wc.deficit > 0 && (
-            <div className="p-4 bg-rose-50 rounded-lg border border-rose-200 flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 text-rose-600 mt-0.5" />
+            <div className="p-4 bg-pink-50 rounded-lg border border-pink-200 flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5" />
               <div>
-                <p className="font-semibold text-rose-900 mb-1">Déficit de Capital de Giro</p>
-                <p className="text-sm text-rose-700 mb-2">
+                <p className="font-semibold text-red-700 mb-1">Déficit de Capital de Giro</p>
+                <p className="text-sm text-red-600 mb-2">
                   Você precisa de <strong>R$ {wc.deficit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> adicionais 
                   para manter 2 meses de despesas operacionais em caixa.
                 </p>
-                <p className="text-xs text-rose-600">
+                <p className="text-xs text-red-600">
                   Recomendamos manter capital de giro equivalente a 2 meses de despesas para garantir liquidez.
                 </p>
               </div>
@@ -219,11 +219,11 @@ Forneça recomendações específicas para melhorar a gestão do capital de giro
           )}
 
           {wc.surplus > 0 && (
-            <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200 flex items-start gap-3">
-              <TrendingUp className="w-5 h-5 text-emerald-600 mt-0.5" />
+            <div className="p-4 bg-green-50 rounded-lg border border-green-200 flex items-start gap-3">
+              <TrendingUp className="w-5 h-5 text-teal-700 mt-0.5" />
               <div>
-                <p className="font-semibold text-emerald-900 mb-1">Superávit de Capital de Giro</p>
-                <p className="text-sm text-emerald-700">
+                <p className="font-semibold text-teal-700 mb-1">Superávit de Capital de Giro</p>
+                <p className="text-sm text-teal-700">
                   Você tem <strong>R$ {wc.surplus.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> além do recomendado.
                   Considere investir esse valor para maior rentabilidade.
                 </p>

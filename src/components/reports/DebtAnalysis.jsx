@@ -113,9 +113,9 @@ Forneça uma análise detalhada e recomendações para gestão de endividamento.
     (debtServiceRatioActual <= 50 && debtToRevenueRatioActual <= 100) ? 'warning' : 'critical';
 
   const statusConfig = {
-    healthy: { color: 'bg-emerald-100 text-emerald-700 border-emerald-200', label: 'Saudável' },
-    warning: { color: 'bg-amber-100 text-amber-700 border-amber-200', label: 'Atenção' },
-    critical: { color: 'bg-rose-100 text-rose-700 border-rose-200', label: 'Crítico' }
+    healthy: { color: 'bg-green-50 text-teal-700 border-green-200', label: 'Saudável' },
+    warning: { color: 'bg-yellow-50 text-amber-700 border-yellow-200', label: 'Atenção' },
+    critical: { color: 'bg-pink-50 text-red-600 border-pink-200', label: 'Crítico' }
   };
 
   const pieData = Object.entries(metrics.debtByCategory).map(([category, value]) => ({
@@ -123,7 +123,7 @@ Forneça uma análise detalhada e recomendações para gestão de endividamento.
     value: value
   }));
 
-  const COLORS = ['#ef4444', '#f59e0b', '#3b82f6', '#0065BA', '#10b981', '#ec4899'];
+  const COLORS = ['#fca5a5', '#fcd34d', '#93c5fd', '#60a5fa', '#86efac', '#f0abfc'];
 
   return (
     <div className="space-y-6">
@@ -185,19 +185,19 @@ Forneça uma análise detalhada e recomendações para gestão de endividamento.
 
           {/* Key Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 bg-rose-50 rounded-lg border border-rose-200">
+            <div className="p-4 bg-pink-50 rounded-lg border border-pink-200">
               <div className="flex items-center gap-2 mb-2">
-                <Calendar className="w-4 h-4 text-rose-600" />
-                <p className="text-sm font-medium text-rose-700">Curto Prazo (3m)</p>
+                <Calendar className="w-4 h-4 text-red-600" />
+                <p className="text-sm font-medium text-red-600">Curto Prazo (3m)</p>
               </div>
-              <p className="text-2xl font-bold text-rose-700">
+              <p className="text-2xl font-bold text-red-600">
                 R$ {isNaN(metrics.shortTermDebt) ? '0,00' : metrics.shortTermDebt.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             </div>
 
-            <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+            <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
               <div className="flex items-center gap-2 mb-2">
-                <Calendar className="w-4 h-4 text-amber-600" />
+                <Calendar className="w-4 h-4 text-amber-700" />
                 <p className="text-sm font-medium text-amber-700">Longo Prazo</p>
               </div>
               <p className="text-2xl font-bold text-amber-700">
@@ -205,12 +205,12 @@ Forneça uma análise detalhada e recomendações para gestão de endividamento.
               </p>
             </div>
 
-            <div className="p-4 bg-indigo-50 rounded-lg border border-blue-200">
+            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
               <div className="flex items-center gap-2 mb-2">
-                <BarChart3 className="w-4 h-4 text-primary" />
-                <p className="text-sm font-medium text-primary">Pagamento Mensal</p>
+                <BarChart3 className="w-4 h-4 text-blue-700" />
+                <p className="text-sm font-medium text-blue-700">Pagamento Mensal</p>
               </div>
-              <p className="text-2xl font-bold text-primary">
+              <p className="text-2xl font-bold text-blue-700">
                 R$ {isNaN(metrics.monthlyDebtPayment) ? '0,00' : metrics.monthlyDebtPayment.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             </div>
@@ -296,15 +296,15 @@ Forneça uma análise detalhada e recomendações para gestão de endividamento.
               </div>
 
               {analysis.key_concerns?.length > 0 && (
-                <div className="p-4 bg-rose-50 rounded-lg border border-rose-200">
-                  <h4 className="font-semibold text-rose-900 mb-2 flex items-center gap-2">
+                <div className="p-4 bg-pink-50 rounded-lg border border-pink-200">
+                  <h4 className="font-semibold text-red-700 mb-2 flex items-center gap-2">
                     <AlertCircle className="w-4 h-4" />
                     Principais Preocupações
                   </h4>
                   <ul className="space-y-1">
                     {analysis.key_concerns.map((concern, idx) => (
-                      <li key={idx} className="text-sm text-rose-700 flex items-start gap-2">
-                        <span className="text-rose-600 font-bold mt-0.5">•</span>
+                      <li key={idx} className="text-sm text-red-600 flex items-start gap-2">
+                        <span className="text-red-600 font-bold mt-0.5">•</span>
                         {concern}
                       </li>
                     ))}
