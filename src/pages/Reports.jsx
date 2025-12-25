@@ -139,15 +139,25 @@ export default function ReportsPage() {
     enabled: !!company?.id
   });
 
+  // Convert date to comparable format (YYYYMMDD as number)
+  const dateToNumber = (d) => {
+    if (!d) return 0;
+    const date = new Date(d);
+    return date.getUTCFullYear() * 10000 + (date.getUTCMonth() + 1) * 100 + date.getUTCDate();
+  };
+
   // Filter transactions based on period and category
   const getFilteredTransactions = () => {
     let filtered = [...transactions];
     
-    // Period filter
+    // Period filter using UTC date conversion
+    const startNum = dateToNumber(dateRange.startDate);
+    const endNum = dateToNumber(dateRange.endDate);
+    
     filtered = filtered.filter(t => {
-      // Parse date using UTC to avoid timezone issues
-      const tDate = parseISO(t.date.split('T')[0] + 'T12:00:00Z');
-      return tDate >= dateRange.startDate && tDate <= dateRange.endDate;
+      if (!t.date) return false;
+      const tNum = dateToNumber(t.date);
+      return tNum >= startNum && tNum <= endNum;
     });
     
     // Category filter
