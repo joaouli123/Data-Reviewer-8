@@ -1111,7 +1111,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   // ========== USER MANAGEMENT ==========
-  app.get("/api/users", authMiddleware, requireRole(["admin", "manager"]), async (req: AuthenticatedRequest, res) => {
+  app.get("/api/users", authMiddleware, requireRole("admin", "manager"), async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       console.log(`[DEBUG] Fetching users for companyId: ${req.user.companyId}`);
