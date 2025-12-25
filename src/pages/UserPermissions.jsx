@@ -29,6 +29,53 @@ const PERMISSIONS_LIST = [
   { id: 'manage_settings', label: 'Gerenciar Configurações', category: 'Configurações' },
 ];
 
+const DEFAULT_PERMISSIONS = {
+  admin: {
+    view_transactions: true,
+    create_transactions: true,
+    edit_transactions: true,
+    delete_transactions: true,
+    import_bank: true,
+    view_reports: true,
+    view_profit: true,
+    export_reports: true,
+    view_customers: true,
+    manage_customers: true,
+    view_suppliers: true,
+    manage_suppliers: true,
+    manage_users: true,
+    invite_users: true,
+    view_settings: true,
+    manage_settings: true,
+  },
+  manager: {
+    view_transactions: true,
+    create_transactions: true,
+    edit_transactions: true,
+    import_bank: true,
+    view_reports: true,
+    export_reports: true,
+    view_customers: true,
+    manage_customers: true,
+    view_suppliers: true,
+    manage_suppliers: true,
+  },
+  operational: {
+    view_transactions: true,
+    create_transactions: true,
+    edit_transactions: true,
+    import_bank: true,
+    view_customers: true,
+    view_suppliers: true,
+  },
+  user: {
+    view_transactions: true,
+    view_reports: true,
+    view_customers: true,
+    view_suppliers: true,
+  },
+};
+
 export default function UserPermissionsPage() {
   const [, setLocation] = useLocation();
   const { company } = useAuth();
@@ -68,7 +115,15 @@ export default function UserPermissionsPage() {
 
   const handleSelectUser = (user) => {
     setSelectedUser(user);
-    const userPerms = user.permissions ? JSON.parse(user.permissions) : {};
+    let userPerms;
+    
+    if (user.permissions) {
+      userPerms = JSON.parse(user.permissions);
+    } else {
+      // Use default permissions based on user role
+      userPerms = DEFAULT_PERMISSIONS[user.role] || {};
+    }
+    
     setPermissions(userPerms);
   };
 
