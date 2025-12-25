@@ -55,7 +55,7 @@ args = "npx tsx server/index.ts"
 VITE_GOOGLE_GEMINI_API_KEY = "AIzaSyA3Rpd0u-hpinU3onQTHLihZuckbEifAws"
 DATABASE_URL = "postgresql://neondb_owner:npg_NvCa6n1hGZBo@ep-bold-surf-acxc3vye-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 VITE_OPENAI_API_KEY = "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"
-VITE_GROQ = "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"
+VITE_GROQ = "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"
 
 [agent]
 integrations = ["javascript_database:1.0.0"]
