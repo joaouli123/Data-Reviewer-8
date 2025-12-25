@@ -14,7 +14,8 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
 
   const calculateWorkingCapital = () => {
     // Usar a data de início do filtro como "Hoje" para o cálculo
-    const now = dateRange?.startDate ? new Date(dateRange.startDate) : new Date();
+    const now = dateRange?.startDate ? (dateRange.startDate instanceof Date ? dateRange.startDate : new Date(dateRange.startDate)) : new Date();
+    console.log('Capital de Giro - Data Ancora usada:', now);
     const startOfAnchor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
     const next30Days = new Date(startOfAnchor.getTime() + 30 * 24 * 60 * 60 * 1000);
 
