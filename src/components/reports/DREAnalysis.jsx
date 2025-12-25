@@ -112,10 +112,14 @@ export default function DREAnalysis({ transactions, categories = [], period = 'c
   const generateForecast = async () => {
     setIsAnalyzing(true);
     try {
-      // Historical data for last 6 months
+      // Historical data for last 6 months relative to the start of the filter
       const historicalData = [];
+      const referenceDate = transactions.length > 0 
+        ? new Date(transactions[0].date) 
+        : new Date();
+
       for (let i = 5; i >= 0; i--) {
-        const date = subMonths(new Date(), i);
+        const date = subMonths(referenceDate, i);
         const monthKey = format(date, 'yyyy-MM');
         const monthTrans = transactions.filter(t => t.date.startsWith(monthKey));
         

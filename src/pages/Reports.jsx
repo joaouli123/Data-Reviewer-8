@@ -376,6 +376,7 @@ export default function ReportsPage() {
             transactions={filteredTransactions}
             saleInstallments={saleInstallments}
             purchaseInstallments={purchaseInstallments}
+            dateRange={dateRange}
           />
 
           <ReportSuggestions 

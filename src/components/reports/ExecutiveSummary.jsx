@@ -3,11 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText, TrendingUp, DollarSign, Calendar, Percent } from 'lucide-react';
 import { subMonths } from 'date-fns';
 
-export default function ExecutiveSummary({ summary, transactions, saleInstallments, purchaseInstallments }) {
+export default function ExecutiveSummary({ summary, transactions, saleInstallments, purchaseInstallments, dateRange }) {
   // Calculate KPIs
-  const now = new Date();
-  const lastMonth = subMonths(now, 1);
-  const twoMonthsAgo = subMonths(now, 2);
+  const now = dateRange?.startDate ? new Date(dateRange.startDate) : new Date();
+  const startOfAnchor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+  const lastMonth = subMonths(startOfAnchor, 1);
+  const twoMonthsAgo = subMonths(startOfAnchor, 2);
 
   const currentMonthTrans = transactions.filter(t => new Date(t.date) >= lastMonth);
   const previousMonthTrans = transactions.filter(t => 
