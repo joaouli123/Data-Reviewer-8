@@ -8,7 +8,7 @@ export default function KPIWidget({ title, value, trend, trendValue, icon: Icon,
     <div className="bg-white dark:bg-slate-900 rounded-lg p-5 border border-slate-200 dark:border-slate-700 shadow-sm">
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">{title}</p>
+          <p className="text-xs font-medium text-muted-foreground tracking-wider mb-1">{title}</p>
           <p className={cn("text-2xl font-bold text-foreground", className)}>{value}</p>
         </div>
         {Icon && (
