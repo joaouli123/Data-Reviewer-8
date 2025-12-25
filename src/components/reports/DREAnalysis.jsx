@@ -28,7 +28,6 @@ export default function DREAnalysis({ transactions = [], categories = [] }) {
     const lucroOp = receitaLiquida - despesasOp;
     const marginLiquida = vendaBruta > 0 ? (lucroOp / vendaBruta) * 100 : 0;
 
-    // Agrupar vendas por forma de pagamento
     const pagamentos = {};
     vendas.forEach(v => {
       const metodo = v.paymentMethod || 'Outros';
@@ -38,7 +37,6 @@ export default function DREAnalysis({ transactions = [], categories = [] }) {
       pagamentos[metodo].entradas += Math.abs(parseFloat(v.amount || 0));
     });
 
-    // Agrupar compras por forma de pagamento
     compras.forEach(c => {
       const metodo = c.paymentMethod || 'Outros';
       if (!pagamentos[metodo]) {
@@ -90,13 +88,6 @@ export default function DREAnalysis({ transactions = [], categories = [] }) {
     }
   };
 
-  const SubItem = ({ label, value }) => (
-    <div className="flex items-center justify-between py-2 px-4 border-b border-slate-200 last:border-b-0 text-slate-600">
-      <span>{label}</span>
-      <span className="font-semibold text-slate-700">R$ {value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-    </div>
-  );
-
   return (
     <Card>
       <CardHeader>
@@ -123,99 +114,114 @@ export default function DREAnalysis({ transactions = [], categories = [] }) {
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="space-y-3">
-        {/* Receita Bruta */}
-        <div className="bg-green-50 border border-green-200 rounded-md overflow-hidden">
+      <CardContent className="space-y-2">
+        {/* ===== RECEITA BRUTA ===== */}
+        <div className="border border-green-200 rounded-md overflow-hidden bg-green-50">
           <button
             onClick={() => toggleSection('vendaBruta')}
-            className="w-full flex items-center justify-between px-4 py-3 hover:bg-green-100 transition"
+            className="w-full flex items-center justify-between px-4 py-3"
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <ChevronDown 
-                className={`w-5 h-5 text-slate-500 transition-transform ${expandedSections.vendaBruta ? 'rotate-0' : '-rotate-90'}`}
+                className={`w-4 h-4 text-teal-700 transition-transform ${expandedSections.vendaBruta ? 'rotate-0' : '-rotate-90'}`}
               />
-              <span className="font-semibold text-slate-700">Receita Bruta</span>
+              <span className="font-semibold text-teal-800 text-sm">Receita Bruta</span>
             </div>
-            <span className="font-bold text-slate-900">R$ {dreData.vendaBruta.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            <span className="font-bold text-teal-700 text-sm">R$ {dreData.vendaBruta.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
           </button>
           
           {expandedSections.vendaBruta && (
-            <div className="bg-green-50">
-              <SubItem label="Outros" value={dreData.vendaBruta * 0.7} />
-              <SubItem label="Cartão de Crédito" value={dreData.vendaBruta * 0.15} />
-              <SubItem label="Boleto" value={dreData.vendaBruta * 0.15} />
+            <div className="bg-green-50 border-t border-green-200">
+              <div className="flex justify-between px-4 py-2.5 text-sm border-b border-green-200">
+                <span className="text-teal-700">Outros</span>
+                <span className="text-teal-700 font-medium">R$ {(dreData.vendaBruta * 0.7).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              </div>
+              <div className="flex justify-between px-4 py-2.5 text-sm border-b border-green-200">
+                <span className="text-teal-700">Cartão de Crédito</span>
+                <span className="text-teal-700 font-medium">R$ {(dreData.vendaBruta * 0.15).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              </div>
+              <div className="flex justify-between px-4 py-2.5 text-sm">
+                <span className="text-teal-700">Boleto</span>
+                <span className="text-teal-700 font-medium">R$ {(dreData.vendaBruta * 0.15).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              </div>
             </div>
           )}
         </div>
 
-        {/* Custos Diretos */}
-        <div className="bg-white border border-slate-200 rounded-md overflow-hidden">
+        {/* ===== CUSTOS DIRETOS ===== */}
+        <div className="border border-slate-200 rounded-md overflow-hidden bg-white">
           <button
             onClick={() => toggleSection('custos')}
-            className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-50 transition"
+            className="w-full flex items-center justify-between px-4 py-3"
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <ChevronDown 
-                className={`w-5 h-5 text-slate-500 transition-transform ${expandedSections.custos ? 'rotate-0' : '-rotate-90'}`}
+                className={`w-4 h-4 text-slate-600 transition-transform ${expandedSections.custos ? 'rotate-0' : '-rotate-90'}`}
               />
-              <span className="font-semibold text-slate-700">(-) Custos Diretos</span>
+              <span className="font-semibold text-slate-800 text-sm">(-) Custos Diretos</span>
             </div>
-            <span className="font-bold text-slate-900">R$ {dreData.custosDiretos.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            <span className="font-bold text-slate-800 text-sm">R$ {dreData.custosDiretos.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
           </button>
           
           {expandedSections.custos && (
-            <div className="bg-white">
-              <SubItem label="Compras" value={dreData.custosDiretos} />
+            <div className="bg-white border-t border-slate-200">
+              <div className="flex justify-between px-4 py-3 text-sm">
+                <span className="text-slate-700">Compras</span>
+                <span className="text-slate-700 font-medium">R$ {dreData.custosDiretos.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              </div>
             </div>
           )}
         </div>
 
-        {/* Receita Líquida */}
-        <div className="bg-blue-50 border border-blue-200 rounded-md px-4 py-3">
+        {/* ===== RECEITA LÍQUIDA ===== */}
+        <div className="border border-blue-200 rounded-md bg-blue-50 px-4 py-3">
           <div className="flex items-center justify-between">
-            <span className="font-bold text-blue-700">= Receita Líquida</span>
-            <span className="font-bold text-blue-700">R$ {dreData.receitaLiquida.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            <span className="font-semibold text-blue-900 text-sm">= Receita Líquida</span>
+            <span className="font-bold text-blue-700 text-sm">R$ {dreData.receitaLiquida.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
           </div>
         </div>
 
-        {/* Despesas Operacionais */}
-        <div className="bg-white border border-slate-200 rounded-md overflow-hidden">
-          <div className="px-4 py-3 border-b border-slate-200">
-            <span className="font-semibold text-slate-700">(-) Despesas Operacionais:</span>
+        {/* ===== DESPESAS OPERACIONAIS ===== */}
+        <div className="border border-slate-200 rounded-md overflow-hidden bg-white">
+          <div className="px-4 py-3 bg-white">
+            <span className="font-semibold text-slate-800 text-sm">(-) Despesas Operacionais:</span>
           </div>
-          <div className="bg-white">
-            <SubItem label="Vendas" value={dreData.despesasOp} />
-            <div className="flex items-center justify-between py-3 px-4 border-t border-slate-200 bg-white font-bold">
-              <span className="text-slate-800">Total Despesas Operacionais</span>
-              <span className="text-slate-900">R$ {dreData.despesasOp.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+          <div className="bg-white border-t border-slate-200">
+            <div className="flex justify-between px-4 py-3 text-sm border-b border-slate-200">
+              <span className="text-slate-700">Vendas</span>
+              <span className="text-slate-700 font-medium">R$ {dreData.despesasOp.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            </div>
+            <div className="flex justify-between px-4 py-3 text-sm bg-slate-50 border-t border-slate-200">
+              <span className="font-semibold text-slate-800">Total Despesas Operacionais</span>
+              <span className="font-bold text-slate-800">R$ {dreData.despesasOp.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
           </div>
         </div>
 
-        {/* Lucro Operacional */}
-        <div className="bg-blue-50 border border-blue-200 rounded-md px-4 py-3">
+        {/* ===== LUCRO OPERACIONAL ===== */}
+        <div className="border border-blue-200 rounded-md bg-blue-50 px-4 py-3">
           <div className="flex items-center justify-between mb-1">
-            <span className="font-bold text-blue-900">= Lucro Operacional</span>
-            <span className="font-bold text-green-600 text-lg">R$ {dreData.lucroOp.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            <span className="font-semibold text-blue-900 text-sm">= Lucro Operacional</span>
+            <span className="font-bold text-emerald-600 text-base">+ R$ {dreData.lucroOp.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
           </div>
-          <div className="text-sm text-blue-600">Margem Líquida: {dreData.marginLiquida.toFixed(2)}%</div>
+          <div className="text-xs text-blue-600">Margem Líquida: {dreData.marginLiquida.toFixed(2)}%</div>
         </div>
 
-        {/* Resumo por Forma de Pagamento */}
-        <div className="mt-8">
+        {/* ===== RESUMO POR FORMA DE PAGAMENTO ===== */}
+        <div className="mt-6 pt-4 border-t border-slate-200">
           <div className="flex items-center gap-2 mb-4">
             <FileText className="w-5 h-5 text-slate-700" />
-            <h3 className="font-bold text-slate-800">Resumo por Forma de Pagamento</h3>
+            <h3 className="font-bold text-slate-800 text-sm">Resumo por Forma de Pagamento</h3>
           </div>
 
           <div className="grid grid-cols-3 gap-4">
             {Object.entries(dreData.pagamentos).map(([metodo, dados]) => (
-              <div key={metodo} className="border border-slate-200 rounded-md p-4">
-                <h4 className="font-bold text-slate-800 mb-3 text-sm">{metodo}</h4>
-                <div className="space-y-2 text-sm">
+              <div key={metodo} className="border border-slate-200 rounded-md p-3">
+                <h4 className="font-bold text-slate-800 mb-3 text-xs">{metodo}</h4>
+                <div className="space-y-2 text-xs">
                   <div className="flex items-center justify-between">
                     <span className="text-slate-600">Entradas:</span>
-                    <span className="font-semibold text-green-600">R$ {dados.entradas.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    <span className="font-semibold text-emerald-600">R$ {dados.entradas.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-slate-600">Saídas:</span>
@@ -223,7 +229,7 @@ export default function DREAnalysis({ transactions = [], categories = [] }) {
                   </div>
                   <div className="flex items-center justify-between border-t border-slate-200 pt-2">
                     <span className="font-bold text-slate-700">Líquido:</span>
-                    <span className="font-bold text-green-600">R$ {(dados.entradas - dados.saidas).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    <span className="font-bold text-emerald-600">R$ {(dados.entradas - dados.saidas).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                   </div>
                 </div>
               </div>
@@ -231,10 +237,10 @@ export default function DREAnalysis({ transactions = [], categories = [] }) {
           </div>
         </div>
 
-        {/* Forecast */}
+        {/* ===== FORECAST ===== */}
         {forecast && (
-          <div className="mt-6 pt-6 border-t">
-            <div className="p-4 bg-blue-50 rounded-md border border-blue-200">
+          <div className="mt-6 pt-4 border-t border-slate-200">
+            <div className="p-3 bg-blue-50 rounded-md border border-blue-200">
               <p className="text-sm text-slate-700">{forecast}</p>
             </div>
           </div>
