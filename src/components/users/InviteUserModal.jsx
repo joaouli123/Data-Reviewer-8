@@ -46,10 +46,10 @@ export default function InviteUserModal({ open, onOpenChange, onInvite }) {
         email: inviteData.email,
         role: inviteData.role,
         name: inviteData.name,
-        password: inviteData.password
+        password: inviteData.password,
+        companyId: company?.id
       });
-      if (result?.inviteLink) {
-        setInviteLink(result.inviteLink);
+      if (result?.invitationId) {
         toast.success('Usuário criado com sucesso!');
         setTimeout(() => {
           resetModal();
