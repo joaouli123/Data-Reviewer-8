@@ -2427,6 +2427,84 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // AI Analysis endpoint - no fallback, uses real API
+  app.post("/api/ai-analysis", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { prompt, expectJson } = req.body;
+
+      if (!prompt) {
+        return res.status(400).json({ error: "Prompt is required" });
+      }
+
+      // Try to use OpenAI API if key is configured
+      const openaiKey = process.env.OPENAI_API_KEY;
+      if (!openaiKey) {
+        return res.status(400).json({ 
+          error: "API de IA não configurada. Configure OPENAI_API_KEY para usar análises com IA." 
+        });
+      }
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${openaiKey}`
+        },
+        body: JSON.stringify({
+          model: 'gpt-4-turbo',
+          messages: [
+            {
+              role: 'system',
+              content: 'Você é um assistente financeiro experiente. Forneça análises detalhadas e precisas em português brasileiro.'
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 2048
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('OpenAI API Error:', error);
+        return res.status(500).json({ 
+          error: "Erro ao processar análise com IA: " + (error.error?.message || "Desconhecido") 
+        });
+      }
+
+      const data = await response.json();
+      
+      if (!data.choices?.[0]?.message?.content) {
+        return res.status(500).json({ error: "Resposta inválida da API" });
+      }
+
+      const textContent = data.choices[0].message.content.trim();
+      
+      if (expectJson) {
+        try {
+          return res.json(JSON.parse(textContent));
+        } catch (e) {
+          // Try to extract JSON
+          const jsonMatch = textContent.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            return res.json(JSON.parse(jsonMatch[0]));
+          }
+          return res.status(500).json({ error: "JSON inválido na resposta" });
+        }
+      }
+      
+      res.json(textContent);
+    } catch (error: any) {
+      console.error('AI Analysis error:', error);
+      res.status(500).json({ 
+        error: "Erro ao gerar análise: " + error.message 
+      });
+    }
+  });
+
   // 404 fallback
   app.all("/api/*", (req, res) => {
     res.status(404).json({ error: "API route not found" });
