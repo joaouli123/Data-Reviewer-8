@@ -22,8 +22,6 @@ export default function CategoriesPage() {
   const [formData, setFormData] = useState({ name: '', type: 'entrada' });
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const [sortColumn, setSortColumn] = useState('name');
-  const [sortDirection, setSortDirection] = useState('asc');
 
   const { data: categories } = useQuery({
     queryKey: ['/api/categories', company?.id],
@@ -98,40 +96,9 @@ export default function CategoriesPage() {
     setFormData({ name: '', type: 'entrada' });
   };
 
-  const handleSort = (column) => {
-    if (sortColumn === column) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortColumn(column);
-      setSortDirection('asc');
-    }
-  };
-
-  const getSortIcon = (column) => {
-    if (sortColumn !== column) return ' ▼▲';
-    return sortDirection === 'asc' ? ' ↑' : ' ↓';
-  };
-
-  const sortedCategories = [...categories].sort((a, b) => {
-    let aVal, bVal;
-    
-    switch(sortColumn) {
-      case 'name':
-        aVal = (a.name || '').toLowerCase();
-        bVal = (b.name || '').toLowerCase();
-        return sortDirection === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
-      case 'type':
-        aVal = (a.type || '').toLowerCase();
-        bVal = (b.type || '').toLowerCase();
-        return sortDirection === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
-      default:
-        return 0;
-    }
-  });
-
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedCategories = sortedCategories.slice(startIndex, endIndex);
+  const paginatedCategories = categories.slice(startIndex, endIndex);
 
   return (
     <div className="space-y-6 p-4 sm:p-6">
@@ -150,8 +117,8 @@ export default function CategoriesPage() {
           <Table>
             <TableHeader className="bg-slate-50">
               <TableRow>
-                <TableHead className="pl-6 text-left cursor-pointer hover:bg-slate-100 select-none" onClick={() => handleSort('name')}>Nome{getSortIcon('name')}</TableHead>
-                <TableHead className="text-left cursor-pointer hover:bg-slate-100 select-none" onClick={() => handleSort('type')}>Tipo{getSortIcon('type')}</TableHead>
+                <TableHead className="pl-6 text-left">Nome</TableHead>
+                <TableHead className="text-left">Tipo</TableHead>
                 <TableHead className="text-right pr-6">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -202,7 +169,7 @@ export default function CategoriesPage() {
         <Pagination 
           currentPage={currentPage}
           pageSize={pageSize}
-          totalItems={sortedCategories.length}
+          totalItems={categories.length}
           onPageChange={setCurrentPage}
           onPageSizeChange={(newSize) => {
             setPageSize(newSize);
