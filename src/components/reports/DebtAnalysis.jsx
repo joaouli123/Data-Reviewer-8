@@ -18,10 +18,18 @@ export default function DebtAnalysis({ transactions, purchases, purchaseInstallm
     const now = dateRange?.startDate ? (dateRange.startDate instanceof Date ? dateRange.startDate : new Date(dateRange.startDate)) : new Date();
     const threeMonthsAgo = addMonths(now, -3);
 
+    const toTime = (d) => {
+      const date = new Date(d);
+      if (isNaN(date.getTime())) return null;
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+    };
+
     // Total outstanding debt - with fallback to transactions
     let totalDebt = 0;
-    if (purchaseInstallments && purchaseInstallments.length > 0) {
-      totalDebt = purchaseInstallments
+    const purchasesData = Array.isArray(purchaseInstallments) ? purchaseInstallments : (purchaseInstallments?.data || []);
+    
+    if (purchasesData.length > 0) {
+      totalDebt = purchasesData
         .filter(i => !i.paid)
         .reduce((sum, i) => {
           const amount = typeof i.amount === 'string' ? parseFloat(i.amount) : i.amount;
@@ -30,7 +38,7 @@ export default function DebtAnalysis({ transactions, purchases, purchaseInstallm
         }, 0);
     } else {
       // Fallback: calculate from pending purchase transactions
-      totalDebt = transactions
+      totalDebt = (Array.isArray(transactions) ? transactions : [])
         .filter(t => t.type === 'compra' && t.status === 'pendente')
         .reduce((sum, t) => {
           const amount = parseFloat(t.amount || 0);
@@ -40,7 +48,7 @@ export default function DebtAnalysis({ transactions, purchases, purchaseInstallm
     }
 
     // Revenue (last 3 months)
-    const revenue = transactions
+    const revenue = (Array.isArray(transactions) ? transactions : [])
       .filter(t => (t.type === 'venda' || t.type === 'income') && new Date(t.date) >= threeMonthsAgo)
       .reduce((sum, t) => {
         const amount = Math.abs(parseFloat(t.amount || 0));
@@ -57,13 +65,16 @@ export default function DebtAnalysis({ transactions, purchases, purchaseInstallm
     // Short-term debt (due in next 3 months)
     const startOfAnchor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
     const threeMonthsLater = addMonths(startOfAnchor, 3);
+    const anchorTime = toTime(startOfAnchor);
+    const threeMonthsTime = toTime(threeMonthsLater);
+
     let shortTermDebt = 0;
-    if (purchaseInstallments && purchaseInstallments.length > 0) {
-      shortTermDebt = purchaseInstallments
+    if (purchasesData.length > 0) {
+      shortTermDebt = purchasesData
         .filter(i => {
           if (i.paid) return false;
-          const dueDate = new Date(i.due_date);
-          return dueDate >= startOfAnchor && dueDate <= threeMonthsLater;
+          const t = toTime(i.due_date);
+          return t !== null && t >= anchorTime && t <= threeMonthsTime;
         })
         .reduce((sum, i) => {
           const amount = typeof i.amount === 'string' ? parseFloat(i.amount) : i.amount;
@@ -72,11 +83,11 @@ export default function DebtAnalysis({ transactions, purchases, purchaseInstallm
         }, 0);
     } else {
       // Fallback: calculate from recent pending purchases
-      shortTermDebt = transactions
+      shortTermDebt = (Array.isArray(transactions) ? transactions : [])
         .filter(t => {
           if (t.type !== 'compra' || t.status !== 'pendente') return false;
-          const transDate = new Date(t.date);
-          return transDate >= startOfAnchor && transDate <= threeMonthsLater;
+          const tTime = toTime(t.date);
+          return tTime !== null && tTime >= anchorTime && tTime <= threeMonthsTime;
         })
         .reduce((sum, t) => {
           const amount = parseFloat(t.amount || 0);
@@ -90,11 +101,10 @@ export default function DebtAnalysis({ transactions, purchases, purchaseInstallm
 
     // Monthly debt payment
     let monthlyDebtPayment = 0;
-    if (purchaseInstallments && purchaseInstallments.length > 0) {
-      const startOfAnchor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-      const nextMonth = addMonths(startOfAnchor, 1);
-      monthlyDebtPayment = purchaseInstallments
-        .filter(i => !i.paid && new Date(i.due_date) >= startOfAnchor && new Date(i.due_date) <= nextMonth)
+    if (purchasesData.length > 0) {
+      const nextMonthTime = toTime(addMonths(startOfAnchor, 1));
+      monthlyDebtPayment = purchasesData
+        .filter(i => !i.paid && toTime(i.due_date) !== null && toTime(i.due_date) >= anchorTime && toTime(i.due_date) <= nextMonthTime)
         .reduce((sum, i) => {
           const amount = typeof i.amount === 'string' ? parseFloat(i.amount) : i.amount;
           const interest = typeof i.interest === 'string' ? parseFloat(i.interest) : (i.interest || 0);
@@ -110,9 +120,10 @@ export default function DebtAnalysis({ transactions, purchases, purchaseInstallm
 
     // Debt by category
     const debtByCategory = {};
-    if (purchases && purchases.length > 0 && purchaseInstallments && purchaseInstallments.length > 0) {
-      purchases.forEach(p => {
-        const purchaseDebt = purchaseInstallments
+    const purchasesArr = Array.isArray(purchases) ? purchases : (purchases?.data || []);
+    if (purchasesArr.length > 0 && purchasesData.length > 0) {
+      purchasesArr.forEach(p => {
+        const purchaseDebt = purchasesData
           .filter(i => i.purchase_id === p.id && !i.paid)
           .reduce((sum, i) => {
             const amount = typeof i.amount === 'string' ? parseFloat(i.amount) : i.amount;
@@ -121,23 +132,18 @@ export default function DebtAnalysis({ transactions, purchases, purchaseInstallm
           }, 0);
         
         if (purchaseDebt > 0) {
-          if (!debtByCategory[p.category || 'Outros']) {
-            debtByCategory[p.category || 'Outros'] = 0;
-          }
-          debtByCategory[p.category || 'Outros'] += purchaseDebt;
+          const catName = p.category || 'Outros';
+          debtByCategory[catName] = (debtByCategory[catName] || 0) + purchaseDebt;
         }
       });
     } else {
       // Fallback: calculate from transaction categories
-      const compras = transactions.filter(t => t.type === 'compra' && t.status === 'pendente');
+      const compras = (Array.isArray(transactions) ? transactions : []).filter(t => t.type === 'compra' && t.status === 'pendente');
       compras.forEach(t => {
         const category = t.category || 'Outros';
         const amount = parseFloat(t.amount || 0);
         if (!isNaN(amount)) {
-          if (!debtByCategory[category]) {
-            debtByCategory[category] = 0;
-          }
-          debtByCategory[category] += amount;
+          debtByCategory[category] = (debtByCategory[category] || 0) + amount;
         }
       });
     }

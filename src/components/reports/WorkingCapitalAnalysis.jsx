@@ -15,60 +15,59 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
   const calculateWorkingCapital = () => {
     // Usar a data de início do filtro como "Hoje" para o cálculo
     const now = dateRange?.startDate ? (dateRange.startDate instanceof Date ? dateRange.startDate : new Date(dateRange.startDate)) : new Date();
-    console.log('Capital de Giro - Data Ancora usada:', now);
     const startOfAnchor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
     const next30Days = new Date(startOfAnchor.getTime() + 31 * 24 * 60 * 60 * 1000);
+    next30Days.setHours(23, 59, 59, 999);
 
-    // Initial variables for calculations
+    const toTime = (d) => {
+      const date = new Date(d);
+      if (isNaN(date.getTime())) return null;
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+    };
+
+    const anchorTime = toTime(startOfAnchor);
+    const endTime = toTime(next30Days);
+
     let currentReceivables = 0;
     let currentPayables = 0;
 
-    console.log('Filtros - Recebimentos (30d):', {
-      anchor: startOfAnchor.toISOString(),
-      end: next30Days.toISOString(),
-      installments: saleInstallments?.length || 0
-    });
+    const sales = Array.isArray(saleInstallments) ? saleInstallments : (saleInstallments?.data || []);
+    const payables = Array.isArray(purchaseInstallments) ? purchaseInstallments : (purchaseInstallments?.data || []);
 
-    if (saleInstallments && saleInstallments.length > 0) {
-      currentReceivables = saleInstallments
+    // 1. Calcular Recebimentos (30 dias)
+    if (sales.length > 0) {
+      currentReceivables = sales
         .filter(i => {
-          if (i.paid) return false;
-          const dueDate = new Date(i.due_date);
-          const inRange = dueDate >= startOfAnchor && dueDate <= next30Days;
-          if (inRange) console.log('Recebimento encontrado:', i.due_date, i.amount);
-          return inRange;
+          if (i.paid || !i.due_date) return false;
+          const t = toTime(i.due_date);
+          return t !== null && t >= anchorTime && t <= endTime;
         })
         .reduce((sum, i) => sum + parseFloat(i.amount || 0), 0);
-    } else {
+    } else if (Array.isArray(transactions)) {
       currentReceivables = transactions
         .filter(t => {
-          if ((t.type !== 'venda' && t.type !== 'income') || t.status !== 'pendente') return false;
-          const transDate = new Date(t.date);
-          const inRange = transDate >= startOfAnchor && transDate <= next30Days;
-          if (inRange) console.log('Transação Venda encontrada:', t.date, t.amount);
-          return inRange;
+          if ((t.type !== 'venda' && t.type !== 'income') || t.status !== 'pendente' || !t.date) return false;
+          const tTime = toTime(t.date);
+          return tTime !== null && tTime >= anchorTime && tTime <= endTime;
         })
         .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
     }
 
-    if (purchaseInstallments && purchaseInstallments.length > 0) {
-      currentPayables = purchaseInstallments
+    // 2. Calcular Pagamentos (30 dias)
+    if (payables.length > 0) {
+      currentPayables = payables
         .filter(i => {
-          if (i.paid) return false;
-          const dueDate = new Date(i.due_date);
-          const inRange = dueDate >= startOfAnchor && dueDate <= next30Days;
-          if (inRange) console.log('Pagamento encontrado:', i.due_date, i.amount);
-          return inRange;
+          if (i.paid || !i.due_date) return false;
+          const t = toTime(i.due_date);
+          return t !== null && t >= anchorTime && t <= endTime;
         })
         .reduce((sum, i) => sum + parseFloat(i.amount || 0), 0);
-    } else {
+    } else if (Array.isArray(transactions)) {
       currentPayables = transactions
         .filter(t => {
-          if ((t.type !== 'compra' && t.type !== 'expense') || t.status !== 'pendente') return false;
-          const transDate = new Date(t.date);
-          const inRange = transDate >= startOfAnchor && transDate <= next30Days;
-          if (inRange) console.log('Transação Compra encontrada:', t.date, t.amount);
-          return inRange;
+          if ((t.type !== 'compra' && t.type !== 'expense') || t.status !== 'pendente' || !t.date) return false;
+          const tTime = toTime(t.date);
+          return tTime !== null && tTime >= anchorTime && tTime <= endTime;
         })
         .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
     }
@@ -78,7 +77,7 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
 
     // Average monthly expenses (last 3 months)
     const threeMonthsAgo = addMonths(now, -3);
-    const recentExpenses = transactions
+    const recentExpenses = (Array.isArray(transactions) ? transactions : [])
       .filter(t => (t.type === 'compra' || t.type === 'expense') && new Date(t.date) >= threeMonthsAgo)
       .reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
     const avgMonthlyExpenses = recentExpenses / 3;
