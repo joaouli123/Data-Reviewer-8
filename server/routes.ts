@@ -431,8 +431,21 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   // Transaction routes
   app.get("/api/transactions", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
+      console.log("🔍 [GET /api/transactions] Debug Info:", {
+        hasUser: !!req.user,
+        userId: req.user?.id,
+        companyId: req.user?.companyId,
+        timestamp: new Date().toISOString()
+      });
+      
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
-      const transactions = await storage.getTransactions(req.user.companyId);
+      
+      const companyId = req.user.companyId;
+      console.log(`📊 Fetching transactions for companyId: ${companyId}`);
+      
+      const transactions = await storage.getTransactions(companyId);
+      console.log(`✅ Found ${transactions.length} transactions`);
+      
       // Convert Decimal fields to numbers for JSON serialization
       const converted = transactions.map(t => ({
         ...t,
@@ -441,7 +454,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         interest: t.interest ? parseFloat(t.interest.toString()) : 0
       }));
       res.json(converted);
-    } catch (error) {
+    } catch (error: any) {
+      console.error("❌ [GET /api/transactions] Error:", error?.message || error);
       res.status(500).json({ error: "Failed to fetch transactions" });
     }
   });
