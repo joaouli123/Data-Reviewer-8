@@ -15,7 +15,7 @@ export default function DebtAnalysis({ transactions, purchases, purchaseInstallm
 
   const calculateDebtMetrics = () => {
     // Usar a data de início do filtro como "Hoje" para o cálculo
-    const now = dateRange?.startDate ? new Date(dateRange.startDate) : new Date();
+    const now = dateRange?.startDate ? (dateRange.startDate instanceof Date ? dateRange.startDate : new Date(dateRange.startDate)) : new Date();
     const threeMonthsAgo = addMonths(now, -3);
 
     // Total outstanding debt - with fallback to transactions
