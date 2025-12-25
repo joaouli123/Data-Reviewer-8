@@ -13,25 +13,27 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
   const [analysis, setAnalysis] = useState(null);
 
   const calculateWorkingCapital = () => {
-    // Usar a data de início do filtro como "Hoje" para o cálculo
+    // Use UTC dates to avoid timezone issues
     const now = dateRange?.startDate ? (dateRange.startDate instanceof Date ? dateRange.startDate : new Date(dateRange.startDate)) : new Date();
-    const startOfAnchor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    
+    const startOfAnchor = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
+    
     // Use the end date from dateRange if available, otherwise default to 30 days
     let next30Days;
     if (dateRange?.endDate) {
       const endDate = dateRange.endDate instanceof Date ? dateRange.endDate : new Date(dateRange.endDate);
-      next30Days = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59, 999);
+      next30Days = new Date(Date.UTC(endDate.getUTCFullYear(), endDate.getUTCMonth(), endDate.getUTCDate(), 23, 59, 59, 999));
     } else {
       next30Days = new Date(startOfAnchor.getTime() + 31 * 24 * 60 * 60 * 1000);
-      next30Days.setHours(23, 59, 59, 999);
+      next30Days = new Date(Date.UTC(next30Days.getUTCFullYear(), next30Days.getUTCMonth(), next30Days.getUTCDate(), 23, 59, 59, 999));
     }
 
     const toTime = (d) => {
       if (!d) return null;
       const date = new Date(d);
       if (isNaN(date.getTime())) return null;
-      // Use UTC time to avoid timezone issues
-      return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())).getTime();
+      // Use UTC consistently
+      return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())).getTime();
     };
 
     const anchorTime = toTime(startOfAnchor);

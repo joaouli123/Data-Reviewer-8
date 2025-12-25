@@ -34,30 +34,38 @@ export default function ReportsPage() {
   const [analysisResult, setAnalysisResult] = useState(null);
 
   const setQuickPeriod = (period) => {
+    // Create dates in UTC to avoid timezone issues
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const year = today.getUTCFullYear();
+    const month = today.getUTCMonth();
+    const date = today.getUTCDate();
     
     let start, end, label;
     
     switch(period) {
       case 'this-month':
-        start = startOfMonth(today);
-        end = endOfMonth(today);
+        start = new Date(Date.UTC(year, month, 1, 0, 0, 0, 0));
+        end = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59, 999));
         label = 'Este Mês';
         break;
       case 'next-3-months':
-        start = startOfDay(today);
-        end = endOfMonth(subMonths(today, -3));
+        start = new Date(Date.UTC(year, month, date, 0, 0, 0, 0));
+        // 3 months ahead, last day of month
+        const futureDate = new Date(Date.UTC(year, month + 3, 1, 0, 0, 0, 0));
+        end = new Date(futureDate.getTime() - 1000); // Last millisecond of previous day
+        end = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate(), 23, 59, 59, 999));
         label = 'Próximos 3 Meses';
         break;
       case 'year':
-        start = new Date(today.getFullYear(), 0, 1);
-        end = new Date(today.getFullYear(), 11, 31);
+        start = new Date(Date.UTC(year, 0, 1, 0, 0, 0, 0));
+        end = new Date(Date.UTC(year, 11, 31, 23, 59, 59, 999));
         label = 'Ano Atual';
         break;
       default:
         return;
     }
+    
+    console.log("📅 setQuickPeriod:", { period, start, end, startISO: start.toISOString(), endISO: end.toISOString() });
     
     setDateRange({
       startDate: start,
