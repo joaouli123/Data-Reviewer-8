@@ -87,7 +87,10 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         user: { 
           id: user.id, 
           username: user.username, 
-          email: user.email, 
+          email: user.email,
+          name: user.name,
+          phone: user.phone,
+          avatar: user.avatar,
           role: user.role,
           isSuperAdmin: user.isSuperAdmin,
           companyId: company.id,
@@ -159,7 +162,10 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         user: { 
           id: user.id, 
           username: user.username, 
-          email: user.email, 
+          email: user.email,
+          name: user.name,
+          phone: user.phone,
+          avatar: user.avatar,
           role: user.role, 
           isSuperAdmin: user.isSuperAdmin,
           companyId: user.companyId,
