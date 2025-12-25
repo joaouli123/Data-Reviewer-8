@@ -13,41 +13,22 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
   const [analysis, setAnalysis] = useState(null);
 
   const calculateWorkingCapital = () => {
-    // Use UTC dates to avoid timezone issues
-    const now = dateRange?.startDate ? (dateRange.startDate instanceof Date ? dateRange.startDate : new Date(dateRange.startDate)) : new Date();
-    
-    const startOfAnchor = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
-    
-    // Use the end date from dateRange if available, otherwise default to 30 days
-    let next30Days;
-    if (dateRange?.endDate) {
-      const endDate = dateRange.endDate instanceof Date ? dateRange.endDate : new Date(dateRange.endDate);
-      next30Days = new Date(Date.UTC(endDate.getUTCFullYear(), endDate.getUTCMonth(), endDate.getUTCDate(), 23, 59, 59, 999));
-    } else {
-      next30Days = new Date(startOfAnchor.getTime() + 31 * 24 * 60 * 60 * 1000);
-      next30Days = new Date(Date.UTC(next30Days.getUTCFullYear(), next30Days.getUTCMonth(), next30Days.getUTCDate(), 23, 59, 59, 999));
-    }
-
-    const toTime = (d) => {
-      if (!d) return null;
+    // Convert date to comparable format (YYYYMMDD as number) - SAME as Reports.jsx
+    const dateToNumber = (d) => {
+      if (!d) return 0;
       const date = new Date(d);
-      if (isNaN(date.getTime())) return null;
-      // Use UTC consistently
-      return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())).getTime();
+      return date.getUTCFullYear() * 10000 + (date.getUTCMonth() + 1) * 100 + date.getUTCDate();
     };
 
-    const anchorTime = toTime(startOfAnchor);
-    const endTime = toTime(next30Days);
+    const startNum = dateToNumber(dateRange?.startDate);
+    const endNum = dateToNumber(dateRange?.endDate);
 
     console.log("🔍 WorkingCapital Debug:", {
-      dateRangeStart: dateRange?.startDate,
-      dateRangeEnd: dateRange?.endDate,
-      anchorDate: startOfAnchor,
-      endDate: next30Days,
-      anchorTime,
-      endTime,
-      transactionsCount: Array.isArray(transactions) ? transactions.length : 0,
-      sampleTransaction: Array.isArray(transactions) ? transactions[0] : null
+      startNum,
+      endNum,
+      startDate: dateRange?.startDate,
+      endDate: dateRange?.endDate,
+      transactionsCount: Array.isArray(transactions) ? transactions.length : 0
     });
 
     let currentReceivables = 0;
@@ -56,74 +37,64 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
     const sales = Array.isArray(saleInstallments) ? saleInstallments : (saleInstallments?.data || []);
     const payables = Array.isArray(purchaseInstallments) ? purchaseInstallments : (purchaseInstallments?.data || []);
 
-    // 1. Calcular Recebimentos (30 dias)
+    // 1. Calcular Recebimentos
     if (sales.length > 0) {
       currentReceivables = sales
         .filter(i => {
           if (i.paid || !i.due_date) return false;
-          const t = toTime(i.due_date);
-          return t !== null && t >= anchorTime && t <= endTime;
+          const iNum = dateToNumber(i.due_date);
+          return iNum >= startNum && iNum <= endNum;
         })
         .reduce((sum, i) => sum + parseFloat(i.amount || 0), 0);
     } else if (Array.isArray(transactions)) {
       const vendas = transactions.filter(t => t.type === 'venda' || t.type === 'income');
-      console.log(`📊 Filtered ${vendas.length} venda transactions out of ${transactions.length}. anchorTime=${anchorTime}, endTime=${endTime}`);
       
-      let countInRange = 0;
       currentReceivables = vendas
-        .filter((t, idx) => {
-          if (!t.date) {
-            console.log(`❌ Venda ${idx} has no date`);
-            return false;
-          }
-          const tTime = toTime(t.date);
-          const inRange = tTime !== null && tTime >= anchorTime && tTime <= endTime;
-          if (inRange) countInRange++;
-          if (idx < 3 || inRange) {
-            console.log(`🔍 Venda ${idx}: date=${t.date}, tTime=${tTime}, inRange=${inRange}, amount=${t.amount}`);
-          }
-          return inRange;
+        .filter(t => {
+          if (!t.date) return false;
+          const tNum = dateToNumber(t.date);
+          return tNum >= startNum && tNum <= endNum;
         })
         .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
-      console.log(`💰 Total Receivables: ${currentReceivables} (${countInRange} transactions in range)`);
+      
+      console.log(`💰 Total Receivables: ${currentReceivables} from ${vendas.length} sales`);
     }
 
-    // 2. Calcular Pagamentos (30 dias)
+    // 2. Calcular Pagamentos
     if (payables.length > 0) {
       currentPayables = payables
         .filter(i => {
           if (i.paid || !i.due_date) return false;
-          const t = toTime(i.due_date);
-          return t !== null && t >= anchorTime && t <= endTime;
+          const iNum = dateToNumber(i.due_date);
+          return iNum >= startNum && iNum <= endNum;
         })
         .reduce((sum, i) => sum + parseFloat(i.amount || 0), 0);
     } else if (Array.isArray(transactions)) {
       const compras = transactions.filter(t => t.type === 'compra' || t.type === 'expense');
-      console.log(`📊 Filtered ${compras.length} compra transactions out of ${transactions.length}`);
       
       currentPayables = compras
         .filter(t => {
           if (!t.date) return false;
-          const tTime = toTime(t.date);
-          const inRange = tTime !== null && tTime >= anchorTime && tTime <= endTime;
-          if (inRange && currentPayables < 1000) { // Log first few matching
-            console.log(`✅ Compra in range:`, { date: t.date, tTime, anchorTime, endTime, amount: t.amount });
-          }
-          return inRange;
+          const tNum = dateToNumber(t.date);
+          return tNum >= startNum && tNum <= endNum;
         })
         .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
-      console.log(`💰 Total Payables: ${currentPayables}`);
+      
+      console.log(`💰 Total Payables: ${currentPayables} from ${compras.length} purchases`);
     }
 
     // Working Capital
     const workingCapital = currentReceivables - currentPayables;
 
-    // Average monthly expenses (last 3 months)
-    const threeMonthsAgo = addMonths(now, -3);
-    const recentExpenses = (Array.isArray(transactions) ? transactions : [])
-      .filter(t => (t.type === 'compra' || t.type === 'expense') && new Date(t.date) >= threeMonthsAgo)
+    // Average monthly expenses (use entire transaction range for baseline)
+    const allExpenses = (Array.isArray(transactions) ? transactions : [])
+      .filter(t => t.type === 'compra' || t.type === 'expense')
       .reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
-    const avgMonthlyExpenses = recentExpenses / 3;
+    
+    // Estimate based on number of months in period
+    const daysInPeriod = (endNum - startNum) / 100 + 1; // Rough estimate
+    const monthsInPeriod = Math.max(1, Math.round(daysInPeriod / 30));
+    const avgMonthlyExpenses = monthsInPeriod > 0 ? allExpenses / monthsInPeriod : allExpenses;
 
     // Recommended working capital (2 months of expenses)
     const recommendedWorkingCapital = avgMonthlyExpenses * 2;
