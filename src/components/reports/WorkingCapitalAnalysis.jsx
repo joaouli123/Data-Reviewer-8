@@ -27,13 +27,26 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
     }
 
     const toTime = (d) => {
+      if (!d) return null;
       const date = new Date(d);
       if (isNaN(date.getTime())) return null;
-      return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+      // Use UTC time to avoid timezone issues
+      return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())).getTime();
     };
 
     const anchorTime = toTime(startOfAnchor);
     const endTime = toTime(next30Days);
+
+    console.log("🔍 WorkingCapital Debug:", {
+      dateRangeStart: dateRange?.startDate,
+      dateRangeEnd: dateRange?.endDate,
+      anchorDate: startOfAnchor,
+      endDate: next30Days,
+      anchorTime,
+      endTime,
+      transactionsCount: Array.isArray(transactions) ? transactions.length : 0,
+      sampleTransaction: Array.isArray(transactions) ? transactions[0] : null
+    });
 
     let currentReceivables = 0;
     let currentPayables = 0;
@@ -51,14 +64,21 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
         })
         .reduce((sum, i) => sum + parseFloat(i.amount || 0), 0);
     } else if (Array.isArray(transactions)) {
-      currentReceivables = transactions
+      const vendas = transactions.filter(t => t.type === 'venda' || t.type === 'income');
+      console.log(`📊 Filtered ${vendas.length} venda transactions out of ${transactions.length}`);
+      
+      currentReceivables = vendas
         .filter(t => {
-          if ((t.type !== 'venda' && t.type !== 'income') || !t.date) return false;
-          // Include both pending and other statuses for receivables (contas a receber)
+          if (!t.date) return false;
           const tTime = toTime(t.date);
-          return tTime !== null && tTime >= anchorTime && tTime <= endTime;
+          const inRange = tTime !== null && tTime >= anchorTime && tTime <= endTime;
+          if (inRange && currentReceivables < 1000) { // Log first few matching
+            console.log(`✅ Venda in range:`, { date: t.date, tTime, anchorTime, endTime, amount: t.amount });
+          }
+          return inRange;
         })
         .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+      console.log(`💰 Total Receivables: ${currentReceivables}`);
     }
 
     // 2. Calcular Pagamentos (30 dias)
@@ -71,14 +91,21 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
         })
         .reduce((sum, i) => sum + parseFloat(i.amount || 0), 0);
     } else if (Array.isArray(transactions)) {
-      currentPayables = transactions
+      const compras = transactions.filter(t => t.type === 'compra' || t.type === 'expense');
+      console.log(`📊 Filtered ${compras.length} compra transactions out of ${transactions.length}`);
+      
+      currentPayables = compras
         .filter(t => {
-          if ((t.type !== 'compra' && t.type !== 'expense') || !t.date) return false;
-          // Include both pending and other statuses for payables (contas a pagar)
+          if (!t.date) return false;
           const tTime = toTime(t.date);
-          return tTime !== null && tTime >= anchorTime && tTime <= endTime;
+          const inRange = tTime !== null && tTime >= anchorTime && tTime <= endTime;
+          if (inRange && currentPayables < 1000) { // Log first few matching
+            console.log(`✅ Compra in range:`, { date: t.date, tTime, anchorTime, endTime, amount: t.amount });
+          }
+          return inRange;
         })
         .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+      console.log(`💰 Total Payables: ${currentPayables}`);
     }
 
     // Working Capital
