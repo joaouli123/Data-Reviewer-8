@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Download, Search, Trash2, Pencil, Wallet, TrendingUp, TrendingDown, Upload, ChevronRight, Check, Clock, CheckCircle2, MoreHorizontal } from 'lucide-react';
+import { Plus, Download, Search, Trash2, Pencil, Wallet, TrendingUp, TrendingDown, Upload, ChevronRight, Check, Clock, CheckCircle2, XCircle, MoreHorizontal } from 'lucide-react';
 import { format, parseISO, startOfMonth, endOfMonth, isWithinInterval, isBefore, parse, subDays, startOfDay, endOfDay, isAfter } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import TransactionForm from '../components/transactions/TransactionForm';
@@ -484,6 +484,7 @@ export default function TransactionsPage() {
                         <TableHead className="text-left">Forma</TableHead>
                         <TableHead className="text-left">Status</TableHead>
                         <TableHead className="text-right">Valor</TableHead>
+                        <TableHead className="text-center">Conciliação</TableHead>
                         <TableHead className="text-right pr-6">Ações</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -533,6 +534,21 @@ export default function TransactionsPage() {
                                 <TableCell className={`text-right font-bold ${t.type === 'venda' ? 'text-emerald-600' : 'text-rose-600'}`}>
                                     {t.type === 'venda' ? '+' : '-'} R$ {Math.abs(parseFloat(t.amount || 0) + parseFloat(t.interest || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                 </TableCell>
+                                <TableCell className="text-center" data-testid={`status-reconciliation-${t.id}`}>
+                                    <div className="flex items-center justify-center gap-1">
+                                        {t.is_reconciled ? (
+                                            <>
+                                                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                                                <span className="text-xs font-medium text-emerald-600">Sim</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <XCircle className="w-4 h-4 text-rose-600" />
+                                                <span className="text-xs font-medium text-rose-600">Não</span>
+                                            </>
+                                        )}
+                                    </div>
+                                </TableCell>
                                 <TableCell className="text-right pr-6">
                                     <div className="flex justify-end">
                                         <DropdownMenu>
@@ -562,7 +578,7 @@ export default function TransactionsPage() {
                         ))
                     ) : (
                         <TableRow>
-                            <TableCell colSpan={6} className="text-center py-10 text-slate-500">
+                            <TableCell colSpan={8} className="text-center py-10 text-slate-500">
                                 Nenhuma transação encontrada.
                             </TableCell>
                         </TableRow>
