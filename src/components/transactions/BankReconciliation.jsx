@@ -8,11 +8,14 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import TransactionForm from './TransactionForm';
 
 export default function BankReconciliation({ open, onOpenChange }) {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("unmatched");
   const [lastFileName, setLastFileName] = useState(localStorage.getItem('lastBankStatementFile'));
+  const [isTransactionFormOpen, setIsTransactionFormOpen] = useState(false);
+  const [selectedBankItemForForm, setSelectedBankItemForForm] = useState(null);
 
   // Fetch categories to use as default
   const { data: categories = [] } = useQuery({
@@ -70,33 +73,34 @@ export default function BankReconciliation({ open, onOpenChange }) {
     }
   });
 
-  const createTransactionMutation = useMutation({
-    mutationFn: async (item) => {
-      const defaultCategory = categories.length > 0 ? categories[0].id : null;
+  const createTransactionAndMatchMutation = useMutation({
+    mutationFn: async (transactionData) => {
       const res = await fetch('/api/transactions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          description: item.description,
-          amount: Math.abs(parseFloat(item.amount)),
-          type: parseFloat(item.amount) > 0 ? 'income' : 'expense',
-          date: item.date,
-          status: 'completed',
-          categoryId: defaultCategory
-        })
+        body: JSON.stringify(transactionData)
       });
       if (!res.ok) throw new Error('Erro ao criar transação');
       const transaction = await res.json();
       
-      // Auto-match after creation
-      return matchMutation.mutateAsync({ 
-        bankItemId: item.id, 
-        transactionId: transaction.id 
-      });
+      // Auto-match with bank item after creation
+      if (selectedBankItemForForm) {
+        return matchMutation.mutateAsync({ 
+          bankItemId: selectedBankItemForForm.id, 
+          transactionId: transaction.id 
+        });
+      }
+      return transaction;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/bank/items'] });
       queryClient.invalidateQueries({ exact: false, queryKey: ['/api/transactions'] });
+      setIsTransactionFormOpen(false);
+      setSelectedBankItemForForm(null);
+      toast.success('Transação criada e conciliada com sucesso!');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Erro ao criar transação');
     }
   });
 
@@ -214,8 +218,10 @@ export default function BankReconciliation({ open, onOpenChange }) {
                         </Button>
                         <Button 
                           size="sm"
-                          disabled={createTransactionMutation.isPending}
-                          onClick={() => createTransactionMutation.mutate(item)}
+                          onClick={() => {
+                            setSelectedBankItemForForm(item);
+                            setIsTransactionFormOpen(true);
+                          }}
                         >
                           <Plus className="w-4 h-4 mr-1" />
                           Criar Transação
@@ -284,6 +290,31 @@ export default function BankReconciliation({ open, onOpenChange }) {
             </Button>
           </div>
         </div>
+
+        {selectedBankItemForForm && (
+          <TransactionForm
+            open={isTransactionFormOpen}
+            onOpenChange={(value) => {
+              setIsTransactionFormOpen(value);
+              if (!value) {
+                setSelectedBankItemForForm(null);
+              }
+            }}
+            onSubmit={(data) => {
+              // Convert bank item data to transaction form format
+              const transactionData = Array.isArray(data) ? data : [data];
+              transactionData.forEach(t => {
+                createTransactionAndMatchMutation.mutate(t);
+              });
+            }}
+            initialData={selectedBankItemForForm ? {
+              description: selectedBankItemForForm.description,
+              amount: Math.abs(parseFloat(selectedBankItemForForm.amount)).toString(),
+              date: new Date(selectedBankItemForForm.date),
+              type: parseFloat(selectedBankItemForForm.amount) > 0 ? 'venda' : 'compra'
+            } : null}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );
