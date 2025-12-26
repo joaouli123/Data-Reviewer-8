@@ -52,6 +52,7 @@ export default function BankReconciliation({ open, onOpenChange }) {
       queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
       toast.success('Conciliação realizada com sucesso!');
       setSelectedBankItemId(null);
+      setActiveTab("unmatched"); // Garante que volta para a aba correta se necessário
     },
     onError: () => {
       toast.error('Erro ao realizar conciliação');
