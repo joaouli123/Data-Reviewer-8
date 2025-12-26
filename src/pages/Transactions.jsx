@@ -203,18 +203,20 @@ export default function TransactionsPage() {
           if (!isPending) return false;
         }
         
-        const isPaid = t.status === 'pago' || t.status === 'completed';
-        const relevantDate = isPaid && t.paymentDate ? t.paymentDate : t.date;
-        
-        if (!relevantDate) return false;
-        
-        const tDateStr = relevantDate.split('T')[0];
-        const tDate = new Date(tDateStr + 'T00:00:00Z').getTime();
-        
-        const startTime = dateRange?.startDate?.getTime() || 0;
-        const endTime = dateRange?.endDate?.getTime() || Infinity;
-        
-        const typeMap = { 'income': 'venda', 'expense': 'compra', 'all': 'all' };
+      // statusFilter === 'all' shows everything
+      
+      const isPaid = t.status === 'pago' || t.status === 'completed';
+      const relevantDate = isPaid && t.paymentDate ? t.paymentDate : t.date;
+      
+      if (!relevantDate) return false;
+      
+      const tDateStr = relevantDate.split('T')[0];
+      const tDate = new Date(tDateStr + 'T12:00:00Z').getTime(); // Use midday
+      
+      const startTime = dateRange?.startDate ? new Date(format(dateRange.startDate, 'yyyy-MM-dd') + 'T00:00:00Z').getTime() : 0;
+      const endTime = dateRange?.endDate ? new Date(format(dateRange.endDate, 'yyyy-MM-dd') + 'T23:59:59Z').getTime() : Infinity;
+      
+      const typeMap = { 'income': 'venda', 'expense': 'compra', 'all': 'all' };
         const mappedType = typeMap[typeFilter] || typeFilter;
         const matchesType = mappedType === 'all' || t.type === mappedType;
         
@@ -240,14 +242,13 @@ export default function TransactionsPage() {
       return new Date(bDate) - new Date(aDate);
     });
 
-  // Calculate Balances
-  const calculateBalances = () => {
+    const calculateBalances = () => {
     let openingBalance = 0;
     let periodIncome = 0;
     let periodExpense = 0;
     
-    const startTime = dateRange.startDate.getTime();
-    const endTime = dateRange.endDate.getTime();
+    const startTime = dateRange?.startDate ? new Date(format(dateRange.startDate, 'yyyy-MM-dd') + 'T00:00:00Z').getTime() : 0;
+    const endTime = dateRange?.endDate ? new Date(format(dateRange.endDate, 'yyyy-MM-dd') + 'T23:59:59Z').getTime() : Infinity;
 
     txArray.forEach(t => {
       if (!t) return;
@@ -258,11 +259,8 @@ export default function TransactionsPage() {
       if (!relevantDate) return;
       
       const tDateStr = relevantDate.split('T')[0]; // Get YYYY-MM-DD only
-      const tDate = new Date(tDateStr + 'T00:00:00Z').getTime();
+      const tDate = new Date(tDateStr + 'T12:00:00Z').getTime();
       const amount = (parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0);
-
-      const startTime = dateRange?.startDate?.getTime() || 0;
-      const endTime = dateRange?.endDate?.getTime() || Infinity;
 
       if (tDate < startTime) {
         // Transaction is before the selected period -> contributes to opening balance
