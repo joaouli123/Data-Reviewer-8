@@ -49,10 +49,10 @@ export default function BankReconciliation({ open, onOpenChange }) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/bank/items'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      queryClient.invalidateQueries({ exact: false, queryKey: ['/api/transactions'] });
       toast.success('Conciliação realizada com sucesso!');
       setSelectedBankItemId(null);
-      setActiveTab("unmatched"); // Garante que volta para a aba correta se necessário
+      setActiveTab("unmatched");
     },
     onError: () => {
       toast.error('Erro ao realizar conciliação');
@@ -84,7 +84,7 @@ export default function BankReconciliation({ open, onOpenChange }) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/bank/items'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      queryClient.invalidateQueries({ exact: false, queryKey: ['/api/transactions'] });
     }
   });
 
