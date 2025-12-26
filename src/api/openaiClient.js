@@ -89,7 +89,7 @@ export const invokeOpenAI = async (prompt, responseJsonSchema = null) => {
         
         // Se o resultado contiver uma propriedade 'properties' que envolve o objeto real
         // (comum quando o LLM se confunde com o formato do schema)
-        if (result.properties && !result.assessment && !result.overall_assessment) {
+        if (result.properties && typeof result.properties === 'object' && !result.assessment && !result.overall_assessment) {
           console.log('⚠️ Re-envelopando objeto JSON (removendo "properties" extra)');
           return result.properties;
         }

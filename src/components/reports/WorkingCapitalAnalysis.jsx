@@ -273,7 +273,9 @@ FORNEÇA:
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="p-4 bg-slate-50 rounded-lg border">
                   <h4 className="font-semibold text-slate-900 mb-2">Avaliação Geral</h4>
-                  <p className="text-sm text-slate-700">{analysis.assessment || 'Análise concluída'}</p>
+                  <p className="text-sm text-slate-700">
+                    {analysis && typeof analysis.assessment === 'string' ? analysis.assessment : 'Análise concluída'}
+                  </p>
                 </div>
                 
                 <div className="p-4 bg-slate-50 rounded-lg border">
