@@ -71,7 +71,7 @@ export default function TransactionsPage() {
   const createMutation = useMutation({
     mutationFn: (data) => Transaction.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions', company?.id] });
+      queryClient.invalidateQueries({ exact: false, queryKey: ['/api/transactions'] });
       setIsFormOpen(false);
       toast.success('Transação criada com sucesso!', { duration: 5000 });
     },
@@ -84,7 +84,7 @@ export default function TransactionsPage() {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => Transaction.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions', company?.id] });
+      queryClient.invalidateQueries({ exact: false, queryKey: ['/api/transactions'] });
       setIsFormOpen(false);
       setEditingTransaction(null);
       toast.success('Transação atualizada!', { duration: 5000 });
@@ -98,7 +98,7 @@ export default function TransactionsPage() {
   const deleteMutation = useMutation({
     mutationFn: (id) => Transaction.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions', company?.id] });
+      queryClient.invalidateQueries({ exact: false, queryKey: ['/api/transactions'] });
       toast.success('Transação removida.', { duration: 5000 });
     },
     onError: (error) => {
