@@ -268,12 +268,25 @@ FORNEÇA:
             </div>
           )}
 
-          {/* AI Analysis */}
-          {analysis && (
+              {analysis && (
             <div className="space-y-4">
-              <div className="p-4 bg-slate-50 rounded-lg border">
-                <h4 className="font-semibold text-slate-900 mb-2">Avaliação</h4>
-                <p className="text-sm text-slate-700">{analysis.assessment || 'Análise concluída'}</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 bg-slate-50 rounded-lg border">
+                  <h4 className="font-semibold text-slate-900 mb-2">Avaliação Geral</h4>
+                  <p className="text-sm text-slate-700">{analysis.assessment || 'Análise concluída'}</p>
+                </div>
+                
+                <div className="p-4 bg-slate-50 rounded-lg border">
+                  <h4 className="font-semibold text-slate-900 mb-2">Nível de Risco</h4>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={analysis.risk_level === 'high' ? 'destructive' : analysis.risk_level === 'medium' ? 'default' : 'secondary'}>
+                      {analysis.risk_level === 'high' ? 'Alto' : analysis.risk_level === 'medium' ? 'Médio' : 'Baixo'}
+                    </Badge>
+                    <span className="text-xs text-slate-500 italic">
+                      Baseado na análise de IA
+                    </span>
+                  </div>
+                </div>
               </div>
 
               {Array.isArray(analysis.recommendations) && analysis.recommendations.length > 0 && (
