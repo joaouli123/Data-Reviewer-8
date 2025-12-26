@@ -536,7 +536,7 @@ export default function TransactionsPage() {
                                 </TableCell>
                                 <TableCell className="text-center" data-testid={`status-reconciliation-${t.id}`}>
                                     <div className="flex items-center justify-center gap-1">
-                                        {t.is_reconciled ? (
+                                        {t.isReconciled ? (
                                             <>
                                                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                                                 <span className="text-xs font-medium text-emerald-600">Sim</span>
