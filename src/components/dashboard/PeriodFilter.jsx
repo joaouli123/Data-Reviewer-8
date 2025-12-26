@@ -83,39 +83,54 @@ export default function PeriodFilter({
       label: 'Últimos 7 dias',
       getValue: () => {
         const todayStr = getLocalDateString();
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+        const today = new Date();
+        const sevenDaysAgo = new Date(today);
+        sevenDaysAgo.setDate(today.getDate() - 6);
         const year = sevenDaysAgo.getFullYear();
         const month = String(sevenDaysAgo.getMonth() + 1).padStart(2, '0');
         const day = String(sevenDaysAgo.getDate()).padStart(2, '0');
         const sevenDaysAgoStr = `${year}-${month}-${day}`;
-        return { startDate: new Date(sevenDaysAgoStr + 'T00:00:00Z'), endDate: new Date(todayStr + 'T23:59:59Z'), label: 'Últimos 7 dias' };
+        return { 
+          startDate: new Date(sevenDaysAgoStr + 'T12:00:00Z'), 
+          endDate: new Date(todayStr + 'T12:00:00Z'), 
+          label: 'Últimos 7 dias' 
+        };
       }
     },
     last30Days: {
       label: 'Últimos 30 dias',
       getValue: () => {
         const todayStr = getLocalDateString();
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29);
+        const today = new Date();
+        const thirtyDaysAgo = new Date(today);
+        thirtyDaysAgo.setDate(today.getDate() - 29);
         const year = thirtyDaysAgo.getFullYear();
         const month = String(thirtyDaysAgo.getMonth() + 1).padStart(2, '0');
         const day = String(thirtyDaysAgo.getDate()).padStart(2, '0');
         const thirtyDaysAgoStr = `${year}-${month}-${day}`;
-        return { startDate: new Date(thirtyDaysAgoStr + 'T00:00:00Z'), endDate: new Date(todayStr + 'T23:59:59Z'), label: 'Últimos 30 dias' };
+        return { 
+          startDate: new Date(thirtyDaysAgoStr + 'T12:00:00Z'), 
+          endDate: new Date(todayStr + 'T12:00:00Z'), 
+          label: 'Últimos 30 dias' 
+        };
       }
     },
     last90Days: {
       label: 'Últimos 90 dias',
       getValue: () => {
         const todayStr = getLocalDateString();
-        const ninetyDaysAgo = new Date();
-        ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 89);
+        const today = new Date();
+        const ninetyDaysAgo = new Date(today);
+        ninetyDaysAgo.setDate(today.getDate() - 89);
         const year = ninetyDaysAgo.getFullYear();
         const month = String(ninetyDaysAgo.getMonth() + 1).padStart(2, '0');
         const day = String(ninetyDaysAgo.getDate()).padStart(2, '0');
         const ninetyDaysAgoStr = `${year}-${month}-${day}`;
-        return { startDate: new Date(ninetyDaysAgoStr + 'T00:00:00Z'), endDate: new Date(todayStr + 'T23:59:59Z'), label: 'Últimos 90 dias' };
+        return { 
+          startDate: new Date(ninetyDaysAgoStr + 'T12:00:00Z'), 
+          endDate: new Date(todayStr + 'T12:00:00Z'), 
+          label: 'Últimos 90 dias' 
+        };
       }
     }
   };
@@ -130,7 +145,7 @@ export default function PeriodFilter({
     setPeriod(newPeriod);
     setCustomLabel(null);
     const periodData = periodOptions[newPeriod].getValue();
-    onPeriodChange(periodData);
+    onPeriodChange({...periodData}); // Ensure a new object is passed to trigger state update
   };
 
   const handleCustomApply = () => {

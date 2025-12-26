@@ -211,10 +211,12 @@ export default function TransactionsPage() {
       if (!relevantDate) return false;
       
       const tDateStr = relevantDate.split('T')[0];
-      const tDate = new Date(tDateStr + 'T12:00:00Z').getTime(); // Use midday
+      const tDate = new Date(tDateStr + 'T12:00:00Z').getTime();
       
-      const startTime = dateRange?.startDate ? new Date(format(dateRange.startDate, 'yyyy-MM-dd') + 'T00:00:00Z').getTime() : 0;
-      const endTime = dateRange?.endDate ? new Date(format(dateRange.endDate, 'yyyy-MM-dd') + 'T23:59:59Z').getTime() : Infinity;
+      const start = new Date(dateRange.startDate);
+      const end = new Date(dateRange.endDate);
+      const startTime = new Date(format(start, 'yyyy-MM-dd') + 'T00:00:00Z').getTime();
+      const endTime = new Date(format(end, 'yyyy-MM-dd') + 'T23:59:59Z').getTime();
       
       const typeMap = { 'income': 'venda', 'expense': 'compra', 'all': 'all' };
         const mappedType = typeMap[typeFilter] || typeFilter;
@@ -247,8 +249,10 @@ export default function TransactionsPage() {
     let periodIncome = 0;
     let periodExpense = 0;
     
-    const startTime = dateRange?.startDate ? new Date(format(dateRange.startDate, 'yyyy-MM-dd') + 'T00:00:00Z').getTime() : 0;
-    const endTime = dateRange?.endDate ? new Date(format(dateRange.endDate, 'yyyy-MM-dd') + 'T23:59:59Z').getTime() : Infinity;
+    const start = new Date(dateRange.startDate);
+    const end = new Date(dateRange.endDate);
+    const startTime = new Date(format(start, 'yyyy-MM-dd') + 'T00:00:00Z').getTime();
+    const endTime = new Date(format(end, 'yyyy-MM-dd') + 'T23:59:59Z').getTime();
 
     txArray.forEach(t => {
       if (!t) return;
