@@ -60,7 +60,7 @@ export function authMiddleware(req: AuthenticatedRequest, res: Response, next: N
       // Use the real company from database (HUA Consultoria)
       req.user = {
         id: "dev-user-1",
-        companyId: "4645f6f4-89f2-446f-a08c-0b2f62796c72",
+        companyId: "f6744c7d-511b-4fa6-aef2-cb9e8261a238",
         role: "admin",
         isSuperAdmin: false,
       };
