@@ -210,13 +210,24 @@ export default function TransactionsPage() {
       
       if (!relevantDate) return false;
       
-      const tDateStr = relevantDate.split('T')[0];
-      const tDate = new Date(tDateStr + 'T12:00:00Z').getTime();
+      // Parse dates robustly
+      let tDate;
+      let tDateStr = 'unknown';
+      if (typeof relevantDate === 'string') {
+        tDateStr = relevantDate.split('T')[0];
+        tDate = new Date(tDateStr + 'T12:00:00Z').getTime();
+      } else {
+        const d = new Date(relevantDate);
+        tDateStr = format(d, 'yyyy-MM-dd');
+        tDate = d.setHours(12, 0, 0, 0);
+      }
       
       const start = new Date(dateRange.startDate);
       const end = new Date(dateRange.endDate);
       const startTime = new Date(format(start, 'yyyy-MM-dd') + 'T00:00:00Z').getTime();
       const endTime = new Date(format(end, 'yyyy-MM-dd') + 'T23:59:59Z').getTime();
+      
+      console.log(`Checking transaction: ${t.description}, Date: ${tDateStr}, Timestamp: ${tDate}, Filter: ${format(start, 'yyyy-MM-dd')} to ${format(end, 'yyyy-MM-dd')}, Range: ${startTime} to ${endTime}`);
       
       const typeMap = { 'income': 'venda', 'expense': 'compra', 'all': 'all' };
         const mappedType = typeMap[typeFilter] || typeFilter;
