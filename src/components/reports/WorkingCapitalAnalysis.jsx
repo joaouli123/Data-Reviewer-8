@@ -93,10 +93,31 @@ Forneça recomendações específicas para melhorar a gestão do capital de giro
 
       const response = await InvokeLLM(prompt, schema);
 
-      setAnalysis(response);
+      // Validar resposta
+      if (!response || typeof response !== 'object') {
+        toast.error('Resposta inválida da IA');
+        setIsAnalyzing(false);
+        return;
+      }
+
+      // Garantir estrutura mínima
+      const validatedAnalysis = {
+        assessment: response.assessment || '',
+        recommendations: Array.isArray(response.recommendations) ? response.recommendations : [],
+        risk_level: response.risk_level || 'medium'
+      };
+
+      if (!validatedAnalysis.assessment && validatedAnalysis.recommendations.length === 0) {
+        toast.error('IA não conseguiu gerar análise válida');
+        setIsAnalyzing(false);
+        return;
+      }
+
+      setAnalysis(validatedAnalysis);
       toast.success('Análise concluída!');
     } catch (error) {
-      toast.error('Erro ao analisar capital de giro');
+      console.error('Erro ao analisar:', error);
+      toast.error('Erro ao analisar capital de giro: ' + error.message);
     } finally {
       setIsAnalyzing(false);
     }
