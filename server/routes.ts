@@ -1190,6 +1190,17 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  app.delete("/api/bank/clear", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      await storage.clearBankStatementItems(req.user.companyId);
+      res.json({ message: "Bank statement items cleared successfully" });
+    } catch (error) {
+      console.error("Error clearing bank items:", error);
+      res.status(500).json({ error: "Failed to clear bank items" });
+    }
+  });
+
 
   // ========== PROTECTED ROUTES WITH SUBSCRIPTION CHECK ==========
 

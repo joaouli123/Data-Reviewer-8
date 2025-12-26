@@ -144,6 +144,7 @@ export interface IStorage {
   createBankStatementItem(companyId: string, data: InsertBankStatementItem): Promise<BankStatementItem>;
   updateBankStatementItem(companyId: string, id: string, data: Partial<InsertBankStatementItem>): Promise<BankStatementItem>;
   matchBankStatementItem(companyId: string, bankItemId: string, transactionId: string): Promise<BankStatementItem>;
+  clearBankStatementItems(companyId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -680,6 +681,10 @@ export class DatabaseStorage implements IStorage {
 
       return result[0];
     });
+  }
+
+  async clearBankStatementItems(companyId: string): Promise<void> {
+    await db.delete(bankStatementItems).where(eq(bankStatementItems.companyId, companyId));
   }
 }
 

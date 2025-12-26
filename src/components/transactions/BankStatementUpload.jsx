@@ -30,6 +30,10 @@ export default function BankStatementUpload({ open, onOpenChange, onExtracted })
         message += ` (${duplicateCount} duplicata${duplicateCount !== 1 ? 's' : ''} ignorada${duplicateCount !== 1 ? 's' : ''})`;
       }
       toast.success(message);
+      // Save the filename to localStorage
+      if (file) {
+        localStorage.setItem('lastBankStatementFile', file.name);
+      }
       if (onExtracted) onExtracted(data.newItems || data);
       onOpenChange(false);
       setFile(null);

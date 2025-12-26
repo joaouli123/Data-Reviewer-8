@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle2, XCircle, AlertCircle, Plus, ArrowRight, Loader2 } from 'lucide-react';
+import { CheckCircle2, XCircle, AlertCircle, Plus, ArrowRight, Loader2, Trash2 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 export default function BankReconciliation({ open, onOpenChange }) {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("unmatched");
+  const [lastFileName, setLastFileName] = useState(localStorage.getItem('lastBankStatementFile'));
 
   // Fetch categories to use as default
   const { data: categories = [] } = useQuery({
@@ -99,6 +100,26 @@ export default function BankReconciliation({ open, onOpenChange }) {
     }
   });
 
+  const clearBankDataMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/api/bank/clear', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (!res.ok) throw new Error('Erro ao limpar dados bancários');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/bank/items'] });
+      localStorage.removeItem('lastBankStatementFile');
+      setLastFileName(null);
+      toast.success('Dados bancários removidos com sucesso');
+    },
+    onError: () => {
+      toast.error('Erro ao remover dados bancários');
+    }
+  });
+
   const pendingItems = bankItems.filter(item => item.status === 'PENDING');
   const reconciledItems = bankItems.filter(item => item.status === 'RECONCILED');
 
@@ -110,6 +131,26 @@ export default function BankReconciliation({ open, onOpenChange }) {
         </DialogHeader>
 
         <div className="space-y-4">
+          {lastFileName && (
+            <div className="p-3 bg-blue-50 rounded-lg border border-blue-200 flex items-center justify-between">
+              <div>
+                <p className="text-xs text-blue-600">Último arquivo carregado</p>
+                <p className="text-sm font-medium text-blue-900" data-testid="text-last-file">{lastFileName}</p>
+              </div>
+              <Button 
+                size="sm"
+                variant="ghost"
+                className="text-rose-600 hover:bg-rose-50"
+                onClick={() => clearBankDataMutation.mutate()}
+                disabled={clearBankDataMutation.isPending}
+                data-testid="button-clear-file"
+              >
+                <Trash2 className="w-4 h-4 mr-1" />
+                Limpar
+              </Button>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-4">
             <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
               <div className="flex items-center gap-2 mb-1">
