@@ -66,10 +66,12 @@ function UserListContent() {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [newPassword, setNewPassword] = useState('');
 
-  const { data: users = [], isLoading } = useQuery({
+  const { data: usersData, isLoading } = useQuery({
     queryKey: ['/api/admin/users'],
     queryFn: () => apiRequest('/api/admin/users'),
   });
+
+  const users = usersData || [];
 
   const updateMutation = useMutation({
     mutationFn: (data) => apiRequest(`/api/admin/users/${data.id}`, {
