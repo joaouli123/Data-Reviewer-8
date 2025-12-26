@@ -41,7 +41,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
 
   const transactions = Array.isArray(transactionsData) ? transactionsData : (transactionsData?.data || []);
   const purchases = transactions.filter(t => t.supplierId === supplier?.id && t.type === 'compra');
-  
+
   // Group purchases by installment group
   const groupedPurchases = React.useMemo(() => {
     const groups = {};
@@ -107,20 +107,20 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
 
   const confirmPaymentMutation = useMutation({
     mutationFn: async ({ purchaseId, paidAmount, interest, paymentDate, paymentMethod }) => {
-      
+
       // Get the transaction first to check the amount
       const getResponse = await fetch(`/api/transactions/${purchaseId}`);
       const currentTransaction = await getResponse.json();
-      
+
       // Determine status based on paid amount vs total amount
       const totalAmount = parseFloat(currentTransaction.amount || 0);
       const paidAmountValue = parseFloat(paidAmount || 0);
       const interestValue = parseFloat(interest || 0);
       const totalPaid = paidAmountValue + interestValue;
-      
+
       // Status should be 'pago' only if fully paid
       const status = totalPaid >= totalAmount ? 'pago' : 'parcial';
-      
+
       // Format payment date (NOT the due date - that stays unchanged)
       let formattedPaymentDate = new Date().toISOString(); // Default to today
       if (paymentDate && paymentDate.trim()) {
@@ -128,7 +128,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
         const [year, month, day] = paymentDate.split('-');
         formattedPaymentDate = new Date(`${year}-${month}-${day}T12:00:00Z`).toISOString();
       }
-      
+
       // IMPORTANT: Do NOT update 'date' field - that's the due date and must remain unchanged
       // IMPORTANT: Do NOT update 'description' - keep the base description to maintain grouping
       // Only update paymentDate (when payment was made), status, paidAmount, and interest
@@ -148,7 +148,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
         throw new Error(errorData.error || 'Falha ao confirmar pagamento');
       }
       const transaction = await response.json();
-      
+
       // Then create corresponding cash flow entry (outflow for purchases, using payment date)
       const cashFlowResponse = await fetch('/api/cash-flow', {
         method: 'POST',
@@ -162,10 +162,10 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
           shift: transaction.shift || 'manhã'
         })
       });
-      
+
       if (!cashFlowResponse.ok) {
       }
-      
+
       return transaction;
     },
     onSuccess: (data) => {
@@ -183,11 +183,11 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
 
   const cancelPaymentMutation = useMutation({
     mutationFn: async (purchaseId) => {
-      
+
       // Get the transaction to know the amount to reverse
       const transactionRes = await fetch(`/api/transactions/${purchaseId}`);
       const transaction = await transactionRes.json();
-      
+
       // Revert the transaction status (description stays the same)
       const response = await fetch(`/api/transactions/${purchaseId}`, {
         method: 'PATCH',
@@ -202,7 +202,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
         const errorData = await response.json();
         throw new Error(errorData.error || 'Falha ao cancelar pagamento');
       }
-      
+
       // Delete corresponding cash flow entry
       try {
         const cashFlowsRes = await fetch('/api/cash-flow');
@@ -213,7 +213,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
         }
       } catch (err) {
       }
-      
+
       return response.json();
     },
     onSuccess: () => {
@@ -289,7 +289,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                       </Badge>
                     </div>
                   </div>
-                  
+
                   {/* Lista de parcelas - recolhível */}
                   {isGroupExpanded(group.main.id) && (
                   <div className="divide-y divide-slate-100 border-t border-slate-100">

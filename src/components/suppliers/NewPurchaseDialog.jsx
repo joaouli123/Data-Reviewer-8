@@ -85,59 +85,92 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
     mutationFn: async (data) => {
       // Use categories from React Query cache (already fetched), don't re-fetch
       const cat = categories.find(c => c.name === data.category);
-      
+
       if (!cat || !cat.id) {
         throw new Error('Categoria selecionada não é válida. Recarregue a página e tente novamente.');
       }
-      
+
       // Validate that categoryId is a UUID format (not a timestamp)
       if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cat.id)) {
         throw new Error('Erro no formato da categoria. Por favor, recarregue a página.');
       }
-      
+
       const installmentCount = parseInt(data.installments) || 1;
       // Parse currency values from Brazilian format (1.234,56) to number
       const totalAmount = parseFloat(String(data.total_amount).replace(/\./g, '').replace(',', '.'));
       const installmentAmount = data.installment_amount 
         ? parseFloat(String(data.installment_amount).replace(/\./g, '').replace(',', '.'))
         : (totalAmount / installmentCount);
-      
+
       const installmentGroupId = `group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      // Convert YYYY-MM-DD to ISO date at noon UTC (avoids timezone issues)
-      // Parse the date string directly to ensure correct day
-      const [year, month, day] = data.purchase_date.split('-');
-      const baseDate = new Date(`${year}-${month}-${day}T12:00:00Z`);
-      
       const promises = [];
-      
-      for (let i = 0; i < installmentCount; i++) {
-        // Use addMonths from date-fns to properly handle timezone-aware date arithmetic
-        const dueDate = addMonths(baseDate, i);
-        const dueDateISO = dueDate.toISOString();
-        
-        const payload = {
-          supplierId: supplier.id,
-          categoryId: cat.id,
-          type: 'compra',
-          date: dueDateISO,
-          shift: 'manhã',
-          amount: String(installmentAmount.toFixed(2)),
-          description: `${data.description}${installmentCount > 1 ? ` (${i + 1}/${installmentCount})` : ''}`,
-          status: data.status || 'pendente',
-          paymentMethod: data.paymentMethod,
-          installmentGroup: installmentGroupId,
-          installmentNumber: i + 1,
-          installmentTotal: installmentCount
-        };
-        
-        const promise = apiRequest('/api/transactions', {
-          method: 'POST',
-          body: JSON.stringify(payload)
-        });
-        
-        promises.push(promise);
+
+      // Use custom installments if available, otherwise calculate with addMonths
+      if (data.customInstallments && data.customInstallments.length > 0) {
+        // Use the custom installments with their specific dates
+        for (let i = 0; i < data.customInstallments.length; i++) {
+          const inst = data.customInstallments[i];
+          const [year, month, day] = inst.due_date.split('-');
+          const dueDate = new Date(`${year}-${month}-${day}T12:00:00Z`);
+          const dueDateISO = dueDate.toISOString();
+          const customAmount = parseFloat(inst.amount);
+
+          const payload = {
+            supplierId: supplier.id,
+            categoryId: cat.id,
+            type: 'compra',
+            date: dueDateISO,
+            shift: 'manhã',
+            amount: String(customAmount.toFixed(2)),
+            description: `${data.description}${installmentCount > 1 ? ` (${i + 1}/${installmentCount})` : ''}`,
+            status: data.status || 'pendente',
+            paymentMethod: data.paymentMethod,
+            installmentGroup: installmentGroupId,
+            installmentNumber: i + 1,
+            installmentTotal: installmentCount
+          };
+
+          const promise = apiRequest('/api/transactions', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+          });
+
+          promises.push(promise);
+        }
+      } else {
+        // Use default calculation with addMonths from purchase_date
+        const [year, month, day] = data.purchase_date.split('-');
+        const baseDate = new Date(`${year}-${month}-${day}T12:00:00Z`);
+
+        for (let i = 0; i < installmentCount; i++) {
+          // Use addMonths from date-fns to properly handle timezone-aware date arithmetic
+          const dueDate = addMonths(baseDate, i);
+          const dueDateISO = dueDate.toISOString();
+
+          const payload = {
+            supplierId: supplier.id,
+            categoryId: cat.id,
+            type: 'compra',
+            date: dueDateISO,
+            shift: 'manhã',
+            amount: String(installmentAmount.toFixed(2)),
+            description: `${data.description}${installmentCount > 1 ? ` (${i + 1}/${installmentCount})` : ''}`,
+            status: data.status || 'pendente',
+            paymentMethod: data.paymentMethod,
+            installmentGroup: installmentGroupId,
+            installmentNumber: i + 1,
+            installmentTotal: installmentCount
+          };
+
+          const promise = apiRequest('/api/transactions', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+          });
+
+          promises.push(promise);
+        }
       }
-      
+
       return Promise.all(promises);
     },
     onSuccess: async () => {
@@ -188,7 +221,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
       toast.error('Selecione uma categoria válida');
       return;
     }
-    
+
     // Validate custom installments if provided
     if (customInstallments.length > 0) {
       const totalCustom = customInstallments.reduce((sum, inst) => sum + parseFloat(inst.amount || 0), 0);
@@ -197,7 +230,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
         return;
       }
     }
-    
+
     createPurchaseMutation.mutate({
       ...formData,
       total_amount: Number(formData.total_amount),
@@ -209,7 +242,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
   const handleInstallmentsChange = (value) => {
     const numValue = value === '' ? '1' : value;
     setFormData({ ...formData, installments: numValue, installment_amount: '' });
-    
+
     // Initialize custom installments array
     const numInstallments = parseInt(numValue);
     if (numInstallments > 1) {
@@ -217,8 +250,8 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
         ? parseFloat(formData.total_amount.replace(/\./g, '').replace(',', '.'))
         : parseFloat(formData.total_amount);
       const defaultAmount = totalAmount / numInstallments;
-      // Parse date at noon to avoid timezone offset issues (UTC-3 São Paulo)
-      const baseDate = new Date(formData.purchase_date + 'T12:00:00');
+      // Parse date in UTC to avoid timezone offset issues (UTC-3 São Paulo)
+      const baseDate = new Date(formData.purchase_date + 'T12:00:00Z');
       const newCustomInstallments = Array.from({ length: numInstallments }, (_, i) => ({
         amount: defaultAmount,
         due_date: format(addMonths(baseDate, i), 'yyyy-MM-dd')
@@ -371,12 +404,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
                     <SelectValue placeholder="Selecione a categoria" />
                   </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Insumos">Insumos</SelectItem>
-                  <SelectItem value="Matéria-prima">Matéria-prima</SelectItem>
-                  <SelectItem value="Equipamentos">Equipamentos</SelectItem>
-                  <SelectItem value="Serviços">Serviços</SelectItem>
-                  <SelectItem value="Infraestrutura">Infrasestrutura</SelectItem>
-                  {expenseCategories.filter(c => !['Insumos', 'Matéria-prima', 'Equipamentos', 'Serviços', 'Infraestrutura'].includes(c.name)).map((cat) => (
+                  {expenseCategories.map((cat) => (
                     <SelectItem key={cat.id} value={cat.name}>
                       {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
                     </SelectItem>

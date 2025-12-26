@@ -27,7 +27,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
   const [isCreateCategoryModalOpen, setIsCreateCategoryModalOpen] = useState(false);
   const [isSuggestingCategory, setIsSuggestingCategory] = useState(false);
   const [customInstallments, setCustomInstallments] = useState([]);
-  
+
   const [formData, setFormData] = React.useState({
     description: '',
     amount: '',
@@ -82,27 +82,27 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
         // First try to use categoryId directly, then find by name
         let categoryId = initialData.categoryId;
         let selectedCategory = categories.find(c => c.id === categoryId);
-        
+
         // If no categoryId match found, try matching by category name
         if (!selectedCategory && initialData.category) {
           selectedCategory = categories.find(c => c.name.toLowerCase() === (initialData.category || '').toLowerCase());
           categoryId = selectedCategory?.id || '';
         }
-        
+
         // If still no category, try to find by ID as string
         if (!selectedCategory && initialData.categoryId) {
           selectedCategory = categories.find(c => c.id === initialData.categoryId);
         }
-        
+
         // Try to get amount from either amount or paidAmount (fallback)
         let amountValue = parseFloat(initialData.amount) || parseFloat(initialData.paidAmount) || 0;
         amountValue = Math.abs(amountValue);
-        
+
         // Determine entity type from saved data
         let entityType = 'none';
         let customerId = '';
         let supplierId = '';
-        
+
         if (initialData.customerId) {
           entityType = 'customer';
           customerId = initialData.customerId;
@@ -110,13 +110,13 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
           entityType = 'supplier';
           supplierId = initialData.supplierId;
         }
-        
+
         // Get payment date
         let paymentDate = null;
         if (initialData.paymentDate) {
           paymentDate = new Date(initialData.paymentDate);
         }
-        
+
         setFormData({
           ...initialData,
           categoryId: categoryId || initialData.categoryId || '',
@@ -128,6 +128,10 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
           supplierId: supplierId,
           paymentDate: paymentDate
         });
+
+        // If this is a parcelada transaction, load the custom installments
+        // (This would come from parent component with all installments data)
+        setCustomInstallments([]);
       } else {
         // Pre-select first category when opening new transaction form
         const defaultCategoryId = categories.length > 0 ? categories[0].id : '';
@@ -153,11 +157,11 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
   const handleInstallmentsChange = (value) => {
     const numValue = value === '' ? 1 : parseInt(value);
     setFormData({ ...formData, installments: numValue, installment_amount: '' });
-    
+
     if (numValue > 1) {
       const totalAmount = parseFloat(formData.amount) || 0;
       const defaultAmount = totalAmount > 0 ? totalAmount / numValue : '';
-      
+
       // Extract local date from formData.date (which might be Date or string)
       let baseDate;
       if (typeof formData.date === 'string') {
@@ -167,7 +171,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
       } else {
         baseDate = new Date(formData.date);
       }
-      
+
       const newCustomInstallments = Array.from({ length: numValue }, (_, i) => {
         const installmentDate = addMonths(baseDate, i);
         const year = installmentDate.getFullYear();
@@ -221,75 +225,62 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
         toast.error('Selecione a forma de pagamento', { duration: 5000 });
         return;
     }
-    
+
     // Get selected category to determine if value should be negative
     const selectedCategory = categories.find(c => c.id === formData.categoryId);
     let amount = Number(formData.amount).toFixed(2);
-    
+
     // If category is "saida" (expense), make amount negative
     if (selectedCategory && selectedCategory.type === 'saida') {
       amount = (-Math.abs(Number(amount))).toFixed(2);
     } else {
       amount = Math.abs(Number(amount)).toFixed(2);
     }
-    
-    // Convert date to ISO string using local time (not UTC)
-    let isoDate;
-    if (formData.date && typeof formData.date === 'string') {
-      const [year, month, day] = formData.date.split('-');
-      isoDate = new Date(`${year}-${month}-${day}T00:00:00Z`).toISOString();
-    } else {
-      // Extract local date components to avoid timezone shift
-      const date = new Date(formData.date);
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      isoDate = new Date(`${year}-${month}-${day}T00:00:00Z`).toISOString();
-    }
 
-    let paymentDateISO = null;
-    if (formData.paymentDate) {
-      if (typeof formData.paymentDate === 'string') {
-        const [year, month, day] = formData.paymentDate.split('-');
-        paymentDateISO = new Date(`${year}-${month}-${day}T00:00:00Z`).toISOString();
-      } else {
-        const date = new Date(formData.paymentDate);
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        paymentDateISO = new Date(`${year}-${month}-${day}T00:00:00Z`).toISOString();
-      }
-    }
+    // Helper to convert Date to YYYY-MM-DD format (local date, no timezone)
+    const formatDateOnly = (dateObj) => {
+      if (!dateObj) return null;
+      const d = new Date(dateObj);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
+    let isoDate = formatDateOnly(formData.date);
+
+    let paymentDateISO = formatDateOnly(formData.paymentDate);
 
     // Handle installments
     const installmentCount = formData.installments || 1;
     if (installmentCount > 1) {
       // Create multiple transactions for installments
       const installmentGroupId = `group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      
-      // Extract local date from formData.date
-      let baseDate;
-      if (typeof formData.date === 'string') {
-        const [year, month, day] = formData.date.split('-');
-        baseDate = new Date(year, parseInt(month) - 1, parseInt(day));
-      } else {
-        const date = new Date(formData.date);
-        baseDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-      }
-      
+
       const transactions = [];
       for (let i = 0; i < installmentCount; i++) {
-        const dueDate = addMonths(baseDate, i);
-        // Convert to ISO string using local date components
-        const year = dueDate.getFullYear();
-        const month = String(dueDate.getMonth() + 1).padStart(2, '0');
-        const day = String(dueDate.getDate()).padStart(2, '0');
-        const dueDateISO = new Date(`${year}-${month}-${day}T00:00:00Z`).toISOString();
-        
+        let dueDateISO;
+
+        // ALWAYS use customInstallments if they exist (user may have edited dates)
+        if (customInstallments.length > 0 && customInstallments[i]?.due_date) {
+          // due_date is already in YYYY-MM-DD format, just use it directly
+          dueDateISO = customInstallments[i].due_date;
+        } else if (customInstallments.length > i) {
+          // If customInstallments exist but due_date is missing, calculate it
+          const baseDate = new Date(formData.date);
+          const dueDate = addMonths(new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate()), i);
+          dueDateISO = formatDateOnly(dueDate);
+        } else {
+          // Fallback: calculate from transaction date
+          const baseDate = new Date(formData.date);
+          const dueDate = addMonths(new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate()), i);
+          dueDateISO = formatDateOnly(dueDate);
+        }
+
         const installmentAmount = customInstallments.length > i 
           ? parseFloat(customInstallments[i].amount) 
           : parseFloat(amount) / installmentCount;
-        
+
         const payload = {
           categoryId: formData.categoryId,
           amount: installmentAmount.toFixed(2),
@@ -304,7 +295,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
           installmentNumber: i + 1,
           installmentTotal: installmentCount
         };
-        
+
         // Only add customer/supplier if selected
         if (formData.entityType === 'customer' && formData.customerId) {
           payload.customerId = formData.customerId;
@@ -312,7 +303,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
         if (formData.entityType === 'supplier' && formData.supplierId) {
           payload.supplierId = formData.supplierId;
         }
-        
+
         transactions.push(payload);
       }
       onSubmit(transactions);
@@ -328,20 +319,20 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
         status: formData.status,
         paymentMethod: formData.paymentMethod
       };
-      
+
       // Only add customer/supplier if selected and has value
       if (formData.entityType === 'customer' && formData.customerId) {
         payload.customerId = formData.customerId;
       } else if (formData.entityType === 'customer') {
         console.warn('Customer selected but no customerId provided');
       }
-      
+
       if (formData.entityType === 'supplier' && formData.supplierId) {
         payload.supplierId = formData.supplierId;
       } else if (formData.entityType === 'supplier') {
         console.warn('Supplier selected but no supplierId provided');
       }
-      
+
       console.log('Submitting payload:', payload);
       onSubmit(payload);
     }
@@ -365,7 +356,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
 
       const suggestedCategory = response.toLowerCase().trim();
       const matchingCategory = categories.find(c => c.name.toLowerCase() === suggestedCategory);
-      
+
       if (matchingCategory) {
         const newType = matchingCategory.type === 'entrada' ? 'venda' : 'compra';
         setFormData({ ...formData, categoryId: matchingCategory.id, type: newType });
@@ -387,7 +378,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
           <DialogTitle>{initialData ? 'Editar Transação' : 'Nova Transação'}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-          
+
           <div className="space-y-2">
             <Label>Cliente ou Fornecedor</Label>
             <Select 

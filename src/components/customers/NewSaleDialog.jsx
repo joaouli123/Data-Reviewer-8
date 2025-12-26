@@ -81,56 +81,89 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
     mutationFn: async (data) => {
       // Use categories from React Query cache (already fetched), don't re-fetch
       const cat = categories.find(c => c.name === data.category);
-      
+
       if (!cat || !cat.id) {
         throw new Error('Categoria selecionada não é válida. Recarregue a página e tente novamente.');
       }
-      
+
       // Validate that categoryId is a UUID format (not a timestamp)
       if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cat.id)) {
         throw new Error('Erro no formato da categoria. Por favor, recarregue a página.');
       }
-      
+
       const installmentCount = parseInt(data.installments) || 1;
       const totalAmount = parseFloat(data.total_amount);
       const installmentAmount = parseFloat(data.installment_amount) || (totalAmount / installmentCount);
-      
+
       const installmentGroupId = `group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      // Convert YYYY-MM-DD to ISO date at noon UTC (avoids timezone issues)
-      // Parse the date string directly to ensure correct day
-      const [year, month, day] = data.sale_date.split('-');
-      const baseDate = new Date(`${year}-${month}-${day}T12:00:00Z`);
-      
       const promises = [];
-      
-      for (let i = 0; i < installmentCount; i++) {
-        // Use addMonths from date-fns to properly handle timezone-aware date arithmetic
-        const dueDate = addMonths(baseDate, i);
-        const dueDateISO = dueDate.toISOString();
-        
-        const payload = {
-          customerId: customer.id,
-          categoryId: cat?.id,
-          type: 'venda',
-          date: dueDateISO,
-          shift: 'manhã',
-          amount: String(installmentAmount.toFixed(2)),
-          description: `${data.description}${installmentCount > 1 ? ` (${i + 1}/${installmentCount})` : ''}`,
-          status: data.status || 'pendente',
-          paymentMethod: data.paymentMethod,
-          installmentGroup: installmentGroupId,
-          installmentNumber: i + 1,
-          installmentTotal: installmentCount
-        };
-        
-        const promise = apiRequest('/api/transactions', {
-          method: 'POST',
-          body: JSON.stringify(payload)
-        });
-        
-        promises.push(promise);
+
+      // Use custom installments if available, otherwise calculate with addMonths
+      if (data.customInstallments && data.customInstallments.length > 0) {
+        // Use the custom installments with their specific dates
+        for (let i = 0; i < data.customInstallments.length; i++) {
+          const inst = data.customInstallments[i];
+          const [year, month, day] = inst.due_date.split('-');
+          const dueDate = new Date(`${year}-${month}-${day}T12:00:00Z`);
+          const dueDateISO = dueDate.toISOString();
+          const customAmount = parseFloat(inst.amount);
+
+          const payload = {
+            customerId: customer.id,
+            categoryId: cat?.id,
+            type: 'venda',
+            date: dueDateISO,
+            shift: 'manhã',
+            amount: String(customAmount.toFixed(2)),
+            description: `${data.description}${installmentCount > 1 ? ` (${i + 1}/${installmentCount})` : ''}`,
+            status: data.status || 'pendente',
+            paymentMethod: data.paymentMethod,
+            installmentGroup: installmentGroupId,
+            installmentNumber: i + 1,
+            installmentTotal: installmentCount
+          };
+
+          const promise = apiRequest('/api/transactions', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+          });
+
+          promises.push(promise);
+        }
+      } else {
+        // Use default calculation with addMonths from sale_date
+        const [year, month, day] = data.sale_date.split('-');
+        const baseDate = new Date(`${year}-${month}-${day}T12:00:00Z`);
+
+        for (let i = 0; i < installmentCount; i++) {
+          // Use addMonths from date-fns to properly handle timezone-aware date arithmetic
+          const dueDate = addMonths(baseDate, i);
+          const dueDateISO = dueDate.toISOString();
+
+          const payload = {
+            customerId: customer.id,
+            categoryId: cat?.id,
+            type: 'venda',
+            date: dueDateISO,
+            shift: 'manhã',
+            amount: String(installmentAmount.toFixed(2)),
+            description: `${data.description}${installmentCount > 1 ? ` (${i + 1}/${installmentCount})` : ''}`,
+            status: data.status || 'pendente',
+            paymentMethod: data.paymentMethod,
+            installmentGroup: installmentGroupId,
+            installmentNumber: i + 1,
+            installmentTotal: installmentCount
+          };
+
+          const promise = apiRequest('/api/transactions', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+          });
+
+          promises.push(promise);
+        }
       }
-      
+
       return Promise.all(promises);
     },
     onSuccess: async () => {
@@ -174,7 +207,7 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
       toast.error('Selecione a forma de pagamento', { duration: 5000 });
       return;
     }
-    
+
     // Validate custom installments if provided
     if (customInstallments.length > 0) {
       const totalCustom = customInstallments.reduce((sum, inst) => sum + parseFloat(inst.amount || 0), 0);
@@ -183,7 +216,7 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
         return;
       }
     }
-    
+
     createSaleMutation.mutate({
       ...formData,
       total_amount: Number(formData.total_amount),
@@ -196,14 +229,14 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
   const handleInstallmentsChange = (value) => {
     const numValue = value === '' ? '1' : value;
     setFormData({ ...formData, installments: numValue, installment_amount: '' });
-    
+
     // Initialize custom installments array
     const numInstallments = parseInt(numValue);
     if (numInstallments > 1) {
       const totalAmount = parseFloat(formData.total_amount) || 0;
       const defaultAmount = totalAmount > 0 ? totalAmount / numInstallments : '';
-      // Parse date at noon to avoid timezone offset issues (UTC-3 São Paulo)
-      const baseDate = new Date(formData.sale_date + 'T12:00:00');
+      // Parse date in UTC to avoid timezone offset issues (UTC-3 São Paulo)
+      const baseDate = new Date(formData.sale_date + 'T12:00:00Z');
       const newCustomInstallments = Array.from({ length: numInstallments }, (_, i) => ({
         amount: defaultAmount,
         due_date: format(addMonths(baseDate, i), 'yyyy-MM-dd')
@@ -226,7 +259,7 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
         <DialogHeader>
           <DialogTitle>Nova Venda - {customer?.name}</DialogTitle>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           <div className="space-y-2">
             <Label>Descrição da Venda</Label>
@@ -237,7 +270,7 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
               required
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label>Forma de Pagamento</Label>
             <Select 
