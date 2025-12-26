@@ -52,6 +52,9 @@ import { z } from "zod";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
 
+import OFX from "node-ofx-parser";
+import { parse } from "date-fns";
+
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   // Health check (public)
   app.get("/api/health", (req, res) => {
