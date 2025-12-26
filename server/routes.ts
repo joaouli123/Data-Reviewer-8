@@ -1087,6 +1087,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const items = await storage.getBankStatementItems(req.user.companyId);
       res.json(items);
     } catch (error) {
+      console.error("Error fetching bank items:", error);
       res.status(500).json({ error: "Failed to fetch bank items" });
     }
   });

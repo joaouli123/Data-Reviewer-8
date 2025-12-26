@@ -16,6 +16,11 @@ export default function BankReconciliation({ open, onOpenChange }) {
   // Fetch bank statement items
   const { data: bankItems = [], isLoading: isLoadingItems } = useQuery({
     queryKey: ['/api/bank/items'],
+    queryFn: async () => {
+      const res = await fetch('/api/bank/items');
+      if (!res.ok) throw new Error('Falha ao carregar itens');
+      return res.json();
+    },
     enabled: open
   });
 
@@ -23,6 +28,12 @@ export default function BankReconciliation({ open, onOpenChange }) {
   const [selectedBankItemId, setSelectedBankItemId] = useState(null);
   const { data: suggestions = [], isLoading: isLoadingSuggestions } = useQuery({
     queryKey: ['/api/bank/suggest', selectedBankItemId],
+    queryFn: async () => {
+      if (!selectedBankItemId) return [];
+      const res = await fetch(`/api/bank/suggest/${selectedBankItemId}`);
+      if (!res.ok) throw new Error('Falha ao carregar sugestões');
+      return res.json();
+    },
     enabled: !!selectedBankItemId
   });
 

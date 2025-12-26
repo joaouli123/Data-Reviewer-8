@@ -662,21 +662,23 @@ export class DatabaseStorage implements IStorage {
   }
 
   async matchBankStatementItem(companyId: string, bankItemId: string, transactionId: string): Promise<BankStatementItem> {
-    const [item] = await db
-      .update(bankStatementItems)
-      .set({ 
-        status: "MATCHED", 
-        transactionId 
-      })
-      .where(and(eq(bankStatementItems.companyId, companyId), eq(bankStatementItems.id, bankItemId)))
-      .returning();
+    return await db.transaction(async (tx) => {
+      const result = await tx
+        .update(bankStatementItems)
+        .set({ 
+          status: "RECONCILED", 
+          transactionId 
+        })
+        .where(and(eq(bankStatementItems.companyId, companyId), eq(bankStatementItems.id, bankItemId)))
+        .returning();
 
-    await db
-      .update(transactions)
-      .set({ isReconciled: true })
-      .where(and(eq(transactions.companyId, companyId), eq(transactions.id, transactionId)));
+      await tx
+        .update(transactions)
+        .set({ isReconciled: true })
+        .where(and(eq(transactions.companyId, companyId), eq(transactions.id, transactionId)));
 
-    return item;
+      return result[0];
+    });
   }
 }
 

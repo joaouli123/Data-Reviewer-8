@@ -352,8 +352,8 @@ export const insertUserSchema = createInsertSchema(users).omit({
   createdAt: true,
   updatedAt: true,
 }).extend({
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  username: z.string().min(3, "Username must be at least 3 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters").optional(),
+  username: z.string().min(3, "Username must be at least 3 characters").optional(),
 });
 
 export const insertInvitationSchema = createInsertSchema(invitations).omit({
@@ -362,9 +362,9 @@ export const insertInvitationSchema = createInsertSchema(invitations).omit({
   acceptedAt: true,
   acceptedBy: true,
 }).extend({
-  email: z.string().email("Invalid email"),
+  email: z.string().email("Invalid email").optional(),
   token: z.string().optional(),
-  expiresAt: z.date().or(z.string()),
+  expiresAt: z.date().or(z.string()).optional(),
 });
 
 export type User = typeof users.$inferSelect;
