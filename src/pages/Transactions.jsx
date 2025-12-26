@@ -190,11 +190,19 @@ export default function TransactionsPage() {
     document.body.removeChild(link);
   };
 
-    const txArray = Array.isArray(transactions) ? transactions : [];
+    const txArray = Array.isArray(transactionsData) ? transactionsData : (transactionsData?.data || []);
+    
     const filteredTransactions = txArray
       .filter(t => {
         if (!t) return false;
-        // Filter by status
+        
+        // 1. Filtrar por Tipo
+        const typeMap = { 'income': 'venda', 'expense': 'compra', 'all': 'all' };
+        const mappedType = typeMap[typeFilter] || typeFilter;
+        const matchesType = mappedType === 'all' || t.type === mappedType || (mappedType === 'venda' && t.type === 'income') || (mappedType === 'compra' && t.type === 'expense');
+        if (!matchesType) return false;
+
+        // 2. Filtrar por Status
         if (statusFilter === 'paid') {
           const isPaidOrPartial = t.status === 'pago' || t.status === 'completed' || t.status === 'parcial';
           if (!isPaidOrPartial) return false;
@@ -203,48 +211,43 @@ export default function TransactionsPage() {
           if (!isPending) return false;
         }
         
-      // statusFilter === 'all' shows everything
-      
-      const isPaid = t.status === 'pago' || t.status === 'completed';
-      const relevantDate = isPaid && t.paymentDate ? t.paymentDate : t.date;
-      
-      if (!relevantDate) return false;
-      
-      // Parse dates robustly
-      let tDate;
-      let tDateStr = 'unknown';
-      if (typeof relevantDate === 'string') {
-        tDateStr = relevantDate.split('T')[0];
-        tDate = new Date(tDateStr + 'T12:00:00Z').getTime();
-      } else {
-        const d = new Date(relevantDate);
-        tDateStr = format(d, 'yyyy-MM-dd');
-        tDate = d.setHours(12, 0, 0, 0);
-      }
-      
-      const start = new Date(dateRange.startDate);
-      const end = new Date(dateRange.endDate);
-      const startTime = new Date(format(start, 'yyyy-MM-dd') + 'T00:00:00Z').getTime();
-      const endTime = new Date(format(end, 'yyyy-MM-dd') + 'T23:59:59Z').getTime();
-      
-      console.log(`Checking transaction: ${t.description}, Date: ${tDateStr}, Timestamp: ${tDate}, Filter: ${format(start, 'yyyy-MM-dd')} to ${format(end, 'yyyy-MM-dd')}, Range: ${startTime} to ${endTime}`);
-      
-      const typeMap = { 'income': 'venda', 'expense': 'compra', 'all': 'all' };
-        const mappedType = typeMap[typeFilter] || typeFilter;
-        const matchesType = mappedType === 'all' || t.type === mappedType;
-        
+        // 3. Filtrar por Categoria
         const matchesCategory = categoryFilter === 'all' || 
                                t.category === categoryFilter || 
                                categories?.find(c => c.id === t.categoryId)?.name === categoryFilter ||
                                categories?.find(c => c.name === t.category)?.id === categoryFilter;
+        if (!matchesCategory) return false;
 
+        // 4. Filtrar por Busca
         const matchesSearch = (t.description || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
                               (t.category && t.category.toLowerCase().includes(searchTerm.toLowerCase()));
-        const matchesDate = tDate >= startTime && tDate <= endTime;
+        if (!matchesSearch) return false;
 
+        // 5. Filtrar por Forma de Pagamento
         const matchesPaymentMethod = paymentMethodFilter === 'all' || t.paymentMethod === paymentMethodFilter;
+        if (!matchesPaymentMethod) return false;
 
-        return matchesType && matchesCategory && matchesSearch && matchesDate && matchesPaymentMethod;
+        // 6. Filtrar por Data (UTC Midday approach)
+        const isPaid = t.status === 'pago' || t.status === 'completed';
+        const relevantDate = isPaid && t.paymentDate ? t.paymentDate : t.date;
+        if (!relevantDate) return false;
+
+        let tDate;
+        try {
+          const d = new Date(relevantDate);
+          if (isNaN(d.getTime())) return false;
+          // Normalizar para meio-dia UTC para evitar problemas de fuso horário
+          tDate = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 12, 0, 0);
+        } catch (e) {
+          return false;
+        }
+        
+        const start = new Date(dateRange.startDate);
+        const end = new Date(dateRange.endDate);
+        const startTime = Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate(), 0, 0, 0);
+        const endTime = Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate(), 23, 59, 59);
+
+        return tDate >= startTime && tDate <= endTime;
       })
     .sort((a, b) => {
       // Sort by relevant date (paymentDate for paid, date for pending)
@@ -262,29 +265,37 @@ export default function TransactionsPage() {
     
     const start = new Date(dateRange.startDate);
     const end = new Date(dateRange.endDate);
-    const startTime = new Date(format(start, 'yyyy-MM-dd') + 'T00:00:00Z').getTime();
-    const endTime = new Date(format(end, 'yyyy-MM-dd') + 'T23:59:59Z').getTime();
+    const startTime = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate(), 0, 0, 0)).getTime();
+    const endTime = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate(), 23, 59, 59)).getTime();
 
     txArray.forEach(t => {
       if (!t) return;
-      // For paid transactions, use paymentDate; for pending, use date (due date)
       const isPaid = t.status === 'pago' || t.status === 'completed';
       const relevantDate = isPaid && t.paymentDate ? t.paymentDate : t.date;
-      
       if (!relevantDate) return;
       
-      const tDateStr = relevantDate.split('T')[0]; // Get YYYY-MM-DD only
-      const tDate = new Date(tDateStr + 'T12:00:00Z').getTime();
+      let tDate;
+      try {
+        const d = new Date(relevantDate);
+        if (isNaN(d.getTime())) return;
+        tDate = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 12, 0, 0);
+      } catch (e) {
+        return;
+      }
+      
+      const start = new Date(dateRange.startDate);
+      const end = new Date(dateRange.endDate);
+      const startTime = Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate(), 0, 0, 0);
+      const endTime = Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate(), 23, 59, 59);
+      
       const amount = (parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0);
 
       if (tDate < startTime) {
-        // Transaction is before the selected period -> contributes to opening balance
-        if (t.type === 'venda') openingBalance += amount;
+        if (t.type === 'venda' || t.type === 'income') openingBalance += amount;
         else openingBalance -= amount;
       } else if (tDate >= startTime && tDate <= endTime) {
-        // Transaction is within period
-        if (t.type === 'venda') periodIncome += amount;
-        else periodExpense += Math.abs(amount);  // Always use positive for expense calculation
+        if (t.type === 'venda' || t.type === 'income') periodIncome += amount;
+        else periodExpense += Math.abs(amount);
       }
     });
 
