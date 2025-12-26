@@ -1149,12 +1149,15 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
       const matches = allTransactions.filter(t => {
         if (t.isReconciled) return false;
-        const tAmount = parseFloat(t.amount.toString());
-        if (Math.abs(Math.abs(tAmount) - Math.abs(bankAmount)) > 0.01) return false;
+        
+        const tAmount = Math.abs(parseFloat(t.amount.toString()));
+        const bankAmountAbs = Math.abs(bankAmount);
+        
+        if (Math.abs(tAmount - bankAmountAbs) > 0.01) return false;
         
         const tDate = new Date(t.date);
         const diffDays = Math.abs(tDate.getTime() - bankDate.getTime()) / (1000 * 60 * 60 * 24);
-        return diffDays <= 3;
+        return diffDays <= 7; // Aumentado para 7 dias para maior flexibilidade
       });
 
       res.json(matches);
