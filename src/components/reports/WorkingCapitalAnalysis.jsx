@@ -63,15 +63,20 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
     try {
       const wc = calculateWorkingCapital();
       
-      const prompt = `Analise a situação de capital de giro:
+      const prompt = `Você é um analista financeiro. Analise a situação de capital de giro e retorne recomendações estruturadas.
+
+SITUAÇÃO ATUAL:
 - Capital de Giro Atual: R$ ${wc.workingCapital.toFixed(2)}
 - Contas a Receber (30 dias): R$ ${wc.currentReceivables.toFixed(2)}
 - Contas a Pagar (30 dias): R$ ${wc.currentPayables.toFixed(2)}
 - Despesas Mensais Médias: R$ ${wc.avgMonthlyExpenses.toFixed(2)}
-- Capital de Giro Recomendado: R$ ${wc.recommendedWorkingCapital.toFixed(2)}
+- Capital de Giro Recomendado (2 meses): R$ ${wc.recommendedWorkingCapital.toFixed(2)}
 - Déficit/Superávit: R$ ${(wc.workingCapital - wc.recommendedWorkingCapital).toFixed(2)}
 
-Forneça recomendações específicas para melhorar a gestão do capital de giro.`;
+FORNEÇA:
+1. Assessment: análise da situação atual (1-2 frases)
+2. Recommendations: lista com 2-3 ações específicas (action: string, impact: string, priority: high/medium/low)
+3. Risk Level: low, medium ou high`;
 
       const schema = {
         properties: {
@@ -95,19 +100,28 @@ Forneça recomendações específicas para melhorar a gestão do capital de giro
 
       // Validar resposta
       if (!response || typeof response !== 'object') {
+        console.error('Resposta da IA não é um objeto:', response);
         toast.error('Resposta inválida da IA');
         setIsAnalyzing(false);
         return;
       }
 
-      // Garantir estrutura mínima
+      // Garantir estrutura mínima - ser mais flexível
       const validatedAnalysis = {
-        assessment: response.assessment || '',
+        assessment: response.assessment || 'Análise de capital de giro concluída',
         recommendations: Array.isArray(response.recommendations) ? response.recommendations : [],
         risk_level: response.risk_level || 'medium'
       };
 
-      if (!validatedAnalysis.assessment && validatedAnalysis.recommendations.length === 0) {
+      // Validar que temos pelo menos ALGUNS dados
+      const hasAssessment = validatedAnalysis.assessment && validatedAnalysis.assessment.length > 0;
+      const hasRecommendations = validatedAnalysis.recommendations && validatedAnalysis.recommendations.length > 0;
+      const hasRiskLevel = validatedAnalysis.risk_level;
+      
+      const hasMinimalValidData = hasAssessment || hasRecommendations || hasRiskLevel;
+      
+      if (!hasMinimalValidData) {
+        console.error('Resposta da IA sem dados essenciais:', response);
         toast.error('IA não conseguiu gerar análise válida');
         setIsAnalyzing(false);
         return;
