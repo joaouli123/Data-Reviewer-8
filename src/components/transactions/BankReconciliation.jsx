@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,12 +16,15 @@ export default function BankReconciliation({ open, onOpenChange }) {
   const [lastFileName, setLastFileName] = useState(localStorage.getItem('lastBankStatementFile'));
   const [isTransactionFormOpen, setIsTransactionFormOpen] = useState(false);
   const [selectedBankItemForForm, setSelectedBankItemForForm] = useState(null);
+  const [isAutoReconciling, setIsAutoReconciling] = useState(false);
+  const autoReconcileTriggered = useRef(false);
 
   // Sync lastFileName when modal opens
   useEffect(() => {
     if (open) {
       const fileName = localStorage.getItem('lastBankStatementFile');
       setLastFileName(fileName);
+      autoReconcileTriggered.current = false; // Reset flag when opening
     }
   }, [open]);
 
@@ -131,6 +134,72 @@ export default function BankReconciliation({ open, onOpenChange }) {
       toast.error('Erro ao remover dados bancários');
     }
   });
+
+  // Auto-reconciliation function
+  const performAutoReconciliation = async () => {
+    if (!bankItems.length || isAutoReconciling) return;
+    
+    setIsAutoReconciling(true);
+    let reconciliationCount = 0;
+    const pendingItems = bankItems.filter(item => item.status === 'PENDING');
+    
+    for (const bankItem of pendingItems) {
+      try {
+        // Get suggestions for this bank item
+        const suggestRes = await fetch(`/api/bank/suggest/${bankItem.id}`);
+        if (!suggestRes.ok) continue;
+        
+        const suggestions = await suggestRes.json();
+        if (suggestions.length === 0) continue;
+        
+        // Check for perfect match (exact description and amount)
+        const bankItemAmount = Math.abs(parseFloat(bankItem.amount));
+        const bankItemDesc = bankItem.description.toLowerCase().trim();
+        
+        const perfectMatch = suggestions.find(t => {
+          const tAmount = Math.abs(parseFloat(t.amount));
+          const tDesc = (t.description || '').toLowerCase().trim();
+          const amountMatch = Math.abs(tAmount - bankItemAmount) < 0.01;
+          const descMatch = tDesc === bankItemDesc;
+          return amountMatch && descMatch;
+        });
+        
+        if (perfectMatch) {
+          // Auto-reconcile this item
+          const matchRes = await fetch('/api/bank/match', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              bankItemId: bankItem.id, 
+              transactionId: perfectMatch.id 
+            })
+          });
+          
+          if (matchRes.ok) {
+            reconciliationCount++;
+          }
+        }
+      } catch (error) {
+        console.error('Auto-reconciliation error:', error);
+      }
+    }
+    
+    setIsAutoReconciling(false);
+    
+    if (reconciliationCount > 0) {
+      queryClient.invalidateQueries({ queryKey: ['/api/bank/items'] });
+      queryClient.invalidateQueries({ exact: false, queryKey: ['/api/transactions'] });
+      toast.success(`${reconciliationCount} transação${reconciliationCount > 1 ? 's' : ''} reconciliada${reconciliationCount > 1 ? 's' : ''} automaticamente!`);
+    }
+  };
+
+  // Trigger auto-reconciliation when modal opens with pending items
+  useEffect(() => {
+    if (open && bankItems.length > 0 && !autoReconcileTriggered.current) {
+      autoReconcileTriggered.current = true;
+      performAutoReconciliation();
+    }
+  }, [open, bankItems.length]);
 
   const pendingItems = bankItems.filter(item => item.status === 'PENDING');
   const reconciledItems = bankItems.filter(item => item.status === 'RECONCILED');
