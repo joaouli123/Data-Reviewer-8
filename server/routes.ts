@@ -1100,22 +1100,46 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       
       const transactions = Array.isArray(stmtTrn) ? stmtTrn : [stmtTrn];
       const savedItems = [];
+      const duplicateItems = [];
+
+      // Get existing items to check for duplicates
+      const existingItems = await storage.getBankStatementItems(req.user.companyId);
 
       for (const item of transactions) {
         const dateStr = item.DTPOSTED.substring(0, 8);
         const date = parse(dateStr, "yyyyMMdd", new Date());
+        const amount = String(item.TRNAMT);
+        const description = item.MEMO || item.NAME || "Sem descrição";
         
-        const bankItem = await storage.createBankStatementItem(req.user.companyId, {
-          date,
-          amount: String(item.TRNAMT),
-          description: item.MEMO || item.NAME || "Sem descrição",
-          status: "PENDING",
-          transactionId: null
+        // Check if item already exists (same date, amount, and description)
+        const isDuplicate = existingItems.some(existing => {
+          const existingDate = new Date(existing.date);
+          const isSameDate = existingDate.toDateString() === date.toDateString();
+          const isSameAmount = Math.abs(parseFloat(existing.amount.toString()) - parseFloat(amount)) < 0.01;
+          const isSameDescription = existing.description.toLowerCase().trim() === description.toLowerCase().trim();
+          return isSameDate && isSameAmount && isSameDescription;
         });
-        savedItems.push(bankItem);
+
+        if (isDuplicate) {
+          duplicateItems.push({ date, amount, description });
+        } else {
+          const bankItem = await storage.createBankStatementItem(req.user.companyId, {
+            date,
+            amount,
+            description,
+            status: "PENDING",
+            transactionId: null
+          });
+          savedItems.push(bankItem);
+        }
       }
 
-      res.status(201).json(savedItems);
+      // Return info about both new and duplicate items
+      res.status(201).json({
+        newItems: savedItems,
+        duplicateCount: duplicateItems.length,
+        totalProcessed: transactions.length
+      });
     } catch (error) {
       console.error("OFX Upload error:", error);
       res.status(500).json({ error: "Failed to process OFX file" });

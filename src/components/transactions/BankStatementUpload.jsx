@@ -23,8 +23,14 @@ export default function BankStatementUpload({ open, onOpenChange, onExtracted })
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/bank/items'] });
-      toast.success(`${data.length} transações importadas com sucesso!`);
-      if (onExtracted) onExtracted(data);
+      const newCount = Array.isArray(data.newItems) ? data.newItems.length : (data.newItems ? 1 : 0);
+      const duplicateCount = data.duplicateCount || 0;
+      let message = `${newCount} nova${newCount !== 1 ? 's' : ''} transação${newCount !== 1 ? 's' : ''} importada${newCount !== 1 ? 's' : ''}`;
+      if (duplicateCount > 0) {
+        message += ` (${duplicateCount} duplicata${duplicateCount !== 1 ? 's' : ''} ignorada${duplicateCount !== 1 ? 's' : ''})`;
+      }
+      toast.success(message);
+      if (onExtracted) onExtracted(data.newItems || data);
       onOpenChange(false);
       setFile(null);
     },
