@@ -15,6 +15,7 @@ import {
   auditLogs,
   users,
   invitations,
+  bankStatementItems,
   type BankStatementItem,
   type InsertBankStatementItem,
   type InsertCustomer,

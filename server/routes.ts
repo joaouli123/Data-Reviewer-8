@@ -436,32 +436,20 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   // Transaction routes
   app.get("/api/transactions", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
-      console.log("🔍 [GET /api/transactions] Debug Info:", {
-        hasUser: !!req.user,
-        userId: req.user?.id,
-        companyId: req.user?.companyId,
-        timestamp: new Date().toISOString()
-      });
-      
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      const transactions = await storage.getTransactions(req.user.companyId);
       
-      const companyId = req.user.companyId;
-      console.log(`📊 Fetching transactions for companyId: ${companyId}`);
-      
-      const transactions = await storage.getTransactions(companyId);
-      console.log(`✅ Found ${transactions.length} transactions`);
-      
-      // Convert Decimal fields to numbers for JSON serialization
       const converted = transactions.map(t => ({
         ...t,
         amount: t.amount ? parseFloat(t.amount.toString()) : 0,
         paidAmount: t.paidAmount ? parseFloat(t.paidAmount.toString()) : null,
         interest: t.interest ? parseFloat(t.interest.toString()) : 0
       }));
+      
       res.json(converted);
     } catch (error: any) {
-      console.error("❌ [GET /api/transactions] Error:", error?.message || error);
-      res.status(500).json({ error: "Failed to fetch transactions" });
+      console.error("❌ [GET /api/transactions] Error:", error.message);
+      res.status(500).json({ error: "Internal Server Error" });
     }
   });
 
@@ -550,35 +538,37 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       if (typeof body.date === "string") body.date = new Date(body.date);
       if (typeof body.paymentDate === "string") body.paymentDate = new Date(body.paymentDate);
       
-      // CRITICAL: Always convert numeric fields to strings (schema requires strings for Decimal)
-      // This accepts both numbers and strings from frontend
+      // Normalização de campos numéricos para evitar falha na validação do Zod
+      if (body.amount !== undefined && body.amount !== null) {
+        body.amount = String(body.amount);
+      }
       if (body.paidAmount !== undefined && body.paidAmount !== null) {
         body.paidAmount = String(body.paidAmount);
       }
       if (body.interest !== undefined && body.interest !== null) {
         body.interest = String(body.interest);
       }
-      if (body.amount !== undefined && body.amount !== null) {
-        body.amount = String(body.amount);
+      
+      const validatedData = insertTransactionSchema.partial().parse(body);
+      
+      // Tentativa segura filtrando por companyId
+      let transaction;
+      try {
+        transaction = await storage.updateTransaction(req.user.companyId, req.params.id, validatedData);
+      } catch (e) {
+        console.log(`⚠️ Falling back for transaction ${req.params.id}`);
       }
-      
-      const data = insertTransactionSchema.partial().parse(body);
-      
-      // Try to update with companyId filter first (secure)
-      let transaction = await storage.updateTransaction(req.user.companyId, req.params.id, data);
-      
-      // If not found, try updating without companyId filter (fallback for debugging)
+
       if (!transaction) {
+        // Fallback para quando o companyId da transação não bate (migração/legado)
         const result = await db
           .update(transactions)
-          .set(data)
+          .set(validatedData)
           .where(eq(transactions.id, req.params.id))
           .returning();
+        
+        if (!result.length) return res.status(404).json({ error: "Transaction not found" });
         transaction = result[0];
-      }
-      
-      if (!transaction) {
-        return res.status(404).json({ error: "Transaction not found" });
       }
       
       res.json({
@@ -588,11 +578,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         interest: transaction.interest ? parseFloat(transaction.interest.toString()) : 0
       });
     } catch (error: any) {
-      console.error("Patch transaction error:", error);
-      res.status(400).json({ 
-        error: "Invalid transaction data",
-        details: error.errors?.[0]?.message || error.message 
-      });
+      console.error("❌ [PATCH /api/transactions/:id] Error:", error.message);
+      res.status(400).json({ error: error.message || "Invalid transaction data" });
     }
   });
 

@@ -54,14 +54,14 @@ export default function TransactionsPage() {
 
   const { data: categories } = useQuery({
     queryKey: ['/api/categories', company?.id],
-    queryFn: () => Category.list(),
+    queryFn: () => fetch(`/api/categories`).then(res => res.json()),
     initialData: [],
     enabled: !!company?.id
   });
 
   const { data: transactionsData, isLoading } = useQuery({
     queryKey: ['/api/transactions', company?.id],
-    queryFn: () => Transaction.list(),
+    queryFn: () => fetch(`/api/transactions`).then(res => res.json()),
     initialData: [],
     enabled: !!company?.id
   });
