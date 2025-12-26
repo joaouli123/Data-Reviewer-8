@@ -502,6 +502,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       if (body.shift === undefined) {
         body.shift = "1"; // Default shift if missing
       }
+      if (body.paymentMethod === undefined) {
+        body.paymentMethod = "money"; // Default payment method if missing
+      }
+      if (body.status === undefined) {
+        body.status = "completed"; // Default status if missing
+      }
       
       // DO NOT delete customerId or supplierId - they are required for their respective transaction types
       // The schema validation will handle optional/required validation
