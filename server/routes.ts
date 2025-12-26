@@ -487,14 +487,20 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       if (typeof body.paymentDate === "string" && body.paymentDate) body.paymentDate = new Date(body.paymentDate);
       
       // Convert amount to string for decimal validation
-      if (body.amount && typeof body.amount === "number") {
-        body.amount = body.amount.toString();
+      if (body.amount !== undefined && body.amount !== null) {
+        body.amount = String(body.amount);
       }
-      if (body.paidAmount && typeof body.paidAmount === "number") {
-        body.paidAmount = body.paidAmount.toString();
+      if (body.paidAmount !== undefined && body.paidAmount !== null) {
+        body.paidAmount = String(body.paidAmount);
       }
-      if (body.interest && typeof body.interest === "number") {
-        body.interest = body.interest.toString();
+      if (body.interest !== undefined && body.interest !== null) {
+        body.interest = String(body.interest);
+      }
+      if (body.categoryId !== undefined && body.categoryId !== null) {
+        body.categoryId = String(body.categoryId);
+      }
+      if (body.shift === undefined) {
+        body.shift = "1"; // Default shift if missing
       }
       
       // DO NOT delete customerId or supplierId - they are required for their respective transaction types
@@ -534,11 +540,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const body = { ...req.body };
       
-      // Date handling
       if (typeof body.date === "string") body.date = new Date(body.date);
       if (typeof body.paymentDate === "string") body.paymentDate = new Date(body.paymentDate);
       
-      // Normalização de campos numéricos para evitar falha na validação do Zod
       if (body.amount !== undefined && body.amount !== null) {
         body.amount = String(body.amount);
       }
@@ -551,7 +555,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       
       const validatedData = insertTransactionSchema.partial().parse(body);
       
-      // Tentativa segura filtrando por companyId
       let transaction;
       try {
         transaction = await storage.updateTransaction(req.user.companyId, req.params.id, validatedData);
@@ -560,7 +563,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       }
 
       if (!transaction) {
-        // Fallback para quando o companyId da transação não bate (migração/legado)
         const result = await db
           .update(transactions)
           .set(validatedData)
