@@ -26,12 +26,12 @@ export default function CashFlowForecastChart({ forecast }) {
     );
   }
 
-  const chartData = forecast.map(item => ({
+  const chartData = Array.isArray(forecast) ? forecast.map(item => ({
     name: item.month,
     receita: item.predicted_revenue,
     despesa: item.predicted_expense,
     lucro: item.predicted_revenue - item.predicted_expense
-  }));
+  })) : [];
 
   return (
     <Card className="border-slate-200 shadow-sm">
@@ -87,7 +87,7 @@ export default function CashFlowForecastChart({ forecast }) {
         </ResponsiveContainer>
 
         <div className="mt-6 space-y-3">
-          {forecast.map((item, idx) => (
+          {Array.isArray(forecast) && forecast.map((item, idx) => (
             <div key={idx} className="p-3 bg-slate-50 rounded-lg border border-slate-100">
               <div className="flex items-center justify-between mb-1">
                 <span className="font-semibold text-slate-700">{item.month}</span>

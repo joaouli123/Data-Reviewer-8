@@ -106,7 +106,7 @@ export default function ExecutiveSummary({ summary, transactions, saleInstallmen
         </CardHeader>
         <CardContent>
           <p className="text-slate-700 leading-relaxed text-lg whitespace-pre-line">
-            {summary}
+            {typeof summary === 'string' ? summary : 'Sumário executivo não disponível'}
           </p>
         </CardContent>
       </Card>
