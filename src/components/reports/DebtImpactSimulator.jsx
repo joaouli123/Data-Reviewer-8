@@ -132,6 +132,28 @@ Forneça análise detalhada do impacto e recomendações.`;
 
       const response = await InvokeLLM(prompt, schema);
 
+      // Validar resposta
+      if (!response || typeof response !== 'object') {
+        toast.error('Resposta inválida da IA');
+        setIsAnalyzing(false);
+        return;
+      }
+
+      // Garantir estrutura mínima
+      const validatedAnalysis = {
+        viability_assessment: response.viability_assessment || { recommendation: 'caution', reasoning: '', score: 50 },
+        financial_impact: response.financial_impact || { cash_flow_impact: '', liquidity_impact: '', leverage_impact: '' },
+        risk_analysis: Array.isArray(response.risk_analysis) ? response.risk_analysis : [],
+        alternative_suggestions: Array.isArray(response.alternative_suggestions) ? response.alternative_suggestions : [],
+        break_even_analysis: response.break_even_analysis || ''
+      };
+
+      if (!validatedAnalysis.viability_assessment.reasoning && validatedAnalysis.risk_analysis.length === 0) {
+        toast.error('IA não conseguiu gerar análise válida');
+        setIsAnalyzing(false);
+        return;
+      }
+
       setSimulation({
         inputs: {
           debtAmount,
@@ -142,11 +164,12 @@ Forneça análise detalhada do impacto e recomendações.`;
           totalInterest
         },
         projections,
-        analysis: response
+        analysis: validatedAnalysis
       });
 
       toast.success('Simulação concluída!');
     } catch (error) {
+      console.error('Erro ao simular:', error);
       toast.error('Erro ao simular impacto: ' + (error.message || 'Desconhecido'));
     } finally {
       setIsAnalyzing(false);
