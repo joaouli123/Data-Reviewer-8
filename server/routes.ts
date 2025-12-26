@@ -1069,13 +1069,100 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  // Get audit logs (Super Admin only)
-  app.get("/api/super-admin/audit-logs/:companyId", authMiddleware, requireSuperAdmin, async (req: AuthenticatedRequest, res) => {
+  // Audit log operations
+  app.get("/api/audit-logs", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
-      const logs = await storage.getAuditLogs(req.params.companyId, 100);
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      const logs = await storage.getAuditLogs(req.user.companyId);
       res.json(logs);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch audit logs" });
+    }
+  });
+
+  // Bank Statement routes
+  app.get("/api/bank/items", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      const items = await storage.getBankStatementItems(req.user.companyId);
+      res.json(items);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch bank items" });
+    }
+  });
+
+  app.post("/api/bank/upload-ofx", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      const { ofxContent } = req.body;
+      if (!ofxContent) return res.status(400).json({ error: "Missing OFX content" });
+
+      const data = OFX.parse(ofxContent);
+      const stmtTrn = data?.OFX?.BANKMSGSRSV1?.STMTTRNRS?.STMTRS?.BANKTRANLIST?.STMTTRN;
+      if (!stmtTrn) return res.status(400).json({ error: "Invalid OFX format or no transactions found" });
+      
+      const transactions = Array.isArray(stmtTrn) ? stmtTrn : [stmtTrn];
+      const savedItems = [];
+
+      for (const item of transactions) {
+        const dateStr = item.DTPOSTED.substring(0, 8);
+        const date = parse(dateStr, "yyyyMMdd", new Date());
+        
+        const bankItem = await storage.createBankStatementItem(req.user.companyId, {
+          date,
+          amount: String(item.TRNAMT),
+          description: item.MEMO || item.NAME || "Sem descrição",
+          status: "PENDING",
+          transactionId: null
+        });
+        savedItems.push(bankItem);
+      }
+
+      res.status(201).json(savedItems);
+    } catch (error) {
+      console.error("OFX Upload error:", error);
+      res.status(500).json({ error: "Failed to process OFX file" });
+    }
+  });
+
+  app.post("/api/bank/match", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      const { bankItemId, transactionId } = req.body;
+      if (!bankItemId || !transactionId) return res.status(400).json({ error: "Missing IDs" });
+
+      const result = await storage.matchBankStatementItem(req.user.companyId, bankItemId, transactionId);
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to match transactions" });
+    }
+  });
+
+  app.get("/api/bank/suggest/:bankItemId", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      
+      const bankItems = await storage.getBankStatementItems(req.user.companyId);
+      const bankItem = bankItems.find(i => i.id === req.params.bankItemId);
+      if (!bankItem) return res.status(404).json({ error: "Item not found" });
+
+      const allTransactions = await storage.getTransactions(req.user.companyId);
+      const bankAmount = parseFloat(bankItem.amount.toString());
+      const bankDate = new Date(bankItem.date);
+
+      const matches = allTransactions.filter(t => {
+        if (t.isReconciled) return false;
+        const tAmount = parseFloat(t.amount.toString());
+        if (Math.abs(Math.abs(tAmount) - Math.abs(bankAmount)) > 0.01) return false;
+        
+        const tDate = new Date(t.date);
+        const diffDays = Math.abs(tDate.getTime() - bankDate.getTime()) / (1000 * 60 * 60 * 24);
+        return diffDays <= 3;
+      });
+
+      res.json(matches);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to suggest match" });
     }
   });
 
