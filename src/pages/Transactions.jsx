@@ -308,11 +308,29 @@ export default function TransactionsPage() {
             >
               <Upload className="w-4 h-4" /> Importar Extrato
             </Button>
+            <Button 
+              onClick={() => setReconciliationOpen(true)} 
+              variant="outline"
+              className="flex items-center gap-2 flex-1 sm:flex-none"
+            >
+              <CheckCircle2 className="w-4 h-4" /> Conciliação
+            </Button>
             <Button onClick={() => { setEditingTransaction(null); setIsFormOpen(true); }} className="bg-primary hover:bg-primary w-full sm:w-auto">
                 <Plus className="w-4 h-4 mr-2" /> Nova Transação
             </Button>
         </div>
       </div>
+
+      <BankStatementUpload 
+        open={uploadOpen} 
+        onOpenChange={setUploadOpen} 
+        onExtracted={() => setReconciliationOpen(true)} 
+      />
+      
+      <BankReconciliation 
+        open={reconciliationOpen} 
+        onOpenChange={setReconciliationOpen} 
+      />
 
       {/* Balance Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
