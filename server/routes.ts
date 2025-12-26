@@ -437,7 +437,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.get("/api/transactions", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
-      const transactions = await storage.getTransactions(req.user.companyId);
+      
+      const companyId = req.user.companyId;
+      console.log(`📊 Fetching transactions for companyId: ${companyId}`);
+      
+      const transactions = await storage.getTransactions(companyId);
+      console.log(`✅ Found ${transactions.length} transactions`);
       
       const converted = transactions.map(t => ({
         ...t,
@@ -518,20 +523,11 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       // The schema validation will handle optional/required validation
       
       const VALID_COMPANY_ID = "f6744c7d-511b-4fa6-aef2-cb9e8261a238";
-      const finalCompanyId = req.user.companyId === "4645f6f4-89f2-446f-a08c-0b2f62796c72" 
-        ? VALID_COMPANY_ID 
-        : req.user.companyId;
+      const finalCompanyId = req.user.companyId;
+      console.log(`📊 Creating transaction for companyId: ${finalCompanyId}`);
 
       const data = insertTransactionSchema.parse(body);
       const transaction = await storage.createTransaction(finalCompanyId, data);
-      
-      // Log saved transaction
-      console.log("Transaction saved:", { 
-        id: transaction.id, 
-        supplierId: transaction.supplierId, 
-        customerId: transaction.customerId,
-        amount: transaction.amount 
-      });
       
       res.status(201).json({
         ...transaction,
