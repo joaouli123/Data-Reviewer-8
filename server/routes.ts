@@ -508,6 +508,11 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       if (body.status === undefined) {
         body.status = "completed"; // Default status if missing
       }
+      if (body.companyId === undefined || body.companyId === null) {
+        body.companyId = req.user.companyId; // Ensure companyId is present
+      }
+      // Log after all fixes
+      console.log("Processed Transaction Data:", body);
       
       // DO NOT delete customerId or supplierId - they are required for their respective transaction types
       // The schema validation will handle optional/required validation
