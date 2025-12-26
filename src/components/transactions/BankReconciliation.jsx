@@ -130,22 +130,26 @@ export default function BankReconciliation({ open, onOpenChange }) {
                 <div className="text-center py-8 text-slate-500">Nenhum item pendente</div>
               ) : (
                 pendingItems.map((item) => (
-                  <div key={item.id} className="p-4 bg-white rounded-lg border space-y-3">
+                  <div key={item.id} className="p-4 bg-white rounded-lg border space-y-3" data-testid={`card-pending-${item.id}`}>
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 flex-1">
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
                           parseFloat(item.amount) > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'
                         }`}>
                           {parseFloat(item.amount) > 0 ? '+' : '-'}
                         </div>
-                        <div>
-                          <p className="font-medium text-slate-900">{item.description}</p>
+                        <div className="flex-1">
+                          <p className="font-medium text-slate-900" data-testid={`text-description-${item.id}`}>{item.description}</p>
                           <div className="flex items-center gap-3 text-xs text-slate-600">
-                            <span>{format(new Date(item.date), "dd/MM/yyyy", { locale: ptBR })}</span>
-                            <span className="font-semibold">
+                            <span data-testid={`text-date-${item.id}`}>{format(new Date(item.date), "dd/MM/yyyy", { locale: ptBR })}</span>
+                            <span className="font-semibold" data-testid={`text-amount-${item.id}`}>
                               R$ {Math.abs(parseFloat(item.amount)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                             </span>
                           </div>
+                        </div>
+                        <div className="flex items-center gap-1" data-testid={`status-pending-${item.id}`}>
+                          <XCircle className="w-5 h-5 text-rose-600 flex-shrink-0" />
+                          <span className="text-xs font-medium text-rose-600">Pendente</span>
                         </div>
                       </div>
                       <div className="flex gap-2">
@@ -205,8 +209,7 @@ export default function BankReconciliation({ open, onOpenChange }) {
 
             <TabsContent value="reconciled" className="space-y-2 mt-4">
               {reconciledItems.map((item) => (
-                <div key={item.id} className="flex items-center gap-3 p-3 bg-emerald-50 rounded-lg border border-emerald-200">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                <div key={item.id} className="flex items-center gap-3 p-3 bg-emerald-50 rounded-lg border border-emerald-200" data-testid={`card-reconciled-${item.id}`}>
                   <div className="flex-1">
                     <p className="text-sm font-medium text-slate-900">{item.description}</p>
                     <p className="text-xs text-slate-600">
@@ -214,9 +217,10 @@ export default function BankReconciliation({ open, onOpenChange }) {
                       R$ {Math.abs(parseFloat(item.amount)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </p>
                   </div>
-                  <Badge variant="outline" className="bg-emerald-100 text-emerald-700 border-emerald-200">
-                    Conciliado
-                  </Badge>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                    <span className="text-xs font-medium text-emerald-600">Conciliado</span>
+                  </div>
                 </div>
               ))}
             </TabsContent>
