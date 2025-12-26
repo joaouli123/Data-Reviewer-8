@@ -85,10 +85,12 @@ export const invokeOpenAI = async (prompt, responseJsonSchema = null) => {
     // Se esperamos JSON, parse
     if (responseJsonSchema) {
       try {
-        return extractJSON(textContent);
+        const result = extractJSON(textContent);
+        console.log('✅ JSON válido extraído da IA:', JSON.stringify(result).substring(0, 200));
+        return result;
       } catch (e) {
-        console.error('JSON malformado mesmo após extração:', e.message);
-        console.error('Resposta da IA:', textContent.substring(0, 500));
+        console.error('❌ Erro ao extrair JSON:', e.message);
+        console.error('📝 Resposta completa da IA:', textContent);
         throw new Error('Resposta JSON inválida da IA');
       }
     }

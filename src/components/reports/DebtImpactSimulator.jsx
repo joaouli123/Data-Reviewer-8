@@ -72,15 +72,17 @@ export default function DebtImpactSimulator({ currentMetrics }) {
       }
 
       // AI Analysis
-      const prompt = `Analise o impacto de uma nova dívida:
+      const newDebtServiceRatio = (metrics.monthlyDebtPayment + monthlyPayment) / metrics.avgMonthlyRevenue * 100;
+      
+      const prompt = `Você é um analista financeiro. Analise o impacto de uma nova dívida e retorne análise estruturada.
 
-Situação Atual:
+SITUAÇÃO ATUAL:
 - Dívida Total: R$ ${metrics.totalDebt.toFixed(2)}
 - Receita Mensal Média: R$ ${metrics.avgMonthlyRevenue.toFixed(2)}
 - Pagamento Mensal de Dívidas: R$ ${metrics.monthlyDebtPayment.toFixed(2)}
 - Índice de Cobertura: ${metrics.debtServiceRatio.toFixed(1)}%
 
-Nova Dívida Proposta:
+NOVA DÍVIDA PROPOSTA:
 - Valor: R$ ${debtAmount.toFixed(2)}
 - Parcelas: ${installments}
 - Taxa de Juros: ${(interestRate * 100).toFixed(2)}%
@@ -88,10 +90,16 @@ Nova Dívida Proposta:
 - Total a Pagar: R$ ${totalPayment.toFixed(2)}
 - Total em Juros: R$ ${totalInterest.toFixed(2)}
 - Propósito: ${newDebtInputs.purposeDescription || 'Não especificado'}
+- Novo Índice de Cobertura: ${newDebtServiceRatio.toFixed(1)}%
 
-Novo Índice de Cobertura: ${((metrics.monthlyDebtPayment + monthlyPayment) / metrics.avgMonthlyRevenue * 100).toFixed(1)}%
-
-Forneça análise detalhada do impacto e recomendações.`;
+FORNEÇA:
+1. Recomendação: 'recommended', 'caution', ou 'not_recommended'
+2. Reasoning: explicação breve (1-2 frases)
+3. Score 0-100 da viabilidade
+4. Impacto de caixa, liquidez e alavancagem (strings descritivas)
+5. Lista com 2-3 riscos (risk_factor, severity: high/medium/low, mitigation)
+6. 2-3 alternativas sugeridas
+7. Análise do ponto de equilíbrio`;
 
       const schema = {
         properties: {
@@ -134,21 +142,31 @@ Forneça análise detalhada do impacto e recomendações.`;
 
       // Validar resposta
       if (!response || typeof response !== 'object') {
+        console.error('Resposta da IA não é um objeto:', response);
         toast.error('Resposta inválida da IA');
         setIsAnalyzing(false);
         return;
       }
 
-      // Garantir estrutura mínima
+      // Garantir estrutura mínima - ser mais flexível com validação
       const validatedAnalysis = {
-        viability_assessment: response.viability_assessment || { recommendation: 'caution', reasoning: '', score: 50 },
-        financial_impact: response.financial_impact || { cash_flow_impact: '', liquidity_impact: '', leverage_impact: '' },
+        viability_assessment: response.viability_assessment || { recommendation: 'caution', reasoning: 'Análise incompleta da IA', score: 50 },
+        financial_impact: response.financial_impact || { cash_flow_impact: 'Não disponível', liquidity_impact: 'Não disponível', leverage_impact: 'Não disponível' },
         risk_analysis: Array.isArray(response.risk_analysis) ? response.risk_analysis : [],
         alternative_suggestions: Array.isArray(response.alternative_suggestions) ? response.alternative_suggestions : [],
-        break_even_analysis: response.break_even_analysis || ''
+        break_even_analysis: response.break_even_analysis || 'Análise não disponível'
       };
 
-      if (!validatedAnalysis.viability_assessment.reasoning && validatedAnalysis.risk_analysis.length === 0) {
+      // Validar que temos pelo menos ALGUNS dados
+      const hasViabilityAssessment = validatedAnalysis.viability_assessment?.recommendation;
+      const hasFinancialImpact = validatedAnalysis.financial_impact?.cash_flow_impact;
+      const hasRiskAnalysis = validatedAnalysis.risk_analysis?.length > 0;
+      const hasAlternatives = validatedAnalysis.alternative_suggestions?.length > 0;
+      
+      const hasMinimalValidData = hasViabilityAssessment || hasFinancialImpact || hasRiskAnalysis || hasAlternatives;
+      
+      if (!hasMinimalValidData) {
+        console.error('Resposta da IA sem dados essenciais:', response);
         toast.error('IA não conseguiu gerar análise válida');
         setIsAnalyzing(false);
         return;
