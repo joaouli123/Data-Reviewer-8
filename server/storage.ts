@@ -634,6 +634,50 @@ export class DatabaseStorage implements IStorage {
   async deleteInvitation(token: string): Promise<void> {
     await db.delete(invitations).where(eq(invitations.token, token));
   }
+
+  // Bank Statement operations
+  async getBankStatementItems(companyId: string): Promise<BankStatementItem[]> {
+    return await db
+      .select()
+      .from(bankStatementItems)
+      .where(eq(bankStatementItems.companyId, companyId))
+      .orderBy(desc(bankStatementItems.date));
+  }
+
+  async createBankStatementItem(companyId: string, data: InsertBankStatementItem): Promise<BankStatementItem> {
+    const [item] = await db
+      .insert(bankStatementItems)
+      .values({ ...data, companyId })
+      .returning();
+    return item;
+  }
+
+  async updateBankStatementItem(companyId: string, id: string, data: Partial<InsertBankStatementItem>): Promise<BankStatementItem> {
+    const [item] = await db
+      .update(bankStatementItems)
+      .set(data)
+      .where(and(eq(bankStatementItems.companyId, companyId), eq(bankStatementItems.id, id)))
+      .returning();
+    return item;
+  }
+
+  async matchBankStatementItem(companyId: string, bankItemId: string, transactionId: string): Promise<BankStatementItem> {
+    const [item] = await db
+      .update(bankStatementItems)
+      .set({ 
+        status: "MATCHED", 
+        transactionId 
+      })
+      .where(and(eq(bankStatementItems.companyId, companyId), eq(bankStatementItems.id, bankItemId)))
+      .returning();
+
+    await db
+      .update(transactions)
+      .set({ isReconciled: true })
+      .where(and(eq(transactions.companyId, companyId), eq(transactions.id, transactionId)));
+
+    return item;
+  }
 }
 
 export const storage = new DatabaseStorage();
