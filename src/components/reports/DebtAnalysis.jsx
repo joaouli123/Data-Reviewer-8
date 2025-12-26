@@ -293,22 +293,22 @@ Forneça uma análise detalhada e recomendações para gestão de endividamento.
           {/* AI Analysis */}
           {analysis && (
             <div className="space-y-4">
-              <div className="p-4 bg-slate-50 rounded-lg border">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-semibold text-slate-900">Avaliação Geral</h4>
-                  <Badge 
-                    variant={
-                      analysis.health_score === 'excellent' || analysis.health_score === 'good' ? 'default' :
-                      analysis.health_score === 'fair' ? 'secondary' : 'destructive'
-                    }
-                  >
-                    {analysis.health_score === 'excellent' ? 'Excelente' :
-                     analysis.health_score === 'good' ? 'Bom' :
-                     analysis.health_score === 'fair' ? 'Razoável' :
-                     analysis.health_score === 'poor' ? 'Ruim' : 'Crítico'}
-                  </Badge>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 bg-slate-50 rounded-lg border">
+                  <h4 className="font-semibold text-slate-900 mb-2">Avaliação Geral</h4>
+                  <p className="text-sm text-slate-700">
+                    {typeof analysis.overall_assessment === 'string' ? analysis.overall_assessment : 'Análise concluída'}
+                  </p>
                 </div>
-                <p className="text-sm text-slate-700">{analysis.overall_assessment}</p>
+                
+                <div className="p-4 bg-slate-50 rounded-lg border">
+                  <h4 className="font-semibold text-slate-900 mb-2">Pontuação de Saúde</h4>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={analysis.health_score === 'poor' ? 'destructive' : analysis.health_score === 'fair' ? 'default' : 'secondary'}>
+                      {analysis.health_score === 'poor' ? 'Crítica' : analysis.health_score === 'fair' ? 'Regular' : 'Saudável'}
+                    </Badge>
+                  </div>
+                </div>
               </div>
 
               {analysis.key_concerns?.length > 0 && (
