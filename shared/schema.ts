@@ -266,6 +266,18 @@ export const transactions = pgTable("transactions", {
   installmentNumber: integer("installment_number"),
   installmentTotal: integer("installment_total"),
   paymentMethod: text("payment_method"),
+  isReconciled: boolean("is_reconciled").default(false),
+});
+
+export const bankStatementItems = pgTable("bank_statement_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
+  date: timestamp("date").notNull(),
+  amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
+  description: text("description").notNull(),
+  status: text("status").notNull().default("PENDING"), // PENDING, MATCHED, IGNORED
+  transactionId: varchar("transaction_id").references(() => transactions.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
 });
 
 export const cashFlow = pgTable("cash_flow", {
@@ -383,6 +395,12 @@ export const insertTransactionSchema = createInsertSchema(transactions).omit({
   companyId: true,
 });
 
+export const insertBankStatementItemSchema = createInsertSchema(bankStatementItems).omit({
+  id: true,
+  companyId: true,
+  createdAt: true,
+});
+
 export const insertCashFlowSchema = createInsertSchema(cashFlow).omit({
   id: true,
   companyId: true,
@@ -434,6 +452,9 @@ export type InsertCategory = z.infer<typeof insertCategorySchema>;
 
 export type Transaction = typeof transactions.$inferSelect;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
+
+export type BankStatementItem = typeof bankStatementItems.$inferSelect;
+export type InsertBankStatementItem = z.infer<typeof insertBankStatementItemSchema>;
 
 export type CashFlow = typeof cashFlow.$inferSelect;
 export type InsertCashFlow = z.infer<typeof insertCashFlowSchema>;

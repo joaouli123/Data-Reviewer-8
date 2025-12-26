@@ -15,6 +15,8 @@ import {
   auditLogs,
   users,
   invitations,
+  type BankStatementItem,
+  type InsertBankStatementItem,
   type InsertCustomer,
   type InsertSupplier,
   type InsertCategory,
@@ -135,6 +137,12 @@ export interface IStorage {
   // Audit log operations
   createAuditLog(data: InsertAuditLog): Promise<AuditLog>;
   getAuditLogs(companyId: string, limit?: number): Promise<AuditLog[]>;
+
+  // Bank Statement operations
+  getBankStatementItems(companyId: string): Promise<BankStatementItem[]>;
+  createBankStatementItem(companyId: string, data: InsertBankStatementItem): Promise<BankStatementItem>;
+  updateBankStatementItem(companyId: string, id: string, data: Partial<InsertBankStatementItem>): Promise<BankStatementItem>;
+  matchBankStatementItem(companyId: string, bankItemId: string, transactionId: string): Promise<BankStatementItem>;
 }
 
 export class DatabaseStorage implements IStorage {
