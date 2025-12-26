@@ -324,7 +324,7 @@ export default function TransactionsPage() {
             <PeriodFilter 
               onPeriodChange={setDateRange}
               mode="days"
-              defaultPeriod="today"
+              defaultPeriod="last30Days"
             />
             <Button variant="outline" onClick={handleExport} className="flex items-center gap-2 flex-1 sm:flex-none">
                 <Download className="w-4 h-4" /> Exportar CSV
