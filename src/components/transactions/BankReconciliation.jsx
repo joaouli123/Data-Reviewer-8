@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,14 @@ export default function BankReconciliation({ open, onOpenChange }) {
   const [lastFileName, setLastFileName] = useState(localStorage.getItem('lastBankStatementFile'));
   const [isTransactionFormOpen, setIsTransactionFormOpen] = useState(false);
   const [selectedBankItemForForm, setSelectedBankItemForForm] = useState(null);
+
+  // Sync lastFileName when modal opens
+  useEffect(() => {
+    if (open) {
+      const fileName = localStorage.getItem('lastBankStatementFile');
+      setLastFileName(fileName);
+    }
+  }, [open]);
 
   // Fetch categories to use as default
   const { data: categories = [] } = useQuery({
