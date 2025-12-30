@@ -4,7 +4,7 @@ import { initMercadoPago, CardPayment } from '@mercadopago/sdk-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { ArrowLeft, Check, Lock } from 'lucide-react';
+import { ArrowLeft, Check, Lock, ChevronDown, ChevronUp } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
 
 const PLANS = {
@@ -40,6 +40,7 @@ if (publicKey) {
 export default function Checkout() {
   const [, setLocation] = useLocation();
   const [selectedPlan, setSelectedPlan] = useState(null);
+  const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
   const [formData, setFormData] = useState({
     companyName: '',
     email: '',
@@ -133,46 +134,69 @@ export default function Checkout() {
         <div className="grid lg:grid-cols-3 gap-8 items-start">
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <Card className="bg-white border-slate-200 p-6 sticky top-24 shadow-sm rounded-xl">
-              <h2 className="text-xl font-bold mb-6 text-slate-900 border-b pb-4">Resumo do Pedido</h2>
-              
-              <div className="bg-[#2563eb]/5 rounded-xl p-6 mb-6 border border-[#2563eb]/10">
-                <p className="text-[#2563eb] text-xs font-bold uppercase tracking-wider mb-2">Plano Selecionado</p>
-                <h3 className="text-2xl font-bold mb-1 text-slate-900">{plan.name}</h3>
-                <p className="text-slate-500 text-sm mb-4">{plan.description}</p>
-                
-                {!plan.contact && (
-                  <div className="pt-4 border-t border-slate-100">
-                    <p className="text-3xl font-bold text-slate-900">{formatCurrency(plan.price)}<span className="text-sm font-normal text-slate-500">/mês</span></p>
+            <Card className="bg-white border-slate-200 sticky top-24 shadow-sm rounded-xl overflow-hidden">
+              {/* Mobile Header - Always Visible */}
+              <div 
+                className="lg:hidden p-4 flex items-center justify-between bg-white border-b border-slate-100 cursor-pointer"
+                onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="bg-[#2563eb]/10 p-2 rounded-lg">
+                    <span className="font-bold text-[#2563eb] text-sm">{plan.name}</span>
                   </div>
-                )}
-                
-                <Button 
-                  variant="outline" 
-                  onClick={() => setLocation('/#pricing')} 
-                  className="w-full mt-6 border-[#2563eb]/30 text-[#2563eb] hover:bg-[#2563eb] hover:text-white transition-all rounded-lg"
-                >
-                  Alterar Plano
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold text-slate-900">
+                      {formatCurrency(plan.price)}/mês
+                    </span>
+                  </div>
+                </div>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  {isSummaryExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </Button>
               </div>
 
-              <div className="space-y-4">
-                <p className="text-sm font-semibold text-slate-700">O que está incluso:</p>
-                <div className="space-y-3">
-                  {plan.features.map((f, i) => (
-                    <div key={i} className="flex items-start gap-3 text-sm text-slate-600">
-                      <div className="mt-1 bg-blue-50 p-0.5 rounded-full">
-                        <Check className="w-3 h-3 text-[#2563eb]" />
-                      </div>
-                      <span>{f}</span>
+              {/* Collapsible Content */}
+              <div className={`${!isSummaryExpanded ? 'hidden lg:block' : 'block'} p-6`}>
+                <h2 className="text-xl font-bold mb-6 text-slate-900 border-b pb-4 hidden lg:block">Resumo do Pedido</h2>
+                
+                <div className="bg-[#2563eb]/5 rounded-xl p-6 mb-6 border border-[#2563eb]/10">
+                  <p className="text-[#2563eb] text-xs font-bold uppercase tracking-wider mb-2">Plano Selecionado</p>
+                  <h3 className="text-2xl font-bold mb-1 text-slate-900">{plan.name}</h3>
+                  <p className="text-slate-500 text-sm mb-4">{plan.description}</p>
+                  
+                  {!plan.contact && (
+                    <div className="pt-4 border-t border-slate-100">
+                      <p className="text-3xl font-bold text-slate-900">{formatCurrency(plan.price)}<span className="text-sm font-normal text-slate-500">/mês</span></p>
                     </div>
-                  ))}
+                  )}
+                  
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setLocation('/#pricing')} 
+                    className="w-full mt-6 border-[#2563eb]/30 text-[#2563eb] hover:bg-[#2563eb] hover:text-white transition-all rounded-lg"
+                  >
+                    Alterar Plano
+                  </Button>
                 </div>
-              </div>
 
-              <div className="mt-8 pt-6 border-t border-slate-100 flex items-center gap-3 text-xs text-slate-400">
-                <Lock className="w-4 h-4" />
-                <span>Pagamento processado com segurança via Mercado Pago</span>
+                <div className="space-y-4">
+                  <p className="text-sm font-semibold text-slate-700">O que está incluso:</p>
+                  <div className="space-y-3">
+                    {plan.features.map((f, i) => (
+                      <div key={i} className="flex items-start gap-3 text-sm text-slate-600">
+                        <div className="mt-1 bg-blue-50 p-0.5 rounded-full">
+                          <Check className="w-3 h-3 text-[#2563eb]" />
+                        </div>
+                        <span>{f}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-8 pt-6 border-t border-slate-100 flex items-center gap-3 text-xs text-slate-400">
+                  <Lock className="w-4 h-4" />
+                  <span>Pagamento processado com segurança via Mercado Pago</span>
+                </div>
               </div>
             </Card>
           </div>
