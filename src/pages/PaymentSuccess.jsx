@@ -1,62 +1,108 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'wouter';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { CheckCircle2, Download } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, Loader } from 'lucide-react';
 
 export default function PaymentSuccess() {
   const [, setLocation] = useLocation();
-  const [paymentId, setPaymentId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const statusScreenBrickContainerRef = useRef(null);
+  const [brickRendered, setBrickRendered] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const id = params.get('payment_id');
-    if (id) setPaymentId(id);
-  }, []);
+    const paymentId = params.get('payment_id') || params.get('paymentId');
+
+    if (!paymentId) {
+      setLoading(false);
+      return;
+    }
+
+    const renderStatusBrick = async () => {
+      try {
+        if (!window.MercadoPago) {
+          console.error('Mercado Pago SDK not loaded');
+          return;
+        }
+
+        const publicKey = import.meta.env.VITE_MERCADOPAGO_PUBLIC_KEY;
+        const mp = new window.MercadoPago(publicKey);
+        const bricksBuilder = mp.bricks();
+
+        const settings = {
+          initialization: {
+            paymentId: paymentId,
+          },
+          customization: {
+            visual: {
+              hideStatusDetails: false,
+              hideTransactionDate: false,
+              style: {
+                theme: 'dark',
+              },
+            },
+            backUrls: {
+              'error': window.location.origin + '/checkout',
+              'return': window.location.origin + '/login'
+            }
+          },
+          callbacks: {
+            onReady: () => {
+              setLoading(false);
+              setBrickRendered(true);
+            },
+            onError: (error) => {
+              console.error('Status Brick Error:', error);
+              setLoading(false);
+            },
+          },
+        };
+
+        await bricksBuilder.create('statusScreen', 'statusScreenBrick_container', settings);
+      } catch (error) {
+        console.error('Error rendering Status Brick:', error);
+        setLoading(false);
+      }
+    };
+
+    renderStatusBrick();
+  }, [brickRendered]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white flex items-center justify-center p-4">
-      <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur w-full max-w-md p-8 text-center">
-        <div className="mb-6 flex justify-center">
-          <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center">
-            <CheckCircle2 className="w-10 h-10 text-green-400" />
-          </div>
+    <div className="min-h-screen bg-slate-900 text-white flex flex-col items-center justify-center p-4">
+      <Card className="w-full max-w-2xl bg-slate-800 border-slate-700 p-8">
+        <div id="statusScreenBrick_container">
+          {loading && (
+            <div className="flex flex-col items-center py-12">
+              <Loader className="w-8 h-8 animate-spin text-blue-500 mb-4" />
+              <p className="text-slate-400">Consultando status do pagamento...</p>
+            </div>
+          )}
         </div>
 
-        <h1 className="text-3xl font-bold mb-2">Pagamento Confirmado!</h1>
-        <p className="text-slate-400 mb-6">
-          Sua assinatura foi ativada com sucesso. Bem-vindo ao HUA Analytics!
-        </p>
-
-        {paymentId && (
-          <div className="bg-slate-900/50 border border-slate-700/50 rounded-lg p-4 mb-6 text-left">
-            <p className="text-xs text-slate-500 mb-1">ID do Pagamento</p>
-            <p className="text-sm font-mono text-slate-300 break-all">{paymentId}</p>
+        {!loading && !brickRendered && (
+          <div className="text-center py-8">
+            <h2 className="text-xl font-bold mb-4">Pagamento Processado</h2>
+            <p className="text-slate-400 mb-8">
+              Não conseguimos carregar os detalhes do status, mas seu pagamento foi recebido.
+            </p>
+            <Button onClick={() => setLocation('/login')} className="w-full">
+              Ir para o Login
+            </Button>
           </div>
         )}
-
-        <div className="space-y-3">
-          <Button 
-            onClick={() => setLocation('/login')}
-            className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
-            data-testid="button-success-login"
-          >
-            Acessar Minha Conta
-          </Button>
-
-          <Button 
-            variant="outline"
+        
+        <div className="mt-8 pt-6 border-t border-slate-700">
+           <Button 
+            variant="ghost" 
             onClick={() => setLocation('/')}
-            className="w-full border-slate-600 text-slate-300 hover:bg-slate-700/50"
-            data-testid="button-success-home"
+            className="text-slate-400 hover:text-white flex items-center gap-2 mx-auto"
           >
-            Voltar ao Início
+            <ArrowLeft className="w-4 h-4" />
+            Voltar para Home
           </Button>
         </div>
-
-        <p className="text-xs text-slate-500 mt-6">
-          Um email de confirmação foi enviado para você. Guarde-o como referência.
-        </p>
       </Card>
     </div>
   );
