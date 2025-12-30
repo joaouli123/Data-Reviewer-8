@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { initMercadoPago, Payment } from '@mercadopago/sdk-react';
+import { loadMercadoPago } from "@mercadopago/sdk-js";
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
@@ -34,9 +34,6 @@ const PLANS = {
 };
 
 const publicKey = import.meta.env.VITE_MERCADOPAGO_PUBLIC_KEY;
-if (publicKey) {
-  initMercadoPago(publicKey, { locale: 'pt-BR' });
-}
 
 export default function Checkout() {
   const [, setLocation] = useLocation();
@@ -45,12 +42,47 @@ export default function Checkout() {
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('credit_card');
+  const [identificationTypes, setIdentificationTypes] = useState([]);
+  const [mp, setMp] = useState(null);
 
-  // Dados do usuário autenticado ou da URL (pode vir de paymentPending)
-  const companyName = company?.name || 'Sua Empresa';
-  const email = user?.email || '';
-  
-  // Se não tem company/user e não está carregando, redireciona para signup
+  // Form states
+  const [formData, setFormData] = useState({
+    payerFirstName: '',
+    payerLastName: '',
+    email: user?.email || '',
+    identificationType: 'CPF',
+    identificationNumber: '',
+    zipCode: '',
+    streetName: '',
+    streetNumber: '',
+    neighborhood: '',
+    city: '',
+    state: '',
+    cardNumber: '',
+    expiryMonth: '',
+    expiryYear: '',
+    cvv: ''
+  });
+
+  useEffect(() => {
+    const initMP = async () => {
+      if (publicKey) {
+        await loadMercadoPago();
+        const instance = new window.MercadoPago(publicKey, { locale: 'pt-BR' });
+        setMp(instance);
+        
+        try {
+          const types = await instance.getIdentificationTypes();
+          setIdentificationTypes(types);
+        } catch (e) {
+          console.error("Error fetching identification types", e);
+        }
+      }
+    };
+    initMP();
+  }, []);
+
   useEffect(() => {
     if (!authLoading && !company && !user) {
       setLocation('/signup');
@@ -60,128 +92,108 @@ export default function Checkout() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const plan = params.get('plan');
-    if (plan && PLANS[plan]) {
-      setSelectedPlan(plan);
-    } else {
-      setSelectedPlan('pro');
-    }
+    setSelectedPlan(plan && PLANS[plan] ? plan : 'pro');
     setLoading(false);
   }, []);
 
-  const initialization = {
-    amount: selectedPlan ? PLANS[selectedPlan].price : 100,
-    currency: 'BRL',
-    payer: {
-      email: email || 'customer@example.com',
-      address: {
-        zipCode: '00000000'
-      }
-    }
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const onSubmit = async (cardFormData) => {
-    return new Promise(async (resolve, reject) => {
-      try {
-        setIsProcessing(true);
-        toast.dismiss();
-        toast.loading('Processando assinatura...');
-        
-        // Ensure we send the exact structure expected by the backend
-        // and include all BIN-related info from Mercado Pago Brick
-        const payload = {
-          ...cardFormData,
-          companyId: company?.id,
-          plan: selectedPlan,
-          companyName: company?.name,
-          email: user?.email,
-          amount: selectedPlan ? Math.round(PLANS[selectedPlan].price * 100) : 10000
-        };
+  const handlePayment = async (e) => {
+    e.preventDefault();
+    if (!mp) return;
 
-        const response = await fetch('/api/payment/process', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
+    try {
+      setIsProcessing(true);
+      toast.loading('Processando pagamento...');
 
-        const result = await response.json();
-        
-        // Clear the initial "Processing" toast before showing the next one or redirecting
-        toast.dismiss();
-
-        if (response.ok) {
-          const paymentId = result.id || result.data?.id;
-          const status = result.status || result.data?.status;
-
-          if (status === 'approved' || status === 'authorized' || status === 'active') {
-            toast.success('Assinatura ativada com sucesso!');
-            setLocation(`/payment-success?payment_id=${paymentId}`);
-            resolve();
-            return;
+      let payload = {
+        companyId: company?.id,
+        plan: selectedPlan,
+        email: formData.email,
+        total_amount: PLANS[selectedPlan].price.toFixed(2),
+        payment_method_id: paymentMethod,
+        payer: {
+          email: formData.email,
+          first_name: formData.payerFirstName,
+          last_name: formData.payerLastName,
+          identification: {
+            type: formData.identificationType,
+            number: formData.identificationNumber
+          },
+          address: {
+            zip_code: formData.zipCode,
+            street_name: formData.streetName,
+            street_number: formData.streetNumber,
+            neighborhood: formData.neighborhood,
+            city: formData.city,
+            state: formData.state
           }
-
-          toast.success('Processando assinatura... Confirmando status...');
-          
-          // Polling logic ONLY if not approved immediately
-          let attempts = 0;
-          const maxAttempts = 12; // 1 minute total
-          const pollInterval = setInterval(async () => {
-            attempts++;
-            try {
-              const statusCheck = await fetch('/api/auth/payment-status', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: user?.username })
-              });
-              const statusData = await statusCheck.json();
-              
-              if (statusData.isPaid) {
-                clearInterval(pollInterval);
-                toast.success('Assinatura confirmada!');
-                setLocation(`/payment-success?payment_id=${paymentId}`);
-                resolve();
-              }
-            } catch (e) {
-              console.error("Polling error:", e);
-            }
-
-            if (attempts >= maxAttempts) {
-              clearInterval(pollInterval);
-              setLocation(`/payment-success?payment_id=${paymentId}`);
-              resolve();
-            }
-          }, 5000);
-          
-        } else {
-          const errorMsg = result.message || result.error || 'Erro ao processar assinatura';
-          toast.error(errorMsg);
-          reject(errorMsg);
         }
-      } catch (error) {
-        console.error('Payment error:', error);
-        toast.error('Erro ao processar assinatura');
-        reject(error);
-      } finally {
-        setIsProcessing(false);
+      };
+
+      if (paymentMethod === 'credit_card') {
+        try {
+          // Tokenization logic for Mercado Pago v2
+          const cardToken = await mp.createCardToken({
+            cardNumber: formData.cardNumber,
+            cardholderName: formData.payerFirstName + ' ' + formData.payerLastName,
+            cardExpirationMonth: formData.expiryMonth,
+            cardExpirationYear: formData.expiryYear,
+            securityCode: formData.cvv,
+            identificationType: formData.identificationType,
+            identificationNumber: formData.identificationNumber
+          });
+          payload.token = cardToken.id;
+          payload.payment_method_id = 'master'; // Should ideally be dynamic
+        } catch (tokenErr) {
+          console.error("Tokenization error", tokenErr);
+          toast.error("Erro ao processar dados do cartão");
+          setIsProcessing(false);
+          return;
+        }
       }
-    });
-  };
 
-  const onError = async (error) => {
-    console.error('Card Payment Brick Error:', error);
-  };
+      const response = await fetch('/api/payment/process', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
 
-  const onReady = async () => {
-    console.log('Card Payment Brick Ready');
+      const result = await response.json();
+      toast.dismiss();
+
+      if (response.ok) {
+        if (result.status === 'approved') {
+          toast.success('Assinatura ativada!');
+          setLocation(`/payment-success?payment_id=${result.id}`);
+        } else {
+          toast.info('Pagamento pendente ou em processamento.');
+          // Logic for Pix/Boleto display would go here
+        }
+      } else {
+        toast.error(result.message || 'Erro no processamento');
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      toast.error('Falha na comunicação com o servidor');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   if (loading || !selectedPlan) return <div className="flex items-center justify-center min-h-screen">Carregando...</div>;
   const plan = PLANS[selectedPlan];
 
   return (
-    <div className="min-h-screen lg:bg-[#F8FAFC] text-slate-900 font-sans">
-      {/* Header - Minimalist and Secure */}
-      <header className="border-b border-slate-100 bg-white lg:border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-end">
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans">
+      <header className="border-b border-slate-100 bg-white">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+          <Button variant="ghost" onClick={() => setLocation('/')} className="gap-2">
+            <ArrowLeft className="w-4 h-4" /> Voltar
+          </Button>
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-slate-500">Ambiente Seguro</span>
             <Lock className="w-4 h-4 text-slate-400" />
@@ -189,161 +201,101 @@ export default function Checkout() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-0 lg:px-4 py-0 lg:py-12">
-        <div className="hidden lg:block px-4">
-          <button 
-            onClick={() => setLocation('/')} 
-            className="flex items-center gap-2 text-slate-500 hover:text-[#2563eb] mb-8 transition-colors group"
-          >
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> 
-            <span>Voltar para Início</span>
-          </button>
-        </div>
-
-        <div className="grid lg:grid-cols-3 gap-0 lg:gap-8 items-start">
-          {/* Order Summary - Fixed/Sticky on mobile */}
-          <div className="lg:col-span-1 order-1 lg:order-1">
-            <div className="lg:sticky top-24 z-40">
-              <Card className="bg-[#F8FAFC] lg:bg-white border-0 lg:border-slate-200 shadow-none lg:shadow-sm rounded-none lg:rounded-xl overflow-hidden">
-                {/* Mobile Header - High Conversion Style */}
-                <div 
-                  className="lg:hidden p-4 flex items-center justify-between bg-slate-50 border-b border-slate-200 cursor-pointer shadow-sm"
-                  onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="bg-[#2563eb] px-2 py-1 rounded text-[10px] font-bold text-white uppercase">
-                      {plan.name}
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-bold text-slate-900">
-                        Total: {formatCurrency(plan.price)}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 text-[#2563eb] text-xs font-semibold">
-                    <span>{isSummaryExpanded ? 'Ocultar detalhes' : 'Ver detalhes'}</span>
-                    {isSummaryExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                  </div>
+      <div className="max-w-4xl mx-auto px-4 py-12">
+        <div className="grid lg:grid-cols-2 gap-8">
+          <Card className="p-6">
+            <h2 className="text-xl font-bold mb-4">Dados do Pagamento</h2>
+            <form onSubmit={handlePayment} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Nome</label>
+                  <input name="payerFirstName" value={formData.payerFirstName} onChange={handleInputChange} className="w-full p-2 border rounded-md" required />
                 </div>
-
-                {/* Collapsible Content */}
-                <div className={`${!isSummaryExpanded ? 'hidden lg:block' : 'block animate-in fade-in slide-in-from-top-2 duration-200'} p-6`}>
-                  <h2 className="text-xl font-bold mb-6 text-slate-900 border-b pb-4 hidden lg:block">Resumo do Pedido</h2>
-                  
-                  <div className="bg-white lg:bg-[#2563eb]/5 rounded-xl p-6 mb-6 border border-slate-200 lg:border-[#2563eb]/10 shadow-sm lg:shadow-none">
-                    <p className="text-[#2563eb] text-xs font-bold uppercase tracking-wider mb-2">Plano Selecionado</p>
-                    <h3 className="text-2xl font-bold mb-1 text-slate-900">{plan.name}</h3>
-                    <p className="text-slate-500 text-sm mb-4">{plan.description}</p>
-                    
-                    {!plan.contact && (
-                      <div className="pt-4 border-t border-slate-100 lg:border-slate-200">
-                        <p className="text-3xl font-bold text-slate-900">{formatCurrency(plan.price)}<span className="text-sm font-normal text-slate-500">/mês</span></p>
-                      </div>
-                    )}
-                    
-                    <Button 
-                      variant="outline" 
-                      onClick={() => setLocation('/')} 
-                      className="w-full mt-6 border-slate-300 lg:border-[#2563eb]/30 text-slate-600 lg:text-[#2563eb] hover:bg-slate-50 lg:hover:bg-[#2563eb] lg:hover:text-white transition-all rounded-lg"
-                    >
-                      Alterar Plano
-                    </Button>
-                  </div>
-
-                  <div className="space-y-4">
-                    <p className="text-sm font-semibold text-slate-700">O que está incluso:</p>
-                    <div className="space-y-3">
-                      {plan.features.map((f, i) => (
-                        <div key={i} className="flex items-start gap-3 text-sm text-slate-600">
-                          <div className="mt-1 bg-blue-50 p-0.5 rounded-full">
-                            <Check className="w-3 h-3 text-[#2563eb]" />
-                          </div>
-                          <span>{f}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="mt-8 pt-6 border-t border-slate-100 flex items-center gap-3 text-xs text-slate-400">
-                    <Lock className="w-4 h-4" />
-                    <span>Pagamento 100% seguro</span>
-                  </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Sobrenome</label>
+                  <input name="payerLastName" value={formData.payerLastName} onChange={handleInputChange} className="w-full p-2 border rounded-md" required />
                 </div>
-              </Card>
-            </div>
-          </div>
-
-          {/* Checkout Form - Priority on Mobile */}
-          <div className="lg:col-span-2 order-2 lg:order-2">
-            <div className="p-6 lg:p-8">
-              <div className="mb-6 lg:mb-8 lg:border-b lg:pb-6">
-                <h2 className="text-xl lg:text-2xl font-bold text-slate-900 mb-2">Finalizar Assinatura</h2>
-                <p className="text-sm lg:text-base text-slate-500">Ative sua conta em menos de 1 minuto.</p>
+              </div>
+              
+              <div className="space-y-1">
+                <label className="text-sm font-medium">E-mail</label>
+                <input type="email" name="email" value={formData.email} onChange={handleInputChange} className="w-full p-2 border rounded-md" required />
               </div>
 
-              {plan.contact ? (
-                <div className="text-center py-12 lg:py-16 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                  <h3 className="text-lg lg:text-xl font-bold mb-4 text-slate-900 px-4">Plano Sob Medida</h3>
-                  <p className="text-sm lg:text-base text-slate-500 max-w-sm mx-auto mb-8 px-6">
-                    Nossa equipe de especialistas entrará em contato para oferecer a melhor condição para sua empresa.
-                  </p>
-                  <Button 
-                    onClick={() => window.location.href = 'mailto:vendas@hua.com'}
-                    className="bg-[#2563eb] hover:bg-[#2563eb]/90 text-white font-bold h-11 lg:h-12 px-6 lg:px-8 rounded-lg"
-                  >
-                    Falar com Especialista
-                  </Button>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Tipo Doc.</label>
+                  <select name="identificationType" value={formData.identificationType} onChange={handleInputChange} className="w-full p-2 border rounded-md">
+                    {identificationTypes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                  </select>
                 </div>
-              ) : (
-                <div className="space-y-3 lg:space-y-4">
-                  <div className="p-2 lg:p-3 bg-slate-50 lg:bg-slate-50 rounded-xl lg:rounded-2xl border border-slate-200 shadow-sm lg:shadow-inner">
-                    <Payment
-                      initialization={initialization}
-                      onSubmit={onSubmit}
-                      onReady={onReady}
-                      onError={onError}
-                      customization={{
-                        visual: {
-                          fontFamily: 'system-ui',
-                          style: {
-                            theme: 'default',
-                            customVariables: {
-                              formBackgroundColor: 'transparent',
-                              inputBackgroundColor: '#ffffff',
-                              baseColor: '#2563eb',
-                              buttonTextColor: '#ffffff',
-                              textPrimaryColor: '#0f172a',
-                              textSecondaryColor: '#64748b',
-                              inputBorderWidth: '1px',
-                              borderRadiusLarge: '8px',
-                              fontSizeLarge: '16px',
-                              inputBorderColor: '#e2e8f0',
-                              inputFocusedBorderColor: '#2563eb'
-                            }
-                          }
-                        },
-                        paymentMethods: {
-                          creditCard: 'all',
-                          pix: 'all',
-                          ticket: 'all',
-                          maxInstallments: 1
-                        },
-                        walletInstallments: false,
-                        defaultPaymentMethod: 'credit_card'
-                      }}
-                    />
-                  </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Número Doc.</label>
+                  <input name="identificationNumber" value={formData.identificationNumber} onChange={handleInputChange} className="w-full p-2 border rounded-md" required />
+                </div>
+              </div>
 
-                  <div className="text-center px-4 pt-2">
-                    <p className="text-[10px] lg:text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
-                      Ao finalizar, você aceita nossos <a href="#" className="underline text-[#2563eb]">Termos</a> e <a href="#" className="underline text-[#2563eb]">Privacidade</a>.
-                      <br className="lg:hidden" /> O pagamento é processado pelo Mercado Pago.
-                    </p>
+              <div className="border-t pt-4">
+                <h3 className="text-sm font-bold mb-3 uppercase text-slate-500">Endereço</h3>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="col-span-1 space-y-1">
+                    <label className="text-sm font-medium">CEP</label>
+                    <input name="zipCode" value={formData.zipCode} onChange={handleInputChange} className="w-full p-2 border rounded-md" required />
+                  </div>
+                  <div className="col-span-2 space-y-1">
+                    <label className="text-sm font-medium">Cidade</label>
+                    <input name="city" value={formData.city} onChange={handleInputChange} className="w-full p-2 border rounded-md" required />
+                  </div>
+                </div>
+              </div>
+
+              {paymentMethod === 'credit_card' && (
+                <div className="space-y-4 pt-4 border-t">
+                  <h3 className="text-sm font-bold uppercase text-slate-500">Dados do Cartão</h3>
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium">Número do Cartão</label>
+                    <input name="cardNumber" value={formData.cardNumber} onChange={handleInputChange} className="w-full p-2 border rounded-md" placeholder="0000 0000 0000 0000" />
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-sm font-medium">Mês (MM)</label>
+                      <input name="expiryMonth" value={formData.expiryMonth} onChange={handleInputChange} className="w-full p-2 border rounded-md" placeholder="MM" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-sm font-medium">Ano (YY)</label>
+                      <input name="expiryYear" value={formData.expiryYear} onChange={handleInputChange} className="w-full p-2 border rounded-md" placeholder="YYYY" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-sm font-medium">CVV</label>
+                      <input name="cvv" value={formData.cvv} onChange={handleInputChange} className="w-full p-2 border rounded-md" placeholder="123" />
+                    </div>
                   </div>
                 </div>
               )}
+
+              <Button type="submit" className="w-full bg-[#2563eb] h-12 text-lg font-bold mt-6" disabled={isProcessing}>
+                {isProcessing ? 'Processando...' : `Pagar ${formatCurrency(plan.price)}`}
+              </Button>
+            </form>
+          </Card>
+
+          <Card className="p-6 bg-slate-50 h-fit">
+            <h2 className="text-xl font-bold mb-4">Resumo</h2>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="font-medium">{plan.name}</span>
+                <span className="font-bold">{formatCurrency(plan.price)}</span>
+              </div>
+              <p className="text-sm text-slate-500">{plan.description}</p>
+              <ul className="space-y-2">
+                {plan.features.slice(0, 3).map((f, i) => (
+                  <li key={i} className="text-sm flex items-center gap-2">
+                    <Check className="w-4 h-4 text-green-500" /> {f}
+                  </li>
+                ))}
+              </ul>
             </div>
-          </div>
+          </Card>
         </div>
       </div>
     </div>

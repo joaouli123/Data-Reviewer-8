@@ -2672,356 +2672,113 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   // ========== PAYMENT ROUTES ==========
   
-  // Create payment preference (Mercado Pago)
-  app.post("/api/payment/checkout", async (req, res) => {
-    try {
-      const { plan, amount, companyName, email, phone } = req.body;
-
-      if (!plan || !amount || !companyName || !email) {
-        return res.status(400).json({ error: "Missing required fields" });
-      }
-
-      const mercadoPagoAccessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
-      if (!mercadoPagoAccessToken) {
-        return res.status(500).json({ error: "Payment service not configured" });
-      }
-
-      // Create preference with Mercado Pago
-      const preferenceData = {
-        items: [{
-          title: `HUA Analytics - Plano ${plan.charAt(0).toUpperCase() + plan.slice(1)}`,
-          description: `Assinatura mensal - ${companyName}`,
-          quantity: 1,
-          unit_price: amount
-        }],
-        payer: {
-          email: email,
-          phone: {
-            area_code: "55",
-            number: phone?.replace(/\D/g, '') || undefined
-          }
-        },
-        auto_return: "approved",
-        back_urls: {
-          success: `${process.env.REPLIT_DOMAINS || 'http://localhost:5000'}/payment-success`,
-          failure: `${process.env.REPLIT_DOMAINS || 'http://localhost:5000'}/checkout?plan=${plan}`,
-          pending: `${process.env.REPLIT_DOMAINS || 'http://localhost:5000'}/checkout?plan=${plan}`
-        },
-        notification_url: `${process.env.REPLIT_DOMAINS || 'http://localhost:5000'}/api/payment/webhook`,
-        external_reference: plan,
-        metadata: {
-          plan: plan,
-          companyName: companyName,
-          email: email
-        }
-      };
-
-      const mpResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${mercadoPagoAccessToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(preferenceData)
-      });
-
-      if (!mpResponse.ok) {
-        throw new Error(`Mercado Pago API error: ${mpResponse.status}`);
-      }
-
-      const preference = await mpResponse.json();
-
-      // Note: Subscription will be created/updated when payment webhook is confirmed
-      // Return preferenceId for Payment Brick integration
-      res.json({
-        success: true,
-        preferenceId: preference.id,
-        init_point: preference.init_point // Keep this for reference
-      });
-
-    } catch (error) {
-      console.error("Payment checkout error:", error);
-      res.status(500).json({ error: error instanceof Error ? error.message : "Payment processing failed" });
-    }
-  });
-
-  // Process payment from Brick
+  // Process payment using API de Orders (v1/orders)
   app.post("/api/payment/process", async (req, res) => {
     try {
-      const mercadoPagoAccessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
-      if (!mercadoPagoAccessToken) {
-        return res.status(500).json({ error: "Payment service not configured" });
+      const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
+      if (!accessToken) {
+        return res.status(500).json({ error: "Mercado Pago access token not configured" });
       }
 
-      console.log("📥 Payment Brick Data Received:", JSON.stringify(req.body, null, 2));
+      const { companyId, plan, total_amount, payer, payment_method_id, token } = req.body;
 
-      const client = new MercadoPagoConfig({ accessToken: mercadoPagoAccessToken });
-      const payment = new Payment(client);
-
-      // The Payment Brick sends data - check the actual structure received
-      // Try to extract token from various possible field names
-      let token = req.body.token || req.body.formData?.token;
-      const amount = req.body.amount;
-      const payer = req.body.payer;
-      const paymentMethodId = req.body.paymentMethodId || req.body.selectedPaymentMethod;
-      const issuerId = req.body.issuerId;
-      const installments = req.body.installments || 1;
-      const description = req.body.description;
-      const companyId = req.body.companyId;
-      const plan = req.body.plan;
-      const companyName = req.body.companyName;
-      const email = req.body.email;
-
-      if (!token) {
-        console.error("❌ No token found in request body. Structure:", Object.keys(req.body));
-        return res.status(400).json({ error: "Payment token is required" });
-      }
-
-      // Use exactly what the Brick sends to avoid BIN mismatch (diff_param_bins)
-      const paymentBody = {
-        token: req.body.token || req.body.formData?.token,
-        transaction_amount: Number(req.body.transaction_amount || req.body.formData?.transaction_amount || (Number(amount) / 100)),
-        description: description || req.body.formData?.description || 'HUA Analytics Subscription',
-        installments: Number(req.body.installments || req.body.formData?.installments || 1),
-        payment_method_id: req.body.payment_method_id || req.body.formData?.payment_method_id,
-        issuer_id: (req.body.issuer_id || req.body.formData?.issuer_id) ? Number(req.body.issuer_id || req.body.formData?.issuer_id) : undefined,
+      // Base order structure according to API de Orders documentation
+      const orderBody: any = {
+        type: "online",
+        processing_mode: "automatic",
+        total_amount: String(total_amount),
+        external_reference: companyId || `temp_${Date.now()}`,
         payer: {
-          email: req.body.payer?.email || req.body.formData?.payer?.email || email || 'customer@example.com',
-          identification: req.body.payer?.identification || req.body.formData?.payer?.identification || undefined
+          email: payer?.email || "test@testuser.com",
+          first_name: payer?.first_name || "Comprador",
+          last_name: payer?.last_name || "Teste",
+          identification: payer?.identification || { type: "CPF", number: "12345678909" },
+          address: payer?.address || {
+            zip_code: "06233903",
+            street_name: "Av. das Nações Unidas",
+            street_number: "3003",
+            neighborhood: "Bonfim",
+            state: "SP",
+            city: "Osasco"
+          }
         },
-        additional_info: {
-          items: [{
-            id: plan || 'pro',
-            title: `Assinatura ${plan || 'pro'}`,
-            quantity: 1,
-            unit_price: Number(req.body.transaction_amount || req.body.formData?.transaction_amount || (Number(amount) / 100))
-          }]
-        }
+        transactions: {
+          payments: [
+            {
+              amount: String(total_amount),
+              payment_method: {
+                id: payment_method_id,
+                type: payment_method_id === 'pix' ? 'bank_transfer' : (payment_method_id === 'boleto' ? 'ticket' : 'credit_card'),
+                token: token
+              }
+            }
+          ]
+        },
+        notification_url: `${process.env.REPLIT_DOMAINS || 'http://localhost:5000'}/api/payment/webhook`
       };
 
-      console.log("✅ Sending to MP API (v1/payments):", JSON.stringify(paymentBody, null, 2));
+      console.log("🚀 Creating Mercado Pago Order:", JSON.stringify(orderBody, null, 2));
 
-      const mpResponse = await fetch("https://api.mercadopago.com/v1/payments", {
+      const response = await fetch("https://api.mercadopago.com/v1/orders", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}`,
+          "Authorization": `Bearer ${accessToken}`,
           "Content-Type": "application/json",
-          "X-Idempotency-Key": req.body.token || Date.now().toString()
+          "X-Idempotency-Key": `${companyId || 'anon'}_${Date.now()}`
         },
-        body: JSON.stringify(paymentBody)
+        body: JSON.stringify(orderBody)
       });
 
-      const result = await mpResponse.json();
-      
-      if (!mpResponse.ok) {
-        console.error("❌ MP API Error:", result);
-        return res.status(mpResponse.status).json(result);
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error("❌ Mercado Pago API Error:", result);
+        return res.status(response.status).json(result);
       }
 
-      // If approved, update database immediately
+      // If approved (automatic mode for card might return approved immediately in sandbox)
       if (result.status === 'approved' && companyId) {
-        try {
-          // Update company payment status
-          await db.update(companies).set({ 
-            paymentStatus: 'approved'
-          }).where(eq(companies.id, companyId));
-          
-          // Create or update subscription
-          const existingSub = await db.query.subscriptions.findFirst({
-            where: (subs) => eq(subs.companyId, companyId)
-          });
-          
-          if (existingSub) {
-            // Update existing subscription
-            await db.update(subscriptions).set({
-              plan: plan || 'pro',
-              status: 'active'
-            }).where(eq(subscriptions.companyId, companyId));
-          } else {
-            // Create new subscription
-            await db.insert(subscriptions).values({
-              companyId,
-              plan: plan || 'pro',
-              status: 'active',
-              amount: (Number(req.body.transaction_amount || req.body.formData?.transaction_amount || (Number(amount) / 100))).toString()
-            });
-          }
-          
-          console.log(`✅ Company ${companyId} payment updated to approved with plan ${plan}`);
-        } catch (updateErr) {
-          console.error("Warning: Failed to update company/subscription:", updateErr);
-          // Continue anyway - webhook will also update
-        }
+        await db.update(companies).set({ paymentStatus: 'approved' }).where(eq(companies.id, companyId));
+        await db.update(subscriptions).set({ status: 'active', plan: plan || 'pro' }).where(eq(subscriptions.companyId, companyId));
       }
 
       res.json(result);
     } catch (error: any) {
       console.error("Payment processing error:", error);
-      res.status(400).json({ 
-        error: error.message || "Payment failed",
-        details: error.cause || error
-      });
+      res.status(500).json({ error: error.message || "Failed to process payment" });
     }
   });
 
-  // Payment webhook (Mercado Pago callback)
+  // Webhook for Order updates
   app.post("/api/payment/webhook", async (req, res) => {
     try {
-      const xSignature = req.headers['x-signature'] as string;
-      const xRequestId = req.headers['x-request-id'] as string;
-      const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+      const { action, type, data } = req.body;
+      const orderId = data?.id;
 
-      // Handle IPN Fallback
-      const topic = req.query.topic as string;
-      const resourceId = req.query.id as string;
-
-      if (topic && resourceId) {
-        console.log(`ℹ️ Received IPN: topic=${topic}, id=${resourceId}`);
-        // For IPN, we respond immediately and then process
-        res.status(200).json({ received: true });
-
-        // Process in background
-        (async () => {
-          try {
-            const mpResponse = await fetch(`https://api.mercadopago.com/v1/payments/${resourceId}`, {
-              headers: {
-                'Authorization': `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}`,
-              }
-            });
-            if (mpResponse.ok) {
-              const payment = await mpResponse.json();
-              if (payment.status === 'approved') {
-                const plan = payment.external_reference;
-                console.log(`✅ IPN: Payment approved for plan: ${plan}`);
-              }
-            }
-          } catch (e) {
-            console.error("IPN background processing error:", e);
-          }
-        })();
-        return;
-      }
-
-      if (secret && xSignature) {
-        const parts = xSignature.split(',');
-        let ts = '';
-        let v1 = '';
-        
-        parts.forEach(part => {
-          const [key, value] = part.split('=');
-          if (key === 'ts') ts = value;
-          if (key === 'v1') v1 = value;
+      if (type === 'order' && orderId) {
+        const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
+        const response = await fetch(`https://api.mercadopago.com/v1/orders/${orderId}`, {
+          headers: { 'Authorization': `Bearer ${accessToken}` }
         });
 
-        const manifest = `id:${req.query.id || ''};request-id:${xRequestId};ts:${ts};`;
-        const hmac = crypto.createHmac('sha256', secret);
-        hmac.update(manifest);
-        const sha = hmac.digest('hex');
+        if (response.ok) {
+          const order = await response.json();
+          const companyId = order.external_reference;
 
-        if (sha !== v1) {
-          console.error("❌ Invalid Webhook Signature");
-          return res.status(401).json({ error: "Invalid signature" });
+          if (order.status === 'approved' && companyId && !companyId.startsWith('temp_')) {
+            await db.update(companies).set({ paymentStatus: 'approved' }).where(eq(companies.id, companyId));
+            await db.update(subscriptions).set({ status: 'active' }).where(eq(subscriptions.companyId, companyId));
+            console.log(`✅ Subscription activated for company ${companyId} via Webhook`);
+          }
         }
       }
 
-      const { action, data } = req.body;
-
-      if (action === "payment.created" || action === "payment.updated") {
-        const paymentId = data?.id;
-        
-        // Get payment details
-        const mpResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
-          headers: {
-            'Authorization': `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}`,
-          }
-        });
-
-        if (mpResponse.ok) {
-          const payment = await mpResponse.json();
-          const plan = payment.external_reference;
-          const companyName = payment.metadata?.companyName;
-          const email = payment.metadata?.email;
-          
-          if (payment.status === 'approved') {
-            console.log(`✅ Payment approved for plan: ${plan} - Company: ${companyName} (${email})`);
-            
-            // Find company by looking up via email metadata or payment email
-            try {
-              // Try to find company by getting all companies and matching by email (from metadata)
-              // OR we can look it up via the payment record if needed
-              let company = null;
-              
-              // First try: find by user email (from payment metadata)
-              const companies_list = await storage.getCompanies();
-              const users_list = await db.query.users.findMany();
-              const user = users_list.find(u => u.email === email);
-              
-              if (user && user.companyId) {
-                company = companies_list.find(c => c.id === user.companyId);
-              }
-              
-              // Fallback: search by company name if email didn't work
-              if (!company && companyName) {
-                company = companies_list.find(c => c.name === companyName);
-              }
-              
-              if (company) {
-                // Update company paymentStatus to approved
-                await db.update(companies).set({ paymentStatus: 'approved' }).where(eq(companies.id, company.id));
-                
-                // Create or update subscription via DB
-                try {
-                  const existingSub = await db.query.subscriptions.findFirst({
-                    where: (subs) => eq(subs.companyId, company.id)
-                  });
-                  
-                  if (existingSub) {
-                    await db.update(subscriptions).set({
-                      plan: plan || 'pro',
-                      status: 'active'
-                    }).where(eq(subscriptions.companyId, company.id));
-                  } else {
-                    await db.insert(subscriptions).values({
-                      companyId: company.id,
-                      plan: plan || 'pro',
-                      status: 'active',
-                      amount: '99.00'
-                    });
-                  }
-                } catch (subErr) {
-                  console.error("Warning: Failed to create/update subscription in webhook:", subErr);
-                }
-                
-                console.log(`✅ Subscription activated and payment marked as approved for company: ${company.id}`);
-              } else {
-                console.warn(`⚠️ Company not found for email: ${email}`);
-              }
-            } catch (err) {
-              console.error('Error updating subscription:', err);
-            }
-          } else if (payment.status === 'rejected' || payment.status === 'cancelled') {
-            console.log(`❌ Payment ${payment.status} for plan: ${plan} - Company: ${companyName}`);
-            
-            // Find company and mark subscription as failed
-            try {
-              const companies = await storage.getCompanies();
-              const company = companies.find(c => c.email === email);
-              
-              if (company) {
-                // Update company paymentStatus
-                await db.update(companies).set({ paymentStatus: payment.status }).where(eq(companies.id, company.id));
-                
-                // Update subscription status via DB
-                try {
-                  await db.update(subscriptions).set({
-                    status: payment.status === 'rejected' ? 'suspended' : payment.status
-                  }).where(eq(subscriptions.companyId, company.id));
-                } catch (subErr) {
-                  console.error("Warning: Failed to update subscription in webhook:", subErr);
-                }
-                
-                console.log(`⚠️ Subscription marked as ${payment.status} for company: ${company.id}`);
-              }
+      res.status(200).send("OK");
+    } catch (error) {
+      console.error("Webhook error:", error);
+      res.status(500).send("Internal Server Error");
+    }
+  });
             } catch (err) {
               console.error('Error updating subscription on rejection:', err);
             }
