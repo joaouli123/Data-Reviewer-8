@@ -39,6 +39,29 @@ const PLANS = {
 
 const publicKey = import.meta.env.VITE_MERCADOPAGO_PUBLIC_KEY;
 
+// Card brands SVG logos
+const CardBrands = {
+  visa: (
+    <svg className="w-8 h-5" viewBox="0 0 48 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="48" height="32" rx="4" fill="#1A1F71" />
+      <text x="24" y="20" fontSize="12" fontWeight="bold" fill="white" textAnchor="middle">VISA</text>
+    </svg>
+  ),
+  mastercard: (
+    <svg className="w-8 h-5" viewBox="0 0 48 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="48" height="32" rx="4" fill="#FF5F00" />
+      <circle cx="18" cy="16" r="8" fill="#EB001B" />
+      <circle cx="30" cy="16" r="8" fill="#F79E1B" />
+    </svg>
+  ),
+  elo: (
+    <svg className="w-8 h-5" viewBox="0 0 48 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="48" height="32" rx="4" fill="#111111" />
+      <text x="24" y="20" fontSize="10" fontWeight="bold" fill="white" textAnchor="middle">ELO</text>
+    </svg>
+  )
+};
+
 export default function Checkout() {
   const [, setLocation] = useLocation();
   const { user, company, loading: authLoading } = useAuth();
@@ -49,9 +72,13 @@ export default function Checkout() {
   const [mp, setMp] = useState(null);
   const [cardData, setCardData] = useState({
     cardNumber: '',
+    cardholderName: user?.name || '',
+    cardholderDocument: '',
+    cardholderDocumentType: 'CPF',
     expiryMonth: '',
     expiryYear: '',
-    cvv: ''
+    cvv: '',
+    email: user?.email || ''
   });
   const [cardErrors, setCardErrors] = useState({});
 
@@ -79,6 +106,16 @@ export default function Checkout() {
     setLoading(false);
   }, []);
 
+  useEffect(() => {
+    if (user) {
+      setCardData(prev => ({
+        ...prev,
+        cardholderName: user.name || '',
+        email: user.email || ''
+      }));
+    }
+  }, [user]);
+
   const handleCardInputChange = (e) => {
     const { name, value } = e.target;
     let processedValue = value;
@@ -91,6 +128,8 @@ export default function Checkout() {
       processedValue = value.replace(/\D/g, '').slice(0, 4);
     } else if (name === 'cvv') {
       processedValue = value.replace(/\D/g, '').slice(0, 4);
+    } else if (name === 'cardholderDocument') {
+      processedValue = value.replace(/\D/g, '').slice(0, 14);
     }
     
     setCardData(prev => ({ ...prev, [name]: processedValue }));
@@ -103,8 +142,11 @@ export default function Checkout() {
     const errors = {};
     const cleanNumber = cardData.cardNumber.replace(/\s/g, '');
     if (!cleanNumber || cleanNumber.length < 13) errors.cardNumber = 'Cartão inválido';
-    if (!cardData.expiryMonth || !cardData.expiryYear) errors.expiry = 'Data de validade obrigatória';
+    if (!cardData.cardholderName) errors.cardholderName = 'Nome obrigatório';
+    if (!cardData.cardholderDocument) errors.cardholderDocument = 'Documento obrigatório';
+    if (!cardData.expiryMonth || !cardData.expiryYear) errors.expiry = 'Data obrigatória';
     if (!cardData.cvv || cardData.cvv.length < 3) errors.cvv = 'CVV inválido';
+    if (!cardData.email) errors.email = 'Email obrigatório';
     setCardErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -126,17 +168,17 @@ export default function Checkout() {
       let payload = {
         companyId: company?.id,
         plan: selectedPlan,
-        email: user?.email,
+        email: paymentMethod === 'credit_card' ? cardData.email : user?.email,
         total_amount: PLANS[selectedPlan].price.toFixed(2),
         payment_method_id: paymentMethod,
         recurring: true,
         payer: {
-          email: user?.email,
-          first_name: user?.name?.split(' ')[0] || '',
-          last_name: user?.name?.split(' ').slice(1).join(' ') || '',
+          email: paymentMethod === 'credit_card' ? cardData.email : user?.email,
+          first_name: paymentMethod === 'credit_card' ? cardData.cardholderName?.split(' ')[0] : (user?.name?.split(' ')[0] || ''),
+          last_name: paymentMethod === 'credit_card' ? cardData.cardholderName?.split(' ').slice(1).join(' ') : (user?.name?.split(' ').slice(1).join(' ') || ''),
           identification: {
-            type: 'CPF',
-            number: ''
+            type: cardData.cardholderDocumentType,
+            number: cardData.cardholderDocument
           }
         }
       };
@@ -145,10 +187,12 @@ export default function Checkout() {
         try {
           const cardToken = await mp.createCardToken({
             cardNumber: cardData.cardNumber.replace(/\s/g, ''),
-            cardholderName: user?.name || 'Comprador',
+            cardholderName: cardData.cardholderName,
             cardExpirationMonth: cardData.expiryMonth,
             cardExpirationYear: cardData.expiryYear,
-            securityCode: cardData.cvv
+            securityCode: cardData.cvv,
+            identificationType: cardData.cardholderDocumentType,
+            identificationNumber: cardData.cardholderDocument
           });
           payload.token = cardToken.id;
           payload.payment_method_id = 'master';
@@ -251,62 +295,129 @@ export default function Checkout() {
                 </div>
 
                 <form onSubmit={handlePayment} className="space-y-8">
-                  {/* Card Form */}
+                  {/* Card Form - Professional Style */}
                   {paymentMethod === 'credit_card' && (
-                    <div className="space-y-6 p-8 bg-slate-50 rounded-lg border border-slate-200">
-                      <h3 className="font-bold text-lg text-slate-900">Dados do Cartão de Crédito</h3>
-                      
-                      <div className="space-y-3">
-                        <label className="block text-sm font-semibold text-slate-900">Número do Cartão *</label>
-                        <input
-                          name="cardNumber"
-                          value={cardData.cardNumber}
-                          onChange={handleCardInputChange}
-                          placeholder="1234 5678 9012 3456"
-                          className={`w-full px-5 py-4 text-lg rounded-lg border-2 font-mono tracking-wider ${cardErrors.cardNumber ? 'border-red-400 bg-red-50' : 'border-slate-300 focus:border-blue-500'} focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all`}
-                          maxLength="19"
-                          data-testid="input-card-number"
-                        />
-                        {cardErrors.cardNumber && <p className="text-red-600 text-sm font-medium">{cardErrors.cardNumber}</p>}
+                    <div className="p-8 bg-white rounded-lg border border-slate-300 shadow-sm">
+                      {/* Card Header with Brands */}
+                      <div className="flex items-center justify-between mb-8 pb-6 border-b border-slate-200">
+                        <h3 className="font-semibold text-slate-900">Cartão de crédito ou débito</h3>
+                        <div className="flex gap-2">
+                          {Object.entries(CardBrands).map(([brand, icon]) => (
+                            <div key={brand} className="hover:opacity-80 transition-opacity">
+                              {icon}
+                            </div>
+                          ))}
+                        </div>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-4">
-                        <div className="space-y-3">
-                          <label className="block text-sm font-semibold text-slate-900">Mês *</label>
+                      <div className="space-y-5">
+                        {/* Card Number */}
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-slate-700">Número do cartão</label>
                           <input
-                            name="expiryMonth"
-                            value={cardData.expiryMonth}
+                            name="cardNumber"
+                            value={cardData.cardNumber}
                             onChange={handleCardInputChange}
-                            placeholder="01"
-                            maxLength="2"
-                            className={`w-full px-4 py-4 text-lg rounded-lg border-2 text-center font-mono ${cardErrors.expiry ? 'border-red-400 bg-red-50' : 'border-slate-300 focus:border-blue-500'} focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all`}
-                            data-testid="input-expiry-month"
+                            placeholder="1234 1234 1234 1234"
+                            className={`w-full px-4 py-3 text-sm rounded border ${cardErrors.cardNumber ? 'border-red-500 bg-red-50' : 'border-slate-300'} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all font-mono`}
+                            maxLength="19"
+                            data-testid="input-card-number"
                           />
+                          {cardErrors.cardNumber && <p className="text-red-600 text-xs">{cardErrors.cardNumber}</p>}
                         </div>
-                        <div className="space-y-3">
-                          <label className="block text-sm font-semibold text-slate-900">Ano *</label>
+
+                        {/* Cardholder Name */}
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-slate-700">Nome do titular como aparece no cartão</label>
                           <input
-                            name="expiryYear"
-                            value={cardData.expiryYear}
+                            name="cardholderName"
+                            value={cardData.cardholderName}
                             onChange={handleCardInputChange}
-                            placeholder="2025"
-                            maxLength="4"
-                            className={`w-full px-4 py-4 text-lg rounded-lg border-2 text-center font-mono ${cardErrors.expiry ? 'border-red-400 bg-red-50' : 'border-slate-300 focus:border-blue-500'} focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all`}
-                            data-testid="input-expiry-year"
+                            placeholder="Maria Santos Pereira"
+                            className={`w-full px-4 py-3 text-sm rounded border ${cardErrors.cardholderName ? 'border-red-500 bg-red-50' : 'border-slate-300'} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
+                            data-testid="input-cardholder-name"
                           />
+                          {cardErrors.cardholderName && <p className="text-red-600 text-xs">{cardErrors.cardholderName}</p>}
                         </div>
-                        <div className="space-y-3">
-                          <label className="block text-sm font-semibold text-slate-900">CVV *</label>
-                          <input
-                            name="cvv"
-                            value={cardData.cvv}
-                            onChange={handleCardInputChange}
-                            placeholder="123"
-                            maxLength="4"
-                            className={`w-full px-4 py-4 text-lg rounded-lg border-2 text-center font-mono ${cardErrors.cvv ? 'border-red-400 bg-red-50' : 'border-slate-300 focus:border-blue-500'} focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all`}
-                            data-testid="input-cvv"
-                          />
-                          {cardErrors.cvv && <p className="text-red-600 text-xs font-medium mt-1">{cardErrors.cvv}</p>}
+
+                        {/* Expiry and CVV */}
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <label className="block text-sm font-medium text-slate-700">Data de vencimento</label>
+                            <input
+                              name="expiryMonth"
+                              value={cardData.expiryMonth}
+                              onChange={handleCardInputChange}
+                              placeholder="mm/yy"
+                              maxLength="5"
+                              className={`w-full px-4 py-3 text-sm rounded border ${cardErrors.expiry ? 'border-red-500 bg-red-50' : 'border-slate-300'} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
+                              data-testid="input-expiry"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="block text-sm font-medium text-slate-700">Código de segurança</label>
+                            <div className="relative">
+                              <input
+                                name="cvv"
+                                value={cardData.cvv}
+                                onChange={handleCardInputChange}
+                                placeholder="123"
+                                maxLength="4"
+                                className={`w-full px-4 py-3 text-sm rounded border ${cardErrors.cvv ? 'border-red-500 bg-red-50' : 'border-slate-300'} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all font-mono`}
+                                data-testid="input-cvv"
+                              />
+                              <svg className="absolute right-3 top-3 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Document */}
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <label className="block text-sm font-medium text-slate-700">Tipo de documento</label>
+                            <select
+                              name="cardholderDocumentType"
+                              value={cardData.cardholderDocumentType}
+                              onChange={handleCardInputChange}
+                              className="w-full px-4 py-3 text-sm rounded border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                              data-testid="select-doc-type"
+                            >
+                              <option value="CPF">CPF</option>
+                              <option value="CNPJ">CNPJ</option>
+                            </select>
+                          </div>
+                          <div className="space-y-2">
+                            <label className="block text-sm font-medium text-slate-700">Documento do titular</label>
+                            <input
+                              name="cardholderDocument"
+                              value={cardData.cardholderDocument}
+                              onChange={handleCardInputChange}
+                              placeholder="9.999.999-9"
+                              className={`w-full px-4 py-3 text-sm rounded border ${cardErrors.cardholderDocument ? 'border-red-500 bg-red-50' : 'border-slate-300'} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
+                              data-testid="input-document"
+                            />
+                            {cardErrors.cardholderDocument && <p className="text-red-600 text-xs">{cardErrors.cardholderDocument}</p>}
+                          </div>
+                        </div>
+
+                        {/* Email Section */}
+                        <div className="pt-4 border-t border-slate-200">
+                          <h4 className="text-sm font-medium text-slate-900 mb-4">Preencha seus dados</h4>
+                          <div className="space-y-2">
+                            <label className="block text-sm font-medium text-slate-700">E-mail</label>
+                            <input
+                              name="email"
+                              type="email"
+                              value={cardData.email}
+                              onChange={handleCardInputChange}
+                              placeholder="exemplo@email.com"
+                              className={`w-full px-4 py-3 text-sm rounded border ${cardErrors.email ? 'border-red-500 bg-red-50' : 'border-slate-300'} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
+                              data-testid="input-email"
+                            />
+                            {cardErrors.email && <p className="text-red-600 text-xs">{cardErrors.email}</p>}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -332,10 +443,11 @@ export default function Checkout() {
                   <Button
                     type="submit"
                     disabled={isProcessing}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 text-lg font-semibold rounded-lg transition-all disabled:opacity-50"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 text-base font-semibold rounded transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                     data-testid="button-complete-payment"
                   >
-                    {isProcessing ? 'Processando...' : `Confirmar Pagamento de ${formatCurrency(plan.price)}/mês`}
+                    <Lock className="w-4 h-4" />
+                    {isProcessing ? 'Processando...' : `Pagar ${formatCurrency(plan.price)}/mês`}
                   </Button>
                 </form>
 
