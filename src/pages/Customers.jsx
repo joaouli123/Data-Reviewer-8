@@ -178,6 +178,7 @@ export default function CustomersPage() {
                 <TableHeader className="bg-slate-50">
                     <TableRow>
                         <TableHead className="pl-6 text-left">Nome</TableHead>
+                        <TableHead className="text-left">CNPJ</TableHead>
                         <TableHead className="text-left">Contato</TableHead>
                         <TableHead className="text-left">Desde</TableHead>
                         <TableHead className="text-right">Total em Vendas</TableHead>
@@ -197,8 +198,10 @@ export default function CustomersPage() {
                                     </div>
                                 </TableCell>
                                 <TableCell className="text-left">
+                                    {c.cnpj ? <span className="font-medium text-slate-700">{c.cnpj}</span> : <span className="text-slate-400">-</span>}
+                                </TableCell>
+                                <TableCell className="text-left">
                                     <div className="flex flex-col text-sm text-slate-500 gap-1">
-                                        {c.cnpj && <div className="font-medium text-slate-700">{c.cnpj}</div>}
                                         {c.email && <div className="flex items-center gap-2"><Mail className="w-3 h-3" /> {c.email}</div>}
                                         {c.phone && <div className="flex items-center gap-2"><Phone className="w-3 h-3" /> {c.phone}</div>}
                                     </div>
@@ -252,7 +255,7 @@ export default function CustomersPage() {
                         ))
                     ) : (
                         <TableRow>
-                            <TableCell colSpan={5} className="text-center py-10 text-slate-500">
+                            <TableCell colSpan={6} className="text-center py-10 text-slate-500">
                                 Nenhum cliente encontrado.
                             </TableCell>
                         </TableRow>
