@@ -68,7 +68,7 @@ export default function Checkout() {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('credit_card');
+  const [paymentMethod, setPaymentMethod] = useState(null);
   const [mp, setMp] = useState(null);
   const [cardData, setCardData] = useState({
     cardNumber: '',
@@ -266,15 +266,17 @@ export default function Checkout() {
                     { id: 'pix', label: 'PIX', desc: 'Pagamento imediato', icon: Wallet2 },
                     { id: 'boleto', label: 'Boleto', desc: 'Prazo de 3 dias', icon: Barcode }
                   ].map(({ id, label, desc, icon: Icon }) => (
-                    <div key={id} className="border border-slate-200 rounded-lg overflow-hidden">
+                    <div key={id} className={`border rounded-lg overflow-hidden transition-all ${
+                      id === 'credit_card' ? 'border-blue-200 bg-blue-50/30' : 'border-slate-200'
+                    }`}>
                       {/* Tab Header */}
                       <button
                         type="button"
                         onClick={() => setPaymentMethod(paymentMethod === id ? null : id)}
                         className={`w-full flex items-start gap-4 p-4 transition-all ${
                           paymentMethod === id
-                            ? 'bg-blue-50'
-                            : 'bg-white hover:bg-slate-50'
+                            ? id === 'credit_card' ? 'bg-blue-100/50' : 'bg-blue-50'
+                            : id === 'credit_card' ? 'bg-blue-50/30 hover:bg-blue-50/50' : 'bg-white hover:bg-slate-50'
                         }`}
                         data-testid={`button-payment-method-${id}`}
                       >
@@ -444,7 +446,22 @@ export default function Checkout() {
 
           {/* Summary Sidebar */}
           <div className="lg:col-span-1">
-            <Card className={`p-6 sticky top-24 border ${plan.isPopular ? 'border-blue-300 bg-gradient-to-b from-blue-50 to-white' : 'border-slate-200'}`}>
+            {/* Mobile Compact Summary */}
+            <Card className="lg:hidden p-4 mb-6 border border-slate-200 bg-white">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs text-slate-500 uppercase font-semibold">Plano selecionado</p>
+                  <p className="text-lg font-bold text-slate-900">{plan.name}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-slate-900">{formatCurrency(plan.price)}</p>
+                  <p className="text-xs text-slate-500">/mês</p>
+                </div>
+              </div>
+            </Card>
+
+            {/* Desktop Full Summary */}
+            <Card className={`hidden lg:block p-6 sticky top-24 border ${plan.isPopular ? 'border-blue-300' : 'border-slate-200'} bg-white`}>
               {plan.isPopular && (
                 <div className="mb-4 inline-block">
                   <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold">
@@ -453,7 +470,7 @@ export default function Checkout() {
                 </div>
               )}
               
-              <h3 className="text-2xl font-bold text-slate-900 mb-2">{plan.name}</h3>
+              <h3 className="text-xl font-bold text-slate-900 mb-2">{plan.name}</h3>
               <p className="text-slate-600 text-sm mb-6">{plan.description}</p>
 
               {/* Price */}
