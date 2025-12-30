@@ -176,7 +176,7 @@ export default function Checkout() {
   const plan = PLANS[selectedPlan];
 
   return (
-    <div className="min-h-screen bg-white lg:bg-[#F8FAFC] text-slate-900 font-sans">
+    <div className="min-h-screen lg:bg-[#F8FAFC] text-slate-900 font-sans">
       {/* Header - Minimalist and Secure */}
       <header className="border-b border-slate-100 bg-white lg:border-slate-200">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-end">
@@ -199,79 +199,81 @@ export default function Checkout() {
         </div>
 
         <div className="grid lg:grid-cols-3 gap-0 lg:gap-8 items-start">
-          {/* Order Summary - Fixed/Sticky on mobile? No, let's keep it top but cleaner */}
+          {/* Order Summary - Fixed/Sticky on mobile */}
           <div className="lg:col-span-1 order-1 lg:order-1">
-            <Card className="bg-[#F8FAFC] lg:bg-white border-0 lg:border-slate-200 lg:sticky top-24 shadow-none lg:shadow-sm rounded-none lg:rounded-xl overflow-hidden z-40">
-              {/* Mobile Header - High Conversion Style */}
-              <div 
-                className="lg:hidden p-4 flex items-center justify-between bg-slate-50 border-b border-slate-200 cursor-pointer shadow-sm"
-                onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="bg-[#2563eb] px-2 py-1 rounded text-[10px] font-bold text-white uppercase">
-                    {plan.name}
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-bold text-slate-900">
-                      Total: {formatCurrency(plan.price)}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1 text-[#2563eb] text-xs font-semibold">
-                  <span>{isSummaryExpanded ? 'Ocultar detalhes' : 'Ver detalhes'}</span>
-                  {isSummaryExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                </div>
-              </div>
-
-              {/* Collapsible Content */}
-              <div className={`${!isSummaryExpanded ? 'hidden lg:block' : 'block animate-in fade-in slide-in-from-top-2 duration-200'} p-6`}>
-                <h2 className="text-xl font-bold mb-6 text-slate-900 border-b pb-4 hidden lg:block">Resumo do Pedido</h2>
-                
-                <div className="bg-white lg:bg-[#2563eb]/5 rounded-xl p-6 mb-6 border border-slate-200 lg:border-[#2563eb]/10 shadow-sm lg:shadow-none">
-                  <p className="text-[#2563eb] text-xs font-bold uppercase tracking-wider mb-2">Plano Selecionado</p>
-                  <h3 className="text-2xl font-bold mb-1 text-slate-900">{plan.name}</h3>
-                  <p className="text-slate-500 text-sm mb-4">{plan.description}</p>
-                  
-                  {!plan.contact && (
-                    <div className="pt-4 border-t border-slate-100 lg:border-slate-200">
-                      <p className="text-3xl font-bold text-slate-900">{formatCurrency(plan.price)}<span className="text-sm font-normal text-slate-500">/mês</span></p>
+            <div className="lg:sticky top-24 z-40">
+              <Card className="bg-[#F8FAFC] lg:bg-white border-0 lg:border-slate-200 shadow-none lg:shadow-sm rounded-none lg:rounded-xl overflow-hidden">
+                {/* Mobile Header - High Conversion Style */}
+                <div 
+                  className="lg:hidden p-4 flex items-center justify-between bg-slate-50 border-b border-slate-200 cursor-pointer shadow-sm"
+                  onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="bg-[#2563eb] px-2 py-1 rounded text-[10px] font-bold text-white uppercase">
+                      {plan.name}
                     </div>
-                  )}
-                  
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setLocation('/#pricing')} 
-                    className="w-full mt-6 border-slate-300 lg:border-[#2563eb]/30 text-slate-600 lg:text-[#2563eb] hover:bg-slate-50 lg:hover:bg-[#2563eb] lg:hover:text-white transition-all rounded-lg"
-                  >
-                    Alterar Plano
-                  </Button>
-                </div>
-
-                <div className="space-y-4">
-                  <p className="text-sm font-semibold text-slate-700">O que está incluso:</p>
-                  <div className="space-y-3">
-                    {plan.features.map((f, i) => (
-                      <div key={i} className="flex items-start gap-3 text-sm text-slate-600">
-                        <div className="mt-1 bg-blue-50 p-0.5 rounded-full">
-                          <Check className="w-3 h-3 text-[#2563eb]" />
-                        </div>
-                        <span>{f}</span>
-                      </div>
-                    ))}
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-slate-900">
+                        Total: {formatCurrency(plan.price)}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 text-[#2563eb] text-xs font-semibold">
+                    <span>{isSummaryExpanded ? 'Ocultar detalhes' : 'Ver detalhes'}</span>
+                    {isSummaryExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                   </div>
                 </div>
 
-                <div className="mt-8 pt-6 border-t border-slate-100 flex items-center gap-3 text-xs text-slate-400">
-                  <Lock className="w-4 h-4" />
-                  <span>Pagamento 100% seguro</span>
+                {/* Collapsible Content */}
+                <div className={`${!isSummaryExpanded ? 'hidden lg:block' : 'block animate-in fade-in slide-in-from-top-2 duration-200'} p-6`}>
+                  <h2 className="text-xl font-bold mb-6 text-slate-900 border-b pb-4 hidden lg:block">Resumo do Pedido</h2>
+                  
+                  <div className="bg-white lg:bg-[#2563eb]/5 rounded-xl p-6 mb-6 border border-slate-200 lg:border-[#2563eb]/10 shadow-sm lg:shadow-none">
+                    <p className="text-[#2563eb] text-xs font-bold uppercase tracking-wider mb-2">Plano Selecionado</p>
+                    <h3 className="text-2xl font-bold mb-1 text-slate-900">{plan.name}</h3>
+                    <p className="text-slate-500 text-sm mb-4">{plan.description}</p>
+                    
+                    {!plan.contact && (
+                      <div className="pt-4 border-t border-slate-100 lg:border-slate-200">
+                        <p className="text-3xl font-bold text-slate-900">{formatCurrency(plan.price)}<span className="text-sm font-normal text-slate-500">/mês</span></p>
+                      </div>
+                    )}
+                    
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setLocation('/#pricing')} 
+                      className="w-full mt-6 border-slate-300 lg:border-[#2563eb]/30 text-slate-600 lg:text-[#2563eb] hover:bg-slate-50 lg:hover:bg-[#2563eb] lg:hover:text-white transition-all rounded-lg"
+                    >
+                      Alterar Plano
+                    </Button>
+                  </div>
+
+                  <div className="space-y-4">
+                    <p className="text-sm font-semibold text-slate-700">O que está incluso:</p>
+                    <div className="space-y-3">
+                      {plan.features.map((f, i) => (
+                        <div key={i} className="flex items-start gap-3 text-sm text-slate-600">
+                          <div className="mt-1 bg-blue-50 p-0.5 rounded-full">
+                            <Check className="w-3 h-3 text-[#2563eb]" />
+                          </div>
+                          <span>{f}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mt-8 pt-6 border-t border-slate-100 flex items-center gap-3 text-xs text-slate-400">
+                    <Lock className="w-4 h-4" />
+                    <span>Pagamento 100% seguro</span>
+                  </div>
                 </div>
-              </div>
-            </Card>
+              </Card>
+            </div>
           </div>
 
           {/* Checkout Form - Priority on Mobile */}
           <div className="lg:col-span-2 order-2 lg:order-2">
-            <Card className="bg-white border-0 lg:border-slate-200 p-6 lg:p-8 shadow-none lg:shadow-sm rounded-none lg:rounded-xl">
+            <div className="p-6 lg:p-8">
               <div className="mb-6 lg:mb-8 lg:border-b lg:pb-6">
                 <h2 className="text-xl lg:text-2xl font-bold text-slate-900 mb-2">Finalizar Assinatura</h2>
                 <p className="text-sm lg:text-base text-slate-500">Ative sua conta em menos de 1 minuto.</p>
@@ -337,7 +339,7 @@ export default function Checkout() {
                   </div>
                 </div>
               )}
-            </Card>
+            </div>
           </div>
         </div>
       </div>
