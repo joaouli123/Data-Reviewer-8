@@ -257,9 +257,9 @@ export default function Checkout() {
                           pix: 'all',
                           ticket: 'all'
                         },
-                        walletInstallments: false
+                        walletInstallments: false,
+                        defaultPaymentMethod: 'credit_card'
                       }}
-                      preferredPaymentMethod="credit_card"
                     />
                   </div>
 
