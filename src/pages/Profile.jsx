@@ -413,7 +413,7 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <Button type="submit" disabled={updateProfileMutation.isPending} className="w-full">
+            <Button type="submit" disabled={updateProfileMutation.isPending} className="w-full bg-[#005CB8] hover:bg-[#005CB8]/90 text-white font-semibold">
               <Save className="w-4 h-4 mr-2" />
               {updateProfileMutation.isPending ? 'Salvando...' : 'Salvar Alterações'}
             </Button>
@@ -435,7 +435,7 @@ export default function ProfilePage() {
                 <Input id="confirm" type="password" value={passwords.confirm} onChange={e => setPasswords({...passwords, confirm: e.target.value})} />
               </div>
             </div>
-            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={updatePasswordMutation.isPending}>
+            <Button type="submit" className="w-full bg-[#005CB8] hover:bg-[#005CB8]/90 text-white font-semibold" disabled={updatePasswordMutation.isPending}>
               {updatePasswordMutation.isPending ? 'Atualizando...' : 'Atualizar Senha'}
             </Button>
           </form>
@@ -648,14 +648,23 @@ export default function ProfilePage() {
       </div>
 
       <Tabs defaultValue="perfil" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-8">
-          <TabsTrigger value="perfil" className="gap-2">
+        <TabsList className="grid w-full grid-cols-3 mb-8 bg-muted/50 p-1">
+          <TabsTrigger 
+            value="perfil" 
+            className="gap-2 data-[state=active]:bg-[#005CB8] data-[state=active]:text-white font-medium transition-all"
+          >
             <User className="w-4 h-4" /> <span className="hidden sm:inline">Perfil</span>
           </TabsTrigger>
-          <TabsTrigger value="assinatura" className="gap-2">
+          <TabsTrigger 
+            value="assinatura" 
+            className="gap-2 data-[state=active]:bg-[#005CB8] data-[state=active]:text-white font-medium transition-all"
+          >
             <CreditCard className="w-4 h-4" /> <span className="hidden sm:inline">Assinaturas</span>
           </TabsTrigger>
-          <TabsTrigger value="email" className="gap-2">
+          <TabsTrigger 
+            value="email" 
+            className="gap-2 data-[state=active]:bg-[#005CB8] data-[state=active]:text-white font-medium transition-all"
+          >
             <Settings className="w-4 h-4" /> <span className="hidden sm:inline">Configuração Email</span>
           </TabsTrigger>
         </TabsList>
