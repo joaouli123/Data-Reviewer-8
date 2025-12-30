@@ -248,7 +248,14 @@ export default function Home() {
                 <p className="text-slate-400 text-sm mb-6">{plan.description}</p>
 
                 <Button
-                  onClick={() => setLocation(`/signup?plan=${plan.name.toLowerCase()}`)}
+                  onClick={() => {
+                    const planId = plan.name.toLowerCase();
+                    if (planId === 'enterprise') {
+                      setLocation('/checkout?plan=enterprise');
+                    } else {
+                      setLocation(`/signup?plan=${planId}`);
+                    }
+                  }}
                   className={`w-full mb-6 ${
                     plan.popular 
                       ? 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700' 

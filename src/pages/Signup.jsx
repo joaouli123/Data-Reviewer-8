@@ -80,8 +80,12 @@ export default function Signup() {
         formData.plan
       );
       const userName = data.user?.name || "usuário";
-      toast.success(`Seja bem vindo, ${userName}!`);
-      setLocation("/");
+      toast.success(`Bem vindo, ${userName}! Redirecionando para checkout...`);
+      
+      // Redirecionar para checkout com o plano selecionado
+      setTimeout(() => {
+        setLocation(`/checkout?plan=${formData.plan}&email=${formData.email}&company=${formData.companyName}`);
+      }, 1000);
     } catch (error) {
       toast.error(error.message);
     } finally {

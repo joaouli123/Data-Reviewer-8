@@ -9,6 +9,7 @@ import Home from "@/pages/Home.jsx";
 import Login from "@/pages/Login.jsx";
 import Signup from "@/pages/Signup.jsx";
 import Checkout from "@/pages/Checkout.jsx";
+import PaymentSuccess from "@/pages/PaymentSuccess.jsx";
 import AcceptInvite from "@/pages/AcceptInvite.jsx";
 import AccessDenied from "@/pages/AccessDenied.jsx";
 
@@ -43,6 +44,7 @@ function AppContent() {
         <Route path="/login" component={Login} />
         <Route path="/signup" component={Signup} />
         <Route path="/checkout" component={Checkout} />
+        <Route path="/payment-success" component={PaymentSuccess} />
         <Route path="/accept-invite" component={AcceptInvite} />
         <Route component={Home} />
       </Switch>
