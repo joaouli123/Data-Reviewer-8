@@ -2778,13 +2778,16 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       }
 
       // Use exactly what the Brick sends to avoid BIN mismatch (diff_param_bins)
+      // Log for debugging
+      console.log("📥 Payment Brick Data Received:", JSON.stringify(req.body, null, 2));
+
       const paymentBody = {
         token: req.body.token || req.body.formData?.token,
         transaction_amount: Number(req.body.transaction_amount || req.body.formData?.transaction_amount || (Number(amount) / 100)),
         description: description || req.body.formData?.description || 'HUA Analytics Subscription',
         installments: Number(req.body.installments || req.body.formData?.installments || 1),
         payment_method_id: req.body.payment_method_id || req.body.formData?.payment_method_id,
-        issuer_id: req.body.issuer_id || req.body.formData?.issuer_id ? Number(req.body.issuer_id || req.body.formData?.issuer_id) : undefined,
+        issuer_id: (req.body.issuer_id || req.body.formData?.issuer_id) ? Number(req.body.issuer_id || req.body.formData?.issuer_id) : undefined,
         payer: {
           email: req.body.payer?.email || req.body.formData?.payer?.email || email || 'customer@example.com',
           identification: req.body.payer?.identification || req.body.formData?.payer?.identification || undefined
@@ -2798,6 +2801,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           }]
         }
       };
+
+      console.log("✅ Sending to MP API:", JSON.stringify(paymentBody, null, 2));
 
       // Remove undefined values
       Object.keys(paymentBody).forEach(key => 
