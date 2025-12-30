@@ -2778,9 +2778,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       }
 
       // Use exactly what the Brick sends to avoid BIN mismatch (diff_param_bins)
-      // Log for debugging
-      console.log("📥 Payment Brick Data Received:", JSON.stringify(req.body, null, 2));
-
       const paymentBody = {
         token: req.body.token || req.body.formData?.token,
         transaction_amount: Number(req.body.transaction_amount || req.body.formData?.transaction_amount || (Number(amount) / 100)),
@@ -2791,66 +2788,71 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         payer: {
           email: req.body.payer?.email || req.body.formData?.payer?.email || email || 'customer@example.com',
           identification: req.body.payer?.identification || req.body.formData?.payer?.identification || undefined
-        },
-        additional_info: {
-          items: [{
-            id: plan || 'pro',
-            title: `Assinatura ${plan || 'pro'}`,
-            quantity: 1,
-            unit_price: Number(req.body.transaction_amount || req.body.formData?.transaction_amount || (Number(amount) / 100))
-          }]
         }
       };
 
-      console.log("✅ Sending to MP API:", JSON.stringify(paymentBody, null, 2));
+      // Handle Subscription (Recurrence) using Preapproval API
+      const subscriptionBody = {
+        reason: description || 'HUA Analytics Subscription',
+        payer_email: req.body.payer?.email || req.body.formData?.payer?.email || email,
+        card_token_id: req.body.token || req.body.formData?.token,
+        auto_recurring: {
+          frequency: 1,
+          frequency_type: 'months',
+          transaction_amount: Number(req.body.transaction_amount || req.body.formData?.transaction_amount || (Number(amount) / 100)),
+          currency_id: 'BRL'
+        },
+        back_url: `${req.protocol}://${req.get('host')}/payment-success`,
+        status: 'authorized'
+      };
 
-      // Remove undefined values
-      Object.keys(paymentBody).forEach(key => 
-        paymentBody[key] === undefined && delete paymentBody[key]
-      );
+      console.log("✅ Sending to MP Subscriptions API:", JSON.stringify(subscriptionBody, null, 2));
 
-      // FAST PATH: Process payment immediately using SDK
-      const paymentResponse = await payment.create({
-        body: paymentBody,
+      const subResponse = await fetch("https://api.mercadopago.com/preapproval", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(subscriptionBody)
       });
 
-      // If approved, update database immediately
-      if (paymentResponse.status === 'approved' && companyId) {
-        try {
-          // Update company payment status
+      const result = await subResponse.json();
+      
+      if (!subResponse.ok) {
+        console.error("❌ MP Subscriptions API Error:", result);
+        return res.status(subResponse.status).json(result);
+      }
+
+      // If authorized, update database immediately
+      if (result.status === 'authorized' || result.status === 'active') {
+        if (companyId) {
           await db.update(companies).set({ 
             paymentStatus: 'approved'
           }).where(eq(companies.id, companyId));
           
-          // Create or update subscription
           const existingSub = await db.query.subscriptions.findFirst({
             where: (subs) => eq(subs.companyId, companyId)
           });
           
           if (existingSub) {
-            // Update existing subscription
             await db.update(subscriptions).set({
               plan: plan || 'pro',
               status: 'active'
             }).where(eq(subscriptions.companyId, companyId));
           } else {
-            // Create new subscription
             await db.insert(subscriptions).values({
               companyId,
               plan: plan || 'pro',
               status: 'active',
-              amount: amount ? (amount / 100).toString() : '99.00'
+              amount: (Number(req.body.transaction_amount || req.body.formData?.transaction_amount || (Number(amount) / 100))).toString()
             });
           }
-          
-          console.log(`✅ Company ${companyId} payment updated to approved with plan ${plan}`);
-        } catch (updateErr) {
-          console.error("Warning: Failed to update company/subscription:", updateErr);
-          // Continue anyway - webhook will also update
         }
+        return res.json({ ...result, status: 'approved' }); // Return 'approved' for frontend compatibility
       }
 
-      res.json(paymentResponse);
+      return res.json(result);
     } catch (error: any) {
       console.error("Payment processing error:", error);
       res.status(400).json({ 
