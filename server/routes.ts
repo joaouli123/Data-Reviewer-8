@@ -2781,14 +2781,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const paymentBody = {
         token: token,
         transaction_amount: Number(amount) / 100, // Mercado Pago SDK v2 uses transaction_amount in decimals for v2/payments
-        currency_id: 'BRL',
         description: description || 'HUA Analytics Subscription',
         installments: Number(installments) || 1,
         payment_method_id: paymentMethodId || 'credit_card',
         issuer_id: issuerId ? Number(issuerId) : undefined,
         payer: {
-          email: payer?.email || email || 'customer@example.com',
-          identification: payer?.identification || undefined
+          email: payer?.email || email || 'customer@example.com'
         }
       };
 
