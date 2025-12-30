@@ -48,6 +48,7 @@ import {
   hashPassword,
 } from "./auth";
 import { MercadoPagoConfig, Payment } from 'mercadopago';
+import crypto from 'crypto';
 import { setupVite } from "./vite";
 import { z } from "zod";
 import { db } from "./db";
@@ -2657,6 +2658,32 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   // Payment webhook (Mercado Pago callback)
   app.post("/api/payment/webhook", async (req, res) => {
     try {
+      const xSignature = req.headers['x-signature'] as string;
+      const xRequestId = req.headers['x-request-id'] as string;
+      const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+
+      if (secret && xSignature) {
+        const parts = xSignature.split(',');
+        let ts = '';
+        let v1 = '';
+        
+        parts.forEach(part => {
+          const [key, value] = part.split('=');
+          if (key === 'ts') ts = value;
+          if (key === 'v1') v1 = value;
+        });
+
+        const manifest = `id:${req.query.id || ''};request-id:${xRequestId};ts:${ts};`;
+        const hmac = crypto.createHmac('sha256', secret);
+        hmac.update(manifest);
+        const sha = hmac.digest('hex');
+
+        if (sha !== v1) {
+          console.error("❌ Invalid Webhook Signature");
+          return res.status(401).json({ error: "Invalid signature" });
+        }
+      }
+
       const { action, data } = req.body;
 
       if (action === "payment.created" || action === "payment.updated") {
