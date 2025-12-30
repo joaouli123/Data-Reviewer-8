@@ -56,13 +56,13 @@ function AppContent() {
   if (!isAuthenticated && !paymentPending) {
     return (
       <Switch>
-        <Route path="/" component={Home} />
+        <Route path="/" component={Login} />
         <Route path="/login" component={Login} />
         <Route path="/signup" component={Signup} />
         <Route path="/checkout" component={Checkout} />
         <Route path="/payment-success" component={PaymentSuccess} />
         <Route path="/accept-invite" component={AcceptInvite} />
-        <Route component={Home} />
+        <Route component={Login} />
       </Switch>
     );
   }
