@@ -106,6 +106,10 @@ export default function Checkout() {
         });
 
         const result = await response.json();
+        
+        // Clear the initial "Processing" toast before showing the next one or redirecting
+        toast.dismiss();
+
         if (response.ok) {
           const paymentId = result.id || result.data?.id;
           const status = result.status || result.data?.status;
@@ -323,7 +327,8 @@ export default function Checkout() {
                         paymentMethods: {
                           creditCard: 'all',
                           pix: 'all',
-                          ticket: 'all'
+                          ticket: 'all',
+                          maxInstallments: 1
                         },
                         walletInstallments: false,
                         defaultPaymentMethod: 'credit_card'
