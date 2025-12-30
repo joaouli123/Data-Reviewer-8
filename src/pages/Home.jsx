@@ -1,11 +1,64 @@
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { BarChart3, Users, TrendingUp, Lock, Zap, Shield } from 'lucide-react';
+import { BarChart3, Users, TrendingUp, Lock, Zap, Shield, Check } from 'lucide-react';
 import LogoHUA from '@assets/Logo_HUA_1766187037233.png';
 
 export default function Home() {
   const [, setLocation] = useLocation();
+
+  const plans = [
+    {
+      name: 'Basic',
+      price: 'R$ 99',
+      period: '/mês',
+      description: 'Perfeito para pequenas empresas começarem',
+      features: [
+        'Até 100 clientes',
+        'Gestão básica de vendas',
+        'Relatórios simples',
+        'Suporte por email',
+        '5GB de armazenamento'
+      ],
+      popular: false,
+      buttonText: 'Escolher Plano Basic'
+    },
+    {
+      name: 'Pro',
+      price: 'R$ 299',
+      period: '/mês',
+      description: 'Para empresas em crescimento',
+      features: [
+        'Até 500 clientes',
+        'Gestão avançada de vendas',
+        'Relatórios inteligentes com IA',
+        'Suporte prioritário',
+        '100GB de armazenamento',
+        'Múltiplos usuários',
+        'Integração com banco'
+      ],
+      popular: true,
+      buttonText: 'Escolher Plano Pro'
+    },
+    {
+      name: 'Enterprise',
+      price: 'Customizado',
+      period: '/mês',
+      description: 'Para grandes corporações',
+      features: [
+        'Clientes ilimitados',
+        'Gestão completa e customizável',
+        'Analytics avançado com IA',
+        'Suporte 24/7 dedicado',
+        'Armazenamento ilimitado',
+        'Usuários ilimitados',
+        'APIs personalizadas',
+        'SLA garantido'
+      ],
+      popular: false,
+      buttonText: 'Contatar Vendas'
+    }
+  ];
 
   const features = [
     {
@@ -160,6 +213,63 @@ export default function Home() {
               </Card>
             );
           })}
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold mb-4">Planos Simples e Transparentes</h2>
+          <p className="text-xl text-slate-400">Escolha o plano perfeito para seu negócio</p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-8">
+          {plans.map((plan, idx) => (
+            <Card 
+              key={idx} 
+              className={`relative bg-slate-800/50 border backdrop-blur transition-all hover:border-blue-500/50 ${
+                plan.popular 
+                  ? 'border-blue-500/50 ring-1 ring-blue-500/20 md:scale-105' 
+                  : 'border-slate-700/50'
+              } overflow-hidden`}
+            >
+              {plan.popular && (
+                <div className="absolute top-0 right-0 bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-4 py-1 text-sm font-semibold rounded-bl">
+                  Popular
+                </div>
+              )}
+              
+              <div className="p-8 h-full flex flex-col">
+                <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
+                <div className="mb-4">
+                  <span className="text-4xl font-bold text-blue-400">{plan.price}</span>
+                  <span className="text-slate-400">{plan.period}</span>
+                </div>
+                <p className="text-slate-400 text-sm mb-6">{plan.description}</p>
+
+                <Button
+                  onClick={() => setLocation(`/signup?plan=${plan.name.toLowerCase()}`)}
+                  className={`w-full mb-6 ${
+                    plan.popular 
+                      ? 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700' 
+                      : 'bg-slate-700 hover:bg-slate-600'
+                  }`}
+                  data-testid={`button-plan-${plan.name.toLowerCase()}`}
+                >
+                  {plan.buttonText}
+                </Button>
+
+                <div className="space-y-3 flex-1">
+                  {plan.features.map((feature, fidx) => (
+                    <div key={fidx} className="flex items-start gap-3">
+                      <Check className="w-4 h-4 text-green-400 flex-shrink-0 mt-1" />
+                      <span className="text-sm text-slate-300">{feature}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </Card>
+          ))}
         </div>
       </section>
 

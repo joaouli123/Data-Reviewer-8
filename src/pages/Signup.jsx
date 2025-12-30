@@ -1,12 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Building2, FileText, User, UserCheck, Mail, Lock, CheckCircle2, UserPlus } from "lucide-react";
+import { Building2, FileText, User, UserCheck, Mail, Lock, CheckCircle2, UserPlus, ArrowLeft } from "lucide-react";
 import { formatCNPJ } from "@/utils/masks";
+
+const PLANS = {
+  basic: { name: 'Basic', price: 'R$ 99', features: 'Até 100 clientes, relatórios simples' },
+  pro: { name: 'Pro', price: 'R$ 299', features: 'Até 500 clientes, IA inclusa' },
+  enterprise: { name: 'Enterprise', price: 'Customizado', features: 'Ilimitado, suporte 24/7' }
+};
 
 export default function Signup() {
   const [formData, setFormData] = useState({
@@ -17,10 +23,21 @@ export default function Signup() {
     password: "",
     confirmPassword: "",
     name: "",
+    plan: "pro",
   });
   const [loading, setLoading] = useState(false);
   const { signup } = useAuth();
   const [, setLocation] = useLocation();
+  const [selectedPlan, setSelectedPlan] = useState("pro");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const planParam = params.get("plan");
+    if (planParam && PLANS[planParam]) {
+      setSelectedPlan(planParam);
+      setFormData(prev => ({ ...prev, plan: planParam }));
+    }
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -73,13 +90,40 @@ export default function Signup() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted/30 p-4">
-      <Card className="w-full max-w-md p-8 shadow-lg">
-        <div className="text-center mb-8">
+      <Card className="w-full max-w-2xl p-8 shadow-lg">
+        <div className="mb-8">
+          <button 
+            onClick={() => setLocation('/')}
+            className="flex items-center gap-2 text-primary hover:underline mb-4"
+            data-testid="button-back-plans"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Voltar aos Planos
+          </button>
           <h1 className="text-3xl font-bold">Criar Conta</h1>
           <p className="text-sm text-muted-foreground mt-2">Registre-se para começar a usar</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Plano Selecionado */}
+        <div className="mb-8 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">Plano Selecionado</p>
+              <p className="text-lg font-bold text-blue-900 dark:text-blue-100">{PLANS[selectedPlan]?.name} - {PLANS[selectedPlan]?.price}/mês</p>
+              <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">{PLANS[selectedPlan]?.features}</p>
+            </div>
+            <Button 
+              type="button"
+              variant="outline"
+              onClick={() => setLocation('/#pricing')}
+              data-testid="button-change-plan"
+            >
+              Mudar Plano
+            </Button>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-3">
           <div className="space-y-2">
             <label className="block text-sm font-medium">Empresa</label>
             <div className="relative">
