@@ -32,13 +32,18 @@ export default function CustomerFormDialog({ open, onOpenChange, customer = null
     
     // Garantir que campos vazios sejam enviados como null para o backend
     // Isso evita erros de validação Zod se o schema esperar string ou null
+    const cleanCNPJ = formData.cnpj?.trim();
     const payload = {
       name: formData.name.trim(),
-      cnpj: formData.cnpj?.trim() || null,
+      cnpj: cleanCNPJ && cleanCNPJ.length > 0 ? cleanCNPJ : null,
       email: formData.email?.trim() || null,
       phone: formData.phone?.trim() || null,
+      contact: null,
+      category: null,
+      status: 'ativo'
     };
 
+    console.log('📤 Enviando payload para cliente:', payload);
     onSubmit(payload);
   };
 
