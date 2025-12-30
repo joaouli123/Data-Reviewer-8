@@ -86,17 +86,23 @@ export default function Checkout() {
         setIsProcessing(true);
         toast.loading('Processando pagamento...');
         
+        // Ensure we send the exact structure expected by the backend
+        // and include all BIN-related info from Mercado Pago Brick
+        const payload = {
+          ...cardFormData,
+          companyId: company?.id,
+          plan: selectedPlan,
+          companyName: company?.name,
+          email: user?.email,
+          // Convert amount to cents for the current backend logic if needed, 
+          // but the backend is now being updated to handle both.
+          amount: selectedPlan ? Math.round(PLANS[selectedPlan].price * 100) : 10000
+        };
+
         const response = await fetch('/api/payment/process', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            ...cardFormData,
-            companyId: company?.id,
-            plan: selectedPlan,
-            companyName: company?.name,
-            email: user?.email,
-            amount: selectedPlan ? Math.round(PLANS[selectedPlan].price * 100) : 10000
-          }),
+          body: JSON.stringify(payload),
         });
 
         const result = await response.json();

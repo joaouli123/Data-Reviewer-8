@@ -2777,16 +2777,25 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         return res.status(400).json({ error: "Payment token is required" });
       }
 
-      // Build proper payment creation body for MP API v2
+      // Use exactly what the Brick sends to avoid BIN mismatch (diff_param_bins)
       const paymentBody = {
-        token: token,
-        transaction_amount: Number(amount) / 100, // Mercado Pago SDK v2 uses transaction_amount in decimals for v2/payments
-        description: description || 'HUA Analytics Subscription',
-        installments: Number(installments) || 1,
-        payment_method_id: paymentMethodId || 'credit_card',
-        issuer_id: issuerId ? Number(issuerId) : undefined,
+        token: req.body.token || req.body.formData?.token,
+        transaction_amount: Number(req.body.transaction_amount || req.body.formData?.transaction_amount || (Number(amount) / 100)),
+        description: description || req.body.formData?.description || 'HUA Analytics Subscription',
+        installments: Number(req.body.installments || req.body.formData?.installments || 1),
+        payment_method_id: req.body.payment_method_id || req.body.formData?.payment_method_id,
+        issuer_id: req.body.issuer_id || req.body.formData?.issuer_id ? Number(req.body.issuer_id || req.body.formData?.issuer_id) : undefined,
         payer: {
-          email: payer?.email || email || 'customer@example.com'
+          email: req.body.payer?.email || req.body.formData?.payer?.email || email || 'customer@example.com',
+          identification: req.body.payer?.identification || req.body.formData?.payer?.identification || undefined
+        },
+        additional_info: {
+          items: [{
+            id: plan || 'pro',
+            title: `Assinatura ${plan || 'pro'}`,
+            quantity: 1,
+            unit_price: Number(req.body.transaction_amount || req.body.formData?.transaction_amount || (Number(amount) / 100))
+          }]
         }
       };
 
