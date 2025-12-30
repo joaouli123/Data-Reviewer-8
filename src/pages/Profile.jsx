@@ -7,9 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Upload, Save, Building2, User, Mail, Lock, Settings } from 'lucide-react';
+import { Upload, Save, Building2, User, Mail, Lock, Settings, CreditCard } from 'lucide-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -49,7 +50,6 @@ const BRAZILIAN_STATES = [
   { code: 'TO', name: 'Tocantins' },
 ];
 
-// Mock cities by state (in production, fetch from an API)
 const CITIES_BY_STATE = {
   'SP': ['São Paulo', 'Campinas', 'Santos', 'Sorocaba', 'Ribeirão Preto'],
   'RJ': ['Rio de Janeiro', 'Niterói', 'Duque de Caxias', 'São Gonçalo', 'Nova Iguaçu'],
@@ -186,14 +186,12 @@ export default function ProfilePage() {
       return;
     }
     
-    // Show preview immediately
     const reader = new FileReader();
     reader.onload = (event) => {
       setPreviewUrl(event.target?.result || '');
     };
     reader.readAsDataURL(file);
     
-    // Convert to data URL and upload
     const dataUrlReader = new FileReader();
     dataUrlReader.onload = async (event) => {
       const dataUrl = event.target?.result;
@@ -270,12 +268,10 @@ export default function ProfilePage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (!formData.name?.trim()) {
       toast.error('Nome completo é obrigatório');
       return;
     }
-    
     await updateProfileMutation.mutateAsync({
       ...formData,
       avatar: previewUrl || user?.avatar,
@@ -291,14 +287,8 @@ export default function ProfilePage() {
       .slice(0, 2) || 'US';
   };
 
-  return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Meu Perfil</h1>
-        <p className="text-muted-foreground mt-1">Gerencie suas informações pessoais e configurações</p>
-      </div>
-
-      {/* User Profile Card */}
+  const ProfileTab = () => (
+    <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -308,7 +298,6 @@ export default function ProfilePage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Avatar Section */}
             <div className="flex flex-col gap-4 items-center pb-6 border-b">
               <Avatar className="w-24 h-24">
                 <AvatarImage src={previewUrl || user?.avatar} alt={user?.name} />
@@ -321,172 +310,66 @@ export default function ProfilePage() {
                   size="sm"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={updateProfileMutation.isPending}
-                  data-testid="button-upload-avatar"
                 >
                   <Upload className="w-4 h-4 mr-2" />
                   Alterar Foto
                 </Button>
-                <p className="text-xs text-muted-foreground text-center">
-                  JPG, PNG ou GIF. Máximo 5MB.
-                </p>
               </div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleAvatarChange}
-                className="hidden"
-                data-testid="input-avatar-file"
-              />
+              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
             </div>
 
-            {/* Editable Fields */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
                 <Label htmlFor="name">Nome Completo</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  type="text"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="Seu nome completo"
-                  data-testid="input-name"
-                />
+                <Input id="name" name="name" value={formData.name} onChange={handleInputChange} />
               </div>
-
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="phone">Telefone</Label>
-                <Input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  placeholder="(11) 9 9999-9999"
-                  data-testid="input-phone"
-                />
+                <Input id="phone" name="phone" value={formData.phone} onChange={handleInputChange} />
               </div>
             </div>
 
-            {/* Address Section */}
-            <div className="pt-4 border-t">
-              <h3 className="text-lg font-semibold mb-4">Endereço</h3>
-              
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
+            <div className="pt-4 border-t space-y-4">
+              <h3 className="text-lg font-semibold">Endereço</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
                   <Label htmlFor="cep">CEP</Label>
-                  <Input
-                    id="cep"
-                    name="cep"
-                    type="text"
-                    value={formData.cep}
-                    onChange={handleCepChange}
-                    placeholder="00000-000"
-                    maxLength="8"
-                    disabled={loadingCep}
-                    data-testid="input-cep"
-                  />
-                  {loadingCep && <p className="text-xs text-muted-foreground mt-1">Buscando...</p>}
+                  <Input id="cep" name="cep" value={formData.cep} onChange={handleCepChange} maxLength="8" />
                 </div>
-
-                <div>
-                  <Label htmlFor="endereco">Endereço</Label>
-                  <Input
-                    id="endereco"
-                    name="endereco"
-                    type="text"
-                    value={formData.endereco}
-                    onChange={handleInputChange}
-                    placeholder="Complemento do endereço"
-                    data-testid="input-endereco"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4 mb-4">
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="rua">Rua/Avenida</Label>
-                  <Input
-                    id="rua"
-                    name="rua"
-                    type="text"
-                    value={formData.rua}
-                    onChange={handleInputChange}
-                    placeholder="Nome da rua"
-                    data-testid="input-rua"
-                  />
+                  <Input id="rua" name="rua" value={formData.rua} onChange={handleInputChange} />
                 </div>
-
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="numero">Número</Label>
-                  <Input
-                    id="numero"
-                    name="numero"
-                    type="text"
-                    value={formData.numero}
-                    onChange={handleInputChange}
-                    placeholder="Número"
-                    data-testid="input-numero"
-                  />
+                  <Input id="numero" name="numero" value={formData.numero} onChange={handleInputChange} />
                 </div>
-
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="complemento">Complemento</Label>
-                  <Input
-                    id="complemento"
-                    name="complemento"
-                    type="text"
-                    value={formData.complemento}
-                    onChange={handleInputChange}
-                    placeholder="Apt., sala, etc."
-                    data-testid="input-complemento"
-                  />
+                  <Input id="complemento" name="complemento" value={formData.complemento} onChange={handleInputChange} />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="estado">Estado</Label>
                   <Select value={formData.estado} onValueChange={handleStateChange}>
-                    <SelectTrigger data-testid="select-estado">
-                      <SelectValue placeholder="Selecione o estado" />
-                    </SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="Estado" /></SelectTrigger>
                     <SelectContent>
-                      {BRAZILIAN_STATES.map(state => (
-                        <SelectItem key={state.code} value={state.code}>
-                          {state.name}
-                        </SelectItem>
-                      ))}
+                      {BRAZILIAN_STATES.map(s => <SelectItem key={s.code} value={s.code}>{s.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
-
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="cidade">Cidade</Label>
-                  <Select value={formData.cidade} onValueChange={(value) => setFormData(prev => ({ ...prev, cidade: value }))}>
-                    <SelectTrigger disabled={!formData.estado} data-testid="select-cidade">
-                      <SelectValue placeholder={formData.estado ? "Selecione a cidade" : "Selecione um estado primeiro"} />
-                    </SelectTrigger>
+                  <Select value={formData.cidade} onValueChange={v => setFormData(p => ({...p, cidade: v}))}>
+                    <SelectTrigger disabled={!formData.estado}><SelectValue placeholder="Cidade" /></SelectTrigger>
                     <SelectContent>
-                      {cities.map(city => (
-                        <SelectItem key={city} value={city}>
-                          {city}
-                        </SelectItem>
-                      ))}
+                      {cities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
               </div>
             </div>
 
-            {/* Save Button */}
-            <Button 
-              type="submit" 
-              disabled={updateProfileMutation.isPending}
-              className="w-full"
-              data-testid="button-save-profile"
-            >
+            <Button type="submit" disabled={updateProfileMutation.isPending} className="w-full">
               <Save className="w-4 h-4 mr-2" />
               {updateProfileMutation.isPending ? 'Salvando...' : 'Salvar Alterações'}
             </Button>
@@ -494,194 +377,149 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
 
-      {/* Account Information Card */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Mail className="w-5 h-5" />
-            Informações da Conta
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label className="text-slate-600 text-xs mb-2 block">Email</Label>
-              <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                <p className="text-sm font-medium text-slate-900">{formData.email || 'Não definido'}</p>
-              </div>
-            </div>
-
-            <div>
-              <Label className="text-slate-600 text-xs mb-2 block">Cargo</Label>
-              <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 flex items-center gap-2">
-                <Badge variant="outline" className="capitalize">
-                  {formData.role === 'admin' ? 'Admin' : 'Operacional'}
-                </Badge>
-              </div>
-            </div>
+        <CardHeader><CardTitle className="flex items-center gap-2"><Mail className="w-5 h-5" /> Conta</CardTitle></CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-3 bg-muted/50 rounded-lg border">
+            <Label className="text-xs text-muted-foreground block mb-1">Email</Label>
+            <p className="text-sm font-medium">{formData.email}</p>
+          </div>
+          <div className="p-3 bg-muted/50 rounded-lg border">
+            <Label className="text-xs text-muted-foreground block mb-1">Cargo</Label>
+            <Badge variant="outline" className="capitalize">{formData.role === 'admin' ? 'Admin' : 'Operacional'}</Badge>
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
 
-      {/* Company Information Card */}
-      {company && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building2 className="w-5 h-5" />
-              Informações da Empresa
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-slate-600 text-xs mb-2 block">Nome da Empresa</Label>
-                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                  <p className="text-sm font-medium text-slate-900">{company?.name || 'Não definido'}</p>
-                </div>
-              </div>
-
-              <div>
-                <Label className="text-slate-600 text-xs mb-2 block">CNPJ/CPF</Label>
-                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                  <p className="text-sm font-medium text-slate-900">{company?.document || 'Não definido'}</p>
-                </div>
-              </div>
-
-              <div>
-                <Label className="text-slate-600 text-xs mb-2 block">ID da Empresa</Label>
-                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 flex items-center justify-between gap-2">
-                  <p className="text-sm font-mono text-slate-900 truncate">{company?.id}</p>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => {
-                      navigator.clipboard.writeText(company?.id || '');
-                      toast.success('ID copiado!');
-                    }}
-                    data-testid="button-copy-company-id"
-                  >
-                    Copiar
-                  </Button>
-                </div>
-              </div>
-
-              <div>
-                <Label className="text-slate-600 text-xs mb-2 block">Status da Assinatura</Label>
-                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 flex items-center gap-2">
-                  <Badge className={company?.subscriptionStatus === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}>
-                    {company?.subscriptionStatus === 'active' ? 'Ativa' : 'Inativa'}
-                  </Badge>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* SMTP Configuration Card */}
+  const SubscriptionTab = () => (
+    <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Settings className="w-5 h-5" />
-            Configuração de Email (SMTP)
+            <CreditCard className="w-5 h-5" />
+            Minha Assinatura
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-            <p className="text-sm text-amber-800">
-              Configure as credenciais SMTP para habilitar o envio de convites por email.
-            </p>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
+              <Label className="text-xs text-primary font-semibold uppercase tracking-wider mb-1 block">Plano Atual</Label>
+              <p className="text-2xl font-bold capitalize">{company?.subscriptionPlan || 'Nenhum'}</p>
+            </div>
+            <div className="p-4 bg-muted/50 rounded-lg border">
+              <Label className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1 block">Status</Label>
+              <Badge className={company?.paymentStatus === 'approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}>
+                {company?.paymentStatus === 'approved' ? 'Ativa' : 'Pendente/Inativa'}
+              </Badge>
+            </div>
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="smtpHost">Host SMTP</Label>
-              <Input
-                id="smtpHost"
-                placeholder="smtp.gmail.com"
-                value={smtpConfig.host}
-                onChange={(e) => setSmtpConfig({ ...smtpConfig, host: e.target.value })}
-                data-testid="input-smtp-host"
-              />
+          <div className="pt-4 border-t">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Building2 className="w-5 h-5" />
+              Dados da Empresa
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Razão Social</Label>
+                <p className="font-medium">{company?.name}</p>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">CNPJ/CPF</Label>
+                <p className="font-medium">{company?.document}</p>
+              </div>
+              <div className="space-y-1 md:col-span-2">
+                <Label className="text-xs text-muted-foreground">ID de Identificação</Label>
+                <div className="flex items-center gap-2 bg-muted p-2 rounded text-xs font-mono">
+                  <span className="truncate flex-1">{company?.id}</span>
+                  <Button variant="ghost" size="sm" className="h-6" onClick={() => {
+                    navigator.clipboard.writeText(company?.id);
+                    toast.success('ID copiado!');
+                  }}>Copiar</Button>
+                </div>
+              </div>
             </div>
-
-            <div>
-              <Label htmlFor="smtpPort">Porta</Label>
-              <Input
-                id="smtpPort"
-                placeholder="587"
-                value={smtpConfig.port}
-                onChange={(e) => setSmtpConfig({ ...smtpConfig, port: e.target.value })}
-                data-testid="input-smtp-port"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="smtpUser">Usuário</Label>
-              <Input
-                id="smtpUser"
-                placeholder="seu-email@gmail.com"
-                value={smtpConfig.user}
-                onChange={(e) => setSmtpConfig({ ...smtpConfig, user: e.target.value })}
-                data-testid="input-smtp-user"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="smtpPassword">Senha</Label>
-              <Input
-                id="smtpPassword"
-                type="password"
-                placeholder="Sua senha"
-                value={smtpConfig.password}
-                onChange={(e) => setSmtpConfig({ ...smtpConfig, password: e.target.value })}
-                data-testid="input-smtp-password"
-              />
-            </div>
-
-            <div className="col-span-2">
-              <Label htmlFor="fromEmail">Email de Origem</Label>
-              <Input
-                id="fromEmail"
-                type="email"
-                placeholder="noreply@sua-empresa.com"
-                value={smtpConfig.fromEmail}
-                onChange={(e) => setSmtpConfig({ ...smtpConfig, fromEmail: e.target.value })}
-                data-testid="input-smtp-from"
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-3 pt-2">
-            <Button 
-              type="button"
-              onClick={async () => {
-                try {
-                  const token = JSON.parse(localStorage.getItem('auth') || '{}').token;
-                  const res = await fetch('/api/auth/smtp-config', {
-                    method: 'PATCH',
-                    headers: {
-                      'Content-Type': 'application/json',
-                      Authorization: `Bearer ${token}`,
-                    },
-                    body: JSON.stringify(smtpConfig),
-                  });
-                  if (!res.ok) throw new Error('Falha ao salvar');
-                  toast.success('Configuração SMTP salva!');
-                } catch (error) {
-                  toast.error('Erro ao salvar configuração SMTP');
-                }
-              }}
-              disabled={updateProfileMutation.isPending}
-              data-testid="button-save-smtp"
-            >
-              <Save className="w-4 h-4 mr-2" />
-              Salvar Configuração SMTP
-            </Button>
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+
+  const EmailConfigTab = () => (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Settings className="w-5 h-5" />
+          Configuração de Email (SMTP)
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm">
+          Configure as credenciais SMTP para habilitar o envio de convites e notificações por email.
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Host SMTP</Label>
+            <Input placeholder="smtp.gmail.com" value={smtpConfig.host} onChange={e => setSmtpConfig({...smtpConfig, host: e.target.value})} />
+          </div>
+          <div className="space-y-2">
+            <Label>Porta</Label>
+            <Input placeholder="587" value={smtpConfig.port} onChange={e => setSmtpConfig({...smtpConfig, port: e.target.value})} />
+          </div>
+          <div className="space-y-2">
+            <Label>Usuário</Label>
+            <Input placeholder="seu-email@gmail.com" value={smtpConfig.user} onChange={e => setSmtpConfig({...smtpConfig, user: e.target.value})} />
+          </div>
+          <div className="space-y-2">
+            <Label>Senha</Label>
+            <Input type="password" placeholder="••••••••" value={smtpConfig.password} onChange={e => setSmtpConfig({...smtpConfig, password: e.target.value})} />
+          </div>
+          <div className="space-y-2 md:col-span-2">
+            <Label>Email do Remetente</Label>
+            <Input placeholder="seu-email@gmail.com" value={smtpConfig.fromEmail} onChange={e => setSmtpConfig({...smtpConfig, fromEmail: e.target.value})} />
+          </div>
+        </div>
+        <Button className="w-full" onClick={() => toast.info('Configuração de SMTP será implementada em breve.')}>
+          Salvar Configurações de Email
+        </Button>
+      </CardContent>
+    </Card>
+  );
+
+  return (
+    <div className="p-4 md:p-6 max-w-4xl mx-auto space-y-6">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold tracking-tight">Configurações</h1>
+        <p className="text-muted-foreground mt-1">Gerencie seu perfil, assinatura e preferências do sistema.</p>
+      </div>
+
+      <Tabs defaultValue="perfil" className="w-full">
+        <TabsList className="grid w-full grid-cols-3 mb-8">
+          <TabsTrigger value="perfil" className="gap-2">
+            <User className="w-4 h-4" /> <span className="hidden sm:inline">Perfil</span>
+          </TabsTrigger>
+          <TabsTrigger value="assinatura" className="gap-2">
+            <CreditCard className="w-4 h-4" /> <span className="hidden sm:inline">Assinaturas</span>
+          </TabsTrigger>
+          <TabsTrigger value="email" className="gap-2">
+            <Settings className="w-4 h-4" /> <span className="hidden sm:inline">Configuração Email</span>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="perfil">
+          <ProfileTab />
+        </TabsContent>
+        
+        <TabsContent value="assinatura">
+          <SubscriptionTab />
+        </TabsContent>
+
+        <TabsContent value="email">
+          <EmailConfigTab />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
