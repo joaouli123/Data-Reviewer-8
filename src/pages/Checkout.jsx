@@ -110,11 +110,11 @@ export default function Checkout() {
   return (
     <div className="min-h-screen bg-white lg:bg-[#F8FAFC] text-slate-900 font-sans">
       {/* Header - Minimalist and Secure */}
-      <header className="border-b border-slate-100 bg-white sticky top-0 z-50 lg:border-slate-200">
+      <header className="border-b border-slate-100 bg-white lg:border-slate-200">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-end">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-slate-500">Ambiente Seguro</span>
-            <Lock className="w-4 h-4 text-emerald-500" />
+            <Lock className="w-4 h-4 text-slate-400" />
           </div>
         </div>
       </header>
@@ -133,7 +133,7 @@ export default function Checkout() {
         <div className="grid lg:grid-cols-3 gap-0 lg:gap-8 items-start">
           {/* Order Summary - Fixed/Sticky on mobile? No, let's keep it top but cleaner */}
           <div className="lg:col-span-1 order-1 lg:order-1">
-            <Card className="bg-[#F8FAFC] lg:bg-white border-0 lg:border-slate-200 sticky top-[53px] lg:top-24 shadow-none lg:shadow-sm rounded-none lg:rounded-xl overflow-hidden z-40">
+            <Card className="bg-[#F8FAFC] lg:bg-white border-0 lg:border-slate-200 lg:sticky top-24 shadow-none lg:shadow-sm rounded-none lg:rounded-xl overflow-hidden z-40">
               {/* Mobile Header - High Conversion Style */}
               <div 
                 className="lg:hidden p-4 flex items-center justify-between bg-slate-50 border-b border-slate-200 cursor-pointer shadow-sm"
