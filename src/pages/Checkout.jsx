@@ -40,14 +40,21 @@ if (publicKey) {
 
 export default function Checkout() {
   const [, setLocation] = useLocation();
-  const { user, company } = useAuth();
+  const { user, company, loading: authLoading } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Dados do usuário autenticado ou da URL
-  const companyName = company?.name || '';
+  // Dados do usuário autenticado ou da URL (pode vir de paymentPending)
+  const companyName = company?.name || 'Sua Empresa';
   const email = user?.email || '';
+  
+  // Se não tem company/user e não está carregando, redireciona para signup
+  useEffect(() => {
+    if (!authLoading && !company && !user) {
+      setLocation('/signup');
+    }
+  }, [authLoading, company, user, setLocation]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);

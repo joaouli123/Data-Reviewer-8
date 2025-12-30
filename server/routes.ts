@@ -2761,16 +2761,38 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         body: paymentBody,
       });
 
-      // If payment approved, update company immediately
+      // If payment approved, update company and create subscription immediately
       if (paymentResponse.status === 'approved' && companyId) {
         try {
+          // Update company payment status
           await db.update(companies).set({ 
-            paymentStatus: 'approved',
-            plan: plan || 'pro'
+            paymentStatus: 'approved'
           }).where(eq(companies.id, companyId));
-          console.log(`✅ Company ${companyId} payment updated to approved`);
+          
+          // Create or update subscription
+          const existingSub = await db.query.subscriptions.findFirst({
+            where: (subs) => eq(subs.companyId, companyId)
+          });
+          
+          if (existingSub) {
+            // Update existing subscription
+            await db.update(subscriptions).set({
+              plan: plan || 'pro',
+              status: 'active'
+            }).where(eq(subscriptions.companyId, companyId));
+          } else {
+            // Create new subscription
+            await db.insert(subscriptions).values({
+              companyId,
+              plan: plan || 'pro',
+              status: 'active',
+              amount: amount ? (amount / 100).toString() : '99.00'
+            });
+          }
+          
+          console.log(`✅ Company ${companyId} payment updated to approved with plan ${plan}`);
         } catch (updateErr) {
-          console.error("Warning: Failed to update company payment status:", updateErr);
+          console.error("Warning: Failed to update company/subscription:", updateErr);
           // Continue anyway - webhook will also update
         }
       }
@@ -2868,19 +2890,36 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
             
             // Find company by email and update subscription
             try {
-              const companies = await storage.getCompanies();
-              const company = companies.find(c => c.email === email);
+              const companies_list = await storage.getCompanies();
+              const company = companies_list.find(c => c.email === email);
               
               if (company) {
                 // Update company paymentStatus to approved
                 await db.update(companies).set({ paymentStatus: 'approved' }).where(eq(companies.id, company.id));
                 
-                await storage.updateCompanySubscription(company.id, {
-                  plan: plan,
-                  status: 'active',
-                  merchantId: paymentId,
-                  planStatus: 'approved'
-                });
+                // Create or update subscription via DB
+                try {
+                  const existingSub = await db.query.subscriptions.findFirst({
+                    where: (subs) => eq(subs.companyId, company.id)
+                  });
+                  
+                  if (existingSub) {
+                    await db.update(subscriptions).set({
+                      plan: plan || 'pro',
+                      status: 'active'
+                    }).where(eq(subscriptions.companyId, company.id));
+                  } else {
+                    await db.insert(subscriptions).values({
+                      companyId: company.id,
+                      plan: plan || 'pro',
+                      status: 'active',
+                      amount: '99.00'
+                    });
+                  }
+                } catch (subErr) {
+                  console.error("Warning: Failed to create/update subscription in webhook:", subErr);
+                }
+                
                 console.log(`✅ Subscription activated and payment marked as approved for company: ${company.id}`);
               } else {
                 console.warn(`⚠️ Company not found for email: ${email}`);
@@ -2900,10 +2939,15 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
                 // Update company paymentStatus
                 await db.update(companies).set({ paymentStatus: payment.status }).where(eq(companies.id, company.id));
                 
-                await storage.updateCompanySubscription(company.id, {
-                  planStatus: payment.status,
-                  plan: plan
-                });
+                // Update subscription status via DB
+                try {
+                  await db.update(subscriptions).set({
+                    status: payment.status === 'rejected' ? 'suspended' : payment.status
+                  }).where(eq(subscriptions.companyId, company.id));
+                } catch (subErr) {
+                  console.error("Warning: Failed to update subscription in webhook:", subErr);
+                }
+                
                 console.log(`⚠️ Subscription marked as ${payment.status} for company: ${company.id}`);
               }
             } catch (err) {
