@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { initMercadoPago, CardPayment } from '@mercadopago/sdk-react';
+import { initMercadoPago, Payment } from '@mercadopago/sdk-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
@@ -228,11 +228,11 @@ export default function Checkout() {
                     <div className="mb-4 lg:mb-6 flex items-center justify-between">
                       <h3 className="font-bold text-slate-800 flex items-center gap-2 text-sm lg:text-base">
                         <span className="w-1 h-5 lg:w-1.5 lg:h-6 bg-[#2563eb] rounded-full"></span>
-                        Dados do Cartão
+                        Formas de Pagamento
                       </h3>
                     </div>
                     
-                    <CardPayment
+                    <Payment
                       initialization={initialization}
                       onSubmit={onSubmit}
                       onReady={onReady}
@@ -258,7 +258,12 @@ export default function Checkout() {
                           }
                         },
                         paymentMethods: {
-                          maxInstallments: 1
+                          creditCard: 'all',
+                          debitCard: 'all',
+                          ticket: 'all',
+                          pix: 'all',
+                          atm: 'all',
+                          onInstallments: true
                         }
                       }}
                     />
