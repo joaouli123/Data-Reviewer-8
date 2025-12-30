@@ -1,0 +1,91 @@
+Elemento	Características	Observações
+Título e bandeiras aceitas
+
+Propriedade: formTitle	Valor (título): Cartão de crédito ou débito
+Label N/A
+Placeholder: N/A
+Tipo: text/imagem
+Formato: N/A
+Máx caracteres: N/A	Opcional
+Customizável
+
+*As bandeiras são exibidas em conjunto com o título. A única customização disponível para elas é ocultá-las junto ao título do formulário, deixando de exibir ambas informações.
+Campo para inserção do número do cartão
+
+Propriedade: cardNumber	Valor: N/A
+Label: Número do cartão
+Placeholder: 1234 1234 1234 1234
+Tipo: number
+Formato: N/A
+Máx. caracteres: a depender do emissor, podendo variar entre 15 e 16.	Obrigatório
+Customizável (label, placeholder)
+Campo para inserção da data de vencimento do cartão
+
+Propriedade: expirationDate	Valor: N/A
+Label: Data de vencimento
+Placeholder: MM/AA
+Tipo: date
+Formato: MM/AA
+Máx. caracteres: 5	Obrigatório
+Customizável (label, placeholder)
+Campo para inserção do código de segurança
+
+Propriedade: securityCode	Valor: N/A
+Label: Nome do titular como aparece no cartão
+Placeholder: João Silva
+Tipo: string
+Formato: N/A
+Máx. caracteres: 100	Obrigatório
+Customizável (label, placeholder e máximo de caracteres errados)
+Campo para inserção do nome do titular do cartão
+
+Propriedade: cardholderName	Valor: N/A
+Label: Documento
+Placeholder: N/A
+Tipo: select
+Formato: N/A
+Máx. caracteres: N/A	Obrigatório
+
+Customizável (label, placeholder, tipo, formato e máximo de caracteres errados)
+Campo para seleção do documento do titular do cartão
+
+Propriedade: cardholderIdentificationType	Valor: CPF, CNPJ
+Label: Documento
+Placeholder: N/A
+Tipo: select
+Formato: N/A
+Máx. caracteres: N/A	Obrigatório*
+Customizável (label, placeholder)
+
+*Se os dados de tipo de documento e número de documento foram fornecidos e salvos anteriormente, este elemento se torna opcional.
+Campo para inserção do número do documento do titular do cartão
+
+Propriedade: cardholderIdentificationNumber	Valor: N/A
+Label: N/A
+Placeholder: 999.999.999-99 para CPF ou 99.999.9999/9999-99 para CNPJ .
+Tipo: number
+Formato: N/A
+Máx. caracteres: N/A	Obrigatório
+Não customizável
+Campo para inserção do email do comprador
+
+Propriedade: email	Valor: N/A
+Label: Email
+Placeholder: joaosilva@email.com
+Tipo: string
+Formato: padrão de e-mail convencional (exemplo@email.com)
+*Máx. caracteres: X	Obrigatório*
+Customizável (label, placeholder)
+
+*Se os dados foram fornecidos e salvos anteriormente, este elemento se torna opcional.
+Botão de pagamento
+
+Propriedade: formSubmit	Valor: [imagem] Pagar
+Label: N/A
+Placeholder: N/A
+Tipo: text
+callback: onSubmit
+função: promise(cardFormData)	Opcional
+Ocultável e customizável
+
+*A função recebe os dados do formulário, incluindo o token do cartão e apresenta animação de carregamento.
