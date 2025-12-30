@@ -3,7 +3,6 @@ import { useLocation } from 'wouter';
 import { initMercadoPago, CardPayment } from '@mercadopago/sdk-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { ArrowLeft, Check, Lock } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
@@ -44,7 +43,6 @@ export default function Checkout() {
   const [formData, setFormData] = useState({
     companyName: '',
     email: '',
-    phone: '',
   });
   const [loading, setLoading] = useState(true);
 
@@ -67,7 +65,7 @@ export default function Checkout() {
   const initialization = {
     amount: selectedPlan ? PLANS[selectedPlan].price : 100,
     payer: {
-      email: formData.email,
+      email: formData.email || 'customer@example.com',
     }
   };
 
@@ -82,6 +80,7 @@ export default function Checkout() {
             metadata: {
               plan: selectedPlan,
               companyName: formData.companyName,
+              email: formData.email
             }
           }),
         });
@@ -109,11 +108,6 @@ export default function Checkout() {
 
   const onReady = async () => {
     console.log('Card Payment Brick Ready');
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   if (loading || !selectedPlan) return <div className="flex items-center justify-center min-h-screen">Carregando...</div>;
@@ -195,7 +189,7 @@ export default function Checkout() {
             <Card className="bg-white border-slate-200 p-8 shadow-sm">
               <div className="mb-8">
                 <h2 className="text-2xl font-bold text-slate-900 mb-2">Checkout Seguro</h2>
-                <p className="text-slate-500">Preencha as informações abaixo para ativar sua conta.</p>
+                <p className="text-slate-500">Insira os dados do cartão para finalizar sua assinatura.</p>
               </div>
 
               {plan.contact ? (
@@ -213,29 +207,6 @@ export default function Checkout() {
                 </div>
               ) : (
                 <div className="space-y-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-slate-700 ml-1">Nome da Empresa</label>
-                      <Input 
-                        name="companyName" 
-                        value={formData.companyName} 
-                        onChange={handleChange} 
-                        placeholder="Ex: Minha Empresa LTDA" 
-                        className="bg-white border-slate-200 h-11 focus:border-[#E7AA1C] transition-colors text-slate-900" 
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-slate-700 ml-1">E-mail para Cobrança</label>
-                      <Input 
-                        name="email" 
-                        value={formData.email} 
-                        onChange={handleChange} 
-                        placeholder="email@empresa.com" 
-                        className="bg-white border-slate-200 h-11 focus:border-[#E7AA1C] transition-colors text-slate-900" 
-                      />
-                    </div>
-                  </div>
-                  
                   <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200">
                     <div className="mb-6 flex items-center justify-between">
                       <h3 className="font-bold text-slate-800">Informações do Cartão</h3>
