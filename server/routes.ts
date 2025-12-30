@@ -2596,7 +2596,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         external_reference: plan,
         metadata: {
           plan: plan,
-          companyName: companyName
+          companyName: companyName,
+          email: email
         }
       };
 
@@ -2729,16 +2730,52 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
         if (mpResponse.ok) {
           const payment = await mpResponse.json();
+          const plan = payment.external_reference;
+          const companyName = payment.metadata?.companyName;
+          const email = payment.metadata?.email;
           
           if (payment.status === 'approved') {
-            const externalRef = payment.external_reference; // contains plan
-            const companyName = payment.metadata?.company_name;
-            const email = payment.metadata?.email;
+            console.log(`✅ Payment approved for plan: ${plan} - Company: ${companyName} (${email})`);
             
-            console.log(`✅ Payment approved for plan: ${externalRef} - Company: ${companyName}`);
-
-            // Logic to update or create subscription in IStorage would go here
-            // Example: await storage.updateCompanySubscription(companyId, externalRef, 'active');
+            // Find company by email and update subscription
+            try {
+              const companies = await storage.getCompanies();
+              const company = companies.find(c => c.email === email);
+              
+              if (company) {
+                await storage.updateCompanySubscription(company.id, {
+                  plan: plan,
+                  status: 'active',
+                  merchantId: paymentId,
+                  planStatus: 'approved'
+                });
+                console.log(`✅ Subscription activated for company: ${company.id}`);
+              } else {
+                console.warn(`⚠️ Company not found for email: ${email}`);
+              }
+            } catch (err) {
+              console.error('Error updating subscription:', err);
+            }
+          } else if (payment.status === 'rejected' || payment.status === 'cancelled') {
+            console.log(`❌ Payment ${payment.status} for plan: ${plan} - Company: ${companyName}`);
+            
+            // Find company and mark subscription as failed
+            try {
+              const companies = await storage.getCompanies();
+              const company = companies.find(c => c.email === email);
+              
+              if (company) {
+                await storage.updateCompanySubscription(company.id, {
+                  planStatus: payment.status,
+                  plan: plan
+                });
+                console.log(`⚠️ Subscription marked as ${payment.status} for company: ${company.id}`);
+              }
+            } catch (err) {
+              console.error('Error updating subscription on rejection:', err);
+            }
+          } else {
+            console.log(`⏳ Payment ${payment.status} for plan: ${plan} - Company: ${companyName}`);
           }
         }
       }
