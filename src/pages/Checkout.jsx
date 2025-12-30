@@ -109,16 +109,14 @@ export default function Checkout() {
 
   return (
     <div className="min-h-screen bg-white lg:bg-[#F8FAFC] text-slate-900 font-sans">
-      {/* Header - Minimized for Mobile */}
+      {/* Header - Minimalist and Secure */}
       <header className="border-b border-slate-100 bg-white sticky top-0 z-50 lg:border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 py-3 lg:py-4 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 lg:w-8 lg:h-8 bg-[#2563eb] rounded flex items-center justify-center font-bold text-white text-sm lg:text-base">H</div>
-            <h1 className="text-lg lg:text-xl font-bold tracking-tight text-slate-900">HUA Analytics</h1>
+            <Lock className="w-4 h-4 text-emerald-500" />
+            <span className="text-sm font-medium text-slate-600">Ambiente Seguro</span>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => setLocation('/')} className="hover:bg-slate-100 text-slate-500 h-8">
-            Sair
-          </Button>
+          <Lock className="w-4 h-4 text-slate-300 lg:hidden" />
         </div>
       </header>
 
