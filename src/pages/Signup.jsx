@@ -58,6 +58,13 @@ export default function Signup() {
       return;
     }
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast.error("Email inválido");
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       toast.error("As senhas não coincidem");
       return;
