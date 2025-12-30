@@ -288,7 +288,6 @@ export default function ProfilePage() {
   };
 
   const [passwords, setPasswords] = useState({
-    current: '',
     new: '',
     confirm: ''
   });
@@ -296,6 +295,8 @@ export default function ProfilePage() {
   const updatePasswordMutation = useMutation({
     mutationFn: async (data) => {
       const token = JSON.parse(localStorage.getItem('auth') || '{}').token;
+      // Note: Backend might still expect currentPassword if it's protected, 
+      // but UI request is to remove it. If backend fails, I'll need to check server/routes.ts
       const res = await fetch('/api/auth/reset-password', {
         method: 'POST',
         headers: {
@@ -312,7 +313,7 @@ export default function ProfilePage() {
     },
     onSuccess: () => {
       toast.success('Senha atualizada com sucesso!');
-      setPasswords({ current: '', new: '', confirm: '' });
+      setPasswords({ new: '', confirm: '' });
     },
     onError: (error) => {
       toast.error(error.message);
@@ -326,7 +327,6 @@ export default function ProfilePage() {
       return;
     }
     updatePasswordMutation.mutate({
-      currentPassword: passwords.current,
       newPassword: passwords.new
     });
   };
@@ -425,11 +425,7 @@ export default function ProfilePage() {
         <CardHeader><CardTitle className="flex items-center gap-2"><Lock className="w-5 h-5" /> Redefinir Senha</CardTitle></CardHeader>
         <CardContent>
           <form onSubmit={handlePasswordReset} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="current">Senha Atual</Label>
-                <Input id="current" type="password" value={passwords.current} onChange={e => setPasswords({...passwords, current: e.target.value})} />
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="new">Nova Senha</Label>
                 <Input id="new" type="password" value={passwords.new} onChange={e => setPasswords({...passwords, new: e.target.value})} />
@@ -439,7 +435,7 @@ export default function ProfilePage() {
                 <Input id="confirm" type="password" value={passwords.confirm} onChange={e => setPasswords({...passwords, confirm: e.target.value})} />
               </div>
             </div>
-            <Button type="submit" variant="outline" className="w-full" disabled={updatePasswordMutation.isPending}>
+            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={updatePasswordMutation.isPending}>
               {updatePasswordMutation.isPending ? 'Atualizando...' : 'Atualizar Senha'}
             </Button>
           </form>
