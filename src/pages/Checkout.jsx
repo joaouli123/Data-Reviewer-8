@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { initMercadoPago, Payment } from '@mercadopago/sdk-react';
+import { initMercadoPago, CardPayment } from '@mercadopago/sdk-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -41,13 +41,12 @@ if (publicKey) {
 export default function Checkout() {
   const [, setLocation] = useLocation();
   const [selectedPlan, setSelectedPlan] = useState(null);
-  const [preferenceId, setPreferenceId] = useState(null);
   const [formData, setFormData] = useState({
     companyName: '',
     email: '',
     phone: '',
   });
-  const [initializingPayment, setInitializingPayment] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -62,48 +61,21 @@ export default function Checkout() {
     const company = params.get('company');
     if (email) setFormData(prev => ({ ...prev, email }));
     if (company) setFormData(prev => ({ ...prev, companyName: company }));
+    setLoading(false);
   }, []);
 
-  useEffect(() => {
-    if (!selectedPlan || selectedPlan === 'enterprise' || preferenceId) return;
+  const initialization = {
+    amount: selectedPlan ? PLANS[selectedPlan].price : 100,
+  };
 
-    const initPreference = async () => {
-      try {
-        setInitializingPayment(true);
-        const response = await fetch('/api/payment/checkout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            plan: selectedPlan,
-            amount: PLANS[selectedPlan].price,
-            companyName: formData.companyName || 'Customer',
-            email: formData.email || 'customer@example.com',
-            phone: formData.phone,
-          }),
-        });
-
-        if (!response.ok) throw new Error('Erro ao inicializar pagamento');
-        const data = await response.json();
-        if (data.preferenceId) setPreferenceId(data.preferenceId);
-      } catch (error) {
-        console.error('Preference init error:', error);
-        toast.error('Erro ao carregar formulário de pagamento');
-      } finally {
-        setInitializingPayment(false);
-      }
-    };
-
-    initPreference();
-  }, [selectedPlan, formData.companyName, formData.email]);
-
-  const onSubmit = async (paymentData) => {
+  const onSubmit = async (cardFormData) => {
     return new Promise(async (resolve, reject) => {
       try {
         const response = await fetch('/api/payment/process', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            ...paymentData,
+            ...cardFormData,
             plan: selectedPlan,
             companyName: formData.companyName,
             email: formData.email,
@@ -126,12 +98,21 @@ export default function Checkout() {
     });
   };
 
+  const onError = async (error) => {
+    console.error('Card Payment Brick Error:', error);
+    toast.error('Erro no formulário de pagamento');
+  };
+
+  const onReady = async () => {
+    console.log('Card Payment Brick Ready');
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  if (!selectedPlan) return <div className="flex items-center justify-center min-h-screen">Carregando...</div>;
+  if (loading || !selectedPlan) return <div className="flex items-center justify-center min-h-screen">Carregando...</div>;
   const plan = PLANS[selectedPlan];
 
   return (
@@ -181,18 +162,19 @@ export default function Checkout() {
                     <Input name="email" value={formData.email} onChange={handleChange} placeholder="Email" className="bg-slate-900 border-slate-700" />
                   </div>
                   
-                  {preferenceId ? (
-                    <Payment
-                      initialization={{ amount: plan.price, preferenceId }}
-                      onSubmit={onSubmit}
-                      customization={{ visual: { theme: 'dark' }, paymentMethods: { maxInstallments: 1 } }}
-                    />
-                  ) : (
-                    <div className="text-center py-12 border border-dashed border-slate-700 rounded-lg">
-                      <Loader className="w-8 h-8 animate-spin mx-auto mb-2 text-blue-500" />
-                      <p className="text-slate-400">Carregando Mercado Pago...</p>
-                    </div>
-                  )}
+                  <CardPayment
+                    initialization={initialization}
+                    onSubmit={onSubmit}
+                    onReady={onReady}
+                    onError={onError}
+                    customization={{
+                      visual: {
+                        style: {
+                          theme: 'dark',
+                        }
+                      }
+                    }}
+                  />
                 </div>
               )}
             </Card>
