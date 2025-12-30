@@ -259,6 +259,7 @@ export default function Checkout() {
                         },
                         walletInstallments: false
                       }}
+                      defaultPaymentMethodId="credit_card"
                     />
                   </div>
 
