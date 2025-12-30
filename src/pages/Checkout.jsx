@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { ArrowLeft, Check, Lock, ChevronDown, ChevronUp } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
+import { useAuth } from '@/contexts/AuthContext';
 
 const PLANS = {
   basic: {
@@ -39,13 +40,14 @@ if (publicKey) {
 
 export default function Checkout() {
   const [, setLocation] = useLocation();
+  const { user, company } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
-  const [formData, setFormData] = useState({
-    companyName: '',
-    email: '',
-  });
   const [loading, setLoading] = useState(true);
+
+  // Dados do usuário autenticado ou da URL
+  const companyName = company?.name || '';
+  const email = user?.email || '';
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -55,11 +57,6 @@ export default function Checkout() {
     } else {
       setSelectedPlan('pro');
     }
-
-    const email = params.get('email');
-    const company = params.get('company');
-    if (email) setFormData(prev => ({ ...prev, email }));
-    if (company) setFormData(prev => ({ ...prev, companyName: company }));
     setLoading(false);
   }, []);
 
@@ -67,7 +64,7 @@ export default function Checkout() {
     amount: selectedPlan ? PLANS[selectedPlan].price : 100,
     currency: 'BRL',
     payer: {
-      email: formData.email || 'customer@example.com',
+      email: email || 'customer@example.com',
       address: {
         zipCode: '00000000'
       }
@@ -265,9 +262,7 @@ export default function Checkout() {
                         paymentMethods: {
                           creditCard: 'all',
                           debitCard: 'all',
-                          ticket: 'all',
-                          pix: 'all',
-                          atm: 'all'
+                          pix: 'all'
                         },
                         walletInstallments: false
                       }}
