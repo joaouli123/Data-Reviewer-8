@@ -111,12 +111,11 @@ export default function Checkout() {
     <div className="min-h-screen bg-white lg:bg-[#F8FAFC] text-slate-900 font-sans">
       {/* Header - Minimalist and Secure */}
       <header className="border-b border-slate-100 bg-white sticky top-0 z-50 lg:border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-end">
           <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-slate-500">Ambiente Seguro</span>
             <Lock className="w-4 h-4 text-emerald-500" />
-            <span className="text-sm font-medium text-slate-600">Ambiente Seguro</span>
           </div>
-          <Lock className="w-4 h-4 text-slate-300 lg:hidden" />
         </div>
       </header>
 
