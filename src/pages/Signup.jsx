@@ -76,7 +76,8 @@ export default function Signup() {
         formData.username,
         formData.email,
         formData.password,
-        formData.name
+        formData.name,
+        formData.plan
       );
       const userName = data.user?.name || "usuário";
       toast.success(`Seja bem vindo, ${userName}!`);

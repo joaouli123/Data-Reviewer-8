@@ -21,6 +21,7 @@ import TeamPage from "./settings/Team";
 import Profile from "./Profile";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePermission } from "@/hooks/usePermission";
+import Checkout from "./Checkout";
 
 function ProtectedRoute({ component: Component, permission }) {
   const { user } = useAuth();
