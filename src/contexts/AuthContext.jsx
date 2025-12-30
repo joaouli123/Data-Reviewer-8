@@ -113,21 +113,23 @@ export function AuthProvider({ children }) {
   };
 
   const logout = async () => {
-    try {
-      const { queryClient } = await import("@/lib/queryClient");
-      queryClient.clear();
-    } catch (e) {
-      // Ignore if queryClient import fails
-    }
-    
+    // Immediate state update for fast UI feedback
     setToken(null);
     setUser(null);
     setCompany(null);
     localStorage.clear();
     sessionStorage.clear();
-    
+
     if (typeof window !== 'undefined') {
       window.location.href = '/login';
+    }
+
+    // Secondary cleanup tasks (don't block the redirect)
+    try {
+      const { queryClient } = await import("@/lib/queryClient");
+      queryClient.clear();
+    } catch (e) {
+      // Ignore
     }
   };
 
