@@ -125,6 +125,7 @@ export const companies = pgTable("companies", {
   name: text("name").notNull(),
   document: text("document").notNull().unique(),
   subscriptionStatus: text("subscription_status").notNull().default("active"), // active, suspended, cancelled
+  paymentStatus: text("payment_status").notNull().default("pending"), // pending, approved, rejected, cancelled
   createdAt: timestamp("created_at").notNull().default(sql`now()`),
   updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
 });

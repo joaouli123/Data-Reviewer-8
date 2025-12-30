@@ -44,6 +44,7 @@ import {
   createSession,
   findUserById,
   findCompanyById,
+  findCompanyByDocument,
   createAuditLog,
   hashPassword,
 } from "./auth";
@@ -72,6 +73,28 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
       if (!companyName || !companyDocument || !username || !password) {
         return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      // Check if company with this document already exists
+      const existingCompany = await findCompanyByDocument(companyDocument);
+      
+      if (existingCompany) {
+        // Company exists - check payment status
+        if (existingCompany.paymentStatus === "approved") {
+          // Already paid - cannot create duplicate
+          return res.status(409).json({ 
+            error: "Essa empresa já possui um cadastro ativo",
+            type: "DUPLICATE_PAID"
+          });
+        } else {
+          // Not paid yet - redirect to checkout
+          return res.status(409).json({
+            error: "Cadastro encontrado com pagamento pendente",
+            type: "DUPLICATE_PENDING",
+            companyId: existingCompany.id,
+            plan: "pro" // Default plan
+          });
+        }
       }
 
       // Create company
@@ -2778,13 +2801,16 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
               const company = companies.find(c => c.email === email);
               
               if (company) {
+                // Update company paymentStatus to approved
+                await db.update(companies).set({ paymentStatus: 'approved' }).where(eq(companies.id, company.id));
+                
                 await storage.updateCompanySubscription(company.id, {
                   plan: plan,
                   status: 'active',
                   merchantId: paymentId,
                   planStatus: 'approved'
                 });
-                console.log(`✅ Subscription activated for company: ${company.id}`);
+                console.log(`✅ Subscription activated and payment marked as approved for company: ${company.id}`);
               } else {
                 console.warn(`⚠️ Company not found for email: ${email}`);
               }
@@ -2800,6 +2826,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
               const company = companies.find(c => c.email === email);
               
               if (company) {
+                // Update company paymentStatus
+                await db.update(companies).set({ paymentStatus: payment.status }).where(eq(companies.id, company.id));
+                
                 await storage.updateCompanySubscription(company.id, {
                   planStatus: payment.status,
                   plan: plan

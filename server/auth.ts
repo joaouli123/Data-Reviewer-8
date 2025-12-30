@@ -91,6 +91,11 @@ export async function findCompanyById(companyId: string) {
   return result[0];
 }
 
+export async function findCompanyByDocument(document: string) {
+  const result = await db.select().from(companies).where(eq(companies.document, document));
+  return result[0];
+}
+
 export async function createCompany(name: string, document: string) {
   const result = await db
     .insert(companies)

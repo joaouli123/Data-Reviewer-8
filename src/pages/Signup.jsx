@@ -84,8 +84,24 @@ export default function Signup() {
       // O App.jsx agora vai redirecionar automaticamente para /checkout
       // baseado no status da assinatura da empresa
       toast.success("Conta criada! Redirecionando para pagamento...");
-    } catch (error) {
-      toast.error(error.message);
+    } catch (error: any) {
+      // Handle duplicate company scenarios
+      if (error.message?.includes("409") || error.message?.includes("DUPLICATE")) {
+        // Try to parse the error response if available
+        const errorMsg = error.message;
+        if (errorMsg.includes("DUPLICATE_PAID")) {
+          toast.error("Essa empresa já possui um cadastro ativo com pagamento confirmado");
+        } else if (errorMsg.includes("DUPLICATE_PENDING")) {
+          // Redirect to checkout for existing company
+          toast.success("Cadastro encontrado! Redirecionando para completar pagamento...");
+          setTimeout(() => setLocation("/checkout?plan=" + formData.plan), 1500);
+          return;
+        } else {
+          toast.error(errorMsg || "Essa empresa já existe");
+        }
+      } else {
+        toast.error(error.message || "Erro ao criar conta");
+      }
     } finally {
       setLoading(false);
     }
