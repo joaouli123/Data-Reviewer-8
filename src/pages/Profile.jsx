@@ -472,17 +472,61 @@ export default function ProfilePage() {
     </div>
   );
 
+  const { data: invoices = [] } = useQuery({
+    queryKey: ['/api/subscriptions/invoices', company?.id],
+    queryFn: async () => {
+      const token = JSON.parse(localStorage.getItem('auth') || '{}').token;
+      const res = await fetch('/api/subscriptions/invoices', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!company?.id
+  });
+
+  const cancelSubscriptionMutation = useMutation({
+    mutationFn: async () => {
+      const token = JSON.parse(localStorage.getItem('auth') || '{}').token;
+      const res = await fetch('/api/subscriptions/cancel', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('Falha ao cancelar assinatura');
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success('Assinatura cancelada. Você ainda terá acesso até o fim do período atual.');
+      queryClient.invalidateQueries({ queryKey: ['/api/companies', company?.id] });
+    },
+    onError: (error) => toast.error(error.message)
+  });
+
   const SubscriptionTab = () => (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between gap-4">
           <CardTitle className="flex items-center gap-2">
             <CreditCard className="w-5 h-5" />
             Minha Assinatura
           </CardTitle>
+          {company?.paymentStatus === 'approved' && (
+            <Button 
+              variant="destructive" 
+              size="sm" 
+              onClick={() => {
+                if(confirm('Tem certeza que deseja cancelar sua assinatura? Você perderá o acesso premium ao final do ciclo atual.')) {
+                  cancelSubscriptionMutation.mutate();
+                }
+              }}
+              disabled={cancelSubscriptionMutation.isPending}
+            >
+              Cancelar Assinatura
+            </Button>
+          )}
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
               <Label className="text-xs text-primary font-semibold uppercase tracking-wider mb-1 block">Plano Atual</Label>
               <p className="text-2xl font-bold capitalize">{company?.subscriptionPlan || 'Nenhum'}</p>
@@ -492,6 +536,13 @@ export default function ProfilePage() {
               <Badge className={company?.paymentStatus === 'approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}>
                 {company?.paymentStatus === 'approved' ? 'Ativa' : 'Pendente/Inativa'}
               </Badge>
+            </div>
+            <div className="p-4 bg-muted/50 rounded-lg border">
+              <Label className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1 block">Forma de Pagamento</Label>
+              <div className="flex items-center gap-2 mt-1">
+                <CreditCard className="w-4 h-4 text-slate-500" />
+                <span className="text-sm font-medium">Cartão de Crédito</span>
+              </div>
             </div>
           </div>
           
@@ -509,16 +560,38 @@ export default function ProfilePage() {
                 <Label className="text-xs text-muted-foreground">CNPJ/CPF</Label>
                 <p className="font-medium">{company?.document}</p>
               </div>
-              <div className="space-y-1 md:col-span-2">
-                <Label className="text-xs text-muted-foreground">ID de Identificação</Label>
-                <div className="flex items-center gap-2 bg-muted p-2 rounded text-xs font-mono">
-                  <span className="truncate flex-1">{company?.id}</span>
-                  <Button variant="ghost" size="sm" className="h-6" onClick={() => {
-                    navigator.clipboard.writeText(company?.id);
-                    toast.success('ID copiado!');
-                  }}>Copiar</Button>
-                </div>
-              </div>
+            </div>
+          </div>
+
+          <div className="pt-4 border-t">
+            <h3 className="text-lg font-semibold mb-4">Histórico de Cobranças</h3>
+            <div className="rounded-md border overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/50 border-b">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-medium">Data</th>
+                    <th className="px-4 py-3 text-left font-medium">Plano</th>
+                    <th className="px-4 py-3 text-left font-medium">Valor</th>
+                    <th className="px-4 py-3 text-right font-medium">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {invoices.length > 0 ? invoices.map((inv, i) => (
+                    <tr key={i} className="hover:bg-muted/30">
+                      <td className="px-4 py-3">{new Date(inv.date).toLocaleDateString('pt-BR')}</td>
+                      <td className="px-4 py-3 capitalize">{inv.plan}</td>
+                      <td className="px-4 py-3">R$ {parseFloat(inv.amount).toFixed(2)}</td>
+                      <td className="px-4 py-3 text-right">
+                        <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">Pago</Badge>
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground italic">Nenhuma cobrança encontrada.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         </CardContent>
