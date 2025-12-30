@@ -14,7 +14,7 @@ import AcceptInvite from "@/pages/AcceptInvite.jsx";
 import AccessDenied from "@/pages/AccessDenied.jsx";
 
 function AppContent() {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, company, loading } = useAuth();
 
   useEffect(() => {
     if (isAuthenticated) {
