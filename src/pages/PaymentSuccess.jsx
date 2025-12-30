@@ -40,13 +40,13 @@ export default function PaymentSuccess() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white flex flex-col items-center justify-center p-4">
-      <Card className="w-full max-w-2xl bg-slate-800 border-slate-700 p-8 shadow-2xl">
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col items-center justify-center p-0 lg:p-4">
+      <Card className="w-full max-w-2xl bg-white border-0 lg:border-slate-200 p-6 lg:p-8 shadow-none lg:shadow-sm rounded-none lg:rounded-xl">
         <div className="relative min-h-[400px]">
           {loading && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-800 z-10">
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10">
               <Loader className="w-10 h-10 animate-spin text-blue-500 mb-4" />
-              <p className="text-slate-400 font-medium">Carregando status do pagamento...</p>
+              <p className="text-slate-500 font-medium">Carregando status do pagamento...</p>
             </div>
           )}
 
@@ -60,7 +60,7 @@ export default function PaymentSuccess() {
                   hideStatusDetails: false,
                   hideTransactionDate: false,
                   style: {
-                    theme: 'dark',
+                    theme: 'default',
                   }
                 },
                 backUrls: {
@@ -71,22 +71,22 @@ export default function PaymentSuccess() {
             />
           ) : !loading && (
             <div className="text-center py-12">
-              <h2 className="text-xl font-bold mb-4 text-red-400">ID de Pagamento não encontrado</h2>
-              <p className="text-slate-400 mb-8">
+              <h2 className="text-xl font-bold mb-4 text-red-600">ID de Pagamento não encontrado</h2>
+              <p className="text-slate-500 mb-8">
                 Não foi possível identificar a transação para exibir o status.
               </p>
-              <Button onClick={() => setLocation('/')} className="w-full bg-blue-600 hover:bg-blue-700">
+              <Button onClick={() => setLocation('/')} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold h-12 rounded-lg">
                 Voltar para Início
               </Button>
             </div>
           )}
         </div>
         
-        <div className="mt-8 pt-6 border-t border-slate-700">
+        <div className="mt-8 pt-6 border-t border-slate-100">
            <Button 
             variant="ghost" 
             onClick={() => setLocation('/')}
-            className="text-slate-400 hover:text-white flex items-center gap-2 mx-auto transition-colors"
+            className="text-slate-500 hover:text-blue-600 flex items-center gap-2 mx-auto transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Voltar para Home
