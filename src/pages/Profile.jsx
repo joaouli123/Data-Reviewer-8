@@ -531,16 +531,16 @@ export default function ProfilePage() {
               <Label className="text-xs text-primary font-semibold uppercase tracking-wider mb-1 block">Plano Atual</Label>
               <p className="text-2xl font-bold capitalize">{company?.subscriptionPlan || 'Nenhum'}</p>
             </div>
-            <div className="p-4 bg-muted/50 rounded-lg border">
-              <Label className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1 block">Status</Label>
+            <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
+              <Label className="text-xs text-primary font-semibold uppercase tracking-wider mb-1 block">Status</Label>
               <Badge className={company?.paymentStatus === 'approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}>
                 {company?.paymentStatus === 'approved' ? 'Ativa' : 'Pendente/Inativa'}
               </Badge>
             </div>
-            <div className="p-4 bg-muted/50 rounded-lg border">
-              <Label className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1 block">Forma de Pagamento</Label>
+            <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
+              <Label className="text-xs text-primary font-semibold uppercase tracking-wider mb-1 block">Forma de Pagamento</Label>
               <div className="flex items-center gap-2 mt-1">
-                <CreditCard className="w-4 h-4 text-slate-500" />
+                <CreditCard className="w-4 h-4 text-primary" />
                 <span className="text-sm font-medium">Cartão de Crédito</span>
               </div>
             </div>
