@@ -39,6 +39,7 @@ import {
   createCompany,
   createUser,
   findUserByUsername,
+  findUserByEmail,
   verifyPassword,
   generateToken,
   createSession,
@@ -1414,6 +1415,54 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     } catch (error) {
       console.error("Error fetching users:", error);
       res.status(500).json({ error: "Failed to fetch users" });
+    }
+  });
+
+  // Create user directly (POST /api/users)
+  app.post("/api/users", authMiddleware, requireRole(["admin"]), async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      
+      const { name, email, password, role = "operational", permissions = {} } = req.body;
+      
+      if (!name?.trim() || !email?.trim() || !password?.trim()) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      if (password.length < 6) {
+        return res.status(400).json({ error: "Password must be at least 6 characters" });
+      }
+
+      if (name.length < 3) {
+        return res.status(400).json({ error: "Name must be at least 3 characters" });
+      }
+
+      // Check if user already exists by email
+      const existingUser = await findUserByEmail(email.trim());
+      if (existingUser) {
+        return res.status(400).json({ error: "Email already exists" });
+      }
+
+      // Create user in the admin's company
+      const user = await createUser(req.user.companyId, email.split("@")[0], email.trim(), password, name.trim(), role);
+
+      // Add permissions if provided
+      if (role !== "admin" && Object.keys(permissions).length > 0) {
+        await storage.updateUserPermissions(req.user.companyId, user.id, permissions);
+      }
+
+      res.status(201).json({
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        status: user.status,
+        permissions: permissions
+      });
+    } catch (error) {
+      console.error("Error creating user:", error);
+      res.status(500).json({ error: "Failed to create user" });
     }
   });
 

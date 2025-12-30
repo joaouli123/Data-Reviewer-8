@@ -81,6 +81,22 @@ export async function findUserByUsername(username: string, companyId?: string) {
   return result[0];
 }
 
+export async function findUserByEmail(email: string, companyId?: string) {
+  const result = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, email));
+  
+  if (!result.length) return undefined;
+  
+  // If companyId is provided, find user from that company
+  if (companyId) {
+    return result.find(u => u.companyId === companyId) || result[0];
+  }
+  
+  return result[0];
+}
+
 export async function findUserById(userId: string) {
   const result = await db.select().from(users).where(eq(users.id, userId));
   return result[0];
