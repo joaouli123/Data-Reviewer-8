@@ -69,10 +69,16 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   // Sign up - create company and first user
   app.post("/api/auth/signup", async (req, res) => {
     try {
-      const { companyName, companyDocument, username, email, password, name } = req.body;
+      const { companyName, companyDocument, username, email, password, name, plan } = req.body;
 
-      if (!companyName || !companyDocument || !username || !password) {
+      if (!companyName || !companyDocument || !username || !password || !email) {
         return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ error: "Invalid email format" });
       }
 
       // Check if company with this document already exists
@@ -103,6 +109,31 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       // Create user (admin role for first user)
       const user = await createUser(company.id, username, email, password, name, "admin");
 
+      // Create subscription record with the plan
+      const subscriptionPlan = plan || "pro";
+      try {
+        await db.insert(subscriptions).values({
+          id: crypto.randomUUID(),
+          companyId: company.id,
+          plan: subscriptionPlan,
+          status: "pending",
+          startDate: new Date(),
+        });
+      } catch (e) {
+        console.warn("Could not create subscription:", e);
+        // Continue anyway - subscription can be created later
+      }
+
+      // Update company with subscription plan
+      try {
+        await db.update(companies).set({ 
+          subscriptionPlan: subscriptionPlan,
+          paymentStatus: "pending"
+        }).where(eq(companies.id, company.id));
+      } catch (e) {
+        console.warn("Could not update company subscription info:", e);
+      }
+
       // Generate token
       const token = generateToken({
         userId: user.id,
@@ -126,7 +157,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           companyId: company.id,
           permissions: {}
         },
-        company: { id: company.id, name: company.name },
+        company: { id: company.id, name: company.name, paymentStatus: "pending", subscriptionPlan: subscriptionPlan },
         token,
       });
     } catch (error: any) {

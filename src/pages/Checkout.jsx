@@ -44,6 +44,7 @@ export default function Checkout() {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Dados do usuário autenticado ou da URL (pode vir de paymentPending)
   const companyName = company?.name || 'Sua Empresa';
@@ -82,6 +83,9 @@ export default function Checkout() {
   const onSubmit = async (cardFormData) => {
     return new Promise(async (resolve, reject) => {
       try {
+        setIsProcessing(true);
+        toast.loading('Processando pagamento...');
+        
         const response = await fetch('/api/payment/process', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -97,6 +101,7 @@ export default function Checkout() {
 
         const result = await response.json();
         if (response.ok && (result.status === 'approved' || result.id)) {
+          toast.success('Pagamento aprovado! Redirecionando...');
           setLocation(`/payment-success?payment_id=${result.id || result.data?.id}`);
           resolve();
         } else {
@@ -108,6 +113,8 @@ export default function Checkout() {
         console.error('Payment error:', error);
         toast.error('Erro ao processar pagamento');
         reject(error);
+      } finally {
+        setIsProcessing(false);
       }
     });
   };
