@@ -254,7 +254,7 @@ export default function Checkout() {
                         },
                         paymentMethods: {
                           creditCard: 'all',
-                          debitCard: 'all',
+                          ticket: 'all',
                           pix: 'all'
                         },
                         walletInstallments: false
