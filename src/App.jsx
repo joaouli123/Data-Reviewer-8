@@ -44,6 +44,11 @@ function AppContent() {
 
   // Se está logado mas com pagamento pendente, força checkout
   if ((isAuthenticated || paymentPending) && company && company.paymentStatus !== "approved" && !isPublicPage) {
+    // Only redirect to checkout if we're not already there
+    if (typeof window !== 'undefined' && window.location.pathname !== '/checkout' && window.location.pathname !== '/payment-success') {
+      window.location.href = '/checkout';
+      return null;
+    }
     return (
       <Switch>
         <Route path="/checkout" component={Checkout} />
