@@ -29,7 +29,6 @@ export default function Layout({ children }) {
   const baseNavigation = [
     { name: 'Visão Geral', icon: LayoutDashboard, path: '/', roles: ['admin', 'operational'], permission: null },
     { name: 'Transações', icon: Receipt, path: '/transactions', roles: ['admin', 'operational'], permission: 'view_transactions' },
-    { name: 'Vendas', icon: TrendingUp, path: '/sales', roles: ['admin', 'operational'], permission: 'view_transactions' },
     { name: 'Clientes', icon: Users, path: '/customers', roles: ['admin', 'operational'], permission: 'view_customers' },
     { name: 'Fornecedores', icon: Building2, path: '/suppliers', roles: ['admin', 'operational'], permission: 'view_suppliers' },
     { name: 'Categorias', icon: Tag, path: '/categories', roles: ['admin'], permission: null },
