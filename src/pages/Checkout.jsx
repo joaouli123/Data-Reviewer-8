@@ -108,64 +108,67 @@ export default function Checkout() {
   const plan = PLANS[selectedPlan];
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans">
-      {/* Header */}
-      <header className="border-b border-slate-200 bg-white sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+    <div className="min-h-screen bg-white lg:bg-[#F8FAFC] text-slate-900 font-sans">
+      {/* Header - Minimized for Mobile */}
+      <header className="border-b border-slate-100 bg-white sticky top-0 z-50 lg:border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 py-3 lg:py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-[#2563eb] rounded-md flex items-center justify-center font-bold text-white">H</div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900">HUA Analytics</h1>
+            <div className="w-7 h-7 lg:w-8 lg:h-8 bg-[#2563eb] rounded flex items-center justify-center font-bold text-white text-sm lg:text-base">H</div>
+            <h1 className="text-lg lg:text-xl font-bold tracking-tight text-slate-900">HUA Analytics</h1>
           </div>
-          <Button variant="ghost" onClick={() => setLocation('/')} className="hover:bg-slate-100 text-slate-600">
-            Cancelar
+          <Button variant="ghost" size="sm" onClick={() => setLocation('/')} className="hover:bg-slate-100 text-slate-500 h-8">
+            Sair
           </Button>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 py-12">
-        <button 
-          onClick={() => setLocation('/')} 
-          className="flex items-center gap-2 text-slate-500 hover:text-[#2563eb] mb-8 transition-colors group"
-        >
-          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> 
-          <span>Voltar para Planos</span>
-        </button>
+      <div className="max-w-7xl mx-auto px-0 lg:px-4 py-0 lg:py-12">
+        <div className="hidden lg:block px-4">
+          <button 
+            onClick={() => setLocation('/')} 
+            className="flex items-center gap-2 text-slate-500 hover:text-[#2563eb] mb-8 transition-colors group"
+          >
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> 
+            <span>Voltar para Planos</span>
+          </button>
+        </div>
 
-        <div className="grid lg:grid-cols-3 gap-8 items-start">
-          {/* Order Summary */}
-          <div className="lg:col-span-1">
-            <Card className="bg-white border-slate-200 sticky top-24 shadow-sm rounded-xl overflow-hidden">
-              {/* Mobile Header - Always Visible */}
+        <div className="grid lg:grid-cols-3 gap-0 lg:gap-8 items-start">
+          {/* Order Summary - Fixed/Sticky on mobile? No, let's keep it top but cleaner */}
+          <div className="lg:col-span-1 order-1 lg:order-1">
+            <Card className="bg-[#F8FAFC] lg:bg-white border-0 lg:border-slate-200 sticky top-[53px] lg:top-24 shadow-none lg:shadow-sm rounded-none lg:rounded-xl overflow-hidden z-40">
+              {/* Mobile Header - High Conversion Style */}
               <div 
-                className="lg:hidden p-4 flex items-center justify-between bg-white border-b border-slate-100 cursor-pointer"
+                className="lg:hidden p-4 flex items-center justify-between bg-slate-50 border-b border-slate-200 cursor-pointer shadow-sm"
                 onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
               >
                 <div className="flex items-center gap-3">
-                  <div className="bg-[#2563eb]/10 p-2 rounded-lg">
-                    <span className="font-bold text-[#2563eb] text-sm">{plan.name}</span>
+                  <div className="bg-[#2563eb] px-2 py-1 rounded text-[10px] font-bold text-white uppercase">
+                    {plan.name}
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-slate-900">
-                      {formatCurrency(plan.price)}/mês
+                    <span className="text-sm font-bold text-slate-900">
+                      Total: {formatCurrency(plan.price)}
                     </span>
                   </div>
                 </div>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  {isSummaryExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                </Button>
+                <div className="flex items-center gap-1 text-[#2563eb] text-xs font-semibold">
+                  <span>{isSummaryExpanded ? 'Ocultar detalhes' : 'Ver detalhes'}</span>
+                  {isSummaryExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                </div>
               </div>
 
               {/* Collapsible Content */}
-              <div className={`${!isSummaryExpanded ? 'hidden lg:block' : 'block'} p-6`}>
+              <div className={`${!isSummaryExpanded ? 'hidden lg:block' : 'block animate-in fade-in slide-in-from-top-2 duration-200'} p-6`}>
                 <h2 className="text-xl font-bold mb-6 text-slate-900 border-b pb-4 hidden lg:block">Resumo do Pedido</h2>
                 
-                <div className="bg-[#2563eb]/5 rounded-xl p-6 mb-6 border border-[#2563eb]/10">
+                <div className="bg-white lg:bg-[#2563eb]/5 rounded-xl p-6 mb-6 border border-slate-200 lg:border-[#2563eb]/10 shadow-sm lg:shadow-none">
                   <p className="text-[#2563eb] text-xs font-bold uppercase tracking-wider mb-2">Plano Selecionado</p>
                   <h3 className="text-2xl font-bold mb-1 text-slate-900">{plan.name}</h3>
                   <p className="text-slate-500 text-sm mb-4">{plan.description}</p>
                   
                   {!plan.contact && (
-                    <div className="pt-4 border-t border-slate-100">
+                    <div className="pt-4 border-t border-slate-100 lg:border-slate-200">
                       <p className="text-3xl font-bold text-slate-900">{formatCurrency(plan.price)}<span className="text-sm font-normal text-slate-500">/mês</span></p>
                     </div>
                   )}
@@ -173,7 +176,7 @@ export default function Checkout() {
                   <Button 
                     variant="outline" 
                     onClick={() => setLocation('/#pricing')} 
-                    className="w-full mt-6 border-[#2563eb]/30 text-[#2563eb] hover:bg-[#2563eb] hover:text-white transition-all rounded-lg"
+                    className="w-full mt-6 border-slate-300 lg:border-[#2563eb]/30 text-slate-600 lg:text-[#2563eb] hover:bg-slate-50 lg:hover:bg-[#2563eb] lg:hover:text-white transition-all rounded-lg"
                   >
                     Alterar Plano
                   </Button>
@@ -195,39 +198,39 @@ export default function Checkout() {
 
                 <div className="mt-8 pt-6 border-t border-slate-100 flex items-center gap-3 text-xs text-slate-400">
                   <Lock className="w-4 h-4" />
-                  <span>Pagamento processado com segurança via Mercado Pago</span>
+                  <span>Pagamento 100% seguro</span>
                 </div>
               </div>
             </Card>
           </div>
 
-          {/* Checkout Form */}
-          <div className="lg:col-span-2">
-            <Card className="bg-white border-slate-200 p-8 shadow-sm rounded-xl">
-              <div className="mb-8 border-b pb-6">
-                <h2 className="text-2xl font-bold text-slate-900 mb-2">Pagamento Seguro</h2>
-                <p className="text-slate-500">Insira os dados do seu cartão para ativar sua assinatura agora mesmo.</p>
+          {/* Checkout Form - Priority on Mobile */}
+          <div className="lg:col-span-2 order-2 lg:order-2">
+            <Card className="bg-white border-0 lg:border-slate-200 p-6 lg:p-8 shadow-none lg:shadow-sm rounded-none lg:rounded-xl">
+              <div className="mb-6 lg:mb-8 lg:border-b lg:pb-6">
+                <h2 className="text-xl lg:text-2xl font-bold text-slate-900 mb-2">Finalizar Assinatura</h2>
+                <p className="text-sm lg:text-base text-slate-500">Ative sua conta em menos de 1 minuto.</p>
               </div>
 
               {plan.contact ? (
-                <div className="text-center py-16 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                  <h3 className="text-xl font-bold mb-4 text-slate-900">Plano Sob Medida</h3>
-                  <p className="text-slate-500 max-w-sm mx-auto mb-8">
+                <div className="text-center py-12 lg:py-16 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                  <h3 className="text-lg lg:text-xl font-bold mb-4 text-slate-900 px-4">Plano Sob Medida</h3>
+                  <p className="text-sm lg:text-base text-slate-500 max-w-sm mx-auto mb-8 px-6">
                     Nossa equipe de especialistas entrará em contato para oferecer a melhor condição para sua empresa.
                   </p>
                   <Button 
                     onClick={() => window.location.href = 'mailto:vendas@hua.com'}
-                    className="bg-[#2563eb] hover:bg-[#2563eb]/90 text-white font-bold h-12 px-8 rounded-lg"
+                    className="bg-[#2563eb] hover:bg-[#2563eb]/90 text-white font-bold h-11 lg:h-12 px-6 lg:px-8 rounded-lg"
                   >
                     Falar com Especialista
                   </Button>
                 </div>
               ) : (
-                <div className="space-y-8">
-                  <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200 shadow-inner">
-                    <div className="mb-6 flex items-center justify-between">
-                      <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                        <span className="w-1.5 h-6 bg-[#2563eb] rounded-full"></span>
+                <div className="space-y-6 lg:space-y-8">
+                  <div className="p-4 lg:p-6 bg-slate-50 lg:bg-slate-50 rounded-xl lg:rounded-2xl border border-slate-200 shadow-sm lg:shadow-inner">
+                    <div className="mb-4 lg:mb-6 flex items-center justify-between">
+                      <h3 className="font-bold text-slate-800 flex items-center gap-2 text-sm lg:text-base">
+                        <span className="w-1 h-5 lg:w-1.5 lg:h-6 bg-[#2563eb] rounded-full"></span>
                         Dados do Cartão
                       </h3>
                     </div>
@@ -239,12 +242,13 @@ export default function Checkout() {
                       onError={onError}
                       customization={{
                         visual: {
+                          fontFamily: 'system-ui',
                           style: {
                             theme: 'default',
                             customVariables: {
                               formBackgroundColor: 'transparent',
                               inputBackgroundColor: '#ffffff',
-                              baseColor: '#2563eb', // Primary Blue
+                              baseColor: '#2563eb',
                               buttonTextColor: '#ffffff',
                               textPrimaryColor: '#0f172a',
                               textSecondaryColor: '#64748b',
@@ -263,9 +267,10 @@ export default function Checkout() {
                     />
                   </div>
 
-                  <div className="text-center">
-                    <p className="text-xs text-slate-400 max-w-md mx-auto">
-                      Ao finalizar, você aceita nossos <a href="#" className="underline text-[#2563eb] hover:text-[#2563eb]/80">Termos</a> e <a href="#" className="underline text-[#2563eb] hover:text-[#2563eb]/80">Privacidade</a>.
+                  <div className="text-center px-4">
+                    <p className="text-[10px] lg:text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+                      Ao finalizar, você aceita nossos <a href="#" className="underline text-[#2563eb]">Termos</a> e <a href="#" className="underline text-[#2563eb]">Privacidade</a>.
+                      <br className="lg:hidden" /> O pagamento é processado pelo Mercado Pago.
                     </p>
                   </div>
                 </div>
