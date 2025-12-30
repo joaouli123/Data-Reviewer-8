@@ -3,8 +3,9 @@ import { useLocation } from 'wouter';
 import { loadMercadoPago } from "@mercadopago/sdk-js";
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { ArrowLeft, Check, Lock, Zap, Shield, Headphones, CreditCard, QrCode, BarCode3 } from 'lucide-react';
+import { ArrowLeft, Check, Lock, Zap, Shield, Headphones, CreditCard, QrCode, Barcode } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -49,12 +50,13 @@ export default function Checkout() {
   const [identificationTypes, setIdentificationTypes] = useState([]);
   const [mp, setMp] = useState(null);
   const [step, setStep] = useState(1);
+  const [isRecurring, setIsRecurring] = useState(true);
 
-  // Form states
+  // Form states - Inicializar com dados do usuário
   const [formData, setFormData] = useState({
     payerFirstName: '',
     payerLastName: '',
-    email: user?.email || '',
+    email: '',
     identificationType: 'CPF',
     identificationNumber: '',
     zipCode: '',
@@ -70,6 +72,23 @@ export default function Checkout() {
   });
 
   const [formErrors, setFormErrors] = useState({});
+
+  // Puxar dados do cadastro
+  useEffect(() => {
+    if (user && company) {
+      const nameparts = (user.name || '').split(' ');
+      const firstName = nameparts[0] || '';
+      const lastName = nameparts.slice(1).join(' ') || '';
+      
+      setFormData(prev => ({
+        ...prev,
+        payerFirstName: firstName,
+        payerLastName: lastName,
+        email: user.email || '',
+        identificationType: 'CPF'
+      }));
+    }
+  }, [user, company]);
 
   useEffect(() => {
     const initMP = async () => {
@@ -115,8 +134,8 @@ export default function Checkout() {
     if (!formData.payerFirstName) errors.payerFirstName = 'Nome obrigatório';
     if (!formData.payerLastName) errors.payerLastName = 'Sobrenome obrigatório';
     if (!formData.email) errors.email = 'Email obrigatório';
+    if (!formData.identificationType) errors.identificationType = 'Tipo de documento obrigatório';
     if (!formData.identificationNumber) errors.identificationNumber = 'Documento obrigatório';
-    if (!formData.zipCode) errors.zipCode = 'CEP obrigatório';
     if (!formData.city) errors.city = 'Cidade obrigatória';
     if (paymentMethod === 'credit_card') {
       if (!formData.cardNumber) errors.cardNumber = 'Número do cartão obrigatório';
@@ -135,11 +154,12 @@ export default function Checkout() {
       return;
     }
 
-    if (!mp) return;
+    if (!mp && paymentMethod === 'credit_card') return;
 
     try {
       setIsProcessing(true);
-      toast.loading('Processando seu pagamento com segurança...');
+      const paymentMsg = isRecurring ? 'assinatura' : 'pagamento';
+      toast.loading(`Processando ${paymentMsg} com segurança...`);
 
       let payload = {
         companyId: company?.id,
@@ -147,6 +167,7 @@ export default function Checkout() {
         email: formData.email,
         total_amount: PLANS[selectedPlan].price.toFixed(2),
         payment_method_id: paymentMethod,
+        recurring: isRecurring,
         payer: {
           email: formData.email,
           first_name: formData.payerFirstName,
@@ -169,7 +190,7 @@ export default function Checkout() {
       if (paymentMethod === 'credit_card') {
         try {
           const cardToken = await mp.createCardToken({
-            cardNumber: formData.cardNumber,
+            cardNumber: formData.cardNumber.replace(/\s/g, ''),
             cardholderName: formData.payerFirstName + ' ' + formData.payerLastName,
             cardExpirationMonth: formData.expiryMonth,
             cardExpirationYear: formData.expiryYear,
@@ -198,10 +219,11 @@ export default function Checkout() {
 
       if (response.ok) {
         if (result.status === 'approved') {
-          toast.success('Assinatura ativada com sucesso!');
+          toast.success(`${paymentMethod === 'credit_card' ? 'Assinatura' : 'Pagamento'} confirmado com sucesso!`);
           setLocation(`/payment-success?payment_id=${result.id}`);
         } else {
-          toast.info('Pagamento pendente ou em processamento.');
+          toast.info('Pagamento pendente ou em processamento. Você receberá as instruções de pagamento no seu email.');
+          setLocation(`/payment-success?payment_id=${result.id}`);
         }
       } else {
         toast.error(result.message || 'Erro no processamento');
@@ -269,14 +291,14 @@ export default function Checkout() {
                 <div className="space-y-6">
                   <div>
                     <h2 className="text-2xl font-bold text-slate-900 mb-2">Seus Dados</h2>
-                    <p className="text-slate-500">Informações pessoais e endereço de entrega</p>
+                    <p className="text-slate-500">Informações pessoais para a assinatura</p>
                   </div>
 
                   <form onSubmit={(e) => { e.preventDefault(); setStep(2); }} className="space-y-6">
                     {/* Name Fields */}
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <label className="block text-sm font-semibold text-slate-900">Nome</label>
+                        <label className="block text-sm font-semibold text-slate-900">Nome *</label>
                         <input
                           name="payerFirstName"
                           value={formData.payerFirstName}
@@ -288,7 +310,7 @@ export default function Checkout() {
                         {formErrors.payerFirstName && <p className="text-red-600 text-xs">{formErrors.payerFirstName}</p>}
                       </div>
                       <div className="space-y-2">
-                        <label className="block text-sm font-semibold text-slate-900">Sobrenome</label>
+                        <label className="block text-sm font-semibold text-slate-900">Sobrenome *</label>
                         <input
                           name="payerLastName"
                           value={formData.payerLastName}
@@ -303,7 +325,7 @@ export default function Checkout() {
 
                     {/* Email */}
                     <div className="space-y-2">
-                      <label className="block text-sm font-semibold text-slate-900">E-mail</label>
+                      <label className="block text-sm font-semibold text-slate-900">E-mail *</label>
                       <input
                         type="email"
                         name="email"
@@ -319,7 +341,7 @@ export default function Checkout() {
                     {/* Document */}
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <label className="block text-sm font-semibold text-slate-900">Tipo de Documento</label>
+                        <label className="block text-sm font-semibold text-slate-900">Tipo de Documento *</label>
                         <select
                           name="identificationType"
                           value={formData.identificationType}
@@ -330,12 +352,15 @@ export default function Checkout() {
                           {identificationTypes.length > 0 ? (
                             identificationTypes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)
                           ) : (
-                            <option value="CPF">CPF</option>
+                            <>
+                              <option value="CPF">CPF</option>
+                              <option value="CNPJ">CNPJ</option>
+                            </>
                           )}
                         </select>
                       </div>
                       <div className="space-y-2">
-                        <label className="block text-sm font-semibold text-slate-900">Número do Documento</label>
+                        <label className="block text-sm font-semibold text-slate-900">Número *</label>
                         <input
                           name="identificationNumber"
                           value={formData.identificationNumber}
@@ -350,7 +375,7 @@ export default function Checkout() {
 
                     {/* Address Section */}
                     <div className="pt-6 border-t border-slate-200">
-                      <h3 className="text-sm font-bold text-slate-900 mb-4">Endereço de Entrega</h3>
+                      <h3 className="text-sm font-bold text-slate-900 mb-4">Endereço (Opcional)</h3>
                       <div className="grid grid-cols-3 gap-4 mb-4">
                         <div className="col-span-1 space-y-2">
                           <label className="block text-sm font-semibold text-slate-900">CEP</label>
@@ -359,13 +384,12 @@ export default function Checkout() {
                             value={formData.zipCode}
                             onChange={handleInputChange}
                             placeholder="06233-903"
-                            className={`w-full px-4 py-3 rounded-lg border ${formErrors.zipCode ? 'border-red-400 bg-red-50' : 'border-slate-300'} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
+                            className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                             data-testid="input-zipcode"
                           />
-                          {formErrors.zipCode && <p className="text-red-600 text-xs">{formErrors.zipCode}</p>}
                         </div>
                         <div className="col-span-2 space-y-2">
-                          <label className="block text-sm font-semibold text-slate-900">Cidade</label>
+                          <label className="block text-sm font-semibold text-slate-900">Cidade *</label>
                           <input
                             name="city"
                             value={formData.city}
@@ -426,13 +450,16 @@ export default function Checkout() {
                   {/* Payment Method Tabs */}
                   <div className="grid grid-cols-3 gap-4 pb-6 border-b border-slate-200">
                     {[
-                      { id: 'credit_card', label: 'Cartão de Crédito', icon: CreditCard },
-                      { id: 'pix', label: 'PIX Instantâneo', icon: QrCode },
-                      { id: 'boleto', label: 'Boleto Bancário', icon: BarCode3 }
-                    ].map(({ id, label, icon: Icon }) => (
+                      { id: 'credit_card', label: 'Cartão', icon: CreditCard, desc: isRecurring ? 'Recorrente' : 'Único' },
+                      { id: 'pix', label: 'PIX', icon: QrCode, desc: isRecurring ? 'Recorrente' : 'Instantâneo' },
+                      { id: 'boleto', label: 'Boleto', icon: Barcode, desc: 'Única vez' }
+                    ].map(({ id, label, icon: Icon, desc }) => (
                       <button
                         key={id}
-                        onClick={() => setPaymentMethod(id)}
+                        onClick={() => {
+                          setPaymentMethod(id);
+                          if (id === 'boleto') setIsRecurring(false);
+                        }}
                         className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${
                           paymentMethod === id
                             ? 'border-blue-600 bg-blue-50'
@@ -444,17 +471,34 @@ export default function Checkout() {
                         <span className={`text-sm font-semibold ${paymentMethod === id ? 'text-blue-600' : 'text-slate-700'}`}>
                           {label}
                         </span>
+                        <span className="text-xs text-slate-500">{desc}</span>
                       </button>
                     ))}
                   </div>
 
                   <form onSubmit={handlePayment} className="space-y-6">
+                    {/* Recurring Option */}
+                    {paymentMethod !== 'boleto' && (
+                      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-3">
+                        <Checkbox
+                          checked={isRecurring}
+                          onCheckedChange={setIsRecurring}
+                          id="recurring-payment"
+                          data-testid="checkbox-recurring"
+                        />
+                        <label htmlFor="recurring-payment" className="cursor-pointer flex-1">
+                          <div className="font-semibold text-blue-900">Ativar cobrança automática</div>
+                          <div className="text-sm text-blue-700">Renova automaticamente todo mês sem preocupações</div>
+                        </label>
+                      </div>
+                    )}
+
                     {paymentMethod === 'credit_card' && (
                       <div className="space-y-6 p-6 bg-slate-50 rounded-lg border border-slate-200">
                         <h3 className="font-bold text-slate-900">Dados do Cartão</h3>
                         
                         <div className="space-y-2">
-                          <label className="block text-sm font-semibold text-slate-900">Número do Cartão</label>
+                          <label className="block text-sm font-semibold text-slate-900">Número do Cartão *</label>
                           <input
                             name="cardNumber"
                             value={formData.cardNumber}
@@ -469,7 +513,7 @@ export default function Checkout() {
 
                         <div className="grid grid-cols-3 gap-4">
                           <div className="space-y-2">
-                            <label className="block text-sm font-semibold text-slate-900">Mês</label>
+                            <label className="block text-sm font-semibold text-slate-900">Mês *</label>
                             <input
                               name="expiryMonth"
                               value={formData.expiryMonth}
@@ -481,7 +525,7 @@ export default function Checkout() {
                             />
                           </div>
                           <div className="space-y-2">
-                            <label className="block text-sm font-semibold text-slate-900">Ano</label>
+                            <label className="block text-sm font-semibold text-slate-900">Ano *</label>
                             <input
                               name="expiryYear"
                               value={formData.expiryYear}
@@ -493,7 +537,7 @@ export default function Checkout() {
                             />
                           </div>
                           <div className="space-y-2">
-                            <label className="block text-sm font-semibold text-slate-900">CVV</label>
+                            <label className="block text-sm font-semibold text-slate-900">CVV *</label>
                             <input
                               name="cvv"
                               value={formData.cvv}
@@ -512,14 +556,16 @@ export default function Checkout() {
                     {paymentMethod === 'pix' && (
                       <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-200 text-center">
                         <QrCode className="w-12 h-12 text-blue-600 mx-auto mb-3" />
-                        <p className="text-slate-700 font-medium">Você receberá um código PIX para escanear após confirmar o pagamento</p>
+                        <p className="text-slate-700 font-medium mb-1">PIX Instantâneo</p>
+                        <p className="text-sm text-slate-600">{isRecurring ? 'Você receberá um código PIX de autenticação para ativar cobranças automáticas.' : 'Você receberá um QR Code PIX para copiar e colar.'}</p>
                       </div>
                     )}
 
                     {paymentMethod === 'boleto' && (
                       <div className="p-6 bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg border border-amber-200 text-center">
-                        <BarCode3 className="w-12 h-12 text-amber-600 mx-auto mb-3" />
-                        <p className="text-slate-700 font-medium">Você receberá o código de boleto para pagar até a data de vencimento</p>
+                        <Barcode className="w-12 h-12 text-amber-600 mx-auto mb-3" />
+                        <p className="text-slate-700 font-medium mb-1">Boleto Bancário</p>
+                        <p className="text-sm text-slate-600">Você receberá um código de boleto para pagar até a data de vencimento (geralmente 3 dias úteis)</p>
                       </div>
                     )}
 
@@ -540,7 +586,7 @@ export default function Checkout() {
                         className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 text-lg rounded-lg font-semibold transition-all disabled:opacity-50"
                         data-testid="button-complete-payment"
                       >
-                        {isProcessing ? 'Processando...' : `Pagar ${formatCurrency(plan.price)}`}
+                        {isProcessing ? 'Processando...' : `Confirmar Pagamento`}
                       </Button>
                     </div>
                   </form>
@@ -582,7 +628,11 @@ export default function Checkout() {
                       <span className="text-4xl font-bold text-slate-900">{formatCurrency(plan.price)}</span>
                       <span className="text-slate-600">/mês</span>
                     </div>
-                    <p className="text-xs text-slate-500 mt-2">Sem contrato. Cancele a qualquer momento.</p>
+                    {step === 2 && (
+                      <p className="text-xs text-slate-500 mt-2">
+                        {isRecurring ? '✓ Renovação automática' : 'Pagamento único'}
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
