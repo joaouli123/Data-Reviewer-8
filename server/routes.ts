@@ -2641,9 +2641,33 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const client = new MercadoPagoConfig({ accessToken: mercadoPagoAccessToken });
       const payment = new Payment(client);
 
-      // O body enviado pelo CardPayment Brick já vem no formato esperado pela API de Payments do MP v2
+      // The Payment Brick sends data in a format that needs to be validated and sent to MP
+      // Extract payment data and build the proper format for MP API v2
+      const { token, amount, payer, paymentMethodId, issuerId, installments, description } = req.body;
+
+      if (!token) {
+        return res.status(400).json({ error: "Payment token is required" });
+      }
+
+      // Build proper payment creation body for MP API v2
+      const paymentBody = {
+        token: token,
+        amount: amount,
+        currency_id: 'BRL',
+        description: description || 'HUA Analytics Subscription',
+        installments: installments || 1,
+        payment_method_id: paymentMethodId || 'credit_card',
+        issuer_id: issuerId || undefined,
+        payer: payer || {}
+      };
+
+      // Remove undefined values
+      Object.keys(paymentBody).forEach(key => 
+        paymentBody[key] === undefined && delete paymentBody[key]
+      );
+
       const paymentResponse = await payment.create({
-        body: req.body,
+        body: paymentBody,
       });
 
       res.json(paymentResponse);
