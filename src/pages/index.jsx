@@ -3,7 +3,6 @@ import Layout from "../components/Layout.jsx";
 import Dashboard from "./Dashboard";
 import Transactions from "./Transactions";
 import Customers from "./Customers";
-import Sales from "./Sales";
 import Reports from "./Reports";
 import Suppliers from "./Suppliers";
 import CashFlowForecast from "./CashFlowForecast";
@@ -59,7 +58,6 @@ export default function Pages() {
         <Route path="/profile" component={Profile} />
         <Route path="/transactions">{() => <ProtectedRoute component={Transactions} permission="view_transactions" />}</Route>
         <Route path="/customers">{() => <ProtectedRoute component={Customers} permission="view_customers" />}</Route>
-        <Route path="/sales">{() => <ProtectedRoute component={Sales} permission="view_transactions" />}</Route>
         <Route path="/reports">{() => <ProtectedRoute component={Reports} permission="view_reports" />}</Route>
         <Route path="/suppliers">{() => <ProtectedRoute component={Suppliers} permission="view_suppliers" />}</Route>
         <Route path="/cashflowforecast">{() => <ProtectedRoute component={CashFlowForecast} permission="view_reports" />}</Route>
