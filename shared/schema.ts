@@ -378,6 +378,8 @@ export const insertCustomerSchema = createInsertSchema(customers).omit({
   id: true,
   createdAt: true,
   companyId: true,
+}).extend({
+  cnpj: z.string().optional(),
 });
 
 export const insertSupplierSchema = createInsertSchema(suppliers).omit({
