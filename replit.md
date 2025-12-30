@@ -140,11 +140,20 @@ POST /api/admin/users/:id/reset-password - Reset password
 DELETE /api/admin/users/:id       - Delete user
 ```
 
+### Recurring Payments & Admin Panel
+- **Mercado Pago Bricks:** Suporta pagamentos com cartão, boleto e Pix. Para pagamentos recorrentes (assinaturas), o sistema utiliza o fluxo de `v1/payments` no backend, capturando tokens gerados pelo Brick.
+- **Super Admin Dashboard:** 
+  - ✅ **Acompanhamento de Assinaturas:** Disponível em `/admin/subscriptions`. Exibe data de compra, comprador, forma de pagamento, vencimento e status.
+  - ✅ **Controle de Status:** O Super Admin pode ativar, suspender ou cancelar assinaturas manualmente através do modal de edição em `/admin/subscriptions`.
+  - ✅ **Webhooks:** O endpoint `/api/payment/webhook` processa notificações do Mercado Pago e atualiza o status da empresa globalmente (Ativo/Suspenso).
+  - ✅ **Métricas:** O dashboard principal exibe a taxa de cancelamento (Churn) e o total de empresas ativas em tempo real.
+
 ### Navigation Structure
 **Super Admin (isSuperAdmin = true)**
 - Dashboard (/) 
 - Assinaturas (/admin/subscriptions)
 - Usuários (/admin/users)
+- Clientes (/admin/customers)
 - [Divider]
 - Meu Perfil (/profile)
 - Logout

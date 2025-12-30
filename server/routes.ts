@@ -2672,14 +2672,15 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         if (mpResponse.ok) {
           const payment = await mpResponse.json();
           
-          // Update subscription status based on payment status
           if (payment.status === 'approved') {
-            // Find and update subscription
-            const externalRef = payment.external_reference;
-            if (externalRef) {
-              console.log(`✅ Payment approved for plan: ${externalRef}`);
-              // In a real scenario, we'd update the subscription status here
-            }
+            const externalRef = payment.external_reference; // contains plan
+            const companyName = payment.metadata?.company_name;
+            const email = payment.metadata?.email;
+            
+            console.log(`✅ Payment approved for plan: ${externalRef} - Company: ${companyName}`);
+
+            // Logic to update or create subscription in IStorage would go here
+            // Example: await storage.updateCompanySubscription(companyId, externalRef, 'active');
           }
         }
       }
