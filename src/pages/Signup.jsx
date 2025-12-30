@@ -70,7 +70,7 @@ export default function Signup() {
 
     try {
       setLoading(true);
-      await signup(
+      const result = await signup(
         formData.companyName,
         formData.companyDocument,
         formData.username,
@@ -80,15 +80,17 @@ export default function Signup() {
         formData.plan
       );
       
-      // O signup já salva no localStorage e seta isAuthenticated
-      // O App.jsx agora vai redirecionar automaticamente para /checkout
-      // baseado no status da assinatura da empresa
-      toast.success("Conta criada! Redirecionando para pagamento...");
+      // Check if this was a successful new signup
+      if (result.token) {
+        // O signup já salva no localStorage e seta isAuthenticated
+        // O App.jsx agora vai redirecionar automaticamente para /checkout
+        // baseado no status da assinatura da empresa
+        toast.success("Conta criada! Redirecionando para pagamento...");
+      }
     } catch (error: any) {
       // Handle duplicate company scenarios
-      if (error.message?.includes("409") || error.message?.includes("DUPLICATE")) {
-        // Try to parse the error response if available
-        const errorMsg = error.message;
+      const errorMsg = error.message || "";
+      if (errorMsg.includes("409") || errorMsg.includes("DUPLICATE")) {
         if (errorMsg.includes("DUPLICATE_PAID")) {
           toast.error("Essa empresa já possui um cadastro ativo com pagamento confirmado");
         } else if (errorMsg.includes("DUPLICATE_PENDING")) {
@@ -100,7 +102,7 @@ export default function Signup() {
           toast.error(errorMsg || "Essa empresa já existe");
         }
       } else {
-        toast.error(error.message || "Erro ao criar conta");
+        toast.error(errorMsg || "Erro ao criar conta");
       }
     } finally {
       setLoading(false);

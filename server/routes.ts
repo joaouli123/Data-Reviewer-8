@@ -174,6 +174,29 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       // Record successful login
       await recordLoginAttempt(ip, username, true);
 
+      // Check if company payment is pending
+      if (company.paymentStatus !== "approved") {
+        // Return login successful but with payment pending flag
+        return res.json({
+          user: { 
+            id: user.id, 
+            username: user.username, 
+            email: user.email,
+            name: user.name,
+            phone: user.phone,
+            avatar: user.avatar,
+            role: user.role, 
+            isSuperAdmin: user.isSuperAdmin,
+            companyId: user.companyId,
+            permissions: user.permissions ? JSON.parse(user.permissions) : {}
+          },
+          company: { id: company.id, name: company.name, paymentStatus: company.paymentStatus },
+          token: null,
+          paymentPending: true,
+          message: "Pagamento pendente. Por favor complete o pagamento para acessar o sistema."
+        });
+      }
+
       // Generate token
       const token = generateToken({
         userId: user.id,
@@ -201,12 +224,42 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           companyId: user.companyId,
           permissions: user.permissions ? JSON.parse(user.permissions) : {}
         },
-        company: { id: company.id, name: company.name },
+        company: { id: company.id, name: company.name, paymentStatus: company.paymentStatus },
         token,
+        paymentPending: false,
       });
     } catch (error: any) {
       console.error("Login error:", error);
       res.status(500).json({ error: "Login failed" });
+    }
+  });
+
+  // Check payment status (public endpoint)
+  app.post("/api/auth/payment-status", async (req, res) => {
+    try {
+      const { username } = req.body;
+      if (!username) {
+        return res.status(400).json({ error: "Username is required" });
+      }
+
+      const user = await findUserByUsername(username);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const company = await findCompanyById(user.companyId);
+      if (!company) {
+        return res.status(404).json({ error: "Company not found" });
+      }
+
+      res.json({
+        paymentStatus: company.paymentStatus,
+        companyId: company.id,
+        companyName: company.name,
+        isPaid: company.paymentStatus === "approved"
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to check payment status" });
     }
   });
 
@@ -235,7 +288,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           companyId: user.companyId,
           permissions: user.permissions ? JSON.parse(user.permissions) : {}
         },
-        company: { id: company.id, name: company.name },
+        company: { id: company.id, name: company.name, paymentStatus: company.paymentStatus },
       });
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch user" });

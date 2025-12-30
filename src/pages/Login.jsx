@@ -24,6 +24,14 @@ export default function Login() {
     try {
       setLoading(true);
       const data = await login(username, password);
+      
+      // Check if payment is pending
+      if (data.paymentPending) {
+        toast.info("Sua conta precisa de pagamento para ser ativada");
+        setTimeout(() => setLocation("/checkout?plan=pro"), 1500);
+        return;
+      }
+      
       const userName = data.user?.name || "usuário";
       toast.success(`Seja bem vindo, ${userName}!`);
       setLocation("/");

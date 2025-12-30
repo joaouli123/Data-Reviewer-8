@@ -15,7 +15,10 @@ export function AuthProvider({ children }) {
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
-        setToken(parsed.token);
+        // Only set token if not pending payment
+        if (!parsed.paymentPending) {
+          setToken(parsed.token);
+        }
         setUser(parsed.user);
         setCompany(parsed.company);
       } catch (e) {
@@ -73,6 +76,21 @@ export function AuthProvider({ children }) {
       }
 
       const data = await res.json();
+      
+      // If payment is pending, don't set token but save company info
+      if (data.paymentPending) {
+        setUser(data.user);
+        setCompany(data.company);
+        // Store pending payment info
+        localStorage.setItem("auth", JSON.stringify({
+          user: data.user,
+          company: data.company,
+          token: null,
+          paymentPending: true
+        }));
+        return data;
+      }
+      
       setToken(data.token);
       setUser(data.user);
       setCompany(data.company);
