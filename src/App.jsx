@@ -5,6 +5,7 @@ import { queryClient } from "@/lib/queryClient";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { Toaster } from "sonner";
 import Pages from "@/pages/index.jsx";
+import Home from "@/pages/Home.jsx";
 import Login from "@/pages/Login.jsx";
 import Signup from "@/pages/Signup.jsx";
 import AcceptInvite from "@/pages/AcceptInvite.jsx";
@@ -37,10 +38,11 @@ function AppContent() {
   if (!isAuthenticated) {
     return (
       <Switch>
+        <Route path="/" component={Home} />
         <Route path="/login" component={Login} />
         <Route path="/signup" component={Signup} />
         <Route path="/accept-invite" component={AcceptInvite} />
-        <Route component={Login} />
+        <Route component={Home} />
       </Switch>
     );
   }
