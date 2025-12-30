@@ -161,6 +161,7 @@ export class DatabaseStorage implements IStorage {
         id: customers.id,
         companyId: customers.companyId,
         name: customers.name,
+        cnpj: customers.cnpj,
         email: customers.email,
         phone: customers.phone,
         contact: customers.contact,
