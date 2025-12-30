@@ -2780,13 +2780,16 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       // Build proper payment creation body for MP API v2
       const paymentBody = {
         token: token,
-        amount: amount,
+        transaction_amount: Number(amount) / 100, // Mercado Pago SDK v2 uses transaction_amount in decimals for v2/payments
         currency_id: 'BRL',
         description: description || 'HUA Analytics Subscription',
-        installments: installments || 1,
+        installments: Number(installments) || 1,
         payment_method_id: paymentMethodId || 'credit_card',
-        issuer_id: issuerId || undefined,
-        payer: payer || {}
+        issuer_id: issuerId ? Number(issuerId) : undefined,
+        payer: {
+          email: payer?.email || email || 'customer@example.com',
+          identification: payer?.identification || undefined
+        }
       };
 
       // Remove undefined values
