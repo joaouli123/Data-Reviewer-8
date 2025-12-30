@@ -2809,26 +2809,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         paymentBody[key] === undefined && delete paymentBody[key]
       );
 
-      console.log("✅ Sending to MP API:", JSON.stringify(paymentBody, null, 2));
+      // FAST PATH: Process payment immediately using SDK
+      const paymentResponse = await payment.create({
+        body: paymentBody,
+      });
 
-      // Retry logic for Mercado Pago API
-      let paymentResponse;
-      let retries = 3;
-      while (retries > 0) {
-        try {
-          paymentResponse = await payment.create({
-            body: paymentBody,
-          });
-          break;
-        } catch (err: any) {
-          retries--;
-          console.error(`⚠️ MP API Retry (${3 - retries}/3):`, err.message);
-          if (retries === 0) throw err;
-          await new Promise(resolve => setTimeout(resolve, 2000));
-        }
-      }
-
-      // If payment approved, update company and create subscription immediately
+      // If approved, update database immediately
       if (paymentResponse.status === 'approved' && companyId) {
         try {
           // Update company payment status
