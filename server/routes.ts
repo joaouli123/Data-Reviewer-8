@@ -2613,25 +2613,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
       const preference = await mpResponse.json();
 
-      // Store subscription with pending status
-      const subscription = await db.insert(subscriptions).values({
-        id: `sub_${Date.now()}`,
-        plan: plan,
-        status: "pending",
-        preferenceId: preference.id,
-        subscriberName: companyName,
-        subscriberEmail: email,
-        amount: amount,
-        currency: "BRL",
-        startDate: new Date(),
-        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-      } as any).returning();
-
+      // Note: Subscription will be created/updated when payment webhook is confirmed
+      // For now, we just return the preference to redirect user to Mercado Pago checkout
       res.json({
         success: true,
         preferenceId: preference.id,
-        preferenceUrl: preference.init_point,
-        subscriptionId: subscription[0]?.id
+        preferenceUrl: preference.init_point
       });
 
     } catch (error) {
