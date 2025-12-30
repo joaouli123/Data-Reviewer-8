@@ -381,29 +381,21 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.patch("/api/customers/:id", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
-      console.log("🔧 PATCH /api/customers/" + req.params.id + " body:", JSON.stringify(req.body, null, 2));
       
-      // Converter strings vazias para null
-      const cleanData = { ...req.body };
-      Object.keys(cleanData).forEach(key => {
-        if (cleanData[key] === '') cleanData[key] = null;
-      });
+      const cleanData: any = {};
+      for (const [key, value] of Object.entries(req.body)) {
+        cleanData[key] = (value === '' || value === undefined) ? null : value;
+      }
       
       const data = insertCustomerSchema.partial().parse(cleanData);
-      console.log("✅ Dados validados:", JSON.stringify(data, null, 2));
-      
       const customer = await storage.updateCustomer(req.user.companyId, req.params.id, data);
       if (!customer) {
         return res.status(404).json({ error: "Customer not found" });
       }
-      console.log("✅ Cliente atualizado com sucesso");
       res.json(customer);
     } catch (error: any) {
-      console.error("❌ PATCH /api/customers error:", error);
-      res.status(400).json({ 
-        error: "Invalid customer data", 
-        details: error.errors || error.message 
-      });
+      console.error("Error updating customer:", error);
+      res.status(400).json({ error: error.message || "Invalid customer data" });
     }
   });
 

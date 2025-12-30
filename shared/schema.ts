@@ -381,22 +381,12 @@ export const insertCustomerSchema = createInsertSchema(customers).omit({
   companyId: true,
 }).extend({
   name: z.string().min(1, "Nome é obrigatório"),
-  cnpj: z.string().nullable().optional().or(z.literal('')).default(null),
-  email: z.string().nullable().optional().or(z.literal('')).default(null),
-  phone: z.string().nullable().optional().or(z.literal('')).default(null),
-  contact: z.string().nullable().optional().or(z.literal('')).default(null),
-  category: z.string().nullable().optional().or(z.literal('')).default(null),
-  status: z.string().optional().default('ativo'),
-}).transform((data) => {
-  // Converter strings vazias para null
-  return {
-    ...data,
-    cnpj: data.cnpj === '' ? null : data.cnpj,
-    email: data.email === '' ? null : data.email,
-    phone: data.phone === '' ? null : data.phone,
-    contact: data.contact === '' ? null : data.contact,
-    category: data.category === '' ? null : data.category,
-  };
+  cnpj: z.union([z.string(), z.null()]).optional(),
+  email: z.union([z.string(), z.null()]).optional(),
+  phone: z.union([z.string(), z.null()]).optional(),
+  contact: z.union([z.string(), z.null()]).optional(),
+  category: z.union([z.string(), z.null()]).optional(),
+  status: z.string().optional(),
 });
 
 export const insertSupplierSchema = createInsertSchema(suppliers).omit({
