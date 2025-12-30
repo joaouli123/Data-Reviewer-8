@@ -254,8 +254,8 @@ export default function Checkout() {
                         },
                         paymentMethods: {
                           creditCard: 'all',
-                          ticket: 'all',
-                          pix: 'all'
+                          pix: 'all',
+                          ticket: 'all'
                         },
                         walletInstallments: false
                       }}
