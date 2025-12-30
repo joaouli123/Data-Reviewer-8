@@ -227,13 +227,6 @@ export default function Checkout() {
               ) : (
                 <div className="space-y-6 lg:space-y-8">
                   <div className="p-4 lg:p-6 bg-slate-50 lg:bg-slate-50 rounded-xl lg:rounded-2xl border border-slate-200 shadow-sm lg:shadow-inner">
-                    <div className="mb-4 lg:mb-6 flex items-center justify-between">
-                      <h3 className="font-bold text-slate-800 flex items-center gap-2 text-sm lg:text-base">
-                        <span className="w-1 h-5 lg:w-1.5 lg:h-6 bg-[#2563eb] rounded-full"></span>
-                        Formas de Pagamento
-                      </h3>
-                    </div>
-                    
                     <Payment
                       initialization={initialization}
                       onSubmit={onSubmit}
