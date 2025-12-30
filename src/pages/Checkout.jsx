@@ -65,9 +65,14 @@ export default function Checkout() {
 
   const initialization = {
     amount: selectedPlan ? PLANS[selectedPlan].price : 100,
+    currency: 'BRL',
     payer: {
       email: formData.email || 'customer@example.com',
-    }
+      address: {
+        zipCode: '00000000'
+      }
+    },
+    processingMode: 'aggregator'
   };
 
   const onSubmit = async (cardFormData) => {
@@ -262,9 +267,9 @@ export default function Checkout() {
                           debitCard: 'all',
                           ticket: 'all',
                           pix: 'all',
-                          atm: 'all',
-                          onInstallments: true
-                        }
+                          atm: 'all'
+                        },
+                        walletInstallments: false
                       }}
                     />
                   </div>
