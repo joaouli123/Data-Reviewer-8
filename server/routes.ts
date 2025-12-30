@@ -2639,6 +2639,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const client = new MercadoPagoConfig({ accessToken: mercadoPagoAccessToken });
       const payment = new Payment(client);
 
+      // O body enviado pelo CardPayment Brick já vem no formato esperado pela API de Payments do MP v2
       const paymentResponse = await payment.create({
         body: req.body,
       });

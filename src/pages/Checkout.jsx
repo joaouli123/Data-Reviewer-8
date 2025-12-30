@@ -66,6 +66,9 @@ export default function Checkout() {
 
   const initialization = {
     amount: selectedPlan ? PLANS[selectedPlan].price : 100,
+    payer: {
+      email: formData.email,
+    }
   };
 
   const onSubmit = async (cardFormData) => {
@@ -76,31 +79,34 @@ export default function Checkout() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             ...cardFormData,
-            plan: selectedPlan,
-            companyName: formData.companyName,
-            email: formData.email,
+            metadata: {
+              plan: selectedPlan,
+              companyName: formData.companyName,
+            }
           }),
         });
 
         const result = await response.json();
-        if (response.ok && result.id) {
-          setLocation(`/payment-success?payment_id=${result.id}`);
+        
+        // De acordo com a documentação do CardPayment, o Brick lida com o feedback visual se resolvermos/rejeitarmos
+        if (response.ok && (result.status === 'approved' || result.id)) {
+          setLocation(`/payment-success?payment_id=${result.id || result.data?.id}`);
           resolve();
         } else {
-          toast.error(result.error || 'Erro ao processar pagamento');
-          reject();
+          const errorMsg = result.error || 'Erro ao processar pagamento';
+          toast.error(errorMsg);
+          reject(errorMsg);
         }
       } catch (error) {
         console.error('Payment error:', error);
         toast.error('Erro ao processar pagamento');
-        reject();
+        reject(error);
       }
     });
   };
 
   const onError = async (error) => {
     console.error('Card Payment Brick Error:', error);
-    toast.error('Erro no formulário de pagamento');
   };
 
   const onReady = async () => {
@@ -150,7 +156,7 @@ export default function Checkout() {
 
           <div className="lg:col-span-2">
             <Card className="bg-slate-800/50 border-slate-700/50 p-8">
-              <h2 className="text-2xl font-bold mb-8">Pagamento</h2>
+              <h2 className="text-2xl font-bold mb-8">Pagamento com Cartão</h2>
               {plan.contact ? (
                 <div className="text-center py-12">
                   <Button onClick={() => window.location.href = 'mailto:vendas@hua.com'}>Contatar Vendas</Button>
@@ -158,23 +164,39 @@ export default function Checkout() {
               ) : (
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input name="companyName" value={formData.companyName} onChange={handleChange} placeholder="Empresa" className="bg-slate-900 border-slate-700" />
-                    <Input name="email" value={formData.email} onChange={handleChange} placeholder="Email" className="bg-slate-900 border-slate-700" />
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-slate-300">Empresa</label>
+                      <Input name="companyName" value={formData.companyName} onChange={handleChange} placeholder="Nome da Empresa" className="bg-slate-900 border-slate-700" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-slate-300">Email</label>
+                      <Input name="email" value={formData.email} onChange={handleChange} placeholder="Email para cobrança" className="bg-slate-900 border-slate-700" />
+                    </div>
                   </div>
                   
-                  <CardPayment
-                    initialization={initialization}
-                    onSubmit={onSubmit}
-                    onReady={onReady}
-                    onError={onError}
-                    customization={{
-                      visual: {
-                        style: {
-                          theme: 'dark',
+                  <div className="p-4 bg-slate-900/50 rounded-lg border border-slate-700/50">
+                    <CardPayment
+                      initialization={initialization}
+                      onSubmit={onSubmit}
+                      onReady={onReady}
+                      onError={onError}
+                      customization={{
+                        visual: {
+                          style: {
+                            theme: 'dark',
+                          }
+                        },
+                        paymentMethods: {
+                          maxInstallments: 1
                         }
-                      }
-                    }}
-                  />
+                      }}
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2 justify-center text-xs text-slate-500 mt-4">
+                    <Lock className="w-3 h-3" />
+                    Sua transação é processada de forma segura pelo Mercado Pago
+                  </div>
                 </div>
               )}
             </Card>
