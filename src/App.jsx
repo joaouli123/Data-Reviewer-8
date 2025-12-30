@@ -52,7 +52,10 @@ function AppContent() {
   }
 
   // Se estiver autenticado mas a empresa não estiver ativa, força checkout
-  if (company && company.subscriptionStatus !== "active") {
+  // Exceto para a página inicial (Home) e páginas de sucesso/invite
+  const isPublicPage = ["/", "/payment-success", "/accept-invite"].includes(window.location.pathname);
+
+  if (isAuthenticated && company && company.subscriptionStatus !== "active" && !isPublicPage) {
     return (
       <Switch>
         <Route path="/checkout" component={Checkout} />
