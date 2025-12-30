@@ -263,29 +263,40 @@ export default function Checkout() {
                   <p className="text-slate-500">Selecione o método que preferir</p>
                 </div>
 
-                {/* Payment Method Selection */}
-                <div className="grid grid-cols-3 gap-4">
-                  {[
-                    { id: 'credit_card', label: 'Cartão', icon: CreditCard },
-                    { id: 'pix', label: 'PIX', icon: Wallet2 },
-                    { id: 'boleto', label: 'Boleto', icon: Barcode }
-                  ].map(({ id, label, icon: Icon }) => (
-                    <button
-                      key={id}
-                      onClick={() => setPaymentMethod(id)}
-                      className={`flex flex-col items-center gap-3 p-6 rounded-lg border-2 transition-all ${
-                        paymentMethod === id
-                          ? 'border-blue-600 bg-blue-50'
-                          : 'border-slate-200 hover:border-slate-300'
-                      }`}
-                      data-testid={`button-payment-method-${id}`}
-                    >
-                      <Icon className={`w-10 h-10 ${paymentMethod === id ? 'text-blue-600' : 'text-slate-400'}`} />
-                      <div className={`font-semibold text-base ${paymentMethod === id ? 'text-blue-600' : 'text-slate-700'}`}>
-                        {label}
-                      </div>
-                    </button>
-                  ))}
+                {/* Payment Method Selection - Tabs */}
+                <div className="space-y-3 p-6 bg-white rounded-lg border border-slate-200">
+                  <h3 className="font-semibold text-slate-900 text-sm uppercase">Meios de pagamento</h3>
+                  <div className="space-y-3">
+                    {[
+                      { id: 'credit_card', label: 'Cartão de crédito', desc: 'Sem acréscimo', icon: CreditCard },
+                      { id: 'pix', label: 'PIX', desc: 'Pagamento imediato', icon: Wallet2 },
+                      { id: 'boleto', label: 'Boleto', desc: 'Prazo de 3 dias', icon: Barcode }
+                    ].map(({ id, label, desc, icon: Icon }) => (
+                      <label
+                        key={id}
+                        className={`flex items-start gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                          paymentMethod === id
+                            ? 'border-blue-500 bg-blue-50'
+                            : 'border-slate-200 hover:border-slate-300 bg-white'
+                        }`}
+                        data-testid={`button-payment-method-${id}`}
+                      >
+                        <input
+                          type="radio"
+                          name="payment-method"
+                          value={id}
+                          checked={paymentMethod === id}
+                          onChange={() => setPaymentMethod(id)}
+                          className="w-5 h-5 mt-1 cursor-pointer"
+                        />
+                        <Icon className={`w-6 h-6 flex-shrink-0 mt-0.5 ${paymentMethod === id ? 'text-blue-600' : 'text-slate-400'}`} />
+                        <div className="flex-1">
+                          <p className={`font-medium ${paymentMethod === id ? 'text-blue-900' : 'text-slate-900'}`}>{label}</p>
+                          <p className="text-xs text-slate-500">{desc}</p>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
                 </div>
 
                 <form onSubmit={handlePayment} className="space-y-8">
