@@ -218,6 +218,7 @@ export const customers = pgTable("customers", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   companyId: varchar("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
+  cnpj: text("cnpj"),
   contact: text("contact"),
   email: text("email"),
   phone: text("phone"),
