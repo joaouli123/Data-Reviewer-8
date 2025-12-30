@@ -179,8 +179,8 @@ export default function CustomersPage() {
                     <TableRow>
                         <TableHead className="pl-6 text-left">Nome</TableHead>
                         <TableHead className="text-left">CNPJ</TableHead>
-                        <TableHead className="text-left">Contato</TableHead>
-                        <TableHead className="text-left">Desde</TableHead>
+                        <TableHead className="text-left">Email</TableHead>
+                        <TableHead className="text-left">Telefone</TableHead>
                         <TableHead className="text-right">Total em Vendas</TableHead>
                         <TableHead className="text-right pr-6">Ações</TableHead>
                     </TableRow>
@@ -201,13 +201,10 @@ export default function CustomersPage() {
                                     {c.cnpj ? <span className="font-medium text-slate-700">{c.cnpj}</span> : <span className="text-slate-400">-</span>}
                                 </TableCell>
                                 <TableCell className="text-left">
-                                    <div className="flex flex-col text-sm text-slate-500 gap-1">
-                                        {c.email && <div className="flex items-center gap-2"><Mail className="w-3 h-3" /> {c.email}</div>}
-                                        {c.phone && <div className="flex items-center gap-2"><Phone className="w-3 h-3" /> {c.phone}</div>}
-                                    </div>
+                                    {c.email ? <div className="flex items-center gap-2 text-sm text-slate-700"><Mail className="w-3 h-3" /> {c.email}</div> : <span className="text-slate-400">-</span>}
                                 </TableCell>
-                                <TableCell className="text-slate-500 text-sm text-left">
-                                    -
+                                <TableCell className="text-left">
+                                    {c.phone ? <div className="flex items-center gap-2 text-sm text-slate-700"><Phone className="w-3 h-3" /> {c.phone}</div> : <span className="text-slate-400">-</span>}
                                 </TableCell>
                                 <TableCell className="text-right">
                                     <div className="font-semibold text-emerald-600">
