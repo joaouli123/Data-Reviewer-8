@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePermission } from '@/hooks/usePermission';
 import { ProtectedFeature } from '@/components/ProtectedFeature';
 import { useQuery } from '@tanstack/react-query';
@@ -16,6 +16,7 @@ import { Transaction, Installment } from '@/api/entities';
 import { PurchaseInstallment } from '@/api/entities';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import confetti from 'canvas-confetti';
 
 export default function DashboardPage() {
   // Initialize with UTC-normalized dates for São Paulo timezone
@@ -33,6 +34,31 @@ export default function DashboardPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const { company, user } = useAuth();
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const hasCelebrated = localStorage.getItem(`celebrated_${user?.id}`);
+    if (user && !hasCelebrated) {
+      const duration = 3 * 1000;
+      const animationEnd = Date.now() + duration;
+      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+      const randomInRange = (min, max) => Math.random() * (max - min) + min;
+
+      const interval = setInterval(function() {
+        const timeLeft = animationEnd - Date.now();
+
+        if (timeLeft <= 0) {
+          return clearInterval(interval);
+        }
+
+        const particleCount = 50 * (timeLeft / duration);
+        confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+        confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+      }, 250);
+
+      localStorage.setItem(`celebrated_${user?.id}`, 'true');
+    }
+  }, [user]);
 
   const createMutation = useMutation({
     mutationFn: (data) => Transaction.create(data),
