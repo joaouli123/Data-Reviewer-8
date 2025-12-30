@@ -54,50 +54,15 @@ export default function Checkout() {
     }
   }, []);
 
-  // Inicializar Mercado Pago Bricks
+  // Pré-preencher dados do Signup
   useEffect(() => {
-    if (!selectedPlan || selectedPlan === 'enterprise') return;
-
-    const initMercadoPago = async () => {
-      try {
-        if (!window.MercadoPago) {
-          console.error('Mercado Pago SDK não carregado');
-          return;
-        }
-
-        const mpPublicKey = import.meta.env.VITE_MERCADOPAGO_PUBLIC_KEY;
-        if (!mpPublicKey) {
-          toast.warning('Chave pública do Mercado Pago não configurada');
-          return;
-        }
-
-        window.MercadoPago.setPublishableKey(mpPublicKey);
-
-        if (bricksRef.current) {
-          const bricks = window.MercadoPago.Bricks();
-          
-          await bricks.create('wallet', {
-            initialization: {
-              preferenceId: '<PREFERENCE_ID>',
-            },
-            onReady: () => {
-              console.log('Bricks wallet pronto');
-            },
-            onError: (error) => {
-              console.error('Erro ao inicializar Bricks:', error);
-              toast.error('Erro ao carregar método de pagamento');
-            },
-          });
-
-          setBricksInstance(bricks);
-        }
-      } catch (error) {
-        console.error('Erro ao inicializar Mercado Pago:', error);
-      }
-    };
-
-    initMercadoPago();
-  }, [selectedPlan]);
+    const params = new URLSearchParams(window.location.search);
+    const email = params.get('email');
+    const company = params.get('company');
+    
+    if (email) setFormData(prev => ({ ...prev, email }));
+    if (company) setFormData(prev => ({ ...prev, companyName: company }));
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -125,39 +90,37 @@ export default function Checkout() {
 
     setLoading(true);
     try {
-      // Submeter pagamento via Bricks
-      if (bricksInstance) {
-        await bricksInstance.submit();
+      // Enviar para backend para processar com SDK do Mercado Pago
+      const response = await fetch('/api/payment/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          plan: selectedPlan,
+          amount: PLANS[selectedPlan].price,
+          companyName: formData.companyName,
+          email: formData.email,
+          phone: formData.phone,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro ao processar pagamento');
+      }
+
+      const data = await response.json();
+      
+      if (data.preferenceUrl) {
+        // Redirecionar para Mercado Pago
+        toast.success('Redirecionando para Mercado Pago...');
+        window.location.href = data.preferenceUrl;
       } else {
-        // Fallback: Enviar para backend para processar com SDK do Mercado Pago
-        const response = await fetch('/api/payment/checkout', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            plan: selectedPlan,
-            amount: PLANS[selectedPlan].price,
-            companyName: formData.companyName,
-            email: formData.email,
-            phone: formData.phone,
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Erro ao processar pagamento');
-        }
-
-        const data = await response.json();
-        
-        if (data.preferenceUrl) {
-          window.location.href = data.preferenceUrl;
-        } else if (data.success) {
-          toast.success('Pagamento processado! Redirecionando...');
-          setTimeout(() => setLocation('/dashboard'), 2000);
-        }
+        toast.error('Erro ao processar pagamento');
       }
     } catch (error) {
+      console.error('Payment error:', error);
       toast.error(error.message || 'Erro ao processar pagamento');
     } finally {
       setLoading(false);
@@ -320,22 +283,22 @@ export default function Checkout() {
                     </div>
                   </div>
 
-                  {/* Dados do Cartão - Mercado Pago Bricks */}
+                  {/* Informação de Pagamento */}
                   <div>
-                    <h3 className="text-lg font-semibold mb-4">Cartão de Crédito</h3>
-                    <div 
-                      ref={bricksRef}
-                      id="wallet_container" 
-                      className="mb-4 min-h-32"
-                    >
-                      {/* Mercado Pago Bricks será carregado aqui */}
-                      <div className="bg-slate-900/50 border border-slate-700 rounded-lg p-4 text-center text-slate-400">
-                        Carregando métodos de pagamento do Mercado Pago...
-                      </div>
+                    <h3 className="text-lg font-semibold mb-4">Método de Pagamento</h3>
+                    <div className="bg-blue-900/20 border border-blue-700/50 rounded-lg p-4 mb-4">
+                      <p className="text-sm text-blue-300 mb-2">
+                        Ao clicar em "Pagar", você será redirecionado para o Mercado Pago onde poderá:
+                      </p>
+                      <ul className="text-sm text-blue-300 space-y-1 list-disc list-inside">
+                        <li>Pagar com cartão de crédito/débito</li>
+                        <li>Usar Pix ou transferência bancária</li>
+                        <li>Parcelar em até 12x</li>
+                      </ul>
                     </div>
 
-                    <p className="text-xs text-slate-500 mt-4">
-                      Seu cartão será processado de forma segura pelo Mercado Pago
+                    <p className="text-xs text-slate-500">
+                      Sua transação será processada de forma 100% segura pelo Mercado Pago. Não armazenamos dados de cartão.
                     </p>
                   </div>
 

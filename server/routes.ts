@@ -2586,7 +2586,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         },
         auto_return: "approved",
         back_urls: {
-          success: `${process.env.REPLIT_DOMAINS || 'http://localhost:5000'}/dashboard`,
+          success: `${process.env.REPLIT_DOMAINS || 'http://localhost:5000'}/payment-success`,
           failure: `${process.env.REPLIT_DOMAINS || 'http://localhost:5000'}/checkout?plan=${plan}`,
           pending: `${process.env.REPLIT_DOMAINS || 'http://localhost:5000'}/checkout?plan=${plan}`
         },
