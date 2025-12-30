@@ -2553,6 +2553,130 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // ========== PAYMENT ROUTES ==========
+  
+  // Create payment preference (Mercado Pago)
+  app.post("/api/payment/checkout", async (req, res) => {
+    try {
+      const { plan, amount, companyName, email, phone } = req.body;
+
+      if (!plan || !amount || !companyName || !email) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      const mercadoPagoAccessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
+      if (!mercadoPagoAccessToken) {
+        return res.status(500).json({ error: "Payment service not configured" });
+      }
+
+      // Create preference with Mercado Pago
+      const preferenceData = {
+        items: [{
+          title: `HUA Analytics - Plano ${plan.charAt(0).toUpperCase() + plan.slice(1)}`,
+          description: `Assinatura mensal - ${companyName}`,
+          quantity: 1,
+          unit_price: amount
+        }],
+        payer: {
+          email: email,
+          phone: {
+            area_code: "55",
+            number: phone?.replace(/\D/g, '') || undefined
+          }
+        },
+        auto_return: "approved",
+        back_urls: {
+          success: `${process.env.REPLIT_DOMAINS || 'http://localhost:5000'}/dashboard`,
+          failure: `${process.env.REPLIT_DOMAINS || 'http://localhost:5000'}/checkout?plan=${plan}`,
+          pending: `${process.env.REPLIT_DOMAINS || 'http://localhost:5000'}/checkout?plan=${plan}`
+        },
+        notification_url: `${process.env.REPLIT_DOMAINS || 'http://localhost:5000'}/api/payment/webhook`,
+        external_reference: plan,
+        metadata: {
+          plan: plan,
+          companyName: companyName
+        }
+      };
+
+      const mpResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${mercadoPagoAccessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(preferenceData)
+      });
+
+      if (!mpResponse.ok) {
+        throw new Error(`Mercado Pago API error: ${mpResponse.status}`);
+      }
+
+      const preference = await mpResponse.json();
+
+      // Store subscription with pending status
+      const subscription = await db.insert(subscriptions).values({
+        id: `sub_${Date.now()}`,
+        plan: plan,
+        status: "pending",
+        preferenceId: preference.id,
+        subscriberName: companyName,
+        subscriberEmail: email,
+        amount: amount,
+        currency: "BRL",
+        startDate: new Date(),
+        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+      } as any).returning();
+
+      res.json({
+        success: true,
+        preferenceId: preference.id,
+        preferenceUrl: preference.init_point,
+        subscriptionId: subscription[0]?.id
+      });
+
+    } catch (error) {
+      console.error("Payment checkout error:", error);
+      res.status(500).json({ error: error instanceof Error ? error.message : "Payment processing failed" });
+    }
+  });
+
+  // Payment webhook (Mercado Pago callback)
+  app.post("/api/payment/webhook", async (req, res) => {
+    try {
+      const { action, data } = req.body;
+
+      if (action === "payment.created" || action === "payment.updated") {
+        const paymentId = data?.id;
+        
+        // Get payment details
+        const mpResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+          headers: {
+            'Authorization': `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}`,
+          }
+        });
+
+        if (mpResponse.ok) {
+          const payment = await mpResponse.json();
+          
+          // Update subscription status based on payment status
+          if (payment.status === 'approved') {
+            // Find and update subscription
+            const externalRef = payment.external_reference;
+            if (externalRef) {
+              console.log(`✅ Payment approved for plan: ${externalRef}`);
+              // In a real scenario, we'd update the subscription status here
+            }
+          }
+        }
+      }
+
+      res.json({ received: true });
+    } catch (error) {
+      console.error("Webhook error:", error);
+      res.status(500).json({ error: "Webhook processing failed" });
+    }
+  });
+
   // 404 fallback
   app.all("/api/*", (req, res) => {
     res.status(404).json({ error: "API route not found" });

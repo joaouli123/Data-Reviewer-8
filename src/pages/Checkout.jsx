@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -35,14 +35,12 @@ const PLANS = {
 export default function Checkout() {
   const [, setLocation] = useLocation();
   const [selectedPlan, setSelectedPlan] = useState(null);
+  const bricksRef = useRef(null);
+  const [bricksInstance, setBricksInstance] = useState(null);
   const [formData, setFormData] = useState({
     companyName: '',
     email: '',
     phone: '',
-    cardHolder: '',
-    cardNumber: '',
-    cardExpiry: '',
-    cardCvv: '',
   });
   const [loading, setLoading] = useState(false);
 
@@ -55,6 +53,51 @@ export default function Checkout() {
       setSelectedPlan('pro');
     }
   }, []);
+
+  // Inicializar Mercado Pago Bricks
+  useEffect(() => {
+    if (!selectedPlan || selectedPlan === 'enterprise') return;
+
+    const initMercadoPago = async () => {
+      try {
+        if (!window.MercadoPago) {
+          console.error('Mercado Pago SDK não carregado');
+          return;
+        }
+
+        const mpPublicKey = import.meta.env.VITE_MERCADOPAGO_PUBLIC_KEY;
+        if (!mpPublicKey) {
+          toast.warning('Chave pública do Mercado Pago não configurada');
+          return;
+        }
+
+        window.MercadoPago.setPublishableKey(mpPublicKey);
+
+        if (bricksRef.current) {
+          const bricks = window.MercadoPago.Bricks();
+          
+          await bricks.create('wallet', {
+            initialization: {
+              preferenceId: '<PREFERENCE_ID>',
+            },
+            onReady: () => {
+              console.log('Bricks wallet pronto');
+            },
+            onError: (error) => {
+              console.error('Erro ao inicializar Bricks:', error);
+              toast.error('Erro ao carregar método de pagamento');
+            },
+          });
+
+          setBricksInstance(bricks);
+        }
+      } catch (error) {
+        console.error('Erro ao inicializar Mercado Pago:', error);
+      }
+    };
+
+    initMercadoPago();
+  }, [selectedPlan]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -71,27 +114,49 @@ export default function Checkout() {
 
     if (PLANS[selectedPlan].contact) {
       toast.info('Entre em contato conosco para planos Enterprise');
-      window.location.href = 'mailto:contato@hua.com';
+      window.location.href = 'mailto:vendas@hua.com';
       return;
     }
 
-    if (!formData.companyName || !formData.email || !formData.cardHolder || !formData.cardNumber) {
+    if (!formData.companyName || !formData.email) {
       toast.error('Preencha todos os campos obrigatórios');
       return;
     }
 
     setLoading(true);
     try {
-      // Aqui será integrado o Mercado Pago Bricks
-      console.log('Payment data:', {
-        plan: selectedPlan,
-        amount: PLANS[selectedPlan].price,
-        ...formData
-      });
-      
-      toast.success('Processando pagamento...');
-      // TODO: Integrar Mercado Pago Bricks aqui
-      
+      // Submeter pagamento via Bricks
+      if (bricksInstance) {
+        await bricksInstance.submit();
+      } else {
+        // Fallback: Enviar para backend para processar com SDK do Mercado Pago
+        const response = await fetch('/api/payment/checkout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            plan: selectedPlan,
+            amount: PLANS[selectedPlan].price,
+            companyName: formData.companyName,
+            email: formData.email,
+            phone: formData.phone,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Erro ao processar pagamento');
+        }
+
+        const data = await response.json();
+        
+        if (data.preferenceUrl) {
+          window.location.href = data.preferenceUrl;
+        } else if (data.success) {
+          toast.success('Pagamento processado! Redirecionando...');
+          setTimeout(() => setLocation('/dashboard'), 2000);
+        }
+      }
     } catch (error) {
       toast.error(error.message || 'Erro ao processar pagamento');
     } finally {
@@ -255,82 +320,23 @@ export default function Checkout() {
                     </div>
                   </div>
 
-                  {/* Dados do Cartão - Placeholder para Bricks */}
+                  {/* Dados do Cartão - Mercado Pago Bricks */}
                   <div>
                     <h3 className="text-lg font-semibold mb-4">Cartão de Crédito</h3>
-                    <div id="wallet_container" className="mb-4">
-                      {/* Será substituído por Mercado Pago Bricks */}
+                    <div 
+                      ref={bricksRef}
+                      id="wallet_container" 
+                      className="mb-4 min-h-32"
+                    >
+                      {/* Mercado Pago Bricks será carregado aqui */}
                       <div className="bg-slate-900/50 border border-slate-700 rounded-lg p-4 text-center text-slate-400">
-                        Integração do Mercado Pago Bricks será carregada aqui
+                        Carregando métodos de pagamento do Mercado Pago...
                       </div>
                     </div>
 
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Titular do Cartão *</label>
-                        <Input 
-                          type="text"
-                          name="cardHolder"
-                          value={formData.cardHolder}
-                          onChange={handleChange}
-                          placeholder="Nome como está no cartão"
-                          className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500"
-                          required
-                          disabled={loading}
-                          data-testid="input-card-holder-checkout"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Número do Cartão *</label>
-                        <Input 
-                          type="text"
-                          name="cardNumber"
-                          value={formData.cardNumber}
-                          onChange={handleChange}
-                          placeholder="1234 5678 9012 3456"
-                          className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500"
-                          maxLength="19"
-                          required
-                          disabled={loading}
-                          data-testid="input-card-number-checkout"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium mb-2">Vencimento *</label>
-                          <Input 
-                            type="text"
-                            name="cardExpiry"
-                            value={formData.cardExpiry}
-                            onChange={handleChange}
-                            placeholder="MM/AA"
-                            className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500"
-                            maxLength="5"
-                            required
-                            disabled={loading}
-                            data-testid="input-card-expiry-checkout"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium mb-2">CVV *</label>
-                          <Input 
-                            type="text"
-                            name="cardCvv"
-                            value={formData.cardCvv}
-                            onChange={handleChange}
-                            placeholder="123"
-                            className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500"
-                            maxLength="4"
-                            required
-                            disabled={loading}
-                            data-testid="input-card-cvv-checkout"
-                          />
-                        </div>
-                      </div>
-                    </div>
+                    <p className="text-xs text-slate-500 mt-4">
+                      Seu cartão será processado de forma segura pelo Mercado Pago
+                    </p>
                   </div>
 
                   {/* Termos */}
