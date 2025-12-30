@@ -287,6 +287,50 @@ export default function ProfilePage() {
       .slice(0, 2) || 'US';
   };
 
+  const [passwords, setPasswords] = useState({
+    current: '',
+    new: '',
+    confirm: ''
+  });
+
+  const updatePasswordMutation = useMutation({
+    mutationFn: async (data) => {
+      const token = JSON.parse(localStorage.getItem('auth') || '{}').token;
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Falha ao redefinir senha');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success('Senha atualizada com sucesso!');
+      setPasswords({ current: '', new: '', confirm: '' });
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    }
+  });
+
+  const handlePasswordReset = (e) => {
+    e.preventDefault();
+    if (passwords.new !== passwords.confirm) {
+      toast.error('As senhas não coincidem');
+      return;
+    }
+    updatePasswordMutation.mutate({
+      currentPassword: passwords.current,
+      newPassword: passwords.new
+    });
+  };
+
   const ProfileTab = () => (
     <div className="space-y-6">
       <Card>
@@ -378,6 +422,31 @@ export default function ProfilePage() {
       </Card>
 
       <Card>
+        <CardHeader><CardTitle className="flex items-center gap-2"><Lock className="w-5 h-5" /> Redefinir Senha</CardTitle></CardHeader>
+        <CardContent>
+          <form onSubmit={handlePasswordReset} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="current">Senha Atual</Label>
+                <Input id="current" type="password" value={passwords.current} onChange={e => setPasswords({...passwords, current: e.target.value})} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new">Nova Senha</Label>
+                <Input id="new" type="password" value={passwords.new} onChange={e => setPasswords({...passwords, new: e.target.value})} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirm">Confirmar Senha</Label>
+                <Input id="confirm" type="password" value={passwords.confirm} onChange={e => setPasswords({...passwords, confirm: e.target.value})} />
+              </div>
+            </div>
+            <Button type="submit" variant="outline" className="w-full" disabled={updatePasswordMutation.isPending}>
+              {updatePasswordMutation.isPending ? 'Atualizando...' : 'Atualizar Senha'}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card>
         <CardHeader><CardTitle className="flex items-center gap-2"><Mail className="w-5 h-5" /> Conta</CardTitle></CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="p-3 bg-muted/50 rounded-lg border">
@@ -387,6 +456,20 @@ export default function ProfilePage() {
           <div className="p-3 bg-muted/50 rounded-lg border">
             <Label className="text-xs text-muted-foreground block mb-1">Cargo</Label>
             <Badge variant="outline" className="capitalize">{formData.role === 'admin' ? 'Admin' : 'Operacional'}</Badge>
+          </div>
+          <div className="p-3 bg-muted/50 rounded-lg border">
+            <Label className="text-xs text-muted-foreground block mb-1">CNPJ/CPF</Label>
+            <p className="text-sm font-medium">{company?.document || 'Não definido'}</p>
+          </div>
+          <div className="p-3 bg-muted/50 rounded-lg border flex items-center justify-between gap-2">
+            <div>
+              <Label className="text-xs text-muted-foreground block mb-1">ID da Empresa</Label>
+              <p className="text-xs font-mono truncate">{company?.id}</p>
+            </div>
+            <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => {
+              navigator.clipboard.writeText(company?.id);
+              toast.success('ID copiado!');
+            }}>Copiar</Button>
           </div>
         </CardContent>
       </Card>
