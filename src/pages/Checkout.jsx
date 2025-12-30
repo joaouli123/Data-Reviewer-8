@@ -75,14 +75,7 @@ export default function Checkout() {
         const response = await fetch('/api/payment/process', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            ...cardFormData,
-            metadata: {
-              plan: selectedPlan,
-              companyName: formData.companyName,
-              email: formData.email
-            }
-          }),
+          body: JSON.stringify(cardFormData), // Sending the exact body structure expected by the backend and MP SDK
         });
 
         const result = await response.json();
@@ -119,7 +112,7 @@ export default function Checkout() {
       <header className="border-b border-slate-200 bg-white sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center font-bold text-white">H</div>
+            <div className="w-8 h-8 bg-[#2563eb] rounded-md flex items-center justify-center font-bold text-white">H</div>
             <h1 className="text-xl font-bold tracking-tight text-slate-900">HUA Analytics</h1>
           </div>
           <Button variant="ghost" onClick={() => setLocation('/')} className="hover:bg-slate-100 text-slate-600">
@@ -131,20 +124,20 @@ export default function Checkout() {
       <div className="max-w-7xl mx-auto px-4 py-12">
         <button 
           onClick={() => setLocation('/')} 
-          className="flex items-center gap-2 text-slate-500 hover:text-primary mb-8 transition-colors group"
+          className="flex items-center gap-2 text-slate-500 hover:text-[#2563eb] mb-8 transition-colors group"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> 
           <span>Voltar para Planos</span>
         </button>
 
         <div className="grid lg:grid-cols-3 gap-8 items-start">
-          {/* Resumo do Pedido */}
+          {/* Order Summary */}
           <div className="lg:col-span-1">
             <Card className="bg-white border-slate-200 p-6 sticky top-24 shadow-sm rounded-xl">
               <h2 className="text-xl font-bold mb-6 text-slate-900 border-b pb-4">Resumo do Pedido</h2>
               
-              <div className="bg-primary/5 rounded-xl p-6 mb-6 border border-primary/10">
-                <p className="text-primary text-xs font-bold uppercase tracking-wider mb-2">Plano Selecionado</p>
+              <div className="bg-[#2563eb]/5 rounded-xl p-6 mb-6 border border-[#2563eb]/10">
+                <p className="text-[#2563eb] text-xs font-bold uppercase tracking-wider mb-2">Plano Selecionado</p>
                 <h3 className="text-2xl font-bold mb-1 text-slate-900">{plan.name}</h3>
                 <p className="text-slate-500 text-sm mb-4">{plan.description}</p>
                 
@@ -157,7 +150,7 @@ export default function Checkout() {
                 <Button 
                   variant="outline" 
                   onClick={() => setLocation('/#pricing')} 
-                  className="w-full mt-6 border-primary/30 text-primary hover:bg-primary hover:text-white transition-all rounded-lg"
+                  className="w-full mt-6 border-[#2563eb]/30 text-[#2563eb] hover:bg-[#2563eb] hover:text-white transition-all rounded-lg"
                 >
                   Alterar Plano
                 </Button>
@@ -169,7 +162,7 @@ export default function Checkout() {
                   {plan.features.map((f, i) => (
                     <div key={i} className="flex items-start gap-3 text-sm text-slate-600">
                       <div className="mt-1 bg-blue-50 p-0.5 rounded-full">
-                        <Check className="w-3 h-3 text-primary" />
+                        <Check className="w-3 h-3 text-[#2563eb]" />
                       </div>
                       <span>{f}</span>
                     </div>
@@ -200,7 +193,7 @@ export default function Checkout() {
                   </p>
                   <Button 
                     onClick={() => window.location.href = 'mailto:vendas@hua.com'}
-                    className="bg-primary hover:bg-primary/90 text-white font-bold h-12 px-8 rounded-lg"
+                    className="bg-[#2563eb] hover:bg-[#2563eb]/90 text-white font-bold h-12 px-8 rounded-lg"
                   >
                     Falar com Especialista
                   </Button>
@@ -210,14 +203,9 @@ export default function Checkout() {
                   <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200 shadow-inner">
                     <div className="mb-6 flex items-center justify-between">
                       <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                        <span className="w-1.5 h-6 bg-primary rounded-full"></span>
+                        <span className="w-1.5 h-6 bg-[#2563eb] rounded-full"></span>
                         Dados do Cartão
                       </h3>
-                      <div className="flex gap-2">
-                        <div className="w-8 h-5 bg-slate-200 rounded-sm"></div>
-                        <div className="w-8 h-5 bg-slate-200 rounded-sm"></div>
-                        <div className="w-8 h-5 bg-slate-200 rounded-sm"></div>
-                      </div>
                     </div>
                     
                     <CardPayment
@@ -253,7 +241,7 @@ export default function Checkout() {
 
                   <div className="text-center">
                     <p className="text-xs text-slate-400 max-w-md mx-auto">
-                      Ao finalizar, você aceita nossos <a href="#" className="underline text-primary hover:text-primary/80">Termos</a> e <a href="#" className="underline text-primary hover:text-primary/80">Privacidade</a>.
+                      Ao finalizar, você aceita nossos <a href="#" className="underline text-[#2563eb] hover:text-[#2563eb]/80">Termos</a> e <a href="#" className="underline text-[#2563eb] hover:text-[#2563eb]/80">Privacidade</a>.
                     </p>
                   </div>
                 </div>
