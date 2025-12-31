@@ -1631,7 +1631,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         }
 
         // Return the full user object to ensure frontend has what it needs
-        const fullUser = await storage.getUser(result.id);
+        const fullUser = await storage.getUser(targetCompanyId, result.id);
 
         return res.status(201).json({
           ...(fullUser || result),

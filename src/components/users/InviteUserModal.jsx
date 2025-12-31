@@ -147,8 +147,8 @@ export default function InviteUserModal({ open, onOpenChange, onInvite }) {
             </Card>
 
             <Card 
-              className="p-6 cursor-pointer hover-elevate transition-all flex flex-col items-center text-center gap-4"
-              onClick={() => setStep('methods')}
+              className="p-6 cursor-pointer hover-elevate transition-all flex flex-col items-center text-center gap-4 opacity-50 cursor-not-allowed"
+              onClick={() => toast.info('Funcionalidade em desenvolvimento')}
               data-testid="card-copy-link"
             >
               <div className="p-3 bg-blue-100 rounded-lg">
