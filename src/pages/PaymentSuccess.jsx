@@ -27,8 +27,13 @@ export default function PaymentSuccess() {
     if (id) {
       setPaymentId(id);
       
+      // Se for uma aprovação simulada, não precisamos do StatusScreen que consulta a API do MP
+      if (id.startsWith('simulated_')) {
+        setLoading(false);
+      }
+      
       // Trigger confetti if payment is approved and not already celebrated
-      if (status === 'approved' && user) {
+      if ((status === 'approved' || id.startsWith('simulated_')) && user) {
         const hasCelebrated = localStorage.getItem(`celebrated_${user.id}`);
         if (!hasCelebrated) {
           const duration = 3 * 1000;
@@ -78,24 +83,42 @@ export default function PaymentSuccess() {
           )}
 
           {paymentId ? (
-            <StatusScreen
-              initialization={initialization}
-              onReady={onReady}
-              onError={onError}
-              customization={{
-                visual: {
-                  hideStatusDetails: false,
-                  hideTransactionDate: false,
-                  style: {
-                    theme: 'default',
+            paymentId.startsWith('simulated_') ? (
+              <div className="text-center py-12">
+                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Check className="w-10 h-10 text-green-600" />
+                </div>
+                <h2 className="text-3xl font-bold mb-4 text-slate-900">Pagamento Confirmado!</h2>
+                <p className="text-slate-600 mb-8 text-lg">
+                  Sua assinatura foi ativada com sucesso. Você já pode aproveitar todos os recursos do sistema.
+                </p>
+                <Button 
+                  onClick={() => window.location.href = '/'} 
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold h-12 rounded-lg text-lg"
+                >
+                  Ir para o Painel
+                </Button>
+              </div>
+            ) : (
+              <StatusScreen
+                initialization={initialization}
+                onReady={onReady}
+                onError={onError}
+                customization={{
+                  visual: {
+                    hideStatusDetails: false,
+                    hideTransactionDate: false,
+                    style: {
+                      theme: 'default',
+                    }
+                  },
+                  backUrls: {
+                    'error': window.location.origin + '/checkout',
+                    'return': window.location.origin + '/'
                   }
-                },
-                backUrls: {
-                  'error': window.location.origin + '/checkout',
-                  'return': window.location.origin + '/'
-                }
-              }}
-            />
+                }}
+              />
+            )
           ) : !loading && (
             <div className="text-center py-12">
               <h2 className="text-xl font-bold mb-4 text-red-600">ID de Pagamento não encontrado</h2>
