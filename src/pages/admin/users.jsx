@@ -110,6 +110,9 @@ function UserListContent() {
     mutationFn: (id) => apiRequest(`/api/admin/users/${id}`, { method: 'DELETE' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
+      queryClient.removeQueries({ queryKey: ['/api/admin/users'] });
+      queryClient.removeQueries({ queryKey: ['/api/users'] });
       toast({ title: 'Sucesso', description: 'Usuário deletado' });
       setDeleteConfirm(null);
     },
