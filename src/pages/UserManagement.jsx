@@ -122,13 +122,27 @@ export default function UserManagement() {
       await apiRequest("DELETE", `/api/users/${userId}`);
     },
     onSuccess: () => {
+      console.log("[DEBUG] User deletion SUCCESS. Invalidating queries...");
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      
+      // Forçar limpeza e refetch imediato
+      queryClient.removeQueries({ queryKey: ["/api/users"] });
+      setTimeout(() => {
+        queryClient.refetchQueries({ queryKey: ["/api/users"] });
+      }, 500);
+
       setUserToDelete(null);
       toast({ title: "Sucesso", description: "Usuário removido com sucesso!" });
     },
     onError: (error) => {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
+      console.error("[DEBUG] User deletion ERROR:", error);
+      toast({ 
+        title: "Erro ao excluir", 
+        description: error.message || "Não foi possível remover o usuário. Verifique os logs do servidor.", 
+        variant: "destructive" 
+      });
+      setUserToDelete(null);
     },
   });
 
