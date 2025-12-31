@@ -58,9 +58,9 @@ export default function UserManagement() {
   const [userToDelete, setUserToDelete] = useState(null);
 
   const { data: usersData, isLoading, error } = useQuery({
-    queryKey: ["/api/admin/users"],
+    queryKey: ["/api/users"],
     queryFn: async () => {
-      const response = await fetch("/api/admin/users", {
+      const response = await fetch("/api/users", {
         headers: {
           Authorization: `Bearer ${JSON.parse(localStorage.getItem('auth') || '{}').token}`
         }
@@ -73,7 +73,8 @@ export default function UserManagement() {
     },
     refetchOnMount: true,
     refetchOnWindowFocus: true,
-    staleTime: 0
+    staleTime: 0,
+    gcTime: 0
   });
 
   if (error) {
@@ -90,6 +91,7 @@ export default function UserManagement() {
       });
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       setIsInviteOpen(false);
       toast({ title: "Sucesso", description: "Usuário criado com sucesso!" });
@@ -105,6 +107,7 @@ export default function UserManagement() {
       await apiRequest("DELETE", `/api/users/${userId}`);
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       setUserToDelete(null);
       toast({ title: "Sucesso", description: "Usuário removido com sucesso!" });
@@ -119,6 +122,7 @@ export default function UserManagement() {
       return apiRequest("PATCH", `/api/users/${userId}/permissions`, { permissions });
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       setIsPermissionsOpen(false);
       toast({ title: "Sucesso", description: "Permissões atualizadas com sucesso!" });
