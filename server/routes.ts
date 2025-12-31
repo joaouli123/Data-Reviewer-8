@@ -1539,7 +1539,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       }
 
       const username = email.toLowerCase().trim();
-      const user = await createUser(companyId, username, username, password, name.trim(), role);
+      const user = await createUser(companyId, username, email.toLowerCase().trim(), password, name.trim(), role);
+
+      console.log(`[DEBUG] User created successfully:`, { id: user.id, username: user.username, companyId: user.companyId });
 
       if (role !== "admin") {
         let permsToSave = permissions;
