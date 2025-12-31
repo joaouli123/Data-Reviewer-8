@@ -119,7 +119,13 @@ export default function Checkout() {
     if (name === 'cardNumber') {
       processedValue = value.replace(/\s/g, '').replace(/(\d{4})/g, '$1 ').trim();
     } else if (name === 'expiryMonth') {
-      processedValue = value.replace(/\D/g, '').slice(0, 2);
+      // Remove non-digits
+      const digits = value.replace(/\D/g, '');
+      if (digits.length <= 2) {
+        processedValue = digits;
+      } else {
+        processedValue = `${digits.slice(0, 2)}/${digits.slice(2, 4)}`;
+      }
     } else if (name === 'expiryYear') {
       processedValue = value.replace(/\D/g, '').slice(0, 4);
     } else if (name === 'cvv') {
@@ -350,9 +356,9 @@ export default function Checkout() {
                                   name="expiryMonth"
                                   value={cardData.expiryMonth}
                                   onChange={handleCardInputChange}
-                                  placeholder="mm/yy"
+                                  placeholder="MM/AA"
                                   maxLength="5"
-                                  className={`w-full px-4 py-3 text-sm rounded border ${cardErrors.expiry ? 'border-red-500 bg-red-50' : 'border-slate-300'} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
+                                  className={`w-full px-4 py-3 text-sm rounded border ${cardErrors.expiry ? 'border-red-500 bg-red-50' : 'border-slate-300'} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all font-mono`}
                                   data-testid="input-expiry"
                                 />
                               </div>
