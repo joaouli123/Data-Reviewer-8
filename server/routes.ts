@@ -1616,23 +1616,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         // Add permissions if provided or defaults
         let permsToSave = permissions;
         if (role !== "admin") {
-          const defaultPerms = DEFAULT_PERMISSIONS[role as keyof typeof DEFAULT_PERMISSIONS] || {};
-          permsToSave = { ...defaultPerms, ...permissions };
-          
-          console.log(`[DEBUG] Setting permissions for user ${newUser.id}:`, permsToSave);
-          await storage.updateUserPermissions(targetCompanyId, newUser.id, permsToSave);
-        }
-
-        return res.status(201).json({
-          ...newUser,
-          message: "Usuário criado com sucesso"
-        });
-      }
-
-        // Add permissions if provided or defaults
-        let permsToSave = permissions;
-        if (role !== "admin") {
-          const defaultPerms = DEFAULT_PERMISSIONS[role as keyof typeof DEFAULT_PERMISSIONS] || {};
+          const roleKey = role as keyof typeof DEFAULT_PERMISSIONS;
+          const defaultPerms = DEFAULT_PERMISSIONS[roleKey] || {};
           permsToSave = { ...defaultPerms, ...permissions };
           
           console.log(`[DEBUG] Setting permissions for user ${newUser.id}:`, permsToSave);
