@@ -1511,12 +1511,15 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // ========== INVITATIONS ==========
   app.post("/api/invitations", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       const { email, role = "operational", permissions = {}, name, password, companyId: bodyCompanyId } = req.body;
       
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const companyId = bodyCompanyId || req.user.companyId;
+
+      console.log(`[DEBUG] Creating user via invitations:`, { email, role, companyId });
 
       // Validate required fields
       if (!email?.trim()) {
@@ -1527,9 +1530,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       }
       if (!password?.trim()) {
         return res.status(400).json({ error: "Password is required" });
-      }
-      if (!companyId?.trim()) {
-        return res.status(400).json({ error: "Company ID is required" });
       }
 
       // Validate email format
@@ -1549,16 +1549,30 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       }
 
       // Create user immediately
-      const user = await createUser(companyId.trim(), email.toLowerCase().trim(), email.toLowerCase().trim(), password, name.trim(), role);
+      // Using email as username to ensure uniqueness/simplicity
+      const username = email.toLowerCase().trim();
+      const user = await createUser(companyId, username, username, password, name.trim(), role);
 
       // Add permissions if provided
       if (role !== "admin" && Object.keys(permissions).length > 0) {
-        await storage.updateUserPermissions(companyId.trim(), user.id, permissions);
+        await storage.updateUserPermissions(companyId, user.id, permissions);
+      } else if (role === "operational") {
+        // Default permissions for operational
+        const defaultPerms = {
+          view_transactions: true,
+          create_transactions: true,
+          import_bank: true,
+          view_customers: true,
+          manage_customers: true,
+          view_suppliers: true,
+          manage_suppliers: true,
+          price_calc: true,
+        };
+        await storage.updateUserPermissions(companyId, user.id, defaultPerms);
       }
 
-      res.json({ 
-        invitationId: user.id, 
-        token: null,
+      res.status(201).json({ 
+        id: user.id, 
         message: "User created successfully",
         user: {
           id: user.id,
@@ -1569,7 +1583,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       });
     } catch (error: any) {
       console.error("Error creating invitation:", error);
-      res.status(500).json({ error: error.message || "Failed to create invitation" });
+      res.status(500).json({ error: error.message || "Failed to create user" });
     }
   });
 

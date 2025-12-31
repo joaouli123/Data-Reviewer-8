@@ -64,11 +64,12 @@ export default function UserManagement() {
 
   const inviteMutation = useMutation({
     mutationFn: async (data) => {
+      console.log("Sending invite data:", data);
       const res = await apiRequest("POST", "/api/invitations", {
         ...data,
         companyId: currentUser.companyId,
       });
-      return res.json();
+      return res;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
