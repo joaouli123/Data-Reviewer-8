@@ -2702,8 +2702,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const testCredentials = [
       { 
         username: 'superadmin', 
-        password: 'senha123456', 
-        email: 'superadmin@admin.com', 
+        password: 'superadmin', 
+        email: 'superadmin@superadmin.com', 
         role: 'admin',
         name: 'Super Admin',
         isSuperAdmin: true
@@ -2802,8 +2802,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         users: [
           { 
             username: 'superadmin', 
-            password: 'senha123456', 
-            email: 'superadmin@admin.com', 
+            password: 'superadmin', 
+            email: 'superadmin@superadmin.com', 
             role: 'admin',
             name: 'Super Admin'
           },
