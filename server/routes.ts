@@ -1662,6 +1662,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         return res.status(400).json({ error: "Você não pode excluir sua própria conta" });
       }
 
+      // First check if user has sessions and delete them
+      await db.delete(sessions).where(eq(sessions.userId, req.params.userId));
+
+      // First check if user has invitations and delete them
+      await db.delete(invitations).where(eq(invitations.createdBy, req.params.userId));
+      await db.delete(invitations).where(eq(invitations.acceptedBy, req.params.userId));
+
       await storage.deleteUser(req.user.companyId, req.params.userId);
       res.json({ message: "User deleted" });
     } catch (error) {
