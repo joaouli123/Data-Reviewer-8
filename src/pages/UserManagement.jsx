@@ -87,11 +87,9 @@ export default function UserManagement() {
         companyId: currentUser.companyId,
       });
     },
-    onSuccess: (data) => {
-      console.log("[DEBUG] Invitation mutation SUCCESS. Data returned:", data);
+    onSuccess: () => {
+      console.log("[DEBUG] Invitation mutation SUCCESS.");
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
-
       setIsInviteOpen(false);
       toast({ title: "Sucesso", description: "Usuário criado com sucesso!" });
     },
