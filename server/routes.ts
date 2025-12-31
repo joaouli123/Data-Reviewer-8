@@ -1657,20 +1657,38 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         return res.status(403).json({ error: "Você não tem permissão para excluir usuários" });
       }
 
+      console.log(`[DEBUG] DELETE /api/users/${req.params.userId} - Request by user: ${req.user?.id} from company: ${req.user?.companyId}`);
+
       // Prevent admin from deleting themselves
       if (req.params.userId === req.user?.id) {
+        console.log(`[DEBUG] DELETE /api/users - Blocked: self-deletion attempt`);
         return res.status(400).json({ error: "Você não pode excluir sua própria conta" });
       }
 
-      // First check if user has sessions and delete them
-      await db.delete(sessions).where(eq(sessions.userId, req.params.userId));
+      // Delete all related data that could block user deletion
+      console.log(`[DEBUG] DELETE /api/users - Deleting dependencies for user: ${req.params.userId}`);
+      
+      try {
+        // Delete sessions
+        const deletedSessions = await db.delete(sessions).where(eq(sessions.userId, req.params.userId)).returning();
+        console.log(`[DEBUG] DELETE /api/users - Deleted ${deletedSessions.length} sessions`);
 
-      // First check if user has invitations and delete them
-      await db.delete(invitations).where(eq(invitations.createdBy, req.params.userId));
-      await db.delete(invitations).where(eq(invitations.acceptedBy, req.params.userId));
+        // Delete audit logs (optional but safe to clear)
+        const deletedLogs = await db.delete(auditLogs).where(eq(auditLogs.userId, req.params.userId)).returning();
+        console.log(`[DEBUG] DELETE /api/users - Deleted ${deletedLogs.length} audit logs`);
 
-      await storage.deleteUser(req.user!.companyId, req.params.userId);
-      res.json({ message: "User deleted" });
+        // Delete invitations
+        const deletedInvitationsCreated = await db.delete(invitations).where(eq(invitations.createdBy, req.params.userId)).returning();
+        const deletedInvitationsAccepted = await db.delete(invitations).where(eq(invitations.acceptedBy, req.params.userId)).returning();
+        console.log(`[DEBUG] DELETE /api/users - Deleted ${deletedInvitationsCreated.length + deletedInvitationsAccepted.length} invitations`);
+        
+        await storage.deleteUser(req.user!.companyId, req.params.userId);
+        console.log(`[DEBUG] DELETE /api/users - User deleted successfully from storage`);
+        res.json({ message: "User deleted" });
+      } catch (dbError: any) {
+        console.error(`[ERROR] DELETE /api/users - Database error:`, dbError);
+        res.status(500).json({ error: `Erro no banco de dados: ${dbError.message}` });
+      }
     } catch (error) {
       console.error("Delete user error:", error);
       res.status(500).json({ error: "Failed to delete user" });
