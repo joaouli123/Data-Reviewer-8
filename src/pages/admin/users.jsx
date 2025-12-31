@@ -69,6 +69,9 @@ function UserListContent() {
   const { data: usersData, isLoading } = useQuery({
     queryKey: ['/api/admin/users'],
     queryFn: () => apiRequest('/api/admin/users'),
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnWindowFocus: true
   });
 
   const users = usersData || [];
