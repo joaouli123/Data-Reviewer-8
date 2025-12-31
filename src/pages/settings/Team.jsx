@@ -64,26 +64,29 @@ export default function TeamPage() {
     enabled: !!company?.id,
   });
 
-  // Create direct user
   const createUserMutation = useMutation({
     mutationFn: async (data) => {
       const token = JSON.parse(localStorage.getItem('auth') || '{}').token;
-      const res = await fetch('/api/auth/create-user', {
+      console.log("[DEBUG] TeamPage - Creating user:", data.email);
+      const res = await fetch('/api/users', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          username: data.email.split('@')[0],
           email: data.email,
           password: data.password,
           name: data.name,
-          role: data.isAdmin ? 'admin' : 'operational',
+          role: data.role,
           permissions: data.role === 'admin' ? {} : permissions,
         }),
       });
-      if (!res.ok) throw new Error('Failed to create user');
+      if (!res.ok) {
+        const error = await res.json();
+        console.error("[DEBUG] Create user error:", error);
+        throw new Error(error.error || 'Failed to create user');
+      }
       return res.json();
     },
     onSuccess: () => {

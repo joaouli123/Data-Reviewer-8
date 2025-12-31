@@ -1452,8 +1452,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       console.log(`[DEBUG] GET /api/users - Fetching users for companyId: ${currentCompanyId}`);
       
       // Query users for this company
-      const usersList = await db.select().from(users).where(eq(users.companyId, currentCompanyId));
-      console.log(`[DEBUG] Found ${usersList.length} users in DB for company ${currentCompanyId}`);
+      const usersList = await db.select().from(users).where(eq(users.companyId, currentCompanyId)).orderBy(desc(users.createdAt));
+      console.log(`[DEBUG] GET /api/users - Found ${usersList.length} users:`, usersList.map(u => ({ email: u.email, id: u.id })));
       
       const formattedUsers = usersList.map(u => {
         let perms: any = {};
@@ -1520,15 +1520,15 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         return res.status(400).json({ error: "A senha deve ter no mínimo 6 caracteres" });
       }
 
-      // Check if user already exists by email
-      const existingUser = await findUserByEmail(email.toLowerCase().trim());
+      // Check if user already exists by email (case-insensitive)
+      const normalizedEmail = email.toLowerCase().trim();
+      const existingUser = await findUserByEmail(normalizedEmail);
       if (existingUser) {
         return res.status(400).json({ error: "Este email já está cadastrado" });
       }
 
       // Create user
-      const username = email.toLowerCase().trim();
-      const user = await createUser(companyId, username, email.toLowerCase().trim(), password, name.trim(), role);
+      const user = await createUser(companyId, normalizedEmail, normalizedEmail, password, name.trim(), role);
 
       console.log(`[DEBUG] User created: ${user.id} for company: ${companyId}`);
 
