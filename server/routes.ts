@@ -1372,8 +1372,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const currentCompanyId = req.user.companyId;
-      console.log(`[DEBUG] Fetching users for companyId: ${currentCompanyId}`);
+      console.log(`[DEBUG] GET /api/users - Fetching users for companyId: ${currentCompanyId}`);
       
+      // Query users for this company
       const usersList = await db.select().from(users).where(eq(users.companyId, currentCompanyId));
       console.log(`[DEBUG] Found ${usersList.length} users in DB for company ${currentCompanyId}`);
       
@@ -1387,9 +1388,19 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           console.error("Error parsing permissions for user", u.id, e);
         }
 
-        // Se for admin, garante todas as permissões
         if (u.role === 'admin') {
           Object.values(PERMISSIONS).forEach(p => perms[p] = true);
+        } else if (u.role === 'operational' && (!perms || Object.keys(perms).length === 0)) {
+          perms = {
+            [PERMISSIONS.VIEW_TRANSACTIONS]: true,
+            [PERMISSIONS.CREATE_TRANSACTIONS]: true,
+            [PERMISSIONS.IMPORT_BANK]: true,
+            [PERMISSIONS.VIEW_CUSTOMERS]: true,
+            [PERMISSIONS.MANAGE_CUSTOMERS]: true,
+            [PERMISSIONS.VIEW_SUPPLIERS]: true,
+            [PERMISSIONS.MANAGE_SUPPLIERS]: true,
+            [PERMISSIONS.PRICE_CALC]: true,
+          };
         }
 
         return {
@@ -1398,7 +1409,15 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         };
       });
       
-      console.log(`[DEBUG] Returning ${formattedUsers.length} users to frontend`);
+      // Ensure the current user is ALWAYS in the list
+      if (!formattedUsers.some(u => u.id === req.user.id)) {
+        console.log(`[DEBUG] Adding current user ${req.user.id} to response manually`);
+        formattedUsers.unshift({
+          ...req.user,
+          permissions: req.user.permissions || {}
+        });
+      }
+
       return res.json(formattedUsers);
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -1407,142 +1426,115 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   // Create user directly (POST /api/users)
-  app.post("/api/users", authMiddleware, requireRole(["admin"]), async (req: AuthenticatedRequest, res) => {
+  app.post("/api/users", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+
+      // O admin SEMPRE tem permissão. Outros papéis precisam da permissão granular.
+      const isAdmin = req.user.role === "admin";
+      const userPermissions = req.user.permissions || {};
+      const canManageUsers = !!userPermissions[PERMISSIONS.MANAGE_USERS];
+
+      if (!isAdmin && !canManageUsers) {
+        return res.status(403).json({ error: "Você não tem permissão para gerenciar usuários" });
+      }
       
       const { name, email, password, role = "operational", permissions = {} } = req.body;
+      const companyId = req.user.companyId;
+
+      console.log(`[DEBUG] POST /api/users - Creating user: ${email} for company: ${companyId}`);
       
       if (!name?.trim() || !email?.trim() || !password?.trim()) {
-        return res.status(400).json({ error: "Missing required fields" });
-      }
-
-      if (password.length < 6) {
-        return res.status(400).json({ error: "Password must be at least 6 characters" });
-      }
-
-      if (name.length < 3) {
-        return res.status(400).json({ error: "Name must be at least 3 characters" });
-      }
-
-      // Check if user already exists by email
-      const existingUser = await findUserByEmail(email.trim());
-      if (existingUser) {
-        return res.status(400).json({ error: "Email already exists" });
-      }
-
-      // Create user in the admin's company
-      const user = await createUser(req.user.companyId, email.split("@")[0], email.trim(), password, name.trim(), role);
-
-      // Add permissions if provided
-      if (role !== "admin" && Object.keys(permissions).length > 0) {
-        await storage.updateUserPermissions(req.user.companyId, user.id, permissions);
-      }
-
-      res.status(201).json({
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        status: user.status,
-        permissions: permissions
-      });
-    } catch (error) {
-      console.error("Error creating user:", error);
-      res.status(500).json({ error: "Failed to create user" });
-    }
-  });
-
-  // Create user directly (for admin to add users)
-  app.post("/api/auth/create-user", authMiddleware, requireRole(["admin"]), async (req: AuthenticatedRequest, res) => {
-    try {
-      const { username, email, password, name, role = "operational", permissions = {} } = req.body;
-      
-      if (!username?.trim() || !email?.trim() || !password?.trim()) {
-        return res.status(400).json({ error: "Missing required fields" });
-      }
-
-      if (password.length < 6) {
-        return res.status(400).json({ error: "Password must be at least 6 characters" });
-      }
-
-      if (username.length < 3) {
-        return res.status(400).json({ error: "Username must be at least 3 characters" });
-      }
-
-      // Check if user already exists
-      const existingUser = await findUserByUsername(username);
-      if (existingUser) {
-        return res.status(400).json({ error: "Username already exists" });
-      }
-
-      // Create user in same company
-      const user = await createUser(req.user.companyId, username.trim(), email.trim(), password, name?.trim() || username, role);
-
-      // Add permissions if provided
-      if (role !== "admin" && Object.keys(permissions).length > 0) {
-        await storage.updateUserPermissions(req.user.companyId, user.id, permissions);
-      }
-
-      res.status(201).json({
-        user: {
-          id: user.id,
-          username: user.username,
-          email: user.email,
-          role: user.role,
-          permissions: permissions
-        }
-      });
-    } catch (error) {
-      res.status(500).json({ error: "Failed to create user" });
-    }
-  });
-
-  // ========== INVITATIONS ==========
-  app.post("/api/invitations", authMiddleware, async (req: AuthenticatedRequest, res) => {
-    try {
-      const { email, role = "operational", permissions = {}, name, password, companyId: bodyCompanyId } = req.body;
-      
-      if (!req.user) return res.status(401).json({ error: "Não autorizado" });
-      const companyId = bodyCompanyId || req.user.companyId;
-
-      console.log(`[DEBUG] Creating user: ${email} for company: ${companyId}`);
-
-      if (!email?.trim() || !name?.trim() || !password?.trim()) {
         return res.status(400).json({ error: "Email, Nome e Senha são obrigatórios" });
-      }
-
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        return res.status(400).json({ error: "Formato de e-mail inválido" });
       }
 
       if (password.length < 6) {
         return res.status(400).json({ error: "A senha deve ter no mínimo 6 caracteres" });
       }
 
+      // Check if user already exists by email
       const existingUser = await findUserByEmail(email.toLowerCase().trim());
       if (existingUser) {
-        return res.status(400).json({ error: "Este email já está cadastrado no sistema" });
+        return res.status(400).json({ error: "Este email já está cadastrado" });
+      }
+
+      // Create user
+      const username = email.toLowerCase().trim();
+      const user = await createUser(companyId, username, email.toLowerCase().trim(), password, name.trim(), role);
+
+      console.log(`[DEBUG] User created: ${user.id}`);
+
+      // Add permissions if provided or defaults
+      let permsToSave = permissions;
+      if (role !== "admin") {
+        if (Object.keys(permsToSave).length === 0 && role === "operational") {
+          permsToSave = {
+            [PERMISSIONS.VIEW_TRANSACTIONS]: true,
+            [PERMISSIONS.CREATE_TRANSACTIONS]: true,
+            [PERMISSIONS.IMPORT_BANK]: true,
+            [PERMISSIONS.VIEW_CUSTOMERS]: true,
+            [PERMISSIONS.MANAGE_CUSTOMERS]: true,
+            [PERMISSIONS.VIEW_SUPPLIERS]: true,
+            [PERMISSIONS.MANAGE_SUPPLIERS]: true,
+            [PERMISSIONS.PRICE_CALC]: true,
+          };
+        }
+        await storage.updateUserPermissions(companyId, user.id, permsToSave);
+      }
+
+      return res.status(201).json({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        message: "Usuário criado com sucesso"
+      });
+    } catch (error) {
+      console.error("Error creating user:", error);
+      res.status(500).json({ error: "Falha ao criar usuário" });
+    }
+  });
+
+  // ========== INVITATIONS ==========
+  app.post("/api/invitations", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+
+      const isAdmin = req.user.role === "admin";
+      const userPermissions = req.user.permissions || {};
+      const canManageUsers = !!userPermissions[PERMISSIONS.MANAGE_USERS];
+
+      if (!isAdmin && !canManageUsers) {
+        return res.status(403).json({ error: "Você não tem permissão para gerenciar usuários" });
+      }
+
+      const { email, role = "operational", permissions = {}, name, password } = req.body;
+      const companyId = req.user.companyId;
+
+      if (!email?.trim() || !name?.trim() || !password?.trim()) {
+        return res.status(400).json({ error: "Email, Nome e Senha são obrigatórios" });
+      }
+
+      const existingUser = await findUserByEmail(email.toLowerCase().trim());
+      if (existingUser) {
+        return res.status(400).json({ error: "Este email já está cadastrado" });
       }
 
       const username = email.toLowerCase().trim();
       const user = await createUser(companyId, username, email.toLowerCase().trim(), password, name.trim(), role);
 
-      console.log(`[DEBUG] User created successfully:`, { id: user.id, username: user.username, companyId: user.companyId });
-
+      let permsToSave = permissions;
       if (role !== "admin") {
-        let permsToSave = permissions;
         if (Object.keys(permsToSave).length === 0 && role === "operational") {
           permsToSave = {
-            view_transactions: true,
-            create_transactions: true,
-            import_bank: true,
-            view_customers: true,
-            manage_customers: true,
-            view_suppliers: true,
-            manage_suppliers: true,
-            price_calc: true,
+            [PERMISSIONS.VIEW_TRANSACTIONS]: true,
+            [PERMISSIONS.CREATE_TRANSACTIONS]: true,
+            [PERMISSIONS.IMPORT_BANK]: true,
+            [PERMISSIONS.VIEW_CUSTOMERS]: true,
+            [PERMISSIONS.MANAGE_CUSTOMERS]: true,
+            [PERMISSIONS.VIEW_SUPPLIERS]: true,
+            [PERMISSIONS.MANAGE_SUPPLIERS]: true,
+            [PERMISSIONS.PRICE_CALC]: true,
           };
         }
         await storage.updateUserPermissions(companyId, user.id, permsToSave);
@@ -1551,16 +1543,11 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       return res.status(201).json({ 
         id: user.id, 
         message: "Usuário criado com sucesso",
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role
-        }
+        user: { id: user.id, email: user.email, name: user.name, role: user.role }
       });
-    } catch (error: any) {
-      console.error("Error creating user:", error);
-      return res.status(500).json({ error: "Falha ao criar usuário no servidor" });
+    } catch (error) {
+      console.error("Error in POST /api/invitations:", error);
+      res.status(500).json({ error: "Falha ao criar convite/usuário" });
     }
   });
 
@@ -1590,13 +1577,24 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.patch("/api/users/:userId/permissions", authMiddleware, requireRole(["admin"]), async (req: AuthenticatedRequest, res) => {
+  app.patch("/api/users/:userId/permissions", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+
+      const isAdmin = req.user.role === "admin";
+      const userPermissions = req.user.permissions || {};
+      const canManageUsers = !!userPermissions[PERMISSIONS.MANAGE_USERS];
+
+      if (!isAdmin && !canManageUsers) {
+        return res.status(403).json({ error: "Você não tem permissão para gerenciar usuários" });
+      }
+
       const { permissions } = req.body;
       const permsObj = typeof permissions === 'string' ? JSON.parse(permissions) : permissions;
       const updated = await storage.updateUserPermissions(req.user.companyId, req.params.userId, permsObj);
       res.json({ message: "Permissions updated", user: updated });
     } catch (error) {
+      console.error("Update permissions error:", error);
       res.status(500).json({ error: "Failed to update permissions" });
     }
   });
