@@ -59,6 +59,7 @@ export default function UserManagement() {
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["/api/users"],
+    queryFn: () => apiRequest("GET", "/api/users"),
   });
 
   const inviteMutation = useMutation({
