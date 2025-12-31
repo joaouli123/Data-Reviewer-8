@@ -1368,50 +1368,54 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   // ========== USER MANAGEMENT ==========
-  app.get("/api/users", authMiddleware, requireRole(["admin", "manager"]), async (req: AuthenticatedRequest, res) => {
+  app.get("/api/users", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const currentCompanyId = req.user.companyId;
       console.log(`[DEBUG] Fetching users for companyId: ${currentCompanyId}`);
       
       const usersList = await storage.getUsers(currentCompanyId);
-      console.log(`[DEBUG] Found ${usersList.length} users`);
+      console.log(`[DEBUG] Found ${usersList.length} users for company ${currentCompanyId}`);
       
-      // Garantir isolamento multi-tenant extra e converter permissões
-      const formattedUsers = usersList
-        .filter(u => u.companyId === currentCompanyId)
-        .map(u => {
-          let perms: any = {};
-          try {
-            perms = u.permissions ? (typeof u.permissions === 'string' ? JSON.parse(u.permissions) : u.permissions) : {};
-          } catch (e) {
-            console.error("Error parsing permissions for user", u.id, e);
-          }
+      const formattedUsers = usersList.map(u => {
+        let perms: any = {};
+        try {
+          perms = u.permissions ? (typeof u.permissions === 'string' ? JSON.parse(u.permissions) : u.permissions) : {};
+        } catch (e) {
+          console.error("Error parsing permissions for user", u.id, e);
+        }
 
-          // Se for admin, garante todas as permissões
-          if (u.role === 'admin') {
-            Object.values(PERMISSIONS).forEach(p => perms[p] = true);
-          } else if (u.role === 'operational' && Object.keys(perms).length === 0) {
-            // Padrão para operacional se não tiver nada salvo
-            perms = {
-              [PERMISSIONS.VIEW_TRANSACTIONS]: true,
-              [PERMISSIONS.CREATE_TRANSACTIONS]: true,
-              [PERMISSIONS.IMPORT_BANK]: true,
-              [PERMISSIONS.VIEW_CUSTOMERS]: true,
-              [PERMISSIONS.MANAGE_CUSTOMERS]: true,
-              [PERMISSIONS.VIEW_SUPPLIERS]: true,
-              [PERMISSIONS.MANAGE_SUPPLIERS]: true,
-              [PERMISSIONS.PRICE_CALC]: true,
-            };
-          }
-
-          return {
-            ...u,
-            permissions: perms
+        if (u.role === 'admin') {
+          Object.values(PERMISSIONS).forEach(p => perms[p] = true);
+        } else if (u.role === 'operational' && Object.keys(perms).length === 0) {
+          perms = {
+            [PERMISSIONS.VIEW_TRANSACTIONS]: true,
+            [PERMISSIONS.CREATE_TRANSACTIONS]: true,
+            [PERMISSIONS.IMPORT_BANK]: true,
+            [PERMISSIONS.VIEW_CUSTOMERS]: true,
+            [PERMISSIONS.MANAGE_CUSTOMERS]: true,
+            [PERMISSIONS.VIEW_SUPPLIERS]: true,
+            [PERMISSIONS.MANAGE_SUPPLIERS]: true,
+            [PERMISSIONS.PRICE_CALC]: true,
           };
-        });
+        }
+
+        return {
+          ...u,
+          permissions: perms
+        };
+      });
       
-      res.json(formattedUsers);
+      // Sempre garantir que o usuário logado veja a si mesmo se a lista for filtrada ou estiver vazia
+      if (!formattedUsers.some(u => u.id === req.user.id)) {
+        console.log(`[DEBUG] Adding current user ${req.user.id} to response`);
+        formattedUsers.unshift({
+          ...req.user,
+          permissions: req.user.permissions || {}
+        });
+      }
+
+      return res.json(formattedUsers);
     } catch (error) {
       console.error("Error fetching users:", error);
       res.status(500).json({ error: "Failed to fetch users" });
