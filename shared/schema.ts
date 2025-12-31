@@ -174,7 +174,7 @@ export const invitations = pgTable("invitations", {
   permissions: text("permissions").default(sql`'{}'::jsonb`),
   expiresAt: timestamp("expires_at").notNull(),
   acceptedAt: timestamp("accepted_at"),
-  acceptedBy: varchar("accepted_by").references(() => users.id, { onDelete: "set null" }),
+  acceptedBy: varchar("accepted_by").references(() => users.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").notNull().default(sql`now()`),
   createdBy: varchar("created_by").notNull().references(() => users.id, { onDelete: "cascade" }),
 });

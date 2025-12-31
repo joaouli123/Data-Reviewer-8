@@ -1665,35 +1665,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         return res.status(400).json({ error: "Você não pode excluir sua própria conta" });
       }
 
-      // Delete all related data that could block user deletion
-      console.log(`[DEBUG] DELETE /api/users - Deleting dependencies for user: ${req.params.userId}`);
-      
       try {
-        // Delete related data first
-        await db.delete(sessions).where(eq(sessions.userId, req.params.userId));
-        await db.delete(auditLogs).where(eq(auditLogs.userId, req.params.userId));
-        await db.delete(invitations).where(eq(invitations.createdBy, req.params.userId));
-        await db.delete(invitations).where(eq(invitations.acceptedBy, req.params.userId));
-
-        // Set references to NULL instead of deleting (since we want to keep financial history)
-        // Check for sales, purchases, transactions linked to this user (if any)
-        // Tables: transactions, sales, purchases, installments, purchase_installments
-        // Currently, these tables link to companies, customers, and suppliers, not specifically to users
-        // BUT, some might have a 'createdBy' or similar field. Let's check schema.
-
         await storage.deleteUser(req.user!.companyId, req.params.userId);
-        
-        console.log(`[DEBUG] DELETE /api/users - User ${req.params.userId} deleted successfully`);
+        console.log(`[DEBUG] DELETE /api/users - User deleted successfully from storage`);
         res.json({ message: "User deleted" });
       } catch (dbError: any) {
         console.error(`[ERROR] DELETE /api/users - Database error:`, dbError);
-        // If it's a constraint error, it's likely linked to something else
-        if (dbError.code === '23503') {
-          return res.status(400).json({ 
-            error: "Este usuário não pode ser excluído pois possui registros vinculados (vendas, compras ou logs) que dependem dele." 
-          });
-        }
-        res.status(500).json({ error: `Erro ao remover: ${dbError.message}` });
+        res.status(500).json({ error: `Erro no banco de dados: ${dbError.message}` });
       }
     } catch (error) {
       console.error("Delete user error:", error);
