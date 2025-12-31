@@ -1670,24 +1670,26 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       
       try {
         // Delete sessions
-        const deletedSessions = await db.delete(sessions).where(eq(sessions.userId, req.params.userId)).returning();
-        console.log(`[DEBUG] DELETE /api/users - Deleted ${deletedSessions.length} sessions`);
+        await db.delete(sessions).where(eq(sessions.userId, req.params.userId));
 
-        // Delete audit logs (optional but safe to clear)
-        const deletedLogs = await db.delete(auditLogs).where(eq(auditLogs.userId, req.params.userId)).returning();
-        console.log(`[DEBUG] DELETE /api/users - Deleted ${deletedLogs.length} audit logs`);
+        // Delete audit logs
+        await db.delete(auditLogs).where(eq(auditLogs.userId, req.params.userId));
 
         // Delete invitations
-        const deletedInvitationsCreated = await db.delete(invitations).where(eq(invitations.createdBy, req.params.userId)).returning();
-        const deletedInvitationsAccepted = await db.delete(invitations).where(eq(invitations.acceptedBy, req.params.userId)).returning();
-        console.log(`[DEBUG] DELETE /api/users - Deleted ${deletedInvitationsCreated.length + deletedInvitationsAccepted.length} invitations`);
+        await db.delete(invitations).where(eq(invitations.createdBy, req.params.userId));
+        await db.delete(invitations).where(eq(invitations.acceptedBy, req.params.userId));
+
+        // Handle bank statement items created by/linked to user if any
+        // Note: Currently no user field in bankStatementItems, but good to check others
         
+        // Remove user from storage
         await storage.deleteUser(req.user!.companyId, req.params.userId);
-        console.log(`[DEBUG] DELETE /api/users - User deleted successfully from storage`);
+        
+        console.log(`[DEBUG] DELETE /api/users - User ${req.params.userId} deleted successfully`);
         res.json({ message: "User deleted" });
       } catch (dbError: any) {
         console.error(`[ERROR] DELETE /api/users - Database error:`, dbError);
-        res.status(500).json({ error: `Erro no banco de dados: ${dbError.message}` });
+        res.status(500).json({ error: `Erro ao remover dependências: ${dbError.message}` });
       }
     } catch (error) {
       console.error("Delete user error:", error);
