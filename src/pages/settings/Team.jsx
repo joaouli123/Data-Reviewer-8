@@ -66,7 +66,6 @@ export default function TeamPage() {
   const createUserMutation = useMutation({
     mutationFn: async (data) => {
       const token = JSON.parse(localStorage.getItem('auth') || '{}').token;
-      console.log("[DEBUG] TeamPage - Creating user:", data.email);
       const res = await fetch('/api/users', {
         method: 'POST',
         headers: {
@@ -83,7 +82,6 @@ export default function TeamPage() {
       });
       if (!res.ok) {
         const error = await res.json();
-        console.error("[DEBUG] Create user error:", error);
         throw new Error(error.error || 'Failed to create user');
       }
       return res.json();

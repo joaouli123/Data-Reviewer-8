@@ -1458,7 +1458,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
       // Query users for this company
       const usersList = await db.select().from(users).where(eq(users.companyId, currentCompanyId)).orderBy(desc(users.createdAt));
-      console.log(`[DEBUG] GET /api/users - Found ${usersList.length} users for company ${currentCompanyId}:`, usersList.map(u => ({ email: u.email, id: u.id, companyId: u.companyId })));
       
       const formattedUsers = usersList.map(u => {
         let perms: any = {};
@@ -1534,8 +1533,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
       // Create user
       const user = await createUser(companyId, normalizedEmail, normalizedEmail, password, name.trim(), role);
-
-      console.log(`[DEBUG] User created: ${user.id} for company: ${companyId} (Normalized Email: ${normalizedEmail})`);
 
       // Se for super admin criando usuário, ele pode estar criando em outra empresa
       // O findUserByEmail já deve ter validado unicidade global do email/username
