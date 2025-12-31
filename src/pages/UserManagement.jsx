@@ -64,19 +64,18 @@ export default function UserManagement() {
 
   const inviteMutation = useMutation({
     mutationFn: async (data) => {
-      console.log("Sending invite data:", data);
-      const res = await apiRequest("POST", "/api/invitations", {
+      return apiRequest("POST", "/api/invitations", {
         ...data,
         companyId: currentUser.companyId,
       });
-      return res;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       setIsInviteOpen(false);
-      toast({ title: "Sucesso", description: "Usuário convidado com sucesso!" });
+      toast({ title: "Sucesso", description: "Usuário criado com sucesso!" });
     },
     onError: (error) => {
+      console.error("Mutation error:", error);
       toast({ title: "Erro", description: error.message, variant: "destructive" });
     },
   });

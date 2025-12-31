@@ -1516,64 +1516,51 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     try {
       const { email, role = "operational", permissions = {}, name, password, companyId: bodyCompanyId } = req.body;
       
-      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      if (!req.user) return res.status(401).json({ error: "Não autorizado" });
       const companyId = bodyCompanyId || req.user.companyId;
 
-      console.log(`[DEBUG] Creating user via invitations:`, { email, role, companyId });
+      console.log(`[DEBUG] Creating user: ${email} for company: ${companyId}`);
 
-      // Validate required fields
-      if (!email?.trim()) {
-        return res.status(400).json({ error: "Email is required" });
-      }
-      if (!name?.trim()) {
-        return res.status(400).json({ error: "Name is required" });
-      }
-      if (!password?.trim()) {
-        return res.status(400).json({ error: "Password is required" });
+      if (!email?.trim() || !name?.trim() || !password?.trim()) {
+        return res.status(400).json({ error: "Email, Nome e Senha são obrigatórios" });
       }
 
-      // Validate email format
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        return res.status(400).json({ error: "Invalid email format" });
+        return res.status(400).json({ error: "Formato de e-mail inválido" });
       }
 
-      // Validate password length
       if (password.length < 6) {
-        return res.status(400).json({ error: "Password must be at least 6 characters" });
+        return res.status(400).json({ error: "A senha deve ter no mínimo 6 caracteres" });
       }
 
-      // Check if user already exists
       const existingUser = await findUserByEmail(email.toLowerCase().trim());
       if (existingUser) {
         return res.status(400).json({ error: "Este email já está cadastrado no sistema" });
       }
 
-      // Create user immediately
-      // Using email as username to ensure uniqueness/simplicity
       const username = email.toLowerCase().trim();
       const user = await createUser(companyId, username, username, password, name.trim(), role);
 
-      // Add permissions if provided
-      if (role !== "admin" && Object.keys(permissions).length > 0) {
-        await storage.updateUserPermissions(companyId, user.id, permissions);
-      } else if (role === "operational") {
-        // Default permissions for operational
-        const defaultPerms = {
-          view_transactions: true,
-          create_transactions: true,
-          import_bank: true,
-          view_customers: true,
-          manage_customers: true,
-          view_suppliers: true,
-          manage_suppliers: true,
-          price_calc: true,
-        };
-        await storage.updateUserPermissions(companyId, user.id, defaultPerms);
+      if (role !== "admin") {
+        let permsToSave = permissions;
+        if (Object.keys(permsToSave).length === 0 && role === "operational") {
+          permsToSave = {
+            view_transactions: true,
+            create_transactions: true,
+            import_bank: true,
+            view_customers: true,
+            manage_customers: true,
+            view_suppliers: true,
+            manage_suppliers: true,
+            price_calc: true,
+          };
+        }
+        await storage.updateUserPermissions(companyId, user.id, permsToSave);
       }
 
-      res.status(201).json({ 
+      return res.status(201).json({ 
         id: user.id, 
-        message: "User created successfully",
+        message: "Usuário criado com sucesso",
         user: {
           id: user.id,
           email: user.email,
@@ -1582,8 +1569,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         }
       });
     } catch (error: any) {
-      console.error("Error creating invitation:", error);
-      res.status(500).json({ error: error.message || "Failed to create user" });
+      console.error("Error creating user:", error);
+      return res.status(500).json({ error: "Falha ao criar usuário no servidor" });
     }
   });
 
