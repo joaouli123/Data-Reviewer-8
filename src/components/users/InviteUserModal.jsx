@@ -50,14 +50,14 @@ export default function InviteUserModal({ open, onOpenChange, onInvite }) {
         companyId: company?.id
       });
       
-      // The result from onInvite is the mutation result
+      // onInvite já retorna a resposta do json() via apiRequest
       toast.success('Usuário criado com sucesso!');
       setTimeout(() => {
         resetModal();
       }, 500);
     } catch (error) {
       console.error("Error creating user:", error);
-      toast.error('Erro ao criar usuário');
+      toast.error(error.message || 'Erro ao criar usuário');
     } finally {
       setLoading(false);
     }

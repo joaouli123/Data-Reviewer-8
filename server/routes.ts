@@ -1511,10 +1511,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.post("/api/invitations", async (req: any, res) => {
+  app.post("/api/invitations", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
-      const { email, role = "operational", permissions = {}, name, password, companyId } = req.body;
+      const { email, role = "operational", permissions = {}, name, password, companyId: bodyCompanyId } = req.body;
       
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      const companyId = bodyCompanyId || req.user.companyId;
+
       // Validate required fields
       if (!email?.trim()) {
         return res.status(400).json({ error: "Email is required" });
@@ -1539,8 +1542,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         return res.status(400).json({ error: "Password must be at least 6 characters" });
       }
 
+      // Check if user already exists
+      const existingUser = await findUserByEmail(email.toLowerCase().trim());
+      if (existingUser) {
+        return res.status(400).json({ error: "Este email já está cadastrado no sistema" });
+      }
+
       // Create user immediately
-      const user = await createUser(companyId.trim(), email.split("@")[0], email.toLowerCase().trim(), password, name.trim(), role);
+      const user = await createUser(companyId.trim(), email.toLowerCase().trim(), email.toLowerCase().trim(), password, name.trim(), role);
 
       // Add permissions if provided
       if (role !== "admin" && Object.keys(permissions).length > 0) {
