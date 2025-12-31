@@ -1367,14 +1367,19 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  // ========== USER MANAGEMENT ==========
   app.get("/api/admin/users", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       
+      const isAdmin = req.user.role === "admin";
+      const isSuperAdmin = !!req.user.isSuperAdmin;
+      const userPermissions = req.user.permissions || {};
+      const canManageUsers = isAdmin || !!userPermissions["MANAGE_USERS"];
+      
+      console.log(`[DEBUG] GET /api/admin/users - User: ${req.user.username}, Role: ${req.user.role}, isSuperAdmin: ${isSuperAdmin}, Company: ${req.user.companyId}`);
+
       let usersList;
-      if (req.user.isSuperAdmin) {
-        // Super Admin vê todos de todas as empresas
+      if (isSuperAdmin) {
         usersList = await db.select({
           id: users.id,
           username: users.username,
@@ -1386,12 +1391,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           createdAt: users.createdAt,
           companyId: users.companyId,
           companyName: companies.name,
+          permissions: users.permissions,
         })
         .from(users)
         .leftJoin(companies, eq(users.companyId, companies.id))
         .orderBy(desc(users.createdAt));
-      } else if (req.user.role === 'admin') {
-        // Admin vê apenas os da sua empresa
+      } else if (canManageUsers) {
         usersList = await db.select({
           id: users.id,
           username: users.username,
@@ -1403,6 +1408,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           createdAt: users.createdAt,
           companyId: users.companyId,
           companyName: companies.name,
+          permissions: users.permissions,
         })
         .from(users)
         .leftJoin(companies, eq(users.companyId, companies.id))
@@ -1412,10 +1418,30 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         return res.status(403).json({ error: "Acesso negado" });
       }
 
-      return res.json(usersList);
+      const formattedUsers = usersList.map(u => {
+        let perms: any = {};
+        try {
+          if (u.permissions) {
+            perms = typeof u.permissions === 'string' ? JSON.parse(u.permissions) : u.permissions;
+          }
+        } catch (e) {
+          console.error("Error parsing permissions", e);
+        }
+
+        if (u.role === 'admin') {
+          const ALL_PERMS = ["VIEW_TRANSACTIONS", "CREATE_TRANSACTIONS", "EDIT_TRANSACTIONS", "DELETE_TRANSACTIONS", "IMPORT_BANK", "VIEW_REPORTS", "VIEW_PROFIT", "EXPORT_REPORTS", "VIEW_CUSTOMERS", "MANAGE_CUSTOMERS", "VIEW_SUPPLIERS", "MANAGE_SUPPLIERS", "PRICE_CALC", "MANAGE_USERS", "INVITE_USERS", "VIEW_SETTINGS", "MANAGE_SETTINGS"];
+          ALL_PERMS.forEach(p => perms[p] = true);
+        } else if (u.role === 'operational' && (!perms || Object.keys(perms).length === 0)) {
+          perms = { "VIEW_TRANSACTIONS": true, "CREATE_TRANSACTIONS": true, "IMPORT_BANK": true, "VIEW_CUSTOMERS": true, "MANAGE_CUSTOMERS": true, "VIEW_SUPPLIERS": true, "MANAGE_SUPPLIERS": true, "PRICE_CALC": true };
+        }
+
+        return { ...u, permissions: perms };
+      });
+
+      return res.json(formattedUsers);
     } catch (error) {
-      console.error("Error fetching admin users:", error);
-      res.status(500).json({ error: "Failed to fetch users" });
+      console.error("Error fetching users:", error);
+      res.status(500).json({ error: "Falha ao buscar usuários" });
     }
   });
 
@@ -2313,28 +2339,43 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         return res.status(403).json({ error: "Forbidden" });
       }
 
-      const users_list = await db.select().from(users).orderBy(desc(users.createdAt));
-      
-      const enriched = await Promise.all(
-        users_list.map(async (u) => {
-          const company = await storage.getCompany(u.companyId || '');
-          return {
-            id: u.id,
-            username: u.username,
-            name: u.name,
-            email: u.email,
-            phone: u.phone,
-            role: u.role,
-            status: u.status,
-            companyId: u.companyId,
-            companyName: company?.name || 'N/A',
-            createdAt: u.createdAt,
-            isSuperAdmin: u.isSuperAdmin,
-          };
+      if (isSuperAdmin) {
+        // Super admin vê tudo
+        usersList = await db.select({
+          id: users.id,
+          username: users.username,
+          email: users.email,
+          name: users.name,
+          phone: users.phone,
+          role: users.role,
+          status: users.status,
+          createdAt: users.createdAt,
+          companyId: users.companyId,
+          companyName: companies.name,
+          isSuperAdmin: users.isSuperAdmin,
         })
-      );
-
-      res.json(enriched);
+        .from(users)
+        .leftJoin(companies, eq(users.companyId, companies.id))
+        .orderBy(desc(users.createdAt));
+      } else {
+        // Admin ou usuário com permissão vê apenas da empresa dele
+        usersList = await db.select({
+          id: users.id,
+          username: users.username,
+          email: users.email,
+          name: users.name,
+          phone: users.phone,
+          role: users.role,
+          status: users.status,
+          createdAt: users.createdAt,
+          companyId: users.companyId,
+          companyName: companies.name,
+        })
+        .from(users)
+        .leftJoin(companies, eq(users.companyId, companies.id))
+        .where(eq(users.companyId, req.user.companyId))
+        .orderBy(desc(users.createdAt));
+      }
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch users" });
     }

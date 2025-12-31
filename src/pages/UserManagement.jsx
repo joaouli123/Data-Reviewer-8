@@ -57,13 +57,28 @@ export default function UserManagement() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [userToDelete, setUserToDelete] = useState(null);
 
-  const { data: usersData, isLoading } = useQuery({
+  const { data: usersData, isLoading, error } = useQuery({
     queryKey: ["/api/admin/users"],
-    queryFn: () => apiRequest("GET", "/api/admin/users"),
+    queryFn: async () => {
+      const response = await fetch("/api/admin/users", {
+        headers: {
+          Authorization: `Bearer ${JSON.parse(localStorage.getItem('auth') || '{}').token}`
+        }
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch users");
+      }
+      return response.json();
+    },
     refetchOnMount: true,
     refetchOnWindowFocus: true,
     staleTime: 0
   });
+
+  if (error) {
+    console.error("User fetch error:", error);
+  }
 
   const users = Array.isArray(usersData) ? usersData : [];
 
