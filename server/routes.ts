@@ -1374,30 +1374,22 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const currentCompanyId = req.user.companyId;
       console.log(`[DEBUG] Fetching users for companyId: ${currentCompanyId}`);
       
-      const usersList = await storage.getUsers(currentCompanyId);
-      console.log(`[DEBUG] Found ${usersList.length} users for company ${currentCompanyId}`);
+      const usersList = await db.select().from(users).where(eq(users.companyId, currentCompanyId));
+      console.log(`[DEBUG] Found ${usersList.length} users in DB for company ${currentCompanyId}`);
       
       const formattedUsers = usersList.map(u => {
         let perms: any = {};
         try {
-          perms = u.permissions ? (typeof u.permissions === 'string' ? JSON.parse(u.permissions) : u.permissions) : {};
+          if (u.permissions) {
+            perms = typeof u.permissions === 'string' ? JSON.parse(u.permissions) : u.permissions;
+          }
         } catch (e) {
           console.error("Error parsing permissions for user", u.id, e);
         }
 
+        // Se for admin, garante todas as permissões
         if (u.role === 'admin') {
           Object.values(PERMISSIONS).forEach(p => perms[p] = true);
-        } else if (u.role === 'operational' && Object.keys(perms).length === 0) {
-          perms = {
-            [PERMISSIONS.VIEW_TRANSACTIONS]: true,
-            [PERMISSIONS.CREATE_TRANSACTIONS]: true,
-            [PERMISSIONS.IMPORT_BANK]: true,
-            [PERMISSIONS.VIEW_CUSTOMERS]: true,
-            [PERMISSIONS.MANAGE_CUSTOMERS]: true,
-            [PERMISSIONS.VIEW_SUPPLIERS]: true,
-            [PERMISSIONS.MANAGE_SUPPLIERS]: true,
-            [PERMISSIONS.PRICE_CALC]: true,
-          };
         }
 
         return {
@@ -1406,15 +1398,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         };
       });
       
-      // Sempre garantir que o usuário logado veja a si mesmo se a lista for filtrada ou estiver vazia
-      if (!formattedUsers.some(u => u.id === req.user.id)) {
-        console.log(`[DEBUG] Adding current user ${req.user.id} to response`);
-        formattedUsers.unshift({
-          ...req.user,
-          permissions: req.user.permissions || {}
-        });
-      }
-
+      console.log(`[DEBUG] Returning ${formattedUsers.length} users to frontend`);
       return res.json(formattedUsers);
     } catch (error) {
       console.error("Error fetching users:", error);
