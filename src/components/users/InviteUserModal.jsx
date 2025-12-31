@@ -47,13 +47,14 @@ export default function InviteUserModal({ open, onOpenChange, onInvite }) {
         name: inviteData.name,
         role: inviteData.role
       });
-      await onInvite({
+      const result = await onInvite({
         email: inviteData.email,
         role: inviteData.role,
         name: inviteData.name,
         password: inviteData.password,
         companyId: company?.id
       });
+      console.log("[DEBUG] InviteUserModal onInvite result:", result);
       
       // Toast de sucesso agora é gerenciado pelo componente pai via queryClient.invalidateQueries
       // mas mantemos o resetModal aqui para fechar o diálogo

@@ -1601,31 +1601,40 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         console.log(`[DEBUG] POST /api/invitations - Creating user directly: ${normalizedEmail} for company: ${targetCompanyId}`);
         // Criar usuário diretamente
         const hashedPassword = await hashPassword(password);
-        const [newUser] = await db.insert(users).values({
-          username: normalizedEmail,
-          email: normalizedEmail,
-          name: name.trim(),
-          password: hashedPassword,
-          role: role || 'operational',
-          companyId: targetCompanyId,
-          status: 'active'
-        }).returning();
+        
+        // Use a transaction to ensure atomic insert and log result
+        const result = await db.transaction(async (tx) => {
+          const [newUser] = await tx.insert(users).values({
+            username: normalizedEmail,
+            email: normalizedEmail,
+            name: name.trim(),
+            password: hashedPassword,
+            role: role || 'operational',
+            companyId: targetCompanyId,
+            status: 'active'
+          }).returning();
 
-        console.log(`[DEBUG] User successfully created in DB:`, { id: newUser.id, email: newUser.email, companyId: newUser.companyId });
+          return newUser;
+        });
 
-        // Add permissions if provided or defaults
+        console.log(`[DEBUG] User transaction completed for:`, { id: result.id, email: result.email, companyId: result.companyId });
+
+        // Add permissions outside transaction using storage interface
         let permsToSave = permissions;
         if (role !== "admin") {
           const roleKey = role as keyof typeof DEFAULT_PERMISSIONS;
           const defaultPerms = DEFAULT_PERMISSIONS[roleKey] || {};
           permsToSave = { ...defaultPerms, ...permissions };
           
-          console.log(`[DEBUG] Setting permissions for user ${newUser.id}:`, permsToSave);
-          await storage.updateUserPermissions(targetCompanyId, newUser.id, permsToSave);
+          console.log(`[DEBUG] Setting permissions for user ${result.id}:`, permsToSave);
+          await storage.updateUserPermissions(targetCompanyId, result.id, permsToSave);
         }
 
+        // Return the full user object to ensure frontend has what it needs
+        const fullUser = await storage.getUser(result.id);
+
         return res.status(201).json({
-          ...newUser,
+          ...(fullUser || result),
           message: "Usuário criado com sucesso"
         });
       }

@@ -92,10 +92,16 @@ export default function TeamPage() {
       }
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("[DEBUG] Team page direct user creation SUCCESS:", data);
       queryClient.invalidateQueries({ queryKey: ['/api/users'] });
-      // Forçar atualização imediata removendo do cache
+      // Forçar limpeza total
       queryClient.removeQueries({ queryKey: ['/api/users'] });
+      
+      setTimeout(() => {
+        queryClient.refetchQueries({ queryKey: ['/api/users'] });
+      }, 800);
+      
       toast.success('Membro adicionado com sucesso!');
       resetForm();
       setIsAddOpen(false);

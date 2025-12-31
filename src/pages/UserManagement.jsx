@@ -94,13 +94,20 @@ export default function UserManagement() {
         companyId: currentUser.companyId,
       });
     },
-    onSuccess: () => {
-      console.log("[DEBUG] Invitation mutation SUCCESS. Invalidating queries...");
+    onSuccess: (data) => {
+      console.log("[DEBUG] Invitation mutation SUCCESS. Data returned:", data);
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       // Forçar limpeza total para garantir refetch
       queryClient.removeQueries({ queryKey: ["/api/users"] });
       queryClient.removeQueries({ queryKey: ["/api/admin/users"] });
+      
+      // Pequeno delay para garantir que o BD processou e o refetch pegue o dado novo
+      setTimeout(() => {
+        queryClient.refetchQueries({ queryKey: ["/api/users"] });
+        queryClient.refetchQueries({ queryKey: ["/api/admin/users"] });
+      }, 800);
+
       setIsInviteOpen(false);
       toast({ title: "Sucesso", description: "Usuário criado com sucesso!" });
     },
