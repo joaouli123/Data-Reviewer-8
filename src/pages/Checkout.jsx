@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { loadMercadoPago } from "@mercadopago/sdk-js";
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
@@ -81,8 +80,7 @@ export default function Checkout() {
 
   useEffect(() => {
     const initMP = async () => {
-      if (publicKey) {
-        await loadMercadoPago();
+      if (publicKey && window.MercadoPago) {
         const instance = new window.MercadoPago(publicKey, { locale: 'pt-BR' });
         setMp(instance);
       }
@@ -126,8 +124,6 @@ export default function Checkout() {
       } else {
         processedValue = `${digits.slice(0, 2)}/${digits.slice(2, 4)}`;
       }
-    } else if (name === 'expiryYear') {
-      processedValue = value.replace(/\D/g, '').slice(0, 4);
     } else if (name === 'cvv') {
       processedValue = value.replace(/\D/g, '').slice(0, 4);
     }
@@ -143,7 +139,19 @@ export default function Checkout() {
     const cleanNumber = cardData.cardNumber.replace(/\s/g, '');
     if (!cleanNumber || cleanNumber.length < 13) errors.cardNumber = 'Cartão inválido';
     if (!cardData.cardholderName) errors.cardholderName = 'Nome obrigatório';
-    if (!cardData.expiryMonth || !cardData.expiryYear) errors.expiry = 'Data obrigatória';
+    
+    const expiry = cardData.expiryMonth;
+    if (!expiry || !expiry.includes('/') || expiry.length < 5) {
+      errors.expiry = 'Data obrigatória';
+    } else {
+      const [month, year] = expiry.split('/');
+      const m = parseInt(month);
+      const y = parseInt(year);
+      if (isNaN(m) || isNaN(y) || m < 1 || m > 12) {
+        errors.expiry = 'Data inválida';
+      }
+    }
+
     if (!cardData.cvv || cardData.cvv.length < 3) errors.cvv = 'CVV inválido';
     setCardErrors(errors);
     return Object.keys(errors).length === 0;
@@ -182,12 +190,13 @@ export default function Checkout() {
       };
 
       if (paymentMethod === 'credit_card') {
+        const [month, year] = cardData.expiryMonth.split('/');
         try {
           const cardToken = await mp.createCardToken({
             cardNumber: cardData.cardNumber.replace(/\s/g, ''),
             cardholderName: cardData.cardholderName,
-            cardExpirationMonth: cardData.expiryMonth,
-            cardExpirationYear: cardData.expiryYear,
+            cardExpirationMonth: month,
+            cardExpirationYear: year.length === 2 ? `20${year}` : year,
             securityCode: cardData.cvv
           });
           payload.token = cardToken.id;
