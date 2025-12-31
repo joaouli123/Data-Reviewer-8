@@ -93,6 +93,9 @@ export default function UserManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      // Forçar limpeza total para garantir refetch
+      queryClient.removeQueries({ queryKey: ["/api/users"] });
+      queryClient.removeQueries({ queryKey: ["/api/admin/users"] });
       setIsInviteOpen(false);
       toast({ title: "Sucesso", description: "Usuário criado com sucesso!" });
     },

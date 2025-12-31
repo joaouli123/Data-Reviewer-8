@@ -1534,8 +1534,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       // Create user
       const user = await createUser(companyId, normalizedEmail, normalizedEmail, password, name.trim(), role);
 
-      // Limpar cache de usuários após criação
-      console.log(`[DEBUG] User created: ${user.id}. Invalidating sessions and preparing response.`);
+      console.log(`[DEBUG] User created successfully: ${user.id} (${user.email}) for company: ${user.companyId}`);
 
       // Add permissions if provided or defaults
       let permsToSave = permissions;
@@ -1603,8 +1602,10 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           password: hashedPassword,
           role: role || 'operational',
           companyId: targetCompanyId,
-          status: 'ativo'
+          status: 'active'
         }).returning();
+
+        console.log(`[DEBUG] User created via invitation: ${newUser.id} for company: ${newUser.companyId}`);
 
         // Add permissions if provided or defaults
         let permsToSave = permissions;
