@@ -1669,27 +1669,31 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       console.log(`[DEBUG] DELETE /api/users - Deleting dependencies for user: ${req.params.userId}`);
       
       try {
-        // Delete sessions
+        // Delete related data first
         await db.delete(sessions).where(eq(sessions.userId, req.params.userId));
-
-        // Delete audit logs
         await db.delete(auditLogs).where(eq(auditLogs.userId, req.params.userId));
-
-        // Delete invitations
         await db.delete(invitations).where(eq(invitations.createdBy, req.params.userId));
         await db.delete(invitations).where(eq(invitations.acceptedBy, req.params.userId));
 
-        // Handle bank statement items created by/linked to user if any
-        // Note: Currently no user field in bankStatementItems, but good to check others
-        
-        // Remove user from storage
+        // Set references to NULL instead of deleting (since we want to keep financial history)
+        // Check for sales, purchases, transactions linked to this user (if any)
+        // Tables: transactions, sales, purchases, installments, purchase_installments
+        // Currently, these tables link to companies, customers, and suppliers, not specifically to users
+        // BUT, some might have a 'createdBy' or similar field. Let's check schema.
+
         await storage.deleteUser(req.user!.companyId, req.params.userId);
         
         console.log(`[DEBUG] DELETE /api/users - User ${req.params.userId} deleted successfully`);
         res.json({ message: "User deleted" });
       } catch (dbError: any) {
         console.error(`[ERROR] DELETE /api/users - Database error:`, dbError);
-        res.status(500).json({ error: `Erro ao remover dependências: ${dbError.message}` });
+        // If it's a constraint error, it's likely linked to something else
+        if (dbError.code === '23503') {
+          return res.status(400).json({ 
+            error: "Este usuário não pode ser excluído pois possui registros vinculados (vendas, compras ou logs) que dependem dele." 
+          });
+        }
+        res.status(500).json({ error: `Erro ao remover: ${dbError.message}` });
       }
     } catch (error) {
       console.error("Delete user error:", error);

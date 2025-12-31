@@ -119,7 +119,17 @@ export default function UserManagement() {
 
   const deleteUserMutation = useMutation({
     mutationFn: async (userId) => {
-      await apiRequest("DELETE", `/api/users/${userId}`);
+      const response = await fetch(`/api/users/${userId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${JSON.parse(localStorage.getItem('auth') || '{}').token}`
+        }
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete user");
+      }
+      return response.json();
     },
     onSuccess: () => {
       console.log("[DEBUG] User deletion SUCCESS. Invalidating queries...");
