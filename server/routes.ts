@@ -1603,21 +1603,17 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         const hashedPassword = await hashPassword(password);
         
         // Use a transaction to ensure atomic insert and log result
-        const newUser = await db.transaction(async (tx) => {
-          const [inserted] = await tx.insert(users).values({
-            username: normalizedEmail,
-            email: normalizedEmail,
-            name: name.trim(),
-            password: hashedPassword,
-            role: role || 'operational',
-            companyId: targetCompanyId,
-            status: 'active'
-          }).returning();
+        const [newUser] = await db.insert(users).values({
+          username: normalizedEmail,
+          email: normalizedEmail,
+          name: name.trim(),
+          password: hashedPassword,
+          role: role || 'operational',
+          companyId: targetCompanyId,
+          status: 'active'
+        }).returning();
 
-          return inserted;
-        });
-
-        console.log(`[DEBUG] User transaction completed for:`, { id: newUser.id, email: newUser.email, companyId: newUser.companyId });
+        console.log(`[DEBUG] User insertion result:`, { id: newUser.id, email: newUser.email, companyId: newUser.companyId });
 
         // Add permissions outside transaction using storage interface
         let permsToSave = permissions;
