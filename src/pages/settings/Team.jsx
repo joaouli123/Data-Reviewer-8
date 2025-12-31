@@ -64,6 +64,9 @@ export default function TeamPage() {
         console.log("[DEBUG] Team members received:", data);
         return data;
       },
+      staleTime: 0,
+      gcTime: 0,
+      refetchOnWindowFocus: true
     });
 
   const createUserMutation = useMutation({
@@ -91,6 +94,8 @@ export default function TeamPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/users'] });
+      // Forçar atualização imediata removendo do cache
+      queryClient.removeQueries({ queryKey: ['/api/users'] });
       toast.success('Membro adicionado com sucesso!');
       resetForm();
       setIsAddOpen(false);

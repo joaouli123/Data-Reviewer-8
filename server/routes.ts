@@ -1534,8 +1534,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       // Create user
       const user = await createUser(companyId, normalizedEmail, normalizedEmail, password, name.trim(), role);
 
-      // Se for super admin criando usuário, ele pode estar criando em outra empresa
-      // O findUserByEmail já deve ter validado unicidade global do email/username
+      // Limpar cache de usuários após criação
+      console.log(`[DEBUG] User created: ${user.id}. Invalidating sessions and preparing response.`);
 
       // Add permissions if provided or defaults
       let permsToSave = permissions;
