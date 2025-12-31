@@ -69,9 +69,6 @@ function UserListContent() {
   const { data: usersData, isLoading } = useQuery({
     queryKey: ['/api/admin/users'],
     queryFn: () => apiRequest('/api/admin/users'),
-    staleTime: 0,
-    gcTime: 0,
-    refetchOnWindowFocus: true
   });
 
   const users = usersData || [];
@@ -111,8 +108,6 @@ function UserListContent() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
       queryClient.invalidateQueries({ queryKey: ['/api/users'] });
-      queryClient.removeQueries({ queryKey: ['/api/admin/users'] });
-      queryClient.removeQueries({ queryKey: ['/api/users'] });
       toast({ title: 'Sucesso', description: 'Usuário deletado' });
       setDeleteConfirm(null);
     },

@@ -70,15 +70,8 @@ export default function UserManagement() {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to fetch users");
       }
-      const data = await response.json();
-      console.log("[DEBUG] UserManagement received data:", data);
-      return data;
+      return response.json();
     },
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
-    staleTime: 0,
-    gcTime: 0,
-    retry: false,
   });
 
   if (error) {
@@ -98,15 +91,6 @@ export default function UserManagement() {
       console.log("[DEBUG] Invitation mutation SUCCESS. Data returned:", data);
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
-      // Forçar limpeza total para garantir refetch
-      queryClient.removeQueries({ queryKey: ["/api/users"] });
-      queryClient.removeQueries({ queryKey: ["/api/admin/users"] });
-      
-      // Pequeno delay para garantir que o BD processou e o refetch pegue o dado novo
-      setTimeout(() => {
-        queryClient.refetchQueries({ queryKey: ["/api/users"] });
-        queryClient.refetchQueries({ queryKey: ["/api/admin/users"] });
-      }, 800);
 
       setIsInviteOpen(false);
       toast({ title: "Sucesso", description: "Usuário criado com sucesso!" });
@@ -135,12 +119,6 @@ export default function UserManagement() {
       console.log("[DEBUG] User deletion SUCCESS. Invalidating queries...");
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
-      
-      // Forçar limpeza e refetch imediato
-      queryClient.removeQueries({ queryKey: ["/api/users"] });
-      setTimeout(() => {
-        queryClient.refetchQueries({ queryKey: ["/api/users"] });
-      }, 500);
 
       setUserToDelete(null);
       toast({ title: "Sucesso", description: "Usuário removido com sucesso!" });
