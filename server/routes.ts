@@ -1372,9 +1372,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       
-      // Apenas Super Admin ou Admin podem ver todos os usuários
-      // No caso de Admin, ele vê apenas os da sua empresa (ajustado abaixo)
-      
       let usersList;
       if (req.user.isSuperAdmin) {
         // Super Admin vê todos de todas as empresas
@@ -1462,15 +1459,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           permissions: perms
         };
       });
-      
-      // Ensure the current user is ALWAYS in the list
-      if (!formattedUsers.some(u => u.id === req.user.id)) {
-        console.log(`[DEBUG] Adding current user ${req.user.id} to response manually`);
-        formattedUsers.unshift({
-          ...req.user,
-          permissions: req.user.permissions || {}
-        });
-      }
 
       return res.json(formattedUsers);
     } catch (error) {
