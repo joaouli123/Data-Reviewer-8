@@ -1603,8 +1603,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         const hashedPassword = await hashPassword(password);
         
         // Use a transaction to ensure atomic insert and log result
-        const result = await db.transaction(async (tx) => {
-          const [newUser] = await tx.insert(users).values({
+        const newUser = await db.transaction(async (tx) => {
+          const [inserted] = await tx.insert(users).values({
             username: normalizedEmail,
             email: normalizedEmail,
             name: name.trim(),
@@ -1614,10 +1614,10 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
             status: 'active'
           }).returning();
 
-          return newUser;
+          return inserted;
         });
 
-        console.log(`[DEBUG] User transaction completed for:`, { id: result.id, email: result.email, companyId: result.companyId });
+        console.log(`[DEBUG] User transaction completed for:`, { id: newUser.id, email: newUser.email, companyId: newUser.companyId });
 
         // Add permissions outside transaction using storage interface
         let permsToSave = permissions;
@@ -1626,17 +1626,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           const defaultPerms = DEFAULT_PERMISSIONS[roleKey] || {};
           permsToSave = { ...defaultPerms, ...permissions };
           
-          console.log(`[DEBUG] Setting permissions for user ${result.id}:`, permsToSave);
-          await storage.updateUserPermissions(targetCompanyId, result.id, permsToSave);
+          console.log(`[DEBUG] Setting permissions for user ${newUser.id}:`, permsToSave);
+          await storage.updateUserPermissions(targetCompanyId, newUser.id, permsToSave);
         }
 
-        // Return the full user object to ensure frontend has what it needs
-        const fullUser = await storage.getUser(targetCompanyId, result.id);
+        // Fetch the user again to ensure we have all fields (including default values from DB)
+        const result = await storage.getUser(targetCompanyId, newUser.id);
 
-        return res.status(201).json({
-          ...(fullUser || result),
-          message: "Usuário criado com sucesso"
-        });
+        return res.status(201).json(result);
       }
     } catch (error) {
       console.error("Error in POST /api/invitations:", error);
