@@ -60,6 +60,9 @@ export default function UserManagement() {
   const { data: usersData, isLoading } = useQuery({
     queryKey: ["/api/users"],
     queryFn: () => apiRequest("GET", "/api/users"),
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    staleTime: 0
   });
 
   const users = Array.isArray(usersData) ? usersData : [];
