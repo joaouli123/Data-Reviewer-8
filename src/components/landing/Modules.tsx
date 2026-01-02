@@ -14,7 +14,7 @@ const Modules: React.FC = () => {
       icon: <ArrowRightLeft className="w-8 h-8" />,
       title: "Gestão de Transações",
       subtitle: "Controle inteligente de caixa",
-      features: ["Importação Inteligente (OFX/PDF/IA)", "Reconciliação Bancária Automática", "Gestão de Parcelamentos Múltiplos", "Filtros Avançados e Exportação CSV"]
+      features: ["Importação de Extrato (OFX)", "Reconciliação Bancária", "Gestão de Parcelamentos", "Filtros e Exportação CSV"]
     },
     {
       icon: <TrendingUp className="w-8 h-8" />,
@@ -26,7 +26,7 @@ const Modules: React.FC = () => {
       icon: <FileBarChart className="w-8 h-8" />,
       title: "Relatórios & DRE",
       subtitle: "Inteligência Artificial Financeira",
-      features: ["IA Analista & Simulação (What-If)", "DRE Gerencial Detalhado", "Análise de Capital de Giro e Dívidas", "Exportação Profissional PDF/Excel"]
+      features: ["Análise de Dados com IA", "DRE Gerencial Detalhado", "Análise de Capital de Giro e Dívidas", "Exportação PDF/Excel"]
     },
     {
       icon: <Users className="w-8 h-8" />,
