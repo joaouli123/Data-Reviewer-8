@@ -122,18 +122,21 @@ export function AuthProvider({ children }) {
   };
 
   const logout = async () => {
-    // Immediate state update for fast UI feedback
+    // Clear state first
     setToken(null);
     setUser(null);
     setCompany(null);
+    
+    // Clear storage
     localStorage.clear();
     sessionStorage.clear();
 
+    // Redirect immediately
     if (typeof window !== 'undefined') {
-      window.location.href = '/login';
+      window.location.replace('/login');
     }
 
-    // Secondary cleanup tasks (don't block the redirect)
+    // Background cleanup
     try {
       const { queryClient } = await import("@/lib/queryClient");
       queryClient.clear();
