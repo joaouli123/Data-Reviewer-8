@@ -171,7 +171,7 @@ export class DatabaseStorage implements IStorage {
       })
       .from(customers)
       .where(eq(customers.companyId, companyId))
-      .orderBy(desc(sql`total_sales`));
+      .orderBy(desc(sql`COALESCE((SELECT SUM(${transactions.amount}) FROM ${transactions} WHERE ${transactions.customerId} = ${customers.id} AND ${transactions.type} IN ('income', 'venda')), 0)`));
     
     return result as (Customer & { totalSales: number })[];
   }
