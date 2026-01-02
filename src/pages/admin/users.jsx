@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
@@ -130,12 +130,14 @@ function UserListContent() {
     },
   });
 
-  const filtered = users.filter(u =>
-    u.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.companyName?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filtered = useMemo(() => {
+    return users.filter(u =>
+      u.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      u.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      u.companyName?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [users, searchTerm]);
 
   return (
     <div className="space-y-8 p-4 md:p-8">
