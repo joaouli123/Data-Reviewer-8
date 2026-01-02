@@ -155,6 +155,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCustomers(companyId: string): Promise<(Customer & { totalSales: number })[]> {
+    console.log(`[DEBUG] getCustomers called for companyId: ${companyId}`);
     const result = await db
       .select({
         id: customers.id,
@@ -175,6 +176,7 @@ export class DatabaseStorage implements IStorage {
       .groupBy(customers.id)
       .orderBy(desc(sql`total_sales`)); // Order by most valuable customers
     
+    console.log(`[DEBUG] getCustomers result count: ${result.length}`);
     return result as (Customer & { totalSales: number })[];
   }
 

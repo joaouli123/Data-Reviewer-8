@@ -33,13 +33,23 @@ export default function CustomersPage() {
   const { company } = useAuth();
   const queryClient = useQueryClient();
 
-  const { data: customers = [], isLoading } = useQuery({
+  const { data: customers = [], isLoading, error } = useQuery({
     queryKey: ['/api/customers', company?.id],
     queryFn: () => Customer.list(),
     enabled: !!company?.id,
     staleTime: 1000 * 60 * 5, // Cache por 5 minutos
     refetchOnWindowFocus: true,
   });
+
+  if (error) {
+    console.error('[DEBUG] Customers query error:', error);
+  }
+
+  if (customers.length > 0) {
+    console.log('[DEBUG] Customers received:', customers.length, 'Company ID:', company?.id);
+  } else if (!isLoading) {
+    console.log('[DEBUG] Customers list is empty for Company ID:', company?.id);
+  }
 
   const { data: categories = [] } = useQuery({
     queryKey: ['/api/categories', company?.id],
