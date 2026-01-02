@@ -14,17 +14,17 @@ const FAQItem: React.FC<FAQItemProps> = ({ question, answer }) => {
     <div className="border-b border-slate-200 last:border-0">
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full py-7 flex items-center justify-between text-left group"
+        className="w-full py-6 flex items-center justify-between text-left group"
       >
-        <span className="text-xl md:text-2xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors leading-tight pr-8">
+        <span className="text-lg md:text-xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors leading-tight pr-8">
           {question}
         </span>
-        <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 ${isOpen ? 'bg-blue-600 text-white rotate-180' : 'bg-slate-100 text-slate-500'}`}>
-          {isOpen ? <Minus className="w-6 h-6" /> : <Plus className="w-6 h-6" />}
+        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 ${isOpen ? 'bg-blue-600 text-white rotate-180' : 'bg-slate-100 text-slate-500'}`}>
+          {isOpen ? <Minus className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
         </div>
       </button>
-      <div className={`overflow-hidden transition-all duration-500 ${isOpen ? 'max-h-[500px] opacity-100 pb-8' : 'max-h-0 opacity-0'}`}>
-        <p className="text-lg text-slate-600 leading-relaxed font-normal">
+      <div className={`overflow-hidden transition-all duration-500 ${isOpen ? 'max-h-[500px] opacity-100 pb-6' : 'max-h-0 opacity-0'}`}>
+        <p className="text-base text-slate-600 leading-relaxed font-normal">
           {answer}
         </p>
       </div>
@@ -53,13 +53,13 @@ const FAQ: React.FC = () => {
   ];
 
   return (
-    <section className="py-20 md:py-32 px-4 bg-slate-50" id="faq">
-      <div className="container mx-auto max-w-4xl">
-        <div className="text-center mb-16 md:mb-24">
-          <h2 className="text-blue-600 font-bold text-xs md:text-sm uppercase tracking-[0.3em] mb-4">FAQ</h2>
-          <h3 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight tracking-tight">Dúvidas Frequentes</h3>
+    <section className="py-16 md:py-24 px-4 bg-slate-50" id="faq">
+      <div className="container mx-auto max-w-3xl">
+        <div className="text-center mb-12 md:mb-20">
+          <h2 className="text-blue-600 font-bold text-[10px] md:text-xs uppercase tracking-[0.3em] mb-3">FAQ</h2>
+          <h3 className="text-2xl md:text-4xl font-extrabold text-slate-900 leading-tight tracking-tight">Dúvidas Frequentes</h3>
         </div>
-        <div className="bg-white rounded-[3rem] p-8 md:p-16 border border-slate-200 shadow-2xl">
+        <div className="bg-white rounded-[2rem] p-6 md:p-12 border border-slate-200 shadow-xl">
           {faqs.map((faq, i) => (
             <FAQItem key={i} {...faq} />
           ))}

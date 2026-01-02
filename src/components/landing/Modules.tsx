@@ -43,30 +43,32 @@ const Modules: React.FC = () => {
   ];
 
   return (
-    <section className="py-20 md:py-24 px-4 bg-slate-50 border-y border-slate-100" id="recursos">
+    <section className="py-16 md:py-24 px-4 bg-slate-50 border-y border-slate-100" id="recursos">
       <div className="container mx-auto">
-        <div className="max-w-4xl mx-auto text-center mb-16 md:mb-20">
-          <h2 className="text-blue-600 font-bold text-xs uppercase tracking-[0.3em] mb-4">Ecossistema Completo</h2>
-          <h3 className="text-3xl md:text-5xl font-bold text-slate-900 mb-6 px-4 md:px-0 tracking-tight">
+        <div className="max-w-4xl mx-auto text-center mb-12 md:mb-20">
+          <h2 className="text-blue-600 font-bold text-[10px] md:text-xs uppercase tracking-[0.3em] mb-3">Ecossistema Completo</h2>
+          <h3 className="text-2xl md:text-4xl font-extrabold text-slate-900 mb-6 px-4 md:px-0 tracking-tight">
             Um sistema, <span className="text-blue-600 italic font-medium">infinitas</span> possibilidades
           </h3>
-          <p className="text-base md:text-lg text-slate-600 max-w-2xl mx-auto px-4 font-normal">
+          <p className="text-base md:text-lg text-slate-600 max-w-xl mx-auto px-4 font-normal">
             6 módulos poderosos integrados para você dominar as finanças sem precisar de várias ferramentas.
           </p>
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 px-2 md:px-0">
           {modules.map((mod, idx) => (
-            <div key={idx} className="group p-6 md:p-8 rounded-3xl bg-white border border-slate-200 hover:border-blue-300 hover:shadow-xl hover:shadow-blue-500/5 transition-all">
+            <div key={idx} className="group p-6 md:p-8 rounded-[2rem] bg-white border border-slate-200 hover:border-blue-300 hover:shadow-xl hover:shadow-blue-500/5 transition-all">
               <div className="text-blue-600 mb-6 group-hover:scale-110 transition-transform origin-left">
-                {mod.icon}
+                <div className="w-10 h-10">
+                  {React.cloneElement(mod.icon as React.ReactElement, { className: "w-full h-full" })}
+                </div>
               </div>
-              <h4 className="text-lg md:text-xl font-bold text-slate-900 mb-1">{mod.title}</h4>
-              <p className="text-blue-600/80 text-[10px] font-bold uppercase tracking-wider mb-6">{mod.subtitle}</p>
-              <ul className="space-y-3">
+              <h4 className="text-base md:text-lg font-bold text-slate-900 mb-1">{mod.title}</h4>
+              <p className="text-blue-600/80 text-[9px] font-bold uppercase tracking-wider mb-5">{mod.subtitle}</p>
+              <ul className="space-y-2.5">
                 {mod.features.map((f, i) => (
-                  <li key={i} className="flex items-start gap-3 text-slate-500 text-sm font-normal">
-                    <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 shrink-0"></div>
+                  <li key={i} className="flex items-start gap-2.5 text-slate-500 text-xs font-normal">
+                    <div className="w-1 h-1 rounded-full bg-blue-400 mt-1.5 shrink-0"></div>
                     {f}
                   </li>
                 ))}

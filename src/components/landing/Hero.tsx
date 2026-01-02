@@ -16,26 +16,26 @@ const Hero: React.FC = () => {
           OFERTA ESPECIAL: <span className="text-blue-900">ACESSO VITALÍCIO LIBERADO</span>
         </div>
         
-        <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-bold text-slate-900 leading-[1.1] tracking-tight mb-8 text-balance">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-slate-900 leading-[1.15] tracking-tight mb-6 text-balance">
           O Fim das Planilhas Quebradas e das <span className="text-blue-600">Mensalidades Eternas.</span>
         </h1>
         
-        <p className="text-lg md:text-2xl text-slate-600 mb-12 max-w-4xl mx-auto leading-relaxed px-4 font-normal">
+        <p className="text-base md:text-lg text-slate-600 mb-10 max-w-3xl mx-auto leading-relaxed px-4 font-normal">
           Assuma o controle financeiro de nível bancário com gestão de equipe avançada. <span className="text-blue-700 font-semibold">Pague uma única vez e use para sempre.</span>
         </p>
         
-        <div className="flex flex-col items-center gap-8 mb-20">
+        <div className="flex flex-col items-center gap-6 mb-16">
           <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
             <a 
               href="#precos" 
-              className="group w-full sm:w-auto relative inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white text-lg md:text-xl px-12 py-5 rounded-2xl font-bold transition-all shadow-2xl shadow-blue-500/30 active:scale-95"
+              className="group w-full sm:w-auto relative inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white text-base md:text-lg px-10 py-4 rounded-xl font-bold transition-all shadow-xl shadow-blue-500/30 active:scale-95"
             >
               GARANTIR ACESSO VITALÍCIO AGORA
-              <ArrowRight className="ml-3 w-6 h-6 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </a>
             <a 
               href="/signup" 
-              className="w-full sm:w-auto inline-flex items-center justify-center bg-white border-2 border-slate-200 hover:border-blue-600 text-slate-900 text-lg md:text-xl px-12 py-5 rounded-2xl font-bold transition-all active:scale-95"
+              className="w-full sm:w-auto inline-flex items-center justify-center bg-white border-2 border-slate-200 hover:border-blue-600 text-slate-900 text-base md:text-lg px-10 py-4 rounded-xl font-bold transition-all active:scale-95"
             >
               CRIAR CONTA GRÁTIS
             </a>
