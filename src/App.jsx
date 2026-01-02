@@ -45,17 +45,15 @@ function AppContent() {
 
   // Verificar se está em página pública (sem window dependency)
   const isPublicPage = typeof window !== 'undefined' ? 
-    ["/", "/lp", "/payment-success", "/accept-invite"].includes(window.location.pathname) : 
+    ["/", "/payment-success", "/accept-invite"].includes(window.location.pathname) : 
     false;
 
-  // Se está logado mas com pagamento pendente, força checkout
   if ((isAuthenticated || paymentPending) && company && company.paymentStatus !== "approved" && !isPublicPage) {
     // Only redirect to checkout if we're not already there
     if (typeof window !== 'undefined' && 
         window.location.pathname !== '/checkout' && 
         window.location.pathname !== '/payment-success' &&
-        window.location.pathname !== '/accept-invite' &&
-        window.location.pathname !== '/lp') {
+        window.location.pathname !== '/accept-invite') {
       window.location.href = '/checkout';
       return null;
     }
@@ -64,7 +62,6 @@ function AppContent() {
         <Route path="/checkout" component={Checkout} />
         <Route path="/payment-success" component={PaymentSuccess} />
         <Route path="/accept-invite" component={AcceptInvite} />
-        <Route path="/lp" component={LandingPage} />
         <Route component={Checkout} />
       </Switch>
     );
@@ -74,7 +71,6 @@ function AppContent() {
     return (
       <Switch>
         <Route path="/" component={LandingPage} />
-        <Route path="/lp" component={LandingPage} />
         <Route path="/login" component={Login} />
         <Route path="/signup" component={Signup} />
         <Route path="/checkout" component={Checkout} />
@@ -98,7 +94,6 @@ function AppContent() {
   return (
     <Switch>
       <Route path="/" component={LandingPage} />
-      <Route path="/lp" component={LandingPage} />
       <Route path="/access-denied" component={AccessDenied} />
       <Route component={Pages} />
     </Switch>
