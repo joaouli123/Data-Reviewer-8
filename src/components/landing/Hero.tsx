@@ -4,7 +4,7 @@ import { Zap, ArrowRight, ShieldCheck, Play } from 'lucide-react';
 
 const Hero: React.FC = () => {
   return (
-    <section className="relative pt-16 pb-12 md:pt-28 md:pb-20 px-4 md:px-6 overflow-hidden bg-white">
+    <section className="relative pt-20 pb-12 md:pt-36 md:pb-20 px-4 md:px-6 overflow-hidden bg-white">
       {/* Decorative background elements */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none overflow-hidden">
         <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-blue-50 rounded-full blur-3xl opacity-60"></div>
