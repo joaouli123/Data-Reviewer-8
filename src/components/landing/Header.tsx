@@ -45,7 +45,7 @@ const Header: React.FC = () => {
           </a>
           <a 
             href="#precos" 
-            className="hidden sm:inline-flex bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 rounded-xl text-sm font-bold transition-all shadow-lg hover:shadow-xl active:scale-95"
+            className="hidden sm:inline-flex bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl text-sm font-bold transition-all shadow-lg hover:shadow-xl active:scale-95"
           >
             Começar Agora
           </a>
