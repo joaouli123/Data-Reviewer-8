@@ -12,6 +12,7 @@ const Header: React.FC = () => {
     { name: 'Recursos', href: '#recursos' },
     { name: 'Planos', href: '#precos' },
     { name: 'FAQ', href: '#faq' },
+    { name: 'Login', href: '/login' },
   ];
 
   return (
@@ -19,9 +20,9 @@ const Header: React.FC = () => {
       <div className="container mx-auto px-4 md:px-6 h-20 flex items-center justify-between">
         <div className="flex items-center gap-2 shrink-0">
           <LogoIcon className="w-8 h-8 md:w-10 md:h-10 text-blue-600" />
-          <span className="text-lg md:text-xl font-extrabold tracking-tight text-slate-900 uppercase">
+          <a href="/" className="text-lg md:text-xl font-extrabold tracking-tight text-slate-900 uppercase">
             HUA<span className="text-blue-600">CONSULTORIA</span>
-          </span>
+          </a>
         </div>
         
         {/* Desktop Navigation */}
@@ -39,10 +40,16 @@ const Header: React.FC = () => {
 
         <div className="flex items-center gap-4">
           <a 
+            href="/login" 
+            className="hidden sm:inline-flex text-slate-600 hover:text-blue-600 text-sm font-bold transition-colors"
+          >
+            ENTRAR
+          </a>
+          <a 
             href="#precos" 
             className="hidden sm:inline-flex bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-all shadow-lg shadow-blue-500/20 active:scale-95"
           >
-            ACESSAR AGORA
+            ASSINAR AGORA
           </a>
           
           {/* Mobile Menu Toggle */}

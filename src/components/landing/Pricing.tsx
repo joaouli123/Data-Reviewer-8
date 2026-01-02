@@ -40,9 +40,12 @@ const Pricing: React.FC = () => {
               </li>
             </ul>
 
-            <button className="w-full py-5 rounded-2xl border-2 border-slate-300 text-slate-900 font-bold text-lg hover:bg-slate-100 transition-all">
+            <a 
+              href="/checkout?plan=monthly" 
+              className="w-full py-5 rounded-2xl border-2 border-slate-300 text-slate-900 font-bold text-center text-lg hover:bg-slate-100 transition-all"
+            >
               ASSINAR MENSAL
-            </button>
+            </a>
           </div>
 
           {/* Lifetime Plan */}
@@ -77,9 +80,12 @@ const Pricing: React.FC = () => {
               ))}
             </ul>
 
-            <button className="w-full py-6 rounded-2xl bg-white text-blue-600 font-bold text-2xl shadow-xl hover:bg-blue-50 transition-all active:scale-95">
+            <a 
+              href="/checkout?plan=pro" 
+              className="w-full py-6 rounded-2xl bg-white text-blue-600 font-bold text-center text-2xl shadow-xl hover:bg-blue-50 transition-all active:scale-95"
+            >
               QUERO O VITALÍCIO
-            </button>
+            </a>
             <p className="text-center mt-6 text-xs font-bold text-blue-200 uppercase tracking-widest animate-pulse">
               ⚡ Oferta limitada para este lote.
             </p>

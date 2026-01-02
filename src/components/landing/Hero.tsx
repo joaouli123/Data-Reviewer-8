@@ -25,13 +25,21 @@ const Hero: React.FC = () => {
         </p>
         
         <div className="flex flex-col items-center gap-8 mb-20">
-          <a 
-            href="#precos" 
-            className="group w-full sm:w-auto relative inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white text-lg md:text-xl px-12 py-5 rounded-2xl font-bold transition-all shadow-2xl shadow-blue-500/30 active:scale-95"
-          >
-            GARANTIR ACESSO VITALÍCIO AGORA
-            <ArrowRight className="ml-3 w-6 h-6 group-hover:translate-x-1 transition-transform" />
-          </a>
+          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+            <a 
+              href="#precos" 
+              className="group w-full sm:w-auto relative inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white text-lg md:text-xl px-12 py-5 rounded-2xl font-bold transition-all shadow-2xl shadow-blue-500/30 active:scale-95"
+            >
+              GARANTIR ACESSO VITALÍCIO AGORA
+              <ArrowRight className="ml-3 w-6 h-6 group-hover:translate-x-1 transition-transform" />
+            </a>
+            <a 
+              href="/signup" 
+              className="w-full sm:w-auto inline-flex items-center justify-center bg-white border-2 border-slate-200 hover:border-blue-600 text-slate-900 text-lg md:text-xl px-12 py-5 rounded-2xl font-bold transition-all active:scale-95"
+            >
+              CRIAR CONTA GRÁTIS
+            </a>
+          </div>
           
           <div className="flex flex-wrap justify-center items-center gap-8 text-slate-400 text-xs md:text-sm font-semibold uppercase tracking-widest">
             <span className="flex items-center gap-2">
