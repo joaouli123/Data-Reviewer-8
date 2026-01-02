@@ -18,7 +18,7 @@ const Hero: React.FC = () => {
         </div>
         
         <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-black text-slate-900 leading-[1.1] tracking-tight mb-8 text-balance">
-          O Fim das Planilhas Quebradas e das <span className="text-blue-600">Mensalidades Eternas.</span>
+          O fim das planilhas quebradas e das <span className="text-blue-600">mensalidades eternas.</span>
         </h1>
         
         <p className="text-base md:text-lg text-slate-600 mb-10 max-w-3xl mx-auto leading-relaxed px-4 font-normal">
