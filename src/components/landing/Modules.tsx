@@ -8,7 +8,7 @@ const Modules: React.FC = () => {
       icon: <LayoutDashboard className="w-8 h-8" />,
       title: "Dashboard Executivo",
       subtitle: "Visão macro e estratégica",
-      features: ["KPIs: Receita, Despesa e Pendências", "Gráfico Comparativo (6 meses)", "Fluxo de Caixa Futuro (30 dias)", "Monitoramento de Transações"]
+      features: ["KPIs: Receita, Despesa e Pendências", "Gráfico Comparativo", "Fluxo de Caixa Futuro", "Monitoramento de Transações"]
     },
     {
       icon: <ArrowRightLeft className="w-8 h-8" />,
@@ -32,13 +32,13 @@ const Modules: React.FC = () => {
       icon: <Users className="w-8 h-8" />,
       title: "Gestão de Clientes",
       subtitle: "CRM de Vendas Integrado",
-      features: ["Cadastro Completo (CPF/Email)", "Histórico de Vendas Detalhado", "Lançamento de Vendas Parceladas", "Busca Rápida e Organização"]
+      features: ["Cadastro Completo", "Histórico de Vendas Detalhado", "Lançamento de Vendas Parceladas", "Busca Rápida e Organização"]
     },
     {
       icon: <Truck className="w-8 h-8" />,
       title: "Gestão de Fornecedores",
       subtitle: "Controle de compras",
-      features: ["Cadastro de Fornecedores (CNPJ)", "Histórico de Compras Realizadas", "Gestão de Compras Parceladas", "Controle de Cadastro e Contato"]
+      features: ["Cadastro de Fornecedores", "Histórico de Compras Realizadas", "Gestão de Compras Parceladas", "Controle de Cadastro e Contato"]
     }
   ];
 
