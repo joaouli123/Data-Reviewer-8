@@ -551,10 +551,20 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       
       const companyId = req.user.companyId;
-      console.log(`📊 Fetching transactions for companyId: ${companyId}`);
+      const { startDate, endDate, shift } = req.query;
       
-      const transactions = await storage.getTransactions(companyId);
-      console.log(`✅ Found ${transactions.length} transactions`);
+      let transactions;
+      if (startDate && endDate) {
+        transactions = await storage.getTransactionsByDateRange(
+          companyId, 
+          new Date(startDate as string), 
+          new Date(endDate as string)
+        );
+      } else if (shift) {
+        transactions = await storage.getTransactionsByShift(companyId, shift as string);
+      } else {
+        transactions = await storage.getTransactions(companyId);
+      }
       
       const converted = transactions.map(t => ({
         ...t,
