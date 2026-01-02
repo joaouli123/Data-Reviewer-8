@@ -4,8 +4,6 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { Toaster } from "sonner";
-import Pages from "@/pages/index.jsx";
-import Home from "@/pages/Home.jsx";
 import LandingPage from "@/components/landing/LandingPage.jsx";
 import Login from "@/pages/Login.jsx";
 import Signup from "@/pages/Signup.jsx";
@@ -13,6 +11,75 @@ import Checkout from "@/pages/Checkout.jsx";
 import PaymentSuccess from "@/pages/PaymentSuccess.jsx";
 import AcceptInvite from "@/pages/AcceptInvite.jsx";
 import AccessDenied from "@/pages/AccessDenied.jsx";
+
+import Dashboard from "./pages/Dashboard";
+import Transactions from "./pages/Transactions";
+import Customers from "./pages/Customers";
+import Reports from "./pages/Reports";
+import Suppliers from "./pages/Suppliers";
+import CashFlowForecast from "./pages/CashFlowForecast";
+import PricingCalculator from "./pages/PricingCalculator";
+import Categories from "./pages/Categories";
+import UserManagement from "./pages/UserManagement";
+import UserPermissions from "./pages/UserPermissions";
+import SuperAdmin from "./pages/SuperAdmin";
+import SuperAdminDashboard from "./pages/admin/super-dashboard";
+import AdminCustomers from "./pages/admin/customers";
+import AdminSubscriptions from "./pages/admin/subscriptions";
+import AdminUsers from "./pages/admin/users";
+import TeamPage from "./pages/settings/Team";
+import Profile from "./pages/Profile";
+import { usePermission } from "@/hooks/usePermission";
+import Layout from "./components/Layout.jsx";
+
+function ProtectedRoute({ component: Component, permission }) {
+  const { user } = useAuth();
+  const { hasPermission } = usePermission();
+
+  if (user?.role === "admin") {
+    return <Component />;
+  }
+
+  if (permission && !hasPermission(permission)) {
+    return <AccessDenied />;
+  }
+
+  return <Component />;
+}
+
+function MainApp() {
+  const { user } = useAuth();
+
+  if (user?.isSuperAdmin) {
+    return (
+      <Switch>
+        <Route path="/" component={SuperAdmin} />
+        <Route component={SuperAdmin} />
+      </Switch>
+    );
+  }
+
+  return (
+    <Layout>
+      <Switch>
+        <Route path="/" component={Dashboard} />
+        <Route path="/profile" component={Profile} />
+        <Route path="/transactions">{() => <ProtectedRoute component={Transactions} permission="view_transactions" />}</Route>
+        <Route path="/customers">{() => <ProtectedRoute component={Customers} permission="view_customers" />}</Route>
+        <Route path="/reports">{() => <ProtectedRoute component={Reports} permission="view_reports" />}</Route>
+        <Route path="/suppliers">{() => <ProtectedRoute component={Suppliers} permission="view_suppliers" />}</Route>
+        <Route path="/cashflowforecast">{() => <ProtectedRoute component={CashFlowForecast} permission="view_reports" />}</Route>
+        <Route path="/pricingcalculator" component={PricingCalculator} />
+        <Route path="/categories" component={Categories} />
+        <Route path="/settings/users">{() => <ProtectedRoute component={UserManagement} permission="manage_users" />}</Route>
+        <Route path="/settings/team">{() => <ProtectedRoute component={TeamPage} permission="manage_users" />}</Route>
+        <Route path="/users">{() => <ProtectedRoute component={UserManagement} permission="manage_users" />}</Route>
+        <Route path="/permissions">{() => <ProtectedRoute component={UserPermissions} permission="manage_users" />}</Route>
+        <Route path="/access-denied" component={AccessDenied} />
+      </Switch>
+    </Layout>
+  );
+}
 
 function AppContent() {
   const { isAuthenticated, company, loading, token, paymentPending } = useAuth();
@@ -43,13 +110,11 @@ function AppContent() {
     );
   }
 
-  // Verificar se está em página pública (sem window dependency)
   const isPublicPage = typeof window !== 'undefined' ? 
     ["/", "/payment-success", "/accept-invite"].includes(window.location.pathname) : 
     false;
 
   if ((isAuthenticated || paymentPending) && company && company.paymentStatus !== "approved" && !isPublicPage) {
-    // Only redirect to checkout if we're not already there
     if (typeof window !== 'undefined' && 
         window.location.pathname !== '/checkout' && 
         window.location.pathname !== '/payment-success' &&
@@ -86,7 +151,6 @@ function AppContent() {
     );
   }
 
-  // Página de sucesso não deve ter o layout lateral
   if (window.location.pathname === "/payment-success") {
     return <PaymentSuccess />;
   }
@@ -95,7 +159,7 @@ function AppContent() {
     <Switch>
       <Route path="/" component={LandingPage} />
       <Route path="/access-denied" component={AccessDenied} />
-      <Route component={Pages} />
+      <Route component={MainApp} />
     </Switch>
   );
 }
