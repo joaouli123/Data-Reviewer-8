@@ -35,8 +35,8 @@ const Footer: React.FC = () => {
               <div className="p-1.5 bg-white rounded-lg shadow-lg shadow-blue-500/20">
                 <LogoIcon className="w-6 h-6 md:w-7 md:h-7 text-blue-600" />
               </div>
-              <span className="text-xl md:text-2xl font-bold tracking-tighter uppercase italic">
-                HUA<span className="text-blue-400">CONSULTORIA</span>
+              <span className="text-xl md:text-2xl font-bold tracking-tighter">
+                Hua<span className="text-blue-400">Consultoria</span>
               </span>
             </div>
             <p className="text-blue-100/70 mb-8 leading-relaxed text-sm md:text-base font-normal">
