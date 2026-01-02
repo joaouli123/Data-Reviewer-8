@@ -54,7 +54,8 @@ function AppContent() {
     if (typeof window !== 'undefined' && 
         window.location.pathname !== '/checkout' && 
         window.location.pathname !== '/payment-success' &&
-        window.location.pathname !== '/accept-invite') {
+        window.location.pathname !== '/accept-invite' &&
+        window.location.pathname !== '/lp') {
       window.location.href = '/checkout';
       return null;
     }
@@ -63,6 +64,7 @@ function AppContent() {
         <Route path="/checkout" component={Checkout} />
         <Route path="/payment-success" component={PaymentSuccess} />
         <Route path="/accept-invite" component={AcceptInvite} />
+        <Route path="/lp" component={LandingPage} />
         <Route component={Checkout} />
       </Switch>
     );
@@ -71,14 +73,19 @@ function AppContent() {
   if (!isAuthenticated && !paymentPending) {
     return (
       <Switch>
-        <Route path="/" component={Login} />
+        <Route path="/" component={LandingPage} />
         <Route path="/lp" component={LandingPage} />
         <Route path="/login" component={Login} />
         <Route path="/signup" component={Signup} />
         <Route path="/checkout" component={Checkout} />
         <Route path="/payment-success" component={PaymentSuccess} />
         <Route path="/accept-invite" component={AcceptInvite} />
-        <Route component={Login} />
+        <Route component={() => {
+          if (typeof window !== 'undefined' && window.location.pathname === '/') {
+            return <LandingPage />;
+          }
+          return <Login />;
+        }} />
       </Switch>
     );
   }
@@ -90,6 +97,7 @@ function AppContent() {
 
   return (
     <Switch>
+      <Route path="/" component={LandingPage} />
       <Route path="/lp" component={LandingPage} />
       <Route path="/access-denied" component={AccessDenied} />
       <Route component={Pages} />
