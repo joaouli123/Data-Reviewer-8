@@ -193,8 +193,53 @@ export default function TransactionsPage() {
 
     const txArray = Array.isArray(transactionsData) ? transactionsData : (transactionsData?.data || []);
     
+    const calculateBalances = () => {
+      let openingBalance = 0;
+      let periodIncome = 0;
+      let periodExpense = 0;
+      
+      const start = new Date(dateRange.startDate);
+      const end = new Date(dateRange.endDate);
+      const startTime = Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate(), 0, 0, 0);
+      const endTime = Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate(), 23, 59, 59);
+
+      txArray.forEach(t => {
+        if (!t) return;
+        const isPaid = t.status === 'pago' || t.status === 'completed';
+        const relevantDate = isPaid && t.paymentDate ? t.paymentDate : t.date;
+        if (!relevantDate) return;
+        
+        let tDate;
+        try {
+          const d = new Date(relevantDate);
+          if (isNaN(d.getTime())) return;
+          tDate = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 12, 0, 0);
+        } catch (e) {
+          return;
+        }
+        
+        const amount = (parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0);
+
+        if (tDate < startTime) {
+          if (t.type === 'venda' || t.type === 'income') openingBalance += amount;
+          else openingBalance -= amount;
+        } else if (tDate >= startTime && tDate <= endTime) {
+          if (t.type === 'venda' || t.type === 'income') periodIncome += amount;
+          else periodExpense += Math.abs(amount);
+        }
+      });
+
+      return {
+        opening: openingBalance,
+        income: periodIncome,
+        expense: periodExpense,
+        closing: openingBalance + periodIncome - periodExpense
+      };
+    };
+
     // Memoize calculations to prevent lag
     const balances = React.useMemo(() => calculateBalances(), [txArray, dateRange]);
+
     const filteredTransactions = React.useMemo(() => {
       return txArray
         .filter(t => {
