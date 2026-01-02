@@ -37,13 +37,8 @@ export default function SuppliersPage() {
     queryKey: ['/api/suppliers', company?.id],
     queryFn: () => Supplier.list(),
     enabled: !!company?.id,
-    staleTime: Infinity,
-    gcTime: Infinity,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchInterval: false,
-    refetchOnReconnect: false,
-    retry: 1
+    staleTime: 1000 * 60 * 5, // Cache por 5 minutos
+    refetchOnWindowFocus: true,
   });
 
   const { data: expenseCategories = [] } = useQuery({
@@ -53,13 +48,8 @@ export default function SuppliersPage() {
       return data || [];
     },
     enabled: !!company?.id,
-    staleTime: Infinity,
-    gcTime: Infinity,
-    refetchOnMount: false,
+    staleTime: 1000 * 60 * 30, // 30 minutos
     refetchOnWindowFocus: false,
-    refetchInterval: false,
-    refetchOnReconnect: false,
-    retry: 1
   });
 
   const transactionsQuery = useQuery({
@@ -69,13 +59,8 @@ export default function SuppliersPage() {
       return Array.isArray(data) ? data : [];
     },
     enabled: !!company?.id,
-    staleTime: Infinity,
-    gcTime: Infinity,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchInterval: false,
-    refetchOnReconnect: false,
-    retry: 1
+    staleTime: 1000 * 60 * 5, // 5 minutos
+    refetchOnWindowFocus: true,
   });
 
   const { data: transactionsData = [] } = transactionsQuery;
