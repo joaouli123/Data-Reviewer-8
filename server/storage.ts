@@ -150,7 +150,7 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   // Customer operations
   async createCustomer(companyId: string, data: InsertCustomer): Promise<Customer> {
-    const result = await db.insert(customers).values({ ...data, companyId }).returning();
+    const result = await db.insert(customers).values({ ...data, companyId } as any).returning();
     return result[0];
   }
 
@@ -209,7 +209,7 @@ export class DatabaseStorage implements IStorage {
 
   // Supplier operations
   async createSupplier(companyId: string, data: InsertSupplier): Promise<Supplier> {
-    const result = await db.insert(suppliers).values({ ...data, companyId }).returning();
+    const result = await db.insert(suppliers).values({ ...data, companyId } as any).returning();
     return result[0];
   }
 
@@ -253,7 +253,7 @@ export class DatabaseStorage implements IStorage {
 
   // Category operations
   async createCategory(companyId: string, data: InsertCategory): Promise<Category> {
-    const result = await db.insert(categories).values({ ...data, companyId }).returning();
+    const result = await db.insert(categories).values({ ...data, companyId } as any).returning();
     if (!result[0]) throw new Error("Failed to create category");
     return result[0];
   }
@@ -290,7 +290,7 @@ export class DatabaseStorage implements IStorage {
 
   // Transaction operations
   async createTransaction(companyId: string, data: InsertTransaction): Promise<Transaction> {
-    const result = await db.insert(transactions).values({ ...data, companyId }).returning();
+    const result = await db.insert(transactions).values({ ...data, companyId } as any).returning();
     return result[0];
   }
 
@@ -346,7 +346,7 @@ export class DatabaseStorage implements IStorage {
 
   // Cash Flow operations
   async createCashFlow(companyId: string, data: InsertCashFlow): Promise<CashFlow> {
-    const result = await db.insert(cashFlow).values({ ...data, companyId }).returning();
+    const result = await db.insert(cashFlow).values({ ...data, companyId } as any).returning();
     return result[0];
   }
 
@@ -402,7 +402,7 @@ export class DatabaseStorage implements IStorage {
 
   // Sale operations
   async createSale(companyId: string, data: InsertSale): Promise<Sale> {
-    const result = await db.insert(sales).values({ ...data, companyId }).returning();
+    const result = await db.insert(sales).values({ ...data, companyId } as any).returning();
     return result[0];
   }
 
@@ -438,7 +438,7 @@ export class DatabaseStorage implements IStorage {
 
   // Purchase operations
   async createPurchase(companyId: string, data: InsertPurchase): Promise<Purchase> {
-    const result = await db.insert(purchases).values({ ...data, companyId }).returning();
+    const result = await db.insert(purchases).values({ ...data, companyId } as any).returning();
     return result[0];
   }
 
@@ -474,7 +474,7 @@ export class DatabaseStorage implements IStorage {
 
   // Installment operations
   async createInstallment(companyId: string, data: InsertInstallment): Promise<Installment> {
-    const result = await db.insert(installments).values({ ...data, companyId }).returning();
+    const result = await db.insert(installments).values({ ...data, companyId } as any).returning();
     return result[0];
   }
 
@@ -510,7 +510,7 @@ export class DatabaseStorage implements IStorage {
 
   // Purchase Installment operations
   async createPurchaseInstallment(companyId: string, data: InsertPurchaseInstallment): Promise<PurchaseInstallment> {
-    const result = await db.insert(purchaseInstallments).values({ ...data, companyId }).returning();
+    const result = await db.insert(purchaseInstallments).values({ ...data, companyId } as any).returning();
     return result[0];
   }
 
@@ -573,7 +573,7 @@ export class DatabaseStorage implements IStorage {
 
   // Audit log operations
   async createAuditLog(data: InsertAuditLog): Promise<AuditLog> {
-    const result = await db.insert(auditLogs).values(data).returning();
+    const result = await db.insert(auditLogs).values(data as any).returning();
     return result[0];
   }
 

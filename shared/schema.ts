@@ -350,25 +350,25 @@ export const insertSubscriptionSchema = createInsertSchema(subscriptions).omit({
   updatedAt: true,
 });
 
-export const insertUserSchema = createInsertSchema(users).omit({
+export const insertUserSchema = createInsertSchema(users, {
+  password: z.string().min(6, "Password must be at least 6 characters").optional(),
+  username: z.string().min(3, "Username must be at least 3 characters").optional(),
+  email: z.string().email("Invalid email").optional(),
+}).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
-}).extend({
-  password: z.string().min(6, "Password must be at least 6 characters").optional(),
-  username: z.string().min(3, "Username must be at least 3 characters").optional(),
-}) as any;
+});
 
-export const insertInvitationSchema = createInsertSchema(invitations).omit({
+export const insertInvitationSchema = createInsertSchema(invitations, {
+  email: z.string().email("Invalid email"),
+  expiresAt: z.coerce.date(),
+}).omit({
   id: true,
   createdAt: true,
   acceptedAt: true,
   acceptedBy: true,
-}).extend({
-  email: z.string().email("Invalid email").optional(),
-  token: z.string().optional(),
-  expiresAt: z.date().or(z.string()).optional(),
-}) as any;
+});
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof users.$inferInsert>;
