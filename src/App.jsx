@@ -160,6 +160,20 @@ function AppContent() {
     );
   }
 
+  // Se o usuário está autenticado e aprovado, ele não deve ver Landing ou Checkout
+  if (isAuthenticated && company?.paymentStatus === "approved") {
+    const isPublicOrCheckout = typeof window !== 'undefined' ? 
+      ["/", "/checkout", "/signup", "/login"].includes(window.location.pathname) : 
+      false;
+    
+    if (isPublicOrCheckout) {
+      if (typeof window !== 'undefined') {
+        window.location.href = '/dashboard';
+        return null;
+      }
+    }
+  }
+
   if (window.location.pathname === "/payment-success") {
     return <PaymentSuccess />;
   }
