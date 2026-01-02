@@ -160,13 +160,13 @@ function AppContent() {
     );
   }
 
-  // Se o usuário está autenticado e aprovado, ele não deve ver Landing ou Checkout
+  // Se o usuário está autenticado e aprovado, ele não deve ver Checkout, Signup ou Login
   if (isAuthenticated && company?.paymentStatus === "approved") {
-    const isPublicOrCheckout = typeof window !== 'undefined' ? 
-      ["/", "/checkout", "/signup", "/login"].includes(window.location.pathname) : 
+    const isRestricted = typeof window !== 'undefined' ? 
+      ["/checkout", "/signup", "/login"].includes(window.location.pathname) : 
       false;
     
-    if (isPublicOrCheckout) {
+    if (isRestricted) {
       if (typeof window !== 'undefined') {
         window.location.href = '/dashboard';
         return null;
