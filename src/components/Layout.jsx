@@ -28,14 +28,14 @@ export default function Layout({ children }) {
   // Regular user navigation
   const baseNavigation = [
     { name: 'Visão Geral', icon: LayoutDashboard, path: '/dashboard', roles: ['admin', 'operational'], permission: null },
-    { name: 'Transações', icon: Receipt, path: '/transactions', roles: ['admin', 'operational'], permission: 'view_transactions' },
-    { name: 'Clientes', icon: Users, path: '/customers', roles: ['admin', 'operational'], permission: 'view_customers' },
-    { name: 'Fornecedores', icon: Building2, path: '/suppliers', roles: ['admin', 'operational'], permission: 'view_suppliers' },
-    { name: 'Categorias', icon: Tag, path: '/categories', roles: ['admin'], permission: null },
-    { name: 'Fluxo de Caixa', icon: TrendingUp, path: '/cashflowforecast', roles: ['admin'], permission: 'view_reports' },
-    { name: 'IA Analista', icon: Brain, path: '/reports', roles: ['admin'], permission: 'view_reports' },
-    { name: 'Calc. Preços', icon: Settings, path: '/pricingcalculator', roles: ['admin', 'operational'], permission: null },
-    { name: 'Gestão de Usuários', icon: Users, path: '/users', roles: ['admin'], permission: 'manage_users' },
+    { name: 'Transações', icon: Receipt, path: '/transacoes', roles: ['admin', 'operational'], permission: 'view_transactions' },
+    { name: 'Clientes', icon: Users, path: '/clientes', roles: ['admin', 'operational'], permission: 'view_customers' },
+    { name: 'Fornecedores', icon: Building2, path: '/fornecedores', roles: ['admin', 'operational'], permission: 'view_suppliers' },
+    { name: 'Categorias', icon: Tag, path: '/categorias', roles: ['admin'], permission: null },
+    { name: 'Fluxo de Caixa', icon: TrendingUp, path: '/fluxo-de-caixa', roles: ['admin'], permission: 'view_reports' },
+    { name: 'IA Analista', icon: Brain, path: '/analista-ia', roles: ['admin'], permission: 'view_reports' },
+    { name: 'Calc. Preços', icon: Settings, path: '/calculadora-precos', roles: ['admin', 'operational'], permission: null },
+    { name: 'Gestão de Usuários', icon: Users, path: '/usuarios', roles: ['admin'], permission: 'manage_users' },
   ];
 
   // Choose navigation based on user type
@@ -65,10 +65,10 @@ export default function Layout({ children }) {
                 </Link>
             );
         })}
-        <Link href="/profile" onClick={onNavigate}>
-          <div className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${pathname === '/profile' ? 'text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
-              style={{ backgroundColor: pathname === '/profile' ? '#005CB8' : 'transparent' }} data-testid="link-nav-meu-perfil">
-              <User className={`w-5 h-5 ${pathname === '/profile' ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
+        <Link href="/perfil" onClick={onNavigate}>
+          <div className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${pathname === '/perfil' ? 'text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
+              style={{ backgroundColor: pathname === '/perfil' ? '#005CB8' : 'transparent' }} data-testid="link-nav-meu-perfil">
+              <User className={`w-5 h-5 ${pathname === '/perfil' ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
               <span className="font-medium text-sm">Meu Perfil</span>
           </div>
         </Link>

@@ -66,19 +66,19 @@ function MainApp() {
       <Switch>
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/" component={Dashboard} />
-        <Route path="/profile" component={Profile} />
-        <Route path="/transactions">{() => <ProtectedRoute component={Transactions} permission="view_transactions" />}</Route>
-        <Route path="/customers">{() => <ProtectedRoute component={Customers} permission="view_customers" />}</Route>
-        <Route path="/reports">{() => <ProtectedRoute component={Reports} permission="view_reports" />}</Route>
-        <Route path="/suppliers">{() => <ProtectedRoute component={Suppliers} permission="view_suppliers" />}</Route>
-        <Route path="/cashflowforecast">{() => <ProtectedRoute component={CashFlowForecast} permission="view_reports" />}</Route>
-        <Route path="/pricingcalculator" component={PricingCalculator} />
-        <Route path="/categories" component={Categories} />
-        <Route path="/settings/users">{() => <ProtectedRoute component={UserManagement} permission="manage_users" />}</Route>
-        <Route path="/settings/team">{() => <ProtectedRoute component={TeamPage} permission="manage_users" />}</Route>
-        <Route path="/users">{() => <ProtectedRoute component={UserManagement} permission="manage_users" />}</Route>
-        <Route path="/permissions">{() => <ProtectedRoute component={UserPermissions} permission="manage_users" />}</Route>
-        <Route path="/access-denied" component={AccessDenied} />
+        <Route path="/perfil" component={Profile} />
+        <Route path="/transacoes">{() => <ProtectedRoute component={Transactions} permission="view_transactions" />}</Route>
+        <Route path="/clientes">{() => <ProtectedRoute component={Customers} permission="view_customers" />}</Route>
+        <Route path="/analista-ia">{() => <ProtectedRoute component={Reports} permission="view_reports" />}</Route>
+        <Route path="/fornecedores">{() => <ProtectedRoute component={Suppliers} permission="view_suppliers" />}</Route>
+        <Route path="/fluxo-de-caixa">{() => <ProtectedRoute component={CashFlowForecast} permission="view_reports" />}</Route>
+        <Route path="/calculadora-precos" component={PricingCalculator} />
+        <Route path="/categorias" component={Categories} />
+        <Route path="/configuracoes/usuarios">{() => <ProtectedRoute component={UserManagement} permission="manage_users" />}</Route>
+        <Route path="/configuracoes/equipe">{() => <ProtectedRoute component={TeamPage} permission="manage_users" />}</Route>
+        <Route path="/usuarios">{() => <ProtectedRoute component={UserManagement} permission="manage_users" />}</Route>
+        <Route path="/permissoes">{() => <ProtectedRoute component={UserPermissions} permission="manage_users" />}</Route>
+        <Route path="/acesso-negado" component={AccessDenied} />
       </Switch>
     </Layout>
   );

@@ -72,6 +72,14 @@ export default function CashFlowForecastPage() {
 
   const transactions = Array.isArray(transactionsData) ? transactionsData : (transactionsData?.data || []);
 
+  if (loading || !company?.id) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   // Calculate min and max dates from all transactions and installments
   const getDateRange = () => {
     const today = startOfDay(new Date());
