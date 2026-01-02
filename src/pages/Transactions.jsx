@@ -27,19 +27,17 @@ export default function TransactionsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('paid'); // 'all', 'paid', 'pending'
+  const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'paid', 'pending'
   const [paymentMethodFilter, setPaymentMethodFilter] = useState('all');
   // Initialize with local date (not UTC) to respect user timezone
   const getInitialDateRange = () => {
     const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    const todayStr = `${year}-${month}-${day}`;
+    const thirtyDaysAgo = subDays(today, 30);
+    
     return {
-      startDate: new Date(todayStr + 'T00:00:00Z'),
-      endDate: new Date(todayStr + 'T23:59:59Z'),
-      label: 'Hoje'
+      startDate: startOfDay(thirtyDaysAgo),
+      endDate: endOfDay(today),
+      label: 'Últimos 30 dias'
     };
   };
 
