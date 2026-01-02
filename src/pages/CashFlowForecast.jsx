@@ -173,7 +173,7 @@ export default function CashFlowForecastPage() {
   const [pageSize, setPageSize] = useState(10);
 
   const calculateCashFlow = () => {
-    if (!dateRange.startDate || !dateRange.endDate) return [];
+    if (!dateRange || !dateRange.startDate || !dateRange.endDate) return [];
 
     const start = startOfDay(dateRange.startDate);
     const end = endOfDay(dateRange.endDate);
