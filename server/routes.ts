@@ -112,16 +112,20 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
       // Auto-approve for now or handle trial
       const subscriptionPlan = plan || "pro";
-      await db.insert(subscriptions).values({
-        companyId: company.id,
-        plan: subscriptionPlan,
-        status: "active",
-      } as any);
+      try {
+        await db.insert(subscriptions).values({
+          companyId: company.id,
+          plan: subscriptionPlan,
+          status: "active",
+        } as any);
 
-      await db.update(companies).set({ 
-        subscriptionPlan: subscriptionPlan,
-        paymentStatus: "approved"
-      } as any).where(eq(companies.id, company.id));
+        await db.update(companies).set({ 
+          subscriptionPlan: subscriptionPlan,
+          paymentStatus: "approved"
+        } as any).where(eq(companies.id, company.id));
+      } catch (err) {
+        console.error("Error setting up company subscription:", err);
+      }
 
       // Generate token
       const token = generateToken({
