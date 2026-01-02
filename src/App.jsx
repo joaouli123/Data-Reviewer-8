@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { Toaster } from "sonner";
 import Pages from "@/pages/index.jsx";
 import Home from "@/pages/Home.jsx";
+import LandingPage from "@/components/landing/LandingPage.jsx";
 import Login from "@/pages/Login.jsx";
 import Signup from "@/pages/Signup.jsx";
 import Checkout from "@/pages/Checkout.jsx";
@@ -44,7 +45,7 @@ function AppContent() {
 
   // Verificar se está em página pública (sem window dependency)
   const isPublicPage = typeof window !== 'undefined' ? 
-    ["/", "/payment-success", "/accept-invite"].includes(window.location.pathname) : 
+    ["/", "/lp", "/payment-success", "/accept-invite"].includes(window.location.pathname) : 
     false;
 
   // Se está logado mas com pagamento pendente, força checkout
@@ -71,6 +72,7 @@ function AppContent() {
     return (
       <Switch>
         <Route path="/" component={Login} />
+        <Route path="/lp" component={LandingPage} />
         <Route path="/login" component={Login} />
         <Route path="/signup" component={Signup} />
         <Route path="/checkout" component={Checkout} />
@@ -88,6 +90,7 @@ function AppContent() {
 
   return (
     <Switch>
+      <Route path="/lp" component={LandingPage} />
       <Route path="/access-denied" component={AccessDenied} />
       <Route component={Pages} />
     </Switch>
