@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ShieldCheck } from '../constants';
+import { ShieldCheck } from './constants';
 
 const Guarantee: React.FC = () => {
   return (

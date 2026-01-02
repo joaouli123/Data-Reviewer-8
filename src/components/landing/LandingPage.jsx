@@ -1,15 +1,15 @@
 
 import { useState, useEffect } from 'react';
-import Header from './landing/Header';
-import Hero from './landing/Hero';
-import PainPoints from './landing/PainPoints';
-import Benefits from './landing/Benefits';
-import Modules from './landing/Modules';
-import Pricing from './landing/Pricing';
-import Guarantee from './landing/Guarantee';
-import FAQ from './landing/FAQ';
-import Footer from './landing/Footer';
-import FloatingCTA from './landing/FloatingCTA';
+import Header from './Header';
+import Hero from './Hero';
+import PainPoints from './PainPoints';
+import Benefits from './Benefits';
+import Modules from './Modules';
+import Pricing from './Pricing';
+import Guarantee from './Guarantee';
+import FAQ from './FAQ';
+import Footer from './Footer';
+import FloatingCTA from './FloatingCTA';
 
 const LandingPage = () => {
   const [showFloatingCTA, setShowFloatingCTA] = useState(false);

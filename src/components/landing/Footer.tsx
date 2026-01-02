@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { LogoIcon } from '../constants';
+import { LogoIcon } from './constants';
 import { Facebook, Instagram, Mail, Phone, MapPin } from 'lucide-react';
 
 // Custom WhatsApp Icon to match Lucide style
