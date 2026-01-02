@@ -335,12 +335,16 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.get("/api/customers", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
-      console.log(`[DEBUG] GET /api/customers - User: ${req.user.id}, Company: ${req.user.companyId}`);
       const customers = await storage.getCustomers(req.user.companyId);
-      console.log(`[DEBUG] GET /api/customers - Found ${customers.length} customers`);
-      res.json(customers);
+      
+      const converted = customers.map(c => ({
+        ...c,
+        totalSales: typeof c.totalSales === 'string' ? parseFloat(c.totalSales) : (c.totalSales || 0)
+      }));
+      
+      res.json(converted);
     } catch (error) {
-      console.error("[DEBUG] GET /api/customers - Error:", error);
+      console.error("[ERROR] GET /api/customers:", error);
       res.status(500).json({ error: "Failed to fetch customers" });
     }
   });
