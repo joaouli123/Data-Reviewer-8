@@ -193,122 +193,75 @@ export default function TransactionsPage() {
 
     const txArray = Array.isArray(transactionsData) ? transactionsData : (transactionsData?.data || []);
     
-    const filteredTransactions = txArray
-      .filter(t => {
-        if (!t) return false;
-        
-        // 1. Filtrar por Tipo
-        const typeMap = { 'income': 'venda', 'expense': 'compra', 'all': 'all' };
-        const mappedType = typeMap[typeFilter] || typeFilter;
-        const matchesType = mappedType === 'all' || t.type === mappedType || (mappedType === 'venda' && t.type === 'income') || (mappedType === 'compra' && t.type === 'expense');
-        if (!matchesType) return false;
+    // Memoize calculations to prevent lag
+    const balances = React.useMemo(() => calculateBalances(), [txArray, dateRange]);
+    const filteredTransactions = React.useMemo(() => {
+      return txArray
+        .filter(t => {
+          if (!t) return false;
+          
+          // 1. Filtrar por Tipo
+          const typeMap = { 'income': 'venda', 'expense': 'compra', 'all': 'all' };
+          const mappedType = typeMap[typeFilter] || typeFilter;
+          const matchesType = mappedType === 'all' || t.type === mappedType || (mappedType === 'venda' && t.type === 'income') || (mappedType === 'compra' && t.type === 'expense');
+          if (!matchesType) return false;
 
-        // 2. Filtrar por Status
-        if (statusFilter === 'paid') {
-          const isPaidOrPartial = t.status === 'pago' || t.status === 'completed' || t.status === 'parcial';
-          if (!isPaidOrPartial) return false;
-        } else if (statusFilter === 'pending') {
-          const isPending = t.status === 'pendente';
-          if (!isPending) return false;
-        }
-        
-        // 3. Filtrar por Categoria
-        const matchesCategory = categoryFilter === 'all' || 
-                               t.category === categoryFilter || 
-                               categories?.find(c => c.id === t.categoryId)?.name === categoryFilter ||
-                               categories?.find(c => c.name === t.category)?.id === categoryFilter;
-        if (!matchesCategory) return false;
+          // 2. Filtrar por Status
+          if (statusFilter === 'paid') {
+            const isPaidOrPartial = t.status === 'pago' || t.status === 'completed' || t.status === 'parcial';
+            if (!isPaidOrPartial) return false;
+          } else if (statusFilter === 'pending') {
+            const isPending = t.status === 'pendente';
+            if (!isPending) return false;
+          }
+          
+          // 3. Filtrar por Categoria
+          const matchesCategory = categoryFilter === 'all' || 
+                                 t.category === categoryFilter || 
+                                 categories?.find(c => c.id === t.categoryId)?.name === categoryFilter ||
+                                 categories?.find(c => c.name === t.category)?.id === categoryFilter;
+          if (!matchesCategory) return false;
 
-        // 4. Filtrar por Busca
-        const matchesSearch = (t.description || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
-                              (t.category && t.category.toLowerCase().includes(searchTerm.toLowerCase()));
-        if (!matchesSearch) return false;
+          // 4. Filtrar por Busca
+          const matchesSearch = (t.description || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+                                (t.category && t.category.toLowerCase().includes(searchTerm.toLowerCase()));
+          if (!matchesSearch) return false;
 
-        // 5. Filtrar por Forma de Pagamento
-        const matchesPaymentMethod = paymentMethodFilter === 'all' || t.paymentMethod === paymentMethodFilter;
-        if (!matchesPaymentMethod) return false;
+          // 5. Filtrar por Forma de Pagamento
+          const matchesPaymentMethod = paymentMethodFilter === 'all' || t.paymentMethod === paymentMethodFilter;
+          if (!matchesPaymentMethod) return false;
 
-        // 6. Filtrar por Data (UTC Midday approach)
-        const isPaid = t.status === 'pago' || t.status === 'completed';
-        const relevantDate = isPaid && t.paymentDate ? t.paymentDate : t.date;
-        if (!relevantDate) return true; // Show by default if date is missing to avoid disappearing
+          // 6. Filtrar por Data (UTC Midday approach)
+          const isPaid = t.status === 'pago' || t.status === 'completed';
+          const relevantDate = isPaid && t.paymentDate ? t.paymentDate : t.date;
+          if (!relevantDate) return true; // Show by default if date is missing to avoid disappearing
 
-        let tDate;
-        try {
-          const d = new Date(relevantDate);
-          if (isNaN(d.getTime())) return true;
-          // Normalizar para meio-dia UTC para evitar problemas de fuso horário
-          tDate = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 12, 0, 0);
-        } catch (e) {
-          return true;
-        }
-        
-        const start = new Date(dateRange.startDate);
-        const end = new Date(dateRange.endDate);
-        const startTime = Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate(), 0, 0, 0);
-        const endTime = Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate(), 23, 59, 59);
+          let tDate;
+          try {
+            const d = new Date(relevantDate);
+            if (isNaN(d.getTime())) return true;
+            // Normalizar para meio-dia UTC para evitar problemas de fuso horário
+            tDate = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 12, 0, 0);
+          } catch (e) {
+            return true;
+          }
+          
+          const start = new Date(dateRange.startDate);
+          const end = new Date(dateRange.endDate);
+          const startTime = Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate(), 0, 0, 0);
+          const endTime = Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate(), 23, 59, 59);
 
-        return tDate >= startTime && tDate <= endTime;
-      })
-    .sort((a, b) => {
-      // Sort by relevant date (paymentDate for paid, date for pending)
-      const aIsPaid = a.status === 'pago' || a.status === 'completed';
-      const bIsPaid = b.status === 'pago' || b.status === 'completed';
-      const aDate = aIsPaid && a.paymentDate ? a.paymentDate : a.date;
-      const bDate = bIsPaid && b.paymentDate ? b.paymentDate : b.date;
-      return new Date(bDate) - new Date(aDate);
-    });
-
-    const calculateBalances = () => {
-    let openingBalance = 0;
-    let periodIncome = 0;
-    let periodExpense = 0;
-    
-    const start = new Date(dateRange.startDate);
-    const end = new Date(dateRange.endDate);
-    const startTime = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate(), 0, 0, 0)).getTime();
-    const endTime = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate(), 23, 59, 59)).getTime();
-
-    txArray.forEach(t => {
-      if (!t) return;
-      const isPaid = t.status === 'pago' || t.status === 'completed';
-      const relevantDate = isPaid && t.paymentDate ? t.paymentDate : t.date;
-      if (!relevantDate) return;
-      
-      let tDate;
-      try {
-        const d = new Date(relevantDate);
-        if (isNaN(d.getTime())) return;
-        tDate = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 12, 0, 0);
-      } catch (e) {
-        return;
-      }
-      
-      const start = new Date(dateRange.startDate);
-      const end = new Date(dateRange.endDate);
-      const startTime = Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate(), 0, 0, 0);
-      const endTime = Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate(), 23, 59, 59);
-      
-      const amount = (parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0);
-
-      if (tDate < startTime) {
-        if (t.type === 'venda' || t.type === 'income') openingBalance += amount;
-        else openingBalance -= amount;
-      } else if (tDate >= startTime && tDate <= endTime) {
-        if (t.type === 'venda' || t.type === 'income') periodIncome += amount;
-        else periodExpense += Math.abs(amount);
-      }
-    });
-
-    return {
-      opening: openingBalance,
-      income: periodIncome,
-      expense: periodExpense,
-      closing: openingBalance + periodIncome - periodExpense
-    };
-  };
-
-  const balances = calculateBalances();
+          return tDate >= startTime && tDate <= endTime;
+        })
+      .sort((a, b) => {
+        // Sort by relevant date (paymentDate for paid, date for pending)
+        const aIsPaid = a.status === 'pago' || a.status === 'completed';
+        const bIsPaid = b.status === 'pago' || b.status === 'completed';
+        const aDate = aIsPaid && a.paymentDate ? a.paymentDate : a.date;
+        const bDate = bIsPaid && b.paymentDate ? b.paymentDate : b.date;
+        return new Date(bDate) - new Date(aDate);
+      });
+    }, [txArray, typeFilter, statusFilter, categoryFilter, searchTerm, paymentMethodFilter, dateRange, categories]);
 
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;

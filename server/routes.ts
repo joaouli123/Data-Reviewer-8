@@ -339,7 +339,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       
       const converted = customers.map(c => ({
         ...c,
-        totalSales: typeof c.totalSales === 'string' ? parseFloat(c.totalSales) : (c.totalSales || 0)
+        totalSales: Number(c.totalSales || 0)
       }));
       
       res.json(converted);
@@ -440,8 +440,15 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const suppliers = await storage.getSuppliers(req.user.companyId);
-      res.json(suppliers);
+      
+      const converted = suppliers.map(s => ({
+        ...s,
+        totalPurchases: Number(s.totalPurchases || 0)
+      }));
+      
+      res.json(converted);
     } catch (error) {
+      console.error("[ERROR] GET /api/suppliers:", error);
       res.status(500).json({ error: "Failed to fetch suppliers" });
     }
   });
