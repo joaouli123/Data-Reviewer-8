@@ -29,6 +29,8 @@ import AdminSubscriptions from "./pages/admin/subscriptions";
 import AdminUsers from "./pages/admin/users";
 import TeamPage from "./pages/settings/Team";
 import Profile from "./pages/Profile";
+import TermsOfUse from "./pages/TermsOfUse";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import { usePermission } from "@/hooks/usePermission";
 import Layout from "./components/Layout.jsx";
 
@@ -141,6 +143,8 @@ function AppContent() {
         <Route path="/checkout" component={Checkout} />
         <Route path="/payment-success" component={PaymentSuccess} />
         <Route path="/accept-invite" component={AcceptInvite} />
+        <Route path="/terms" component={TermsOfUse} />
+        <Route path="/privacy" component={PrivacyPolicy} />
         <Route component={() => {
           if (typeof window !== 'undefined' && window.location.pathname === '/') {
             return <LandingPage />;
@@ -158,6 +162,8 @@ function AppContent() {
   return (
     <Switch>
       <Route path="/" component={LandingPage} />
+      <Route path="/terms" component={TermsOfUse} />
+      <Route path="/privacy" component={PrivacyPolicy} />
       <Route path="/access-denied" component={AccessDenied} />
       <Route component={MainApp} />
     </Switch>

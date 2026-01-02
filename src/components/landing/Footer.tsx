@@ -95,10 +95,10 @@ const Footer: React.FC = () => {
         </div>
         
         <div className="pt-10 border-t border-blue-800 flex flex-col md:flex-row justify-between items-center gap-6 text-blue-300 text-[10px] md:text-xs font-medium text-center md:text-left">
-          <p>© {currentYear} HUA Consultoria e Análise. Tecnologia Enterprise para PMEs.</p>
+          <p>© {currentYear} HuaConsultoria e Análise. Tecnologia Enterprise para PMEs.</p>
           <div className="flex gap-6 md:gap-8 font-normal">
-            <a href="#" className="hover:text-white transition-colors">Termos de Uso</a>
-            <a href="#" className="hover:text-white transition-colors">Política de Privacidade</a>
+            <a href="/terms" className="hover:text-white transition-colors">Termos de Uso</a>
+            <a href="/privacy" className="hover:text-white transition-colors">Política de Privacidade</a>
           </div>
         </div>
       </div>
