@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { LogoIcon } from '../constants';
+import { LogoIcon } from './constants';
 import { Menu, X } from 'lucide-react';
 
 const Header: React.FC = () => {
