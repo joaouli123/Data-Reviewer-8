@@ -37,7 +37,9 @@ export default function CashFlowForecastPage() {
     queryKey: ['/api/transactions', company?.id],
     queryFn: () => Transaction.list(),
     initialData: [],
-    enabled: !!company?.id
+    enabled: !!company?.id,
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: true,
   });
 
   const { data: saleInstallments } = useQuery({

@@ -62,7 +62,9 @@ export default function TransactionsPage() {
     queryKey: ['/api/transactions', company?.id],
     queryFn: () => apiRequest('/api/transactions'),
     initialData: [],
-    enabled: !!company?.id
+    enabled: !!company?.id,
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    refetchOnWindowFocus: true,
   });
 
   const transactions = Array.isArray(transactionsData) ? transactionsData : (transactionsData?.data || []);
@@ -229,16 +231,16 @@ export default function TransactionsPage() {
         // 6. Filtrar por Data (UTC Midday approach)
         const isPaid = t.status === 'pago' || t.status === 'completed';
         const relevantDate = isPaid && t.paymentDate ? t.paymentDate : t.date;
-        if (!relevantDate) return false;
+        if (!relevantDate) return true; // Show by default if date is missing to avoid disappearing
 
         let tDate;
         try {
           const d = new Date(relevantDate);
-          if (isNaN(d.getTime())) return false;
+          if (isNaN(d.getTime())) return true;
           // Normalizar para meio-dia UTC para evitar problemas de fuso horário
           tDate = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 12, 0, 0);
         } catch (e) {
-          return false;
+          return true;
         }
         
         const start = new Date(dateRange.startDate);

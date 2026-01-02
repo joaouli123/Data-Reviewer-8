@@ -621,6 +621,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       if (body.amount !== undefined && body.amount !== null) {
         body.amount = String(body.amount);
       }
+      
+      // Ensure companyId is present
+      if (!body.companyId) {
+        body.companyId = req.user.companyId;
+      }
+
       if (body.paidAmount !== undefined && body.paidAmount !== null) {
         body.paidAmount = String(body.paidAmount);
       }

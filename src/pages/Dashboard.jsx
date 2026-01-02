@@ -42,7 +42,7 @@ export default function DashboardPage() {
   const createMutation = useMutation({
     mutationFn: (data) => Transaction.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions', 'all', company?.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions', company?.id] });
     },
     onError: (error) => {
       console.error('Erro ao criar transação:', error);
@@ -68,7 +68,7 @@ export default function DashboardPage() {
           });
         })
       ).then(() => {
-        queryClient.invalidateQueries({ queryKey: ['/api/transactions', 'all', company?.id] });
+        queryClient.invalidateQueries({ queryKey: ['/api/transactions', company?.id] });
         setIsFormOpen(false);
         toast.success(`${data.length} parcel(as) criada(s) com sucesso!`);
       }).catch(error => {
@@ -91,9 +91,10 @@ export default function DashboardPage() {
 
   // Fetch ALL transactions to show only periods with actual data
   const { data: allTxData = [] } = useQuery({
-    queryKey: ['/api/transactions', 'all', company?.id],
+    queryKey: ['/api/transactions', company?.id],
     queryFn: () => Transaction.list(),
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    refetchOnWindowFocus: true,
     enabled: !!company?.id
   });
 
