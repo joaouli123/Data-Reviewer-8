@@ -7,6 +7,7 @@ const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const menuItems = [
+    { name: 'Início', href: '/' },
     { name: 'A Solução', href: '#solucao' },
     { name: 'Benefícios', href: '#beneficios' },
     { name: 'Recursos', href: '#recursos' },
@@ -17,11 +18,11 @@ const Header: React.FC = () => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/50 transition-all duration-300">
       <div className="container mx-auto px-4 md:px-6 h-20 flex items-center justify-between">
-        <div className="flex items-center gap-2.5 shrink-0 group transition-transform">
+        <a href="/" className="flex items-center gap-2.5 shrink-0 group transition-transform">
           <span className="text-lg md:text-xl font-black tracking-tighter text-slate-900">
             Hua<span className="text-blue-600 font-black">Consultoria</span>
           </span>
-        </div>
+        </a>
         
         {/* Desktop Navigation */}
         <nav className="hidden lg:flex items-center gap-8 text-sm font-semibold text-slate-600 tracking-tight">
