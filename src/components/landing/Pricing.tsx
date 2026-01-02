@@ -87,7 +87,7 @@ const Pricing: React.FC = () => {
               QUERO O VITALÍCIO
             </a>
             <p className="text-center mt-6 text-xs font-bold text-blue-200 uppercase tracking-widest animate-pulse">
-              ⚡ Oferta limitada para este lote.
+              ⚡ Oferta limitada para início de ano.
             </p>
           </div>
         </div>
