@@ -113,14 +113,16 @@ function AppContent() {
   }
 
   const isPublicPage = typeof window !== 'undefined' ? 
-    ["/", "/payment-success", "/accept-invite"].includes(window.location.pathname) : 
+    ["/", "/payment-success", "/accept-invite", "/terms", "/privacy"].includes(window.location.pathname) : 
     false;
 
   if ((isAuthenticated || paymentPending) && company && company.paymentStatus !== "approved" && !isPublicPage) {
     if (typeof window !== 'undefined' && 
         window.location.pathname !== '/checkout' && 
         window.location.pathname !== '/payment-success' &&
-        window.location.pathname !== '/accept-invite') {
+        window.location.pathname !== '/accept-invite' &&
+        window.location.pathname !== '/terms' &&
+        window.location.pathname !== '/privacy') {
       window.location.href = '/checkout';
       return null;
     }
@@ -129,6 +131,8 @@ function AppContent() {
         <Route path="/checkout" component={Checkout} />
         <Route path="/payment-success" component={PaymentSuccess} />
         <Route path="/accept-invite" component={AcceptInvite} />
+        <Route path="/terms" component={TermsOfUse} />
+        <Route path="/privacy" component={PrivacyPolicy} />
         <Route component={Checkout} />
       </Switch>
     );

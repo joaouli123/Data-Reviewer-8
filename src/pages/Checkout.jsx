@@ -452,9 +452,9 @@ export default function Checkout() {
                 </form>
 
                 {/* Privacy Info */}
-                <div className="text-center text-xs text-slate-500">
-                  <p>Ao prosseguir, você concorda com nossos <a href="#" className="text-slate-600 hover:text-slate-700 underline">Termos de Serviço</a> e <a href="#" className="text-slate-600 hover:text-slate-700 underline">Política de Privacidade</a></p>
-                </div>
+                  <p className="text-center text-xs text-slate-500">
+                  Ao prosseguir, você concorda com nossos <a href="/terms" className="text-slate-600 hover:text-blue-600 underline">Termos de Uso</a> e <a href="/privacy" className="text-slate-600 hover:text-blue-600 underline">Política de Privacidade</a>
+                </p>
               </div>
             </Card>
           </div>
