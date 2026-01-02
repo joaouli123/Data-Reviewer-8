@@ -167,11 +167,11 @@ export class DatabaseStorage implements IStorage {
         category: customers.category,
         status: customers.status,
         createdAt: customers.createdAt,
-        totalSales: sql<number>`COALESCE((SELECT SUM(${transactions.amount}) FROM ${transactions} WHERE ${transactions.customerId} = ${customers.id} AND ${transactions.type} IN ('income', 'venda')), 0)`.mapWith(Number),
+        totalSales: sql<number>`(SELECT COALESCE(SUM(CAST(${transactions.amount} AS NUMERIC)), 0) FROM ${transactions} WHERE ${transactions.customerId} = ${customers.id} AND ${transactions.type} IN ('income', 'venda'))`.as('total_sales'),
       })
       .from(customers)
       .where(eq(customers.companyId, companyId))
-      .orderBy(desc(sql`COALESCE((SELECT SUM(${transactions.amount}) FROM ${transactions} WHERE ${transactions.customerId} = ${customers.id} AND ${transactions.type} IN ('income', 'venda')), 0)`));
+      .orderBy(desc(sql`total_sales`));
     
     return result as (Customer & { totalSales: number })[];
   }
@@ -211,13 +211,26 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
-  async getSuppliers(companyId: string): Promise<Supplier[]> {
-    // Get all suppliers with their basic info
-    return await db
-      .select()
+  async getSuppliers(companyId: string): Promise<(Supplier & { totalPurchases: number })[]> {
+    const result = await db
+      .select({
+        id: suppliers.id,
+        companyId: suppliers.companyId,
+        name: suppliers.name,
+        cnpj: suppliers.cnpj,
+        email: suppliers.email,
+        phone: suppliers.phone,
+        contact: suppliers.contact,
+        category: suppliers.category,
+        status: suppliers.status,
+        createdAt: suppliers.createdAt,
+        totalPurchases: sql<number>`(SELECT COALESCE(SUM(CAST(${transactions.amount} AS NUMERIC)), 0) FROM ${transactions} WHERE ${transactions.supplierId} = ${suppliers.id} AND ${transactions.type} IN ('expense', 'compra'))`.as('total_purchases'),
+      })
       .from(suppliers)
       .where(eq(suppliers.companyId, companyId))
-      .orderBy(desc(suppliers.createdAt));
+      .orderBy(desc(sql`total_purchases`));
+    
+    return result as (Supplier & { totalPurchases: number })[];
   }
 
   async getSupplier(companyId: string, id: string): Promise<Supplier | undefined> {
