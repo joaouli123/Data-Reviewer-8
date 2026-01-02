@@ -20,14 +20,14 @@ export default function Layout({ children }) {
 
   // Super Admin navigation
   const superAdminNavigation = [
-    { name: 'Dashboard', icon: LayoutDashboard, path: '/', roles: ['super_admin'], permission: null },
+    { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', roles: ['super_admin'], permission: null },
     { name: 'Assinaturas', icon: Users, path: '/admin/subscriptions', roles: ['super_admin'], permission: null },
     { name: 'Usuários', icon: Users, path: '/admin/users', roles: ['super_admin'], permission: null },
   ];
 
   // Regular user navigation
   const baseNavigation = [
-    { name: 'Visão Geral', icon: LayoutDashboard, path: '/', roles: ['admin', 'operational'], permission: null },
+    { name: 'Visão Geral', icon: LayoutDashboard, path: '/dashboard', roles: ['admin', 'operational'], permission: null },
     { name: 'Transações', icon: Receipt, path: '/transactions', roles: ['admin', 'operational'], permission: 'view_transactions' },
     { name: 'Clientes', icon: Users, path: '/customers', roles: ['admin', 'operational'], permission: 'view_customers' },
     { name: 'Fornecedores', icon: Building2, path: '/suppliers', roles: ['admin', 'operational'], permission: 'view_suppliers' },

@@ -64,6 +64,7 @@ function MainApp() {
   return (
     <Layout>
       <Switch>
+        <Route path="/dashboard" component={Dashboard} />
         <Route path="/" component={Dashboard} />
         <Route path="/profile" component={Profile} />
         <Route path="/transactions">{() => <ProtectedRoute component={Transactions} permission="view_transactions" />}</Route>
