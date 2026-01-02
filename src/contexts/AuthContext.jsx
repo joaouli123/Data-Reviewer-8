@@ -105,6 +105,15 @@ export function AuthProvider({ children }) {
       setUser(data.user);
       setCompany(data.company);
       localStorage.setItem("auth", JSON.stringify(data));
+      
+      // Invalidate queries to refresh data after login
+      try {
+        const { queryClient } = await import("@/lib/queryClient");
+        queryClient.invalidateQueries();
+      } catch (e) {
+        // Ignore
+      }
+      
       return data;
     } catch (err) {
       setError(err.message);

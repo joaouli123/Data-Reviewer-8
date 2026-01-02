@@ -1191,7 +1191,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.get("/api/audit-logs", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
-      const limit = req.query.limit ? parseInt(req.query.limit as string) : 100;
+      const limit = req.query.limit ? Math.min(parseInt(req.query.limit as string), 500) : 100;
       const logs = await storage.getAuditLogs(req.user.companyId, limit);
       res.json(logs);
     } catch (error) {
