@@ -357,7 +357,7 @@ export const insertUserSchema = createInsertSchema(users).omit({
 }).extend({
   password: z.string().min(6, "Password must be at least 6 characters").optional(),
   username: z.string().min(3, "Username must be at least 3 characters").optional(),
-});
+}) as any;
 
 export const insertInvitationSchema = createInsertSchema(invitations).omit({
   id: true,
@@ -368,12 +368,12 @@ export const insertInvitationSchema = createInsertSchema(invitations).omit({
   email: z.string().email("Invalid email").optional(),
   token: z.string().optional(),
   expiresAt: z.date().or(z.string()).optional(),
-});
+}) as any;
 
 export type User = typeof users.$inferSelect;
-export type InsertUser = z.infer<typeof insertUserSchema>;
+export type InsertUser = z.infer<typeof users.$inferInsert>;
 export type Invitation = typeof invitations.$inferSelect;
-export type InsertInvitation = z.infer<typeof insertInvitationSchema>;
+export type InsertInvitation = z.infer<typeof invitations.$inferInsert>;
 
 export const insertCustomerSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
@@ -383,91 +383,91 @@ export const insertCustomerSchema = z.object({
   contact: z.string().nullable().optional(),
   category: z.string().nullable().optional(),
   status: z.string().default("ativo").optional(),
-});
+}) as any;
 
 export const insertSupplierSchema = createInsertSchema(suppliers).omit({
   id: true,
   createdAt: true,
   companyId: true,
-});
+}) as any;
 
 export const insertCategorySchema = createInsertSchema(categories).omit({
   id: true,
   createdAt: true,
   companyId: true,
-});
+}) as any;
 
 export const insertTransactionSchema = createInsertSchema(transactions).omit({
   id: true,
   companyId: true,
-});
+}) as any;
 
 export const insertBankStatementItemSchema = createInsertSchema(bankStatementItems).omit({
   id: true,
   companyId: true,
   createdAt: true,
-});
+}) as any;
 
 export const insertCashFlowSchema = createInsertSchema(cashFlow).omit({
   id: true,
   companyId: true,
-});
+}) as any;
 
 export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({
   id: true,
   createdAt: true,
-});
+}) as any;
 
 export const insertSaleSchema = createInsertSchema(sales).omit({
   id: true,
   companyId: true,
-});
+}) as any;
 
 export const insertPurchaseSchema = createInsertSchema(purchases).omit({
   id: true,
   companyId: true,
-});
+}) as any;
 
 export const insertInstallmentSchema = createInsertSchema(installments).omit({
   id: true,
   companyId: true,
-});
+}) as any;
 
 export const insertPurchaseInstallmentSchema = createInsertSchema(purchaseInstallments).omit({
   id: true,
   companyId: true,
-});
+}) as any;
 
 // ========== TYPES ==========
 
 export type Company = typeof companies.$inferSelect;
-export type InsertCompany = z.infer<typeof insertCompanySchema>;
+export type InsertCompany = z.infer<typeof companies.$inferInsert>;
 
 export type Subscription = typeof subscriptions.$inferSelect;
-export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
+export type InsertSubscription = z.infer<typeof subscriptions.$inferInsert>;
 
 export type Session = typeof sessions.$inferSelect;
 
 export type Customer = typeof customers.$inferSelect;
-export type InsertCustomer = z.infer<typeof insertCustomerSchema>;
+export type InsertCustomer = z.infer<typeof customers.$inferInsert>;
 
 export type Supplier = typeof suppliers.$inferSelect;
-export type InsertSupplier = z.infer<typeof insertSupplierSchema>;
+export type InsertSupplier = z.infer<typeof suppliers.$inferInsert>;
 
 export type Category = typeof categories.$inferSelect;
-export type InsertCategory = z.infer<typeof insertCategorySchema>;
+export type InsertCategory = z.infer<typeof categories.$inferInsert>;
 
 export type Transaction = typeof transactions.$inferSelect;
-export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
+export type InsertTransaction = z.infer<typeof transactions.$inferInsert>;
 
 export type BankStatementItem = typeof bankStatementItems.$inferSelect;
-export type InsertBankStatementItem = z.infer<typeof insertBankStatementItemSchema>;
+export type InsertBankStatementItem = z.infer<typeof bankStatementItems.$inferInsert>;
 
 export type CashFlow = typeof cashFlow.$inferSelect;
-export type InsertCashFlow = z.infer<typeof insertCashFlowSchema>;
+export type InsertCashFlow = z.infer<typeof cashFlow.$inferInsert>;
 
 export type AuditLog = typeof auditLogs.$inferSelect;
-export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
+export type InsertAuditLog = z.infer<typeof auditLogs.$inferInsert>;
 
 export type LoginAttempt = typeof loginAttempts.$inferSelect;
 

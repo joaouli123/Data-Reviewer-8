@@ -838,7 +838,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const data = insertSaleSchema.parse(req.body);
-      const sale = await storage.createSale(req.user.companyId, data);
+      const sale = await storage.createSale(req.user.companyId, { ...data, companyId: req.user.companyId });
       res.status(201).json(sale);
     } catch (error: any) {
       res.status(400).json({ error: error.message || "Invalid sale data" });
@@ -928,7 +928,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const data = insertPurchaseSchema.parse(req.body);
-      const purchase = await storage.createPurchase(req.user.companyId, data);
+      const purchase = await storage.createPurchase(req.user.companyId, { ...data, companyId: req.user.companyId });
       res.status(201).json(purchase);
     } catch (error: any) {
       res.status(400).json({ error: error.message || "Invalid purchase data" });
@@ -1018,7 +1018,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const data = insertInstallmentSchema.parse(req.body);
-      const installment = await storage.createInstallment(req.user.companyId, data);
+      const installment = await storage.createInstallment(req.user.companyId, { ...data, companyId: req.user.companyId });
       res.status(201).json(installment);
     } catch (error: any) {
       res.status(400).json({ error: error.message || "Invalid installment data" });
@@ -1095,7 +1095,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const data = insertPurchaseInstallmentSchema.parse(req.body);
-      const installment = await storage.createPurchaseInstallment(req.user.companyId, data);
+      const installment = await storage.createPurchaseInstallment(req.user.companyId, { ...data, companyId: req.user.companyId });
       res.status(201).json(installment);
     } catch (error: any) {
       res.status(400).json({ error: error.message || "Invalid purchase installment data" });
@@ -1350,16 +1350,16 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.post("/api/auth/logout", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (req.user) {
-        await createAuditLog(
-          req.user.id,
-          req.user.companyId,
-          "LOGOUT",
-          "user",
-          req.user.id,
-          undefined,
-          req.ip || 'unknown',
-          req.headers['user-agent'] || 'unknown'
-        );
+    const result = await db.insert(auditLogs).values({
+      companyId: req.user.companyId,
+      userId: req.user.id,
+      action: "LOGOUT",
+      resourceType: "user",
+      resourceId: req.user.id,
+      ipAddress: req.ip || 'unknown',
+      userAgent: req.headers['user-agent'] || 'unknown',
+      status: "success"
+    }).returning();
       }
       res.json({ message: "Logged out" });
     } catch (error) {
@@ -1373,10 +1373,10 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       
       const isAdmin = req.user.role === "admin";
       const isSuperAdmin = !!req.user.isSuperAdmin;
-      const userPermissions = req.user.permissions || {};
-      const canManageUsers = isAdmin || !!userPermissions["MANAGE_USERS"];
+      const userPermissions = (req.user as any).permissions || {};
+      const canManageUsers = isAdmin || !!userPermissions[PERMISSIONS.MANAGE_USERS];
       
-      console.log(`[DEBUG] GET /api/admin/users - User: ${req.user.username}, Role: ${req.user.role}, isSuperAdmin: ${isSuperAdmin}, Company: ${req.user.companyId}`);
+      console.log(`[DEBUG] GET /api/admin/users - User: ${(req.user as any).username}, Role: ${req.user.role}, isSuperAdmin: ${isSuperAdmin}, Company: ${req.user.companyId}`);
 
       let usersList;
       if (isSuperAdmin) {
@@ -1457,9 +1457,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       }
 
       // Query users for this company
-      const usersList = await db.select().from(users).where(eq(users.companyId, currentCompanyId)).orderBy(desc(users.createdAt));
+      const usersFromDb = await db.select().from(users).where(eq(users.companyId, currentCompanyId)).orderBy(desc(users.createdAt));
       
-      const formattedUsers = usersList.map(u => {
+      const formattedUsers = usersFromDb.map(u => {
         let perms: any = {};
         try {
           if (u.permissions) {
@@ -2351,13 +2351,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   // ========== SUPER ADMIN - GLOBAL USERS ==========
 
-  // Get all users across all companies
   app.get("/api/admin/users", authMiddleware, requireSuperAdmin, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user?.isSuperAdmin) {
         return res.status(403).json({ error: "Forbidden" });
       }
 
+      const isSuperAdmin = !!req.user?.isSuperAdmin;
+      let usersList;
       if (isSuperAdmin) {
         // Super admin vê tudo
         usersList = await db.select({
@@ -2745,7 +2746,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       }
     ];
 
-      const createdUsers = [];
+      const createdUsers: any[] = [];
       for (const cred of testCredentials) {
         const user = await createUser(
           company.id,

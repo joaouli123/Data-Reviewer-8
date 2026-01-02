@@ -615,7 +615,13 @@ export class DatabaseStorage implements IStorage {
   // Invitation operations
   async createInvitation(companyId: string, createdBy: string, data: InsertInvitation): Promise<Invitation> {
     const token = require('crypto').randomBytes(32).toString('hex');
-    const result = await db.insert(invitations).values({ ...data, companyId, token, createdBy }).returning();
+    const result = await db.insert(invitations).values({ 
+      ...data, 
+      companyId, 
+      token, 
+      createdBy,
+      expiresAt: data.expiresAt ? new Date(data.expiresAt) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    } as any).returning();
     return result[0];
   }
 
