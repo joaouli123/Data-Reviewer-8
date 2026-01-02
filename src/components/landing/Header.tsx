@@ -12,28 +12,27 @@ const Header: React.FC = () => {
     { name: 'Recursos', href: '#recursos' },
     { name: 'Planos', href: '#precos' },
     { name: 'FAQ', href: '#faq' },
-    { name: 'Login', href: '/login' },
   ];
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
-      <div className="container mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-2 shrink-0">
-          <div className="p-1.5 bg-blue-600 rounded-lg shadow-lg shadow-blue-500/20">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/50 transition-all duration-300">
+      <div className="container mx-auto px-4 md:px-6 h-20 flex items-center justify-between">
+        <div className="flex items-center gap-2.5 shrink-0 group transition-transform hover:scale-105">
+          <div className="p-2 bg-blue-600 rounded-xl shadow-lg shadow-blue-500/20 group-hover:shadow-blue-500/40 transition-all">
             <LogoIcon className="w-5 h-5 md:w-6 md:h-6 text-white" />
           </div>
-          <a href="/" className="text-base md:text-lg font-extrabold tracking-tight text-slate-900 uppercase">
+          <a href="/" className="text-lg md:text-xl font-black tracking-tighter text-slate-900">
             HUA<span className="text-blue-600">CONSULTORIA</span>
           </a>
         </div>
         
         {/* Desktop Navigation */}
-        <nav className="hidden lg:flex items-center gap-6 text-xs font-bold text-slate-600 uppercase tracking-wider">
+        <nav className="hidden lg:flex items-center gap-8 text-sm font-semibold text-slate-600 tracking-tight">
           {menuItems.map((item) => (
             <a 
               key={item.name} 
               href={item.href} 
-              className="hover:text-blue-600 transition-colors py-2"
+              className="hover:text-blue-600 transition-colors relative py-2 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-blue-600 hover:after:w-full after:transition-all"
             >
               {item.name}
             </a>
@@ -43,48 +42,56 @@ const Header: React.FC = () => {
         <div className="flex items-center gap-4">
           <a 
             href="/login" 
-            className="hidden sm:inline-flex text-slate-600 hover:text-blue-600 text-sm font-bold transition-colors"
+            className="hidden sm:inline-flex text-slate-600 hover:text-blue-600 text-sm font-bold transition-colors px-4 py-2"
           >
-            ENTRAR
+            Entrar
           </a>
           <a 
             href="#precos" 
-            className="hidden sm:inline-flex bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-all shadow-lg shadow-blue-500/20 active:scale-95"
+            className="hidden sm:inline-flex bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 rounded-xl text-sm font-bold transition-all shadow-lg hover:shadow-xl active:scale-95"
           >
-            ASSINAR AGORA
+            Começar Agora
           </a>
           
           {/* Mobile Menu Toggle */}
           <button 
-            className="lg:hidden p-2 text-slate-600"
+            className="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-label="Menu"
           >
-            {isMenuOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
+            {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
       </div>
 
       {/* Mobile Menu Overlay */}
-      <div className={`lg:hidden absolute top-20 left-0 right-0 bg-white border-b border-slate-200 transition-all duration-300 ease-in-out ${isMenuOpen ? 'opacity-100 translate-y-0 visible' : 'opacity-0 -translate-y-4 invisible'}`}>
-        <nav className="flex flex-col p-6 gap-4">
+      <div className={`lg:hidden absolute top-[80px] left-0 right-0 bg-white/95 backdrop-blur-xl border-b border-slate-200 transition-all duration-300 ease-in-out ${isMenuOpen ? 'opacity-100 translate-y-0 visible' : 'opacity-0 -translate-y-4 invisible'}`}>
+        <nav className="flex flex-col p-6 gap-2">
           {menuItems.map((item) => (
             <a 
               key={item.name} 
               href={item.href} 
               onClick={() => setIsMenuOpen(false)}
-              className="text-lg font-bold text-slate-900 border-b border-slate-50 pb-4 last:border-0"
+              className="text-lg font-semibold text-slate-900 p-4 hover:bg-slate-50 rounded-xl transition-colors"
             >
               {item.name}
             </a>
           ))}
-          <a 
-            href="#precos" 
-            onClick={() => setIsMenuOpen(false)}
-            className="mt-2 w-full bg-blue-600 text-white text-center py-4 rounded-xl font-bold"
-          >
-            GARANTIR ACESSO VITALÍCIO
-          </a>
+          <div className="pt-4 mt-2 border-t border-slate-100 flex flex-col gap-3">
+            <a 
+              href="/login" 
+              className="w-full text-center py-4 text-slate-900 font-bold"
+            >
+              Entrar
+            </a>
+            <a 
+              href="#precos" 
+              onClick={() => setIsMenuOpen(false)}
+              className="w-full bg-blue-600 text-white text-center py-4 rounded-xl font-bold shadow-lg"
+            >
+              Garantir Acesso Vitalício
+            </a>
+          </div>
         </nav>
       </div>
     </header>
