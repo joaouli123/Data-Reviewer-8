@@ -45,13 +45,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import InviteUserModal from "@/components/users/InviteUserModal";
 import { PERMISSIONS } from "../../shared/schema";
 
 export default function UserManagement() {
   const { user: currentUser } = useAuth();
-  const { toast } = useToast();
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [isPermissionsOpen, setIsPermissionsOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -88,11 +87,11 @@ export default function UserManagement() {
       console.log("[DEBUG] Invitation mutation SUCCESS.");
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       setIsInviteOpen(false);
-      toast({ title: "Sucesso", description: "Usuário criado com sucesso!" });
+      toast.success("Sucesso: Usuário criado com sucesso!");
     },
     onError: (error) => {
       console.error("Mutation error:", error);
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
+      toast.error("Erro: " + error.message);
     },
   });
 
@@ -106,7 +105,7 @@ export default function UserManagement() {
       });
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to delete user");
+        throw new Error(errorData.error || "Failed to fetch users");
       }
       return response.json();
     },
@@ -116,15 +115,11 @@ export default function UserManagement() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
 
       setUserToDelete(null);
-      toast({ title: "Sucesso", description: "Usuário removido com sucesso!" });
+      toast.success("Sucesso: Usuário removido com sucesso!");
     },
     onError: (error) => {
       console.error("[DEBUG] User deletion ERROR:", error);
-      toast({ 
-        title: "Erro ao excluir", 
-        description: error.message || "Não foi possível remover o usuário. Verifique os logs do servidor.", 
-        variant: "destructive" 
-      });
+      toast.error("Erro ao excluir: " + (error.message || "Não foi possível remover o usuário. Verifique os logs do servidor."));
       setUserToDelete(null);
     },
   });
@@ -137,10 +132,10 @@ export default function UserManagement() {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       setIsPermissionsOpen(false);
-      toast({ title: "Sucesso", description: "Permissões atualizadas com sucesso!" });
+      toast.success("Sucesso: Permissões atualizadas com sucesso!");
     },
     onError: (error) => {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
+      toast.error("Erro: " + error.message);
     },
   });
 
