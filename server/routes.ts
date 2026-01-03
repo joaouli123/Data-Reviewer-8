@@ -656,7 +656,10 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         interest: t.interest ? parseFloat(t.interest.toString()) : 0
       }));
       
-      res.json(converted);
+      // Explicitly sort by date descending to ensure newest appear first
+      const sorted = converted.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      
+      res.json(sorted);
     } catch (error: any) {
       console.error("❌ [GET /api/transactions] Error:", error.message);
       res.status(500).json({ error: "Internal Server Error" });
