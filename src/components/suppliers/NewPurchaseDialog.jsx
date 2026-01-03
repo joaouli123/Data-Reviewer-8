@@ -14,6 +14,14 @@ import { apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { Switch } from '@/components/ui/switch';
 
+// MESMA FUNÇÃO SEGURA DA VENDA
+const parseCurrency = (value) => {
+  if (!value) return 0;
+  if (typeof value === 'number') return value;
+  const cleanValue = value.toString().replace(/\./g, '').replace(',', '.');
+  return parseFloat(cleanValue) || 0;
+};
+
 export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
   const { company } = useAuth();
   const queryClient = useQueryClient();
@@ -76,22 +84,28 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
 
   const createPurchaseMutation = useMutation({
     mutationFn: async (data) => {
+      // SEGURANÇA: Garante valor limpo
+      const rawTotal = parseCurrency(data.total_amount);
+
       const payload = {
         supplierId: supplier.id,
         purchaseDate: data.purchase_date,
-        totalAmount: String(data.total_amount), // Enviando valor saneado
+        totalAmount: rawTotal, // Envia float
         status: data.status,
         description: data.description,
         categoryId: categories.find(c => c.name === data.category)?.id,
         paymentMethod: data.paymentMethod,
         installmentCount: parseInt(data.installments) || 1,
-        customInstallments: data.customInstallments
+        // SEGURANÇA: Limpa parcelas customizadas também
+        customInstallments: data.customInstallments?.map(inst => ({
+            ...inst,
+            amount: parseCurrency(inst.amount)
+        }))
       };
 
       return await apiRequest('POST', '/api/purchases', payload);
     },
     onSuccess: async () => {
-      // Sincronização em Tempo Real de todos os módulos afetados
       await Promise.all([
         queryClient.refetchQueries({ queryKey: ['/api/transactions'] }),
         queryClient.refetchQueries({ queryKey: ['/api/cash-flow'] }),
@@ -115,12 +129,9 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
     setFormData(prev => ({ ...prev, installments: numValue }));
 
     if (numInstallments > 1) {
-      // 1. Sanitização do valor total para cálculo
-      const total = typeof formData.total_amount === 'string' 
-        ? parseFloat(formData.total_amount.replace(/\./g, '').replace(',', '.'))
-        : parseFloat(formData.total_amount || 0);
+      // CORREÇÃO: Usando a função helper segura
+      const total = parseCurrency(formData.total_amount);
 
-      // 2. Cálculo com arredondamento fixo em 2 casas
       const defaultAmount = parseFloat((total / numInstallments).toFixed(2));
       const baseDate = new Date(formData.purchase_date + 'T12:00:00Z');
 
@@ -129,7 +140,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
         due_date: format(addMonths(baseDate, i), 'yyyy-MM-dd')
       }));
 
-      // 3. Ajuste do centavo na última parcela (Regra de Ouro Financeira)
+      // Ajuste do centavo na última parcela
       const somaAtual = parseFloat((defaultAmount * numInstallments).toFixed(2));
       const diferenca = parseFloat((total - somaAtual).toFixed(2));
 
@@ -148,20 +159,19 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Validações básicas
+    // CORREÇÃO: Usando parseCurrency para validar corretamente
+    const totalValue = parseCurrency(formData.total_amount);
+
     if (!formData.description.trim()) return toast.error('Digite uma descrição');
-    if (!formData.total_amount || Number(formData.total_amount) <= 0) return toast.error('Valor inválido');
+    if (totalValue <= 0) return toast.error('Valor inválido');
     if (!formData.category) return toast.error('Selecione uma categoria');
     if (!formData.paymentMethod) return toast.error('Selecione a forma de pagamento');
 
-    // Sanitização final do valor para evitar o erro de "500 -> 50000"
-    let totalValue = parseFloat(formData.total_amount);
-    if (totalValue > 999999) totalValue = totalValue / 100; // Proteção contra inputs em centavos
-
     // Validação de soma das parcelas customizadas
     if (customInstallments.length > 0) {
-      const totalCustom = customInstallments.reduce((sum, inst) => sum + parseFloat(inst.amount || 0), 0);
-      if (Math.abs(totalCustom - totalValue) > 0.01) {
+      const totalCustom = customInstallments.reduce((sum, inst) => sum + parseCurrency(inst.amount), 0);
+
+      if (Math.abs(totalCustom - totalValue) > 0.05) {
         return toast.error('A soma das parcelas não bate com o total');
       }
     }
@@ -172,12 +182,9 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
 
     createPurchaseMutation.mutate({
       ...formData,
-      total_amount: totalValue.toFixed(2),
+      total_amount: totalValue, // Envia o valor já tratado, mutation limpa de novo por segurança
       installments: instCount,
-      customInstallments: customInstallments.length > 0 ? customInstallments.map(inst => ({
-        ...inst,
-        amount: parseFloat(parseFloat(inst.amount).toFixed(2))
-      })) : null
+      customInstallments: customInstallments.length > 0 ? customInstallments : null
     });
   };
 
@@ -195,7 +202,6 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-          {/* Descrição */}
           <div className="space-y-2">
             <Label>Descrição da Compra</Label>
             <Input
@@ -206,7 +212,6 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
             />
           </div>
 
-          {/* Pagamento */}
           <div className="space-y-2">
             <Label>Forma de Pagamento</Label>
             <Select 
@@ -237,7 +242,6 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
             </Select>
           </div>
 
-          {/* Switch Pago */}
           <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900 border border-emerald-200 dark:border-emerald-700">
             <Label className="cursor-pointer">Pago à Vista</Label>
             <Switch 
@@ -255,7 +259,6 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
             />
           </div>
 
-          {/* Valor Total */}
           <div className="space-y-2">
             <Label>Valor Total</Label>
             <div className="flex items-center gap-2">
@@ -270,7 +273,6 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
             </div>
           </div>
 
-          {/* Parcelas */}
           {formData.status !== 'pago' && (
             <div className="space-y-2">
               <Label>Número de Parcelas</Label>
@@ -283,7 +285,6 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
             </div>
           )}
 
-          {/* Datas */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Data da Compra</Label>
@@ -319,7 +320,6 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
             )}
           </div>
 
-          {/* Categoria */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Categoria</Label>
@@ -349,7 +349,6 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
             </div>
           </div>
 
-          {/* Listagem de Parcelas Customizadas */}
           {formData.status !== 'pago' && customInstallments.length > 1 && (
             <div className="space-y-3 mt-6 border-t pt-4">
               <Label className="text-sm font-bold">Detalhamento das Parcelas</Label>
@@ -375,17 +374,19 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
                 ))}
               </div>
 
-              {/* Conferência de Soma */}
               <div className="flex justify-between items-center px-2 py-1 bg-slate-100 rounded text-xs">
                 <span>Soma das Parcelas:</span>
-                <span className="font-bold">
-                  R$ {customInstallments.reduce((sum, i) => sum + parseFloat(i.amount || 0), 0).toFixed(2)}
+                <span className={`font-bold ${
+                   Math.abs(customInstallments.reduce((sum, i) => sum + parseCurrency(i.amount), 0) - parseCurrency(formData.total_amount)) < 0.05
+                   ? 'text-emerald-600' 
+                   : 'text-rose-600'
+                }`}>
+                  R$ {customInstallments.reduce((sum, i) => sum + parseCurrency(i.amount), 0).toFixed(2)}
                 </span>
               </div>
             </div>
           )}
 
-          {/* Botões Finais */}
           <div className="flex justify-end gap-3 pt-6 border-t">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar

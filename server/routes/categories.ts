@@ -19,4 +19,17 @@ export function registerCategoryRoutes(app: Express) {
       res.status(500).json({ error: "Failed to fetch categories" });
     }
   });
+
+  app.post("/api/categories", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      const { name, type } = req.body;
+      if (!name || !type) return res.status(400).json({ error: "Name and type are required" });
+      
+      const category = await storage.createCategory(req.user.companyId, { name, type });
+      res.json(category);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create category" });
+    }
+  });
 }

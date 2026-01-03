@@ -1,24 +1,20 @@
 import React, { useState } from 'react';
-import { Supplier, Purchase, Category, Transaction } from '@/api/entities';
+import { Supplier, Category } from '@/api/entities'; // Removi Transaction e Purchase não usados diretamente
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Mail, Phone, Building2, MoreHorizontal, Trash2, ShoppingCart, Eye, Edit } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { Plus, Search, Mail, Phone, MoreHorizontal, Trash2, ShoppingCart, Eye, Edit, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
-import { cn } from "@/lib/utils";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import NewPurchaseDialog from '../components/suppliers/NewPurchaseDialog';
 import SupplierPurchasesDialog from '../components/suppliers/SupplierPurchasesDialog';
 import SupplierFormDialog from '../components/suppliers/SupplierFormDialog';
 import Pagination from '../components/Pagination';
-import { formatPhoneNumber, formatCNPJ } from '@/utils/masks';
+import { formatPhoneNumber, formatCNPJ } from '@/utils/masks'; // Importante usar estes
 
 export default function SuppliersPage() {
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
@@ -29,11 +25,17 @@ export default function SuppliersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  
+
   const { company } = useAuth();
   const queryClient = useQueryClient();
 
-  const { data: suppliersData, isLoading, refetch } = useQuery({
+  // 1. Query Principal
+  const { 
+    data: suppliersData, 
+    isLoading, 
+    refetch, 
+    isRefetching 
+  } = useQuery({
     queryKey: ['/api/suppliers', company?.id],
     queryFn: () => Supplier.list(),
     enabled: !!company?.id,
@@ -41,6 +43,7 @@ export default function SuppliersPage() {
 
   const suppliers = Array.isArray(suppliersData) ? suppliersData : (suppliersData?.data || []);
 
+  // 2. Categorias para o formulário
   const { data: expenseCategories = [] } = useQuery({
     queryKey: ['/api/categories', company?.id],
     queryFn: async () => {
@@ -48,23 +51,11 @@ export default function SuppliersPage() {
       return Array.isArray(data) ? data : (data?.data || []);
     },
     enabled: !!company?.id,
-    staleTime: 1000 * 60 * 30, // 30 minutos
-    refetchOnWindowFocus: false,
+    staleTime: 1000 * 60 * 30, 
   });
 
-  const transactionsQuery = useQuery({
-    queryKey: ['/api/transactions', company?.id],
-    queryFn: async () => {
-      const data = await Transaction.list();
-      return Array.isArray(data) ? data : [];
-    },
-    enabled: !!company?.id,
-    staleTime: 1000 * 60 * 5, // 5 minutos
-    refetchOnWindowFocus: true,
-  });
-
-  const { data: transactionsData = [] } = transactionsQuery;
-  const transactions = Array.isArray(transactionsData) ? transactionsData : [];
+  // NOTA: Removi as queries de transactions e purchases pois elas não estavam sendo usadas na renderização da lista.
+  // O valor total já vem calculado do backend no campo 'totalPurchases'.
 
   const saveMutation = useMutation({
     mutationFn: (data) => {
@@ -77,11 +68,10 @@ export default function SuppliersPage() {
       queryClient.invalidateQueries({ queryKey: ['/api/suppliers', company?.id] });
       setIsFormDialogOpen(false);
       setSelectedSupplier(null);
-      toast.success(selectedSupplier ? 'Fornecedor atualizado!' : 'Fornecedor adicionado!', { duration: 5000 });
+      toast.success(selectedSupplier ? 'Fornecedor atualizado!' : 'Fornecedor adicionado!');
     },
     onError: (error) => {
-      const errorMsg = error?.message || 'Erro ao salvar fornecedor';
-      toast.error(errorMsg, { duration: 5000 });
+      toast.error(error?.message || 'Erro ao salvar fornecedor');
     }
   });
 
@@ -89,11 +79,13 @@ export default function SuppliersPage() {
     mutationFn: (id) => Supplier.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/suppliers', company?.id] });
-      toast.success('Fornecedor removido.', { duration: 5000 });
+      // Também invalida transações pois deletar fornecedor afeta o histórico
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      toast.success('Fornecedor removido.');
       setSupplierToDelete(null);
     },
     onError: (error) => {
-      toast.error(error?.message || 'Erro ao deletar fornecedor', { duration: 5000 });
+      toast.error(error?.message || 'Erro ao deletar fornecedor');
     }
   });
 
@@ -116,40 +108,27 @@ export default function SuppliersPage() {
     setIsPurchasesViewDialogOpen(true);
   };
 
-  const { data: purchasesData = [] } = useQuery({
-    queryKey: ['/api/purchases', company?.id],
-    queryFn: async () => {
-      const data = await Purchase.list();
-      return Array.isArray(data) ? data : (data?.data || []);
-    },
-    enabled: !!company?.id,
-  });
-
-  // Get supplier purchases from the totalPurchases field calculated by the backend
-  const getSupplierPurchases = (supplier) => {
-    return supplier?.totalPurchases || 0;
-  };
-
+  // 3. Filtragem e Ordenação Otimizada
   const filteredSuppliers = (suppliers || [])
     .filter(s => {
       const search = searchTerm.toLowerCase();
+      // Adicionado verificação segura de null/undefined
       return (
         (s.name?.toLowerCase() || '').includes(search) || 
         (s.email?.toLowerCase() || '').includes(search) ||
-        (s.cnpj?.toLowerCase() || '').includes(search)
+        (s.cnpj?.replace(/\D/g, '') || '').includes(search) // Busca ignorando pontuação
       );
     })
-    // Sort by ID descending to show newest first
-    .sort((a, b) => {
-      if (typeof a.id === 'string' && typeof b.id === 'string') {
-        return b.id.localeCompare(a.id);
-      }
-      return (b.id || 0) - (a.id || 0);
-    });
+    .sort((a, b) => Number(b.id) - Number(a.id)); // Ordenação simplificada assumindo ID numérico ou string numérica
 
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
   const paginatedSuppliers = filteredSuppliers.slice(startIndex, endIndex);
+
+  // Função auxiliar para formatar moeda
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
+  };
 
   return (
     <div className="space-y-6 p-4 sm:p-6">
@@ -158,20 +137,26 @@ export default function SuppliersPage() {
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Fornecedores</h1>
           <p className="text-xs sm:text-sm text-slate-500">Gerencie seus fornecedores e compras.</p>
         </div>
-        
+
         <div className="flex gap-2 w-full sm:w-auto flex-col sm:flex-row">
           <Button 
             variant="outline"
-            onClick={() => transactionsQuery.refetch()}
-            disabled={transactionsQuery.isRefetching}
+            onClick={() => {
+                // 4. CORREÇÃO: Atualizar a lista de fornecedores E transações para garantir totais atualizados
+                refetch();
+                queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+            }}
+            disabled={isRefetching}
+            className="gap-2"
           >
-            Atualizar
+            <RefreshCw className={`w-4 h-4 ${isRefetching ? 'animate-spin' : ''}`} />
+            {isRefetching ? 'Atualizando...' : 'Atualizar'}
           </Button>
           <Button 
-            className="bg-primary hover:bg-primary"
+            className="bg-primary hover:bg-primary gap-2"
             onClick={() => openFormDialog()}
           >
-            <Plus className="w-4 h-4 mr-2" /> Novo Fornecedor
+            <Plus className="w-4 h-4" /> Novo Fornecedor
           </Button>
         </div>
       </div>
@@ -181,7 +166,7 @@ export default function SuppliersPage() {
           <div className="relative w-full sm:w-96">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input 
-              placeholder="Buscar por nome ou email..." 
+              placeholder="Buscar por nome, email ou CNPJ..." 
               className="pl-9"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -202,7 +187,11 @@ export default function SuppliersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedSuppliers.length > 0 ? (
+              {isLoading ? (
+                 <TableRow>
+                   <TableCell colSpan={6} className="h-24 text-center">Carregando...</TableCell>
+                 </TableRow>
+              ) : paginatedSuppliers.length > 0 ? (
                 paginatedSuppliers.map((s) => (
                   <TableRow key={s.id} className="hover:bg-slate-50/50 group">
                     <TableCell className="pl-6 text-left">
@@ -214,17 +203,19 @@ export default function SuppliersPage() {
                       </div>
                     </TableCell>
                     <TableCell className="text-left">
-                      {s.cnpj ? <span className="font-medium text-slate-700">{s.cnpj}</span> : <span className="text-slate-400">-</span>}
+                      {/* 5. CORREÇÃO: Aplicando máscara de CNPJ */}
+                      {s.cnpj ? <span className="font-medium text-slate-700">{formatCNPJ(s.cnpj)}</span> : <span className="text-slate-400">-</span>}
                     </TableCell>
                     <TableCell className="text-left">
                       {s.email ? <div className="flex items-center gap-2 text-sm text-slate-700"><Mail className="w-3 h-3" /> {s.email}</div> : <span className="text-slate-400">-</span>}
                     </TableCell>
                     <TableCell className="text-left">
-                      {s.phone ? <div className="flex items-center gap-2 text-sm text-slate-700"><Phone className="w-3 h-3" /> {s.phone}</div> : <span className="text-slate-400">-</span>}
+                      {/* 5. CORREÇÃO: Aplicando máscara de Telefone */}
+                      {s.phone ? <div className="flex items-center gap-2 text-sm text-slate-700"><Phone className="w-3 h-3" /> {formatPhoneNumber(s.phone)}</div> : <span className="text-slate-400">-</span>}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="text-primary font-semibold">
-                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(s.totalPurchases || 0)}
+                        {formatCurrency(s.totalPurchases)}
                       </div>
                     </TableCell>
                     <TableCell className="text-right pr-6">
