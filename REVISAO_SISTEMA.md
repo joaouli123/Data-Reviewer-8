@@ -341,7 +341,7 @@ src/
 5. [x] Corrigir importações órfãs de `useToast` (ex: `UserManagement.jsx`)
 
 ### Média Prioridade
-5. [ ] Dividir `server/routes.ts` em módulos
+5. [x] Dividir `server/routes.ts` em módulos
 6. [ ] Refatorar componentes grandes (>500 linhas)
 7. [ ] Mover chamadas de IA para o backend
 

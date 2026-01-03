@@ -1,7 +1,7 @@
 import { Express } from "express";
-import authRoutes from "./routes/auth";
-import adminRoutes from "./routes/admin";
-import customerRoutes from "./routes/customers";
+import authRoutes from "./auth";
+import adminRoutes from "./admin";
+import customerRoutes from "./customers";
 import { type Server } from "http";
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
