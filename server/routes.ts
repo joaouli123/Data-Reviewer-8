@@ -150,7 +150,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           companyId: company.id,
           permissions: {}
         },
-        company: { id: company.id, name: company.name, paymentStatus: "pending", subscriptionPlan: subscriptionPlan },
+        company: { 
+          id: company.id, 
+          name: company.name, 
+          paymentStatus: company.paymentStatus,
+          subscriptionPlan: subscriptionPlan,
+          document: company.document
+        },
         token,
       });
     } catch (error: any) {
@@ -248,7 +254,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           companyId: user.companyId,
           permissions: user.permissions ? JSON.parse(user.permissions) : {}
         },
-        company: { id: company.id, name: company.name, paymentStatus: company.paymentStatus },
+        company: { 
+          id: company.id, 
+          name: company.name, 
+          paymentStatus: company.paymentStatus,
+          subscriptionPlan: company.subscriptionPlan,
+          document: company.document
+        },
         token,
         paymentPending: false,
       });
@@ -312,7 +324,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           companyId: user.companyId,
           permissions: user.permissions ? JSON.parse(user.permissions) : {}
         },
-        company: { id: company.id, name: company.name, paymentStatus: company.paymentStatus },
+        company: { 
+          id: company.id, 
+          name: company.name, 
+          paymentStatus: company.paymentStatus,
+          subscriptionPlan: company.subscriptionPlan,
+          document: company.document
+        },
       });
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch user" });

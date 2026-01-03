@@ -110,34 +110,17 @@ export default function ProfilePage() {
   const [loadingCep, setLoadingCep] = useState(false);
 
   const { data: companyData } = useQuery({
-    queryKey: ['/api/companies', company?.id],
+    queryKey: ['/api/auth/me'],
     queryFn: async () => {
-      const token = JSON.parse(localStorage.getItem('auth') || '{}').token;
-      const res = await fetch(`/api/companies/${company?.id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) return null;
-      return res.json();
+      const res = await apiRequest('GET', '/api/auth/me');
+      return res.company;
     },
     enabled: !!company?.id
   });
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data) => {
-      const auth = JSON.parse(localStorage.getItem('auth') || '{}');
-      const token = auth?.token;
-      
-      if (!token) {
-        throw new Error('Sessão expirada. Por favor, faça login novamente.');
-      }
-      
-      const res = await fetch('/api/auth/profile', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
+      const res = await apiRequest('PATCH', '/api/auth/profile', {
           name: data.name || '',
           phone: data.phone || '',
           avatar: data.avatar,
@@ -148,18 +131,9 @@ export default function ProfilePage() {
           complemento: data.complemento || '',
           estado: data.estado || '',
           cidade: data.cidade || '',
-        }),
-      });
+        });
       
-      if (!res.ok) {
-        const error = await res.json();
-        if (res.status === 401) {
-          throw new Error('Sessão expirada. Por favor, faça login novamente.');
-        }
-        throw new Error(error.error || 'Falha ao atualizar perfil');
-      }
-      
-      return res.json();
+      return res;
     },
     onSuccess: (data) => {
       updateUser(data.user);
@@ -197,23 +171,7 @@ export default function ProfilePage() {
       const dataUrl = event.target?.result;
       if (dataUrl) {
         try {
-          const token = JSON.parse(localStorage.getItem('auth') || '{}').token;
-          const res = await fetch('/api/auth/avatar', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ avatarDataUrl: dataUrl }),
-          });
-          
-          if (!res.ok) {
-            const error = await res.json();
-            toast.error(String(error.error || 'Falha ao fazer upload'));
-            return;
-          }
-          
-          const result = await res.json();
+          const result = await apiRequest('POST', '/api/auth/avatar', { avatarDataUrl: dataUrl });
           updateUser(result.user);
           toast.success('Foto atualizada com sucesso!');
         } catch (error) {
@@ -294,22 +252,8 @@ export default function ProfilePage() {
 
   const updatePasswordMutation = useMutation({
     mutationFn: async (data) => {
-      const token = JSON.parse(localStorage.getItem('auth') || '{}').token;
-      // Note: Backend might still expect currentPassword if it's protected, 
-      // but UI request is to remove it. If backend fails, I'll need to check server/routes.ts
-      const res = await fetch('/api/auth/reset-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || 'Falha ao redefinir senha');
-      }
-      return res.json();
+      const res = await apiRequest('POST', '/api/auth/reset-password', data);
+      return res;
     },
     onSuccess: () => {
       toast.success('Senha atualizada com sucesso!');
@@ -473,31 +417,24 @@ export default function ProfilePage() {
   );
 
   const { data: invoices = [] } = useQuery({
-    queryKey: ['/api/subscriptions/invoices', company?.id],
+    queryKey: ['/api/transactions'],
     queryFn: async () => {
-      const token = JSON.parse(localStorage.getItem('auth') || '{}').token;
-      const res = await fetch('/api/subscriptions/invoices', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) return [];
-      return res.json();
+      const transactions = await apiRequest('GET', '/api/transactions');
+      // Filter for subscription-related transactions if they exist, or just show sales of type 'venda' if that's what's intended
+      // But typically invoices are subscriptions. Let's look for type 'subscription' or similar.
+      return transactions.filter(t => t.description?.toLowerCase().includes('assinatura') || t.type === 'subscription');
     },
     enabled: !!company?.id
   });
 
   const cancelSubscriptionMutation = useMutation({
     mutationFn: async () => {
-      const token = JSON.parse(localStorage.getItem('auth') || '{}').token;
-      const res = await fetch('/api/subscriptions/cancel', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error('Falha ao cancelar assinatura');
-      return res.json();
+      const res = await apiRequest('POST', '/api/subscriptions/cancel');
+      return res;
     },
     onSuccess: () => {
       toast.success('Assinatura cancelada. Você ainda terá acesso até o fim do período atual.');
-      queryClient.invalidateQueries({ queryKey: ['/api/companies', company?.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
     },
     onError: (error) => toast.error(error.message)
   });

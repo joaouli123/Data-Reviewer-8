@@ -130,10 +130,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
             installmentTotal: installmentCount
           };
 
-          const res = await apiRequest('/api/transactions', {
-            method: 'POST',
-            body: JSON.stringify(payload)
-          });
+          const res = await apiRequest('POST', '/api/transactions', payload);
           promises.push(res);
         }
       } else {
@@ -161,10 +158,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
             installmentTotal: installmentCount
           };
 
-          const res = await apiRequest('/api/transactions', {
-            method: 'POST',
-            body: JSON.stringify(payload)
-          });
+          const res = await apiRequest('POST', '/api/transactions', payload);
 
           promises.push(res);
         }

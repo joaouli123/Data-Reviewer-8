@@ -31,13 +31,13 @@ export default function BankReconciliation({ open, onOpenChange }) {
   // Fetch categories to use as default
   const { data: categories = [] } = useQuery({
     queryKey: ['/api/categories'],
-    queryFn: () => apiRequest('/api/categories')
+    queryFn: () => apiRequest('GET', '/api/categories')
   });
 
   // Fetch bank statement items
   const { data: bankItems = [], isLoading: isLoadingItems } = useQuery({
     queryKey: ['/api/bank/items'],
-    queryFn: () => apiRequest('/api/bank/items'),
+    queryFn: () => apiRequest('GET', '/api/bank/items'),
     enabled: open
   });
 
@@ -47,16 +47,13 @@ export default function BankReconciliation({ open, onOpenChange }) {
     queryKey: ['/api/bank/suggest', selectedBankItemId],
     queryFn: () => {
       if (!selectedBankItemId) return [];
-      return apiRequest(`/api/bank/suggest/${selectedBankItemId}`);
+      return apiRequest('GET', `/api/bank/suggest/${selectedBankItemId}`);
     },
     enabled: !!selectedBankItemId
   });
 
   const matchMutation = useMutation({
-    mutationFn: ({ bankItemId, transactionId }) => apiRequest('/api/bank/match', {
-      method: 'POST',
-      body: JSON.stringify({ bankItemId, transactionId })
-    }),
+    mutationFn: ({ bankItemId, transactionId }) => apiRequest('POST', '/api/bank/match', { bankItemId, transactionId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/bank/items'] });
       queryClient.invalidateQueries({ exact: false, queryKey: ['/api/transactions'] });
@@ -71,10 +68,7 @@ export default function BankReconciliation({ open, onOpenChange }) {
 
   const createTransactionAndMatchMutation = useMutation({
     mutationFn: async (transactionData) => {
-      const transaction = await apiRequest('/api/transactions', {
-        method: 'POST',
-        body: JSON.stringify(transactionData)
-      });
+      const transaction = await apiRequest('POST', '/api/transactions', transactionData);
       
       // Auto-match with bank item after creation
       if (selectedBankItemForForm) {
@@ -98,9 +92,7 @@ export default function BankReconciliation({ open, onOpenChange }) {
   });
 
   const clearBankDataMutation = useMutation({
-    mutationFn: () => apiRequest('/api/bank/clear', {
-      method: 'DELETE'
-    }),
+    mutationFn: () => apiRequest('DELETE', '/api/bank/clear'),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/bank/items'] });
       localStorage.removeItem('lastBankStatementFile');
@@ -123,7 +115,7 @@ export default function BankReconciliation({ open, onOpenChange }) {
     for (const bankItem of pendingItems) {
       try {
         // Get suggestions for this bank item
-        const suggestions = await apiRequest(`/api/bank/suggest/${bankItem.id}`);
+        const suggestions = await apiRequest('GET', `/api/bank/suggest/${bankItem.id}`);
         if (suggestions.length === 0) continue;
         
         // Check for perfect match (exact description and amount)
@@ -140,13 +132,10 @@ export default function BankReconciliation({ open, onOpenChange }) {
         
         if (perfectMatch) {
           // Auto-reconcile this item
-          await apiRequest('/api/bank/match', {
-            method: 'POST',
-            body: JSON.stringify({ 
+          await apiRequest('POST', '/api/bank/match', { 
               bankItemId: bankItem.id, 
               transactionId: perfectMatch.id 
-            })
-          });
+            });
           
           reconciliationCount++;
         }

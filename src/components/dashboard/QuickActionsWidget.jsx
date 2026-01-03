@@ -14,7 +14,7 @@ export default function QuickActionsWidget() {
   const queryClient = useQueryClient();
 
   const createTransactionMutation = useMutation({
-    mutationFn: (data) => Transaction.create(data),
+    mutationFn: (data) => apiRequest('POST', '/api/transactions', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/transactions'], exact: false });
       setTransactionFormOpen(false);
