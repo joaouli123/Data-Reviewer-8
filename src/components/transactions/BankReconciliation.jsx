@@ -35,29 +35,31 @@ export default function BankReconciliation({ open, onOpenChange }) {
     queryFn: () => apiRequest('GET', '/api/categories')
   });
 
-  // Fetch bank statement items
   const { data: bankItems = [], isLoading: isLoadingItems, refetch: refetchBankItems } = useQuery({
     queryKey: ['/api/bank/items'],
     queryFn: () => apiRequest('GET', '/api/bank/items'),
-    enabled: open
+    enabled: true,
+    staleTime: 0, // Ensure we always get fresh data
+    gcTime: 0
   });
 
   // Log para depuração profunda
   useEffect(() => {
-    console.log("[Bank Reconciliation Debug] Estado do modal:", open);
-    console.log("[Bank Reconciliation Debug] bankItems length:", bankItems.length);
-    if (bankItems.length > 0) {
-      console.log("[Bank Reconciliation Debug] Primeiro item:", bankItems[0]);
-      console.log("[Bank Reconciliation Debug] Todos os status:", [...new Set(bankItems.map(i => i.status))]);
+    if (open) {
+      console.log("[Bank Reconciliation Debug] Modal aberto. raw bankItems:", bankItems);
+      console.log("[Bank Reconciliation Debug] Quantidade de itens:", bankItems.length);
     }
   }, [bankItems, open]);
 
-  // Atualizar lista após upload bem-sucedido
+  // Forçar refetch e garantir que o estado local reflita a realidade
   useEffect(() => {
     if (open) {
-      refetchBankItems();
+      refetchBankItems().then((res) => {
+        console.log("[Bank Reconciliation Debug] Refetch concluído. Novos dados:", res.data);
+      });
     }
   }, [open, refetchBankItems]);
+
   const [selectedBankItemId, setSelectedBankItemId] = useState(null);
   const { data: suggestions = [], isLoading: isLoadingSuggestions } = useQuery({
     queryKey: ['/api/bank/suggest', selectedBankItemId],
