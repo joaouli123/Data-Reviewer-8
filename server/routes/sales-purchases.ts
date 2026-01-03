@@ -146,7 +146,8 @@ export function registerSalesPurchasesRoutes(app: Express) {
         description: description || `Compra - ${purchase.id}`,
         status: 'pendente',
         supplierId: supplierId,
-        companyId: req.user.companyId
+        companyId: req.user.companyId,
+        shift: 'Normal' // Added missing required field
       } as any);
 
       const installmentGroupId = `purchase-${purchase.id}-${Date.now()}`;
