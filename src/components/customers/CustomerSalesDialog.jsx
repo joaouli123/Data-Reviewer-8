@@ -160,7 +160,6 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
       toast.success('Pagamento confirmado!', { duration: 5000 });
       queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/cash-flow'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions', { customerId: customer?.id }] });
       setPaymentEditOpen(false);
       setSelectedTransaction(null);
     },
