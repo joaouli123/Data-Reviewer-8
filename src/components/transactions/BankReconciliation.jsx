@@ -8,6 +8,7 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { apiRequest } from '@/lib/queryClient';
 import TransactionForm from './TransactionForm';
 
 export default function BankReconciliation({ open, onOpenChange }) {
