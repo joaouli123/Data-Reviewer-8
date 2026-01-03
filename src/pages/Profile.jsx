@@ -270,9 +270,43 @@ export default function ProfilePage() {
       toast.error('As senhas não coincidem');
       return;
     }
+    if (passwords.new.length < 6) {
+      toast.error('A senha deve ter no mínimo 6 caracteres');
+      return;
+    }
     updatePasswordMutation.mutate({
       newPassword: passwords.new
     });
+  };
+
+  const RedefinirSenhaForm = () => {
+    return (
+      <form onSubmit={handlePasswordReset} className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="new">Nova Senha</Label>
+            <Input 
+              id="new" 
+              type="password" 
+              value={passwords.new} 
+              onChange={e => setPasswords(prev => ({...prev, new: e.target.value}))} 
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="confirm">Confirmar Senha</Label>
+            <Input 
+              id="confirm" 
+              type="password" 
+              value={passwords.confirm} 
+              onChange={e => setPasswords(prev => ({...prev, confirm: e.target.value}))} 
+            />
+          </div>
+        </div>
+        <Button type="submit" className="w-full bg-[#005CB8] hover:bg-[#005CB8]/90 text-white font-semibold" disabled={updatePasswordMutation.isPending}>
+          {updatePasswordMutation.isPending ? 'Atualizando...' : 'Atualizar Senha'}
+        </Button>
+      </form>
+    );
   };
 
   const ProfileTab = () => (
@@ -365,24 +399,9 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
 
-      <Card>
         <CardHeader><CardTitle className="flex items-center gap-2"><Lock className="w-5 h-5" /> Redefinir Senha</CardTitle></CardHeader>
         <CardContent>
-          <form onSubmit={handlePasswordReset} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="new">Nova Senha</Label>
-                <Input id="new" type="password" value={passwords.new} onChange={e => setPasswords({...passwords, new: e.target.value})} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirm">Confirmar Senha</Label>
-                <Input id="confirm" type="password" value={passwords.confirm} onChange={e => setPasswords({...passwords, confirm: e.target.value})} />
-              </div>
-            </div>
-            <Button type="submit" className="w-full bg-[#005CB8] hover:bg-[#005CB8]/90 text-white font-semibold" disabled={updatePasswordMutation.isPending}>
-              {updatePasswordMutation.isPending ? 'Atualizando...' : 'Atualizar Senha'}
-            </Button>
-          </form>
+          <RedefinirSenhaForm />
         </CardContent>
       </Card>
 

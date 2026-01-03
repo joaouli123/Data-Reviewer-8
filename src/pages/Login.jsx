@@ -54,14 +54,14 @@ export default function Login() {
         
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-2">
-            <label className="block text-sm font-medium">Usuário</label>
+            <label className="block text-sm font-medium">Usuário ou Email</label>
             <div className="relative">
               <User className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
               <Input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Digite seu usuário"
+                placeholder="Digite seu usuário ou email"
                 disabled={loading}
                 data-testid="input-username"
                 className="pl-10"

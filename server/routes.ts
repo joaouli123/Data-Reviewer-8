@@ -181,11 +181,15 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         return res.status(429).json({ error: "Too many login attempts. Please try again later." });
       }
 
-      // Find user
-      const user = await findUserByUsername(username);
+      // Find user by username or email
+      let user = await findUserByUsername(username);
+      if (!user) {
+        user = await findUserByEmail(username);
+      }
+      
       if (!user) {
         await recordLoginAttempt(ip, username, false);
-        return res.status(401).json({ error: "Invalid credentials" });
+        return res.status(401).json({ error: "Credenciais inválidas" });
       }
 
       // Verify password
