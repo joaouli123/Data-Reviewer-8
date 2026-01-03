@@ -66,5 +66,5 @@ export async function apiRequest(
 }
 
 export const fetcher = async (url: string) => {
-  return apiRequest(url);
+  return apiRequest("GET", url);
 };

@@ -1,255 +1,106 @@
-// Get stored auth token from localStorage (NOT data storage)
-const getAuthToken = () => {
-  try {
-    const auth = localStorage.getItem('auth');
-    if (auth) {
-      const parsed = JSON.parse(auth);
-      return parsed.token;
-    }
-    return null;
-  } catch (e) {
-    return null;
-  }
-};
-
-const fetchWithTimeout = (url, options = {}) => {
-  const timeout = options.timeout || 30000;
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
-  
-  const headers = {
-    'Content-Type': 'application/json',
-    ...options.headers
-  };
-  
-  // Add auth token if available
-  const token = getAuthToken();
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-  
-  return fetch(url, { ...options, headers, signal: controller.signal })
-    .finally(() => clearTimeout(timeoutId));
-};
+import { apiRequest } from '@/lib/queryClient';
 
 export const Transaction = {
   async list() {
-    const response = await fetchWithTimeout('/api/transactions');
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return await response.json() || [];
+    return apiRequest('GET', '/api/transactions');
   },
   async get(id) {
-    const response = await fetchWithTimeout(`/api/transactions/${id}`);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return await response.json();
+    return apiRequest('GET', `/api/transactions/${id}`);
   },
   async create(data) {
-    const response = await fetchWithTimeout('/api/transactions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      throw new Error(error.error || `HTTP ${response.status}`);
-    }
-    return await response.json();
+    return apiRequest('POST', '/api/transactions', data);
   },
   async update(id, data) {
-    const response = await fetchWithTimeout(`/api/transactions/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return await response.json();
+    return apiRequest('PATCH', `/api/transactions/${id}`, data);
   },
   async delete(id) {
-    const response = await fetchWithTimeout(`/api/transactions/${id}`, { method: 'DELETE' });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return true;
+    return apiRequest('DELETE', `/api/transactions/${id}`);
   }
 };
 
 export const Customer = {
   async list() {
-    const response = await fetchWithTimeout('/api/customers');
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const data = await response.json();
-    return Array.isArray(data) ? data : [];
+    return apiRequest('GET', '/api/customers');
   },
   async get(id) {
-    const response = await fetchWithTimeout(`/api/customers/${id}`);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return await response.json();
+    return apiRequest('GET', `/api/customers/${id}`);
   },
   async create(data) {
-    const response = await fetchWithTimeout('/api/customers', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      throw new Error(error.error || `HTTP ${response.status}`);
-    }
-    return await response.json();
+    return apiRequest('POST', '/api/customers', data);
   },
   async update(id, data) {
-    const response = await fetchWithTimeout(`/api/customers/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return await response.json();
+    return apiRequest('PATCH', `/api/customers/${id}`, data);
   },
   async delete(id) {
-    const response = await fetchWithTimeout(`/api/customers/${id}`, { method: 'DELETE' });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return true;
+    return apiRequest('DELETE', `/api/customers/${id}`);
   }
 };
 
 export const Supplier = {
   async list() {
-    const response = await fetchWithTimeout('/api/suppliers');
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const data = await response.json();
-    return Array.isArray(data) ? data : [];
+    return apiRequest('GET', '/api/suppliers');
   },
   async get(id) {
-    const response = await fetchWithTimeout(`/api/suppliers/${id}`);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return await response.json();
+    return apiRequest('GET', `/api/suppliers/${id}`);
   },
   async create(data) {
-    const response = await fetchWithTimeout('/api/suppliers', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      throw new Error(error.error || `HTTP ${response.status}`);
-    }
-    return await response.json();
+    return apiRequest('POST', '/api/suppliers', data);
   },
   async update(id, data) {
-    const response = await fetchWithTimeout(`/api/suppliers/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return await response.json();
+    return apiRequest('PATCH', `/api/suppliers/${id}`, data);
   },
   async delete(id) {
-    const response = await fetchWithTimeout(`/api/suppliers/${id}`, { method: 'DELETE' });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return true;
+    return apiRequest('DELETE', `/api/suppliers/${id}`);
   }
 };
 
 export const Category = {
   async list() {
-    const response = await fetchWithTimeout('/api/categories', { timeout: 60000 });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const data = await response.json() || [];
+    const data = await apiRequest('GET', '/api/categories') || [];
     // Filter out invalid categories (with timestamp IDs instead of UUIDs)
     return data.filter(cat => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cat.id));
   },
   async get(id) {
-    const response = await fetchWithTimeout(`/api/categories/${id}`);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return await response.json();
+    return apiRequest('GET', `/api/categories/${id}`);
   },
   async create(data) {
-    const response = await fetchWithTimeout('/api/categories', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      throw new Error(error.error || `HTTP ${response.status}`);
-    }
-    return await response.json();
+    return apiRequest('POST', '/api/categories', data);
   },
   async update(id, data) {
-    const response = await fetchWithTimeout(`/api/categories/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return await response.json();
+    return apiRequest('PATCH', `/api/categories/${id}`, data);
   },
   async delete(id) {
-    const response = await fetchWithTimeout(`/api/categories/${id}`, { method: 'DELETE' });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return true;
+    return apiRequest('DELETE', `/api/categories/${id}`);
   }
 };
 
 export const CashFlow = {
   async list() {
-    const response = await fetchWithTimeout('/api/cash-flow');
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return await response.json() || [];
+    return apiRequest('GET', '/api/cash-flow');
   },
   async get(id) {
-    const response = await fetchWithTimeout(`/api/cash-flow/${id}`);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return await response.json();
+    return apiRequest('GET', `/api/cash-flow/${id}`);
   },
   async create(data) {
-    const response = await fetchWithTimeout('/api/cash-flow', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      throw new Error(error.error || `HTTP ${response.status}`);
-    }
-    return await response.json();
+    return apiRequest('POST', '/api/cash-flow', data);
   },
   async update(id, data) {
-    const response = await fetchWithTimeout(`/api/cash-flow/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return await response.json();
+    return apiRequest('PATCH', `/api/cash-flow/${id}`, data);
   },
   async delete(id) {
-    const response = await fetchWithTimeout(`/api/cash-flow/${id}`, { method: 'DELETE' });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return true;
+    return apiRequest('DELETE', `/api/cash-flow/${id}`);
   }
 };
 
 export const Report = {
   async getSummary(companyId, period) {
-    const response = await fetchWithTimeout(`/api/reports/summary?companyId=${companyId}&period=${period}`);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return await response.json();
+    return apiRequest('GET', `/api/reports/summary?companyId=${companyId}&period=${period}`);
   },
   async getCashFlow(companyId, startDate, endDate) {
-    const response = await fetchWithTimeout(
-      `/api/reports/cash-flow?companyId=${companyId}&startDate=${startDate}&endDate=${endDate}`
-    );
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return await response.json();
+    return apiRequest('GET', `/api/reports/cash-flow?companyId=${companyId}&startDate=${startDate}&endDate=${endDate}`);
   },
   async getTransactionsByCategory(companyId, startDate, endDate) {
-    const response = await fetchWithTimeout(
-      `/api/reports/transactions-by-category?companyId=${companyId}&startDate=${startDate}&endDate=${endDate}`
-    );
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return await response.json();
+    return apiRequest('GET', `/api/reports/transactions-by-category?companyId=${companyId}&startDate=${startDate}&endDate=${endDate}`);
   }
 };
 
