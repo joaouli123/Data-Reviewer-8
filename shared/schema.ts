@@ -425,7 +425,7 @@ export const insertSaleSchema = createInsertSchema(sales).extend({
 }).omit({
   id: true,
   companyId: true,
-}) as any;
+});
 
 export const insertPurchaseSchema = createInsertSchema(purchases).extend({
   purchaseDate: z.coerce.date(),
@@ -434,7 +434,7 @@ export const insertPurchaseSchema = createInsertSchema(purchases).extend({
 }).omit({
   id: true,
   companyId: true,
-}) as any;
+});
 
 export const insertInstallmentSchema = createInsertSchema(installments).omit({
   id: true,
