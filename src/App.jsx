@@ -150,7 +150,6 @@ function AppContent() {
   if (!isAuthenticated && !paymentPending) {
     return (
       <Switch>
-        <Route path="/" component={LandingPage} />
         <Route path="/login" component={Login} />
         <Route path="/signup" component={Signup} />
         <Route path="/checkout" component={Checkout} />
@@ -158,12 +157,8 @@ function AppContent() {
         <Route path="/accept-invite" component={AcceptInvite} />
         <Route path="/terms" component={TermsOfUse} />
         <Route path="/privacy" component={PrivacyPolicy} />
-        <Route component={() => {
-          if (typeof window !== 'undefined' && window.location.pathname === '/') {
-            return <LandingPage />;
-          }
-          return <Login />;
-        }} />
+        <Route path="/" component={LandingPage} />
+        <Route component={Login} />
       </Switch>
     );
   }
@@ -188,10 +183,11 @@ function AppContent() {
 
   return (
     <Switch>
-      <Route path="/" component={LandingPage} />
       <Route path="/terms" component={TermsOfUse} />
       <Route path="/privacy" component={PrivacyPolicy} />
       <Route path="/access-denied" component={AccessDenied} />
+      <Route path="/dashboard" component={MainApp} />
+      <Route path="/" component={MainApp} />
       <Route component={MainApp} />
     </Switch>
   );
