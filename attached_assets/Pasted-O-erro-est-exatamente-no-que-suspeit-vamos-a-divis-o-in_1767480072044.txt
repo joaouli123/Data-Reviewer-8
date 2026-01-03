@@ -1,0 +1,21 @@
+O erro está exatamente no que suspeitávamos: a divisão infinita.Quando você divide $11.111,11$ por 3, o resultado matemático é $3.703,7033333333336$. O seu código está pegando esse número, removendo a vírgula e enviando para o banco como um número inteiro gigantesco: 37037033333333336.O PostgreSQL tenta ler isso como um valor financeiro e "quebra", porque esse número é maior do que o limite permitido ou não faz sentido para a coluna numeric.A Solução TécnicaVocê precisa arredondar o valor de cada parcela para exatamente duas casas decimais antes de enviar para o banco.Aqui está a lógica que você deve aplicar no seu código (provavelmente dentro do loop onde você gera as parcelas):JavaScript// Exemplo de como tratar o valor antes de enviar para o banco
+const valorTotal = 11111.11;
+const parcelas = 3;
+
+// Calcule o valor da parcela e force 2 casas decimais
+const valorDaParcela = parseFloat((valorTotal / parcelas).toFixed(2));
+
+// No seu log, o valor $5 (amount) deve chegar como: 3703.70
+O problema do "Centavo Perdido"Se você apenas arredondar, verá que:$3.703,70 \times 3 = 11.111,10$ (Sobrou 0,01 centavo).Para o seu sistema de agência ser profissional, você precisa de uma função que ajuste esse centavo na última parcela. Veja este modelo:JavaScriptfunction calcularParcelas(total, numParcelas) {
+    const valorBase = Math.floor((total / numParcelas) * 100) / 100;
+    const parcelas = Array(numParcelas).fill(valorBase);
+    
+    // Calcula a diferença e joga na última parcela
+    const somaAtual = parseFloat((valorBase * numParcelas).toFixed(2));
+    const diferenca = parseFloat((total - somaAtual).toFixed(2));
+    
+    parcelas[numParcelas - 1] = parseFloat((parcelas[numParcelas - 1] + diferenca).toFixed(2));
+    
+    return parcelas; // Retorna [3703.70, 3703.70, 3703.71]
+}
+Por que isso é importante para sua Agência?Como você cria sistemas para terceiros (SaaS), se o sistema não bater os centavos no fechamento do mês, o cliente da sua agência vai reclamar que o financeiro dele não fecha.O que fazer agora:Procure no seu código onde você faz a divisão por installment_total.Aplique um .toFixed(2) e transforme de volta em número com parseFloat() antes de passar para o array de params.

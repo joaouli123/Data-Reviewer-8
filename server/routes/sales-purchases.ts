@@ -156,11 +156,14 @@ export function registerSalesPurchasesRoutes(app: Express) {
       if (customInstallments && customInstallments.length > 0) {
         for (let i = 0; i < customInstallments.length; i++) {
           const inst = customInstallments[i];
+          // Ensure we are using a numeric value and not a string that could be misinterpreted
+          const installmentAmount = parseFloat(String(inst.amount)).toFixed(2);
+          
           const transactionData = {
             companyId: req.user.companyId,
             type: 'expense',
             description: `${description || 'Compra'} (${i + 1}/${customInstallments.length})`,
-            amount: String(inst.amount),
+            amount: installmentAmount,
             date: new Date(inst.date || inst.due_date), // Safe date handling
             status: status === 'pago' ? 'pago' : 'pendente',
             categoryId,
@@ -171,6 +174,7 @@ export function registerSalesPurchasesRoutes(app: Express) {
             installmentGroup: installmentGroupId,
             shift: 'Normal'
           };
+          console.log("[Purchases Debug] Creating installment transaction:", transactionData);
           await storage.createTransaction(req.user.companyId, transactionData as any);
         }
       } else {
