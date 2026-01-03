@@ -8,8 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { format, parseISO, addMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
-import { CheckCircle2, Calendar, Clock, X, ChevronDown, ChevronRight } from 'lucide-react';
+import { CheckCircle2, Calendar, Clock, X, ChevronDown, ChevronRight, Trash2 } from 'lucide-react';
 import PaymentEditDialog from './PaymentEditDialog';
+import { apiRequest } from '@/lib/queryClient';
 
 export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }) {
   const { company } = useAuth();
@@ -208,6 +209,21 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
     }
   });
 
+  const deletePurchaseMutation = useMutation({
+    mutationFn: async (purchaseId) => {
+      await apiRequest(`/api/transactions/${purchaseId}`, {
+        method: 'DELETE'
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      toast.success('Compra excluída com sucesso!');
+    },
+    onError: (error) => {
+      toast.error('Erro ao excluir compra: ' + error.message);
+    }
+  });
+
   if (!supplier) return null;
 
   return (
@@ -221,19 +237,19 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
           <div className="p-4 bg-slate-50 rounded-lg border">
             <p className="text-xs text-slate-500 mb-1">Total em Compras</p>
             <p className="text-xl font-bold text-slate-900">
-              R$ {purchases.reduce((acc, p) => acc + parseFloat(p.amount || 0), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              R$ {Math.abs(purchases.reduce((acc, p) => acc + parseFloat(p.amount || 0), 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </p>
           </div>
           <div className="p-4 bg-rose-50 rounded-lg border border-rose-100">
             <p className="text-xs text-rose-600 mb-1">Pago</p>
             <p className="text-xl font-bold text-rose-700">
-              R$ {getTotalPaid().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              R$ {Math.abs(getTotalPaid()).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </p>
           </div>
           <div className="p-4 bg-amber-50 rounded-lg border border-amber-100">
             <p className="text-xs text-amber-600 mb-1">Pendente</p>
             <p className="text-xl font-bold text-amber-700">
-              R$ {getTotalPending().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              R$ {Math.abs(getTotalPending()).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </p>
           </div>
         </div>
@@ -264,7 +280,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                     </div>
                     <div className="text-right flex-shrink-0">
                       <p className="text-lg font-bold text-slate-900">
-                        R$ {group.main.totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        R$ {Math.abs(group.main.totalAmount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </p>
                       <Badge className={`${group.main.isPaid ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-amber-50 text-amber-600 border-amber-200'} shadow-none font-medium text-xs`}>
                         {group.main.isPaid ? 'Pago' : 'Parcial'}
@@ -283,7 +299,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                           </div>
                           <div>
                             <p className="font-semibold text-slate-900">
-                              R$ {(parseFloat(installment.amount || 0) + parseFloat(installment.interest || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                              R$ {Math.abs(parseFloat(installment.amount || 0) + parseFloat(installment.interest || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                             </p>
                             <p className="text-xs text-slate-500">
                               Venc: {installment.date ? format(parseISO(installment.date), "dd/MM/yyyy") : '-'}
@@ -302,7 +318,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                                 {(installment.paidAmount || installment.amount) && (
                                   <div className="flex flex-col items-end gap-0.5">
                                     <p className="text-xs text-slate-500">
-                                      Pago: R$ {parseFloat(installment.paidAmount || installment.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                      Pago: R$ {Math.abs(parseFloat(installment.paidAmount || installment.amount || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                     </p>
                                     {installment.paymentMethod && (
                                       <p className="text-xs text-slate-400">
@@ -313,7 +329,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                                 )}
                                 {parseFloat(installment.interest || 0) > 0 && (
                                   <p className="text-xs text-amber-600">
-                                    Juros: R$ {parseFloat(installment.interest).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                    Juros: R$ {Math.abs(parseFloat(installment.interest)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                   </p>
                                 )}
                               </div>
@@ -334,20 +350,50 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                               >
                                 <X className="w-4 h-4" />
                               </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => {
+                                  if (confirm('Tem certeza que deseja excluir permanentemente esta compra?')) {
+                                    deletePurchaseMutation.mutate(installment.id);
+                                  }
+                                }}
+                                disabled={deletePurchaseMutation.isPending}
+                                className="text-slate-400 hover:text-red-600"
+                                data-testid={`button-delete-purchase-${installment.id}`}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
                             </>
                           ) : (
-                            <Button
-                              size="sm"
-                              onClick={() => {
-                                setSelectedTransaction(installment);
-                                setPaymentEditOpen(true);
-                              }}
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4"
-                              disabled={confirmPaymentMutation.isPending}
-                              data-testid={`button-confirm-payment-${installment.id}`}
-                            >
-                              Confirmar Pagamento
-                            </Button>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedTransaction(installment);
+                                  setPaymentEditOpen(true);
+                                }}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4"
+                                disabled={confirmPaymentMutation.isPending}
+                                data-testid={`button-confirm-payment-${installment.id}`}
+                              >
+                                Confirmar Pagamento
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => {
+                                  if (confirm('Tem certeza que deseja excluir esta compra pendente?')) {
+                                    deletePurchaseMutation.mutate(installment.id);
+                                  }
+                                }}
+                                disabled={deletePurchaseMutation.isPending}
+                                className="text-slate-400 hover:text-red-600"
+                                data-testid={`button-delete-purchase-${installment.id}`}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
                           )}
                         </div>
                       </div>
