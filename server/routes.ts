@@ -1206,30 +1206,97 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.post("/api/purchases", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
-      const data = insertPurchaseSchema.parse(req.body);
+      
+      // Extract extra fields that aren't in the purchase schema
+      const { description, categoryId, paymentMethod, customInstallments, ...purchaseData } = req.body;
+      
+      const data = insertPurchaseSchema.parse(purchaseData);
+      const installmentCount = data.installmentCount || 1;
+      const totalAmount = parseFloat(data.totalAmount.toString());
+      const isPaid = data.status === 'pago';
       
       const purchase = await db.transaction(async (tx) => {
         // Create the purchase record
         const [newPurchase] = await tx.insert(purchases).values({ ...data, companyId: req.user!.companyId }).returning();
         
-        // Create a corresponding transaction record so it appears in the transactions page
-        await tx.insert(transactions).values({
-          companyId: req.user!.companyId,
-          supplierId: data.supplierId,
-          type: "compra",
-          amount: data.totalAmount,
-          paidAmount: data.paidAmount || "0",
-          date: data.purchaseDate,
-          description: `Compra #${newPurchase.id.substring(0, 8)}`,
-          shift: "Geral", // Default shift
-          status: parseFloat(data.paidAmount?.toString() || "0") >= parseFloat(data.totalAmount.toString()) ? "pago" : "pendente",
-        });
+        // Generate a unique installment group ID for grouping
+        const installmentGroup = newPurchase.id;
+        
+        // Create transaction records for each installment
+        if (installmentCount > 1 && !isPaid) {
+          // Create multiple installment transactions
+          for (let i = 0; i < installmentCount; i++) {
+            let installmentAmount: number;
+            let dueDate: Date;
+            
+            if (customInstallments && customInstallments[i]) {
+              // Use custom installment values
+              installmentAmount = parseFloat(customInstallments[i].amount) || (totalAmount / installmentCount);
+              dueDate = new Date(customInstallments[i].due_date + 'T12:00:00Z');
+            } else {
+              // Calculate default values
+              installmentAmount = totalAmount / installmentCount;
+              const baseDate = new Date(data.purchaseDate);
+              dueDate = new Date(baseDate.setMonth(baseDate.getMonth() + i));
+            }
+            
+            await tx.insert(transactions).values({
+              companyId: req.user!.companyId,
+              supplierId: data.supplierId,
+              categoryId: categoryId || null,
+              type: "compra",
+              amount: installmentAmount.toFixed(2),
+              paidAmount: "0",
+              date: dueDate,
+              description: `${description || 'Compra'} (${i + 1}/${installmentCount})`,
+              shift: "Geral",
+              status: "pendente",
+              installmentGroup: installmentGroup,
+              installmentNumber: i + 1,
+              installmentTotal: installmentCount,
+              paymentMethod: paymentMethod || null
+            });
+          }
+        } else {
+          // Create single transaction (no installments or paid in full)
+          await tx.insert(transactions).values({
+            companyId: req.user!.companyId,
+            supplierId: data.supplierId,
+            categoryId: categoryId || null,
+            type: "compra",
+            amount: data.totalAmount,
+            paidAmount: isPaid ? data.totalAmount : "0",
+            date: data.purchaseDate,
+            paymentDate: isPaid ? data.purchaseDate : null,
+            description: description || 'Compra',
+            shift: "Geral",
+            status: isPaid ? "pago" : "pendente",
+            installmentGroup: installmentGroup,
+            installmentNumber: 1,
+            installmentTotal: 1,
+            paymentMethod: paymentMethod || null
+          });
+          
+          // If paid, also create cash flow entry
+          if (isPaid) {
+            await tx.insert(cashFlow).values({
+              companyId: req.user!.companyId,
+              date: data.purchaseDate,
+              inflow: "0",
+              outflow: data.totalAmount,
+              balance: (-parseFloat(data.totalAmount.toString())).toFixed(2),
+              description: `Pagamento: ${description || 'Compra'}`,
+              shift: "Geral"
+            });
+          }
+        }
 
         return newPurchase;
       });
 
       res.status(201).json(purchase);
     } catch (error: any) {
+      console.error("Error creating purchase:", error);
       res.status(400).json({ error: error.message || "Invalid purchase data" });
     }
   });
