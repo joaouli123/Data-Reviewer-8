@@ -456,7 +456,8 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(sales)
-      .where(eq(sales.companyId, companyId));
+      .where(eq(sales.companyId, companyId))
+      .orderBy(desc(sales.saleDate));
   }
 
   async getSale(companyId: string, id: string): Promise<Sale | undefined> {
@@ -492,7 +493,8 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(purchases)
-      .where(eq(purchases.companyId, companyId));
+      .where(eq(purchases.companyId, companyId))
+      .orderBy(desc(purchases.purchaseDate));
   }
 
   async getPurchase(companyId: string, id: string): Promise<Purchase | undefined> {

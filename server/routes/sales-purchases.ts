@@ -16,6 +16,89 @@ export function registerSalesPurchasesRoutes(app: Express) {
     }
   });
 
+  app.get("/api/purchases", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      const purchasesData = await storage.getPurchases(req.user.companyId);
+      res.json(purchasesData);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch purchases" });
+    }
+  });
+
+  app.post("/api/sales", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      const { customerId, saleDate, totalAmount, installmentCount, status, description, categoryId, paymentMethod, customInstallments } = req.body;
+
+      const saleData = {
+        companyId: req.user.companyId,
+        customerId,
+        saleDate: new Date(saleDate),
+        totalAmount: String(totalAmount),
+        installmentCount: installmentCount || 1,
+        status: status || 'pago',
+        description: description || 'Venda sem descrição',
+        categoryId,
+        paymentMethod
+      };
+
+      const sale = await storage.createSale(req.user.companyId, saleData as any);
+      const installmentGroupId = `sale-${sale.id}-${Date.now()}`;
+
+      if (customInstallments && customInstallments.length > 0) {
+        for (let i = 0; i < customInstallments.length; i++) {
+          const inst = customInstallments[i];
+          const transactionData = {
+            companyId: req.user.companyId,
+            type: 'venda',
+            description: `${description} (${i + 1}/${customInstallments.length})`,
+            amount: String(inst.amount),
+            date: new Date(inst.due_date),
+            status: status === 'pago' ? 'pago' : 'pendente',
+            categoryId,
+            customerId,
+            paymentMethod,
+            installmentNumber: i + 1,
+            installmentTotal: customInstallments.length,
+            installmentGroup: installmentGroupId,
+            shift: 'default'
+          };
+          await storage.createTransaction(req.user.companyId, transactionData as any);
+        }
+      } else {
+        const count = parseInt(installmentCount) || 1;
+        const amountPerInstallment = parseFloat(totalAmount) / count;
+        
+        for (let i = 0; i < count; i++) {
+          const dueDate = new Date(saleDate);
+          dueDate.setMonth(dueDate.getMonth() + i);
+          
+          const transactionData = {
+            companyId: req.user.companyId,
+            type: 'venda',
+            description: count > 1 ? `${description} (${i + 1}/${count})` : description,
+            amount: String(amountPerInstallment.toFixed(2)),
+            date: dueDate,
+            status: status === 'pago' ? 'pago' : 'pendente',
+            categoryId,
+            customerId,
+            paymentMethod,
+            installmentNumber: i + 1,
+            installmentTotal: count,
+            installmentGroup: installmentGroupId,
+            shift: 'default'
+          };
+          await storage.createTransaction(req.user.companyId, transactionData as any);
+        }
+      }
+
+      res.status(201).json(sale);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message || "Failed to create sale" });
+    }
+  });
+
   app.post("/api/purchases", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
