@@ -7,7 +7,20 @@ export function registerTransactionRoutes(app: Express) {
   app.get("/api/transactions", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
-      const transactions = await storage.getTransactions(req.user.companyId);
+      const { customerId, supplierId, type } = req.query;
+      
+      let transactions = await storage.getTransactions(req.user.companyId);
+      
+      if (customerId) {
+        transactions = transactions.filter(t => t.customerId === customerId);
+      }
+      if (supplierId) {
+        transactions = transactions.filter(t => t.supplierId === supplierId);
+      }
+      if (type) {
+        transactions = transactions.filter(t => t.type === type);
+      }
+      
       res.json(transactions);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch transactions" });

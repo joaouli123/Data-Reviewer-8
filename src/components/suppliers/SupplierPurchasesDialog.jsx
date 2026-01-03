@@ -31,17 +31,17 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
   };
 
   const { data: transactionsData = [] } = useQuery({
-    queryKey: ['/api/transactions', company?.id],
-    queryFn: () => Transaction.list(),
+    queryKey: ['/api/transactions', { supplierId: supplier?.id }],
+    queryFn: () => apiRequest('GET', `/api/transactions?supplierId=${supplier?.id}&type=compra`),
     initialData: [],
-    enabled: !!company?.id,
+    enabled: !!supplier?.id && open,
     staleTime: 0,
     refetchOnMount: true,
     refetchOnWindowFocus: true
   });
 
   const transactions = Array.isArray(transactionsData) ? transactionsData : (transactionsData?.data || []);
-  const purchases = transactions.filter(t => t.supplierId === supplier?.id && t.type === 'compra');
+  const purchases = transactions; // Filtered by backend now
 
   // Group purchases by installment group
   const groupedPurchases = React.useMemo(() => {

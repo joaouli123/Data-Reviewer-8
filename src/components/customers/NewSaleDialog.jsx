@@ -81,18 +81,17 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
     mutationFn: async (data) => {
       const payload = {
         customerId: customer.id,
-        date: data.sale_date, // Send string, backend will parse
-        amount: String(data.total_amount),
-        type: 'venda',
+        saleDate: data.sale_date,
+        totalAmount: String(data.total_amount),
         status: data.status,
         description: data.description,
-        category: data.category,
+        categoryId: categories.find(c => c.name === data.category)?.id,
         paymentMethod: data.paymentMethod,
-        shift: 'day', // Default shift
-        isReconciled: false
+        installmentCount: parseInt(data.installments) || 1,
+        customInstallments: data.customInstallments
       };
 
-      const res = await apiRequest('POST', '/api/transactions', payload);
+      const res = await apiRequest('POST', '/api/sales', payload);
       return res;
     },
     onSuccess: async () => {

@@ -85,18 +85,17 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
     mutationFn: async (data) => {
       const payload = {
         supplierId: supplier.id,
-        date: data.purchase_date, // Send string, backend will parse
-        amount: String(data.total_amount),
-        type: 'compra',
+        purchaseDate: data.purchase_date,
+        totalAmount: String(data.total_amount),
         status: data.status,
         description: data.description,
-        category: data.category,
+        categoryId: categories.find(c => c.name === data.category)?.id,
         paymentMethod: data.paymentMethod,
-        shift: 'day',
-        isReconciled: false
+        installmentCount: parseInt(data.installments) || 1,
+        customInstallments: data.customInstallments
       };
 
-      const res = await apiRequest('POST', '/api/transactions', payload);
+      const res = await apiRequest('POST', '/api/purchases', payload);
       return res;
     },
     onSuccess: async () => {
