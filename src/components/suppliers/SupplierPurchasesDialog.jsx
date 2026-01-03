@@ -154,11 +154,12 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
     },
     onSuccess: (data) => {
       toast.success('Pagamento confirmado!');
-      // Refetch immediately and wait for it to complete before closing
-      queryClient.refetchQueries({ queryKey: ['transactions'], exact: false }).then(() => {
-        setPaymentEditOpen(false);
-        setSelectedTransaction(null);
-      });
+      // Invalidate both general and specific queries
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/cash-flow'], exact: false });
+      
+      setPaymentEditOpen(false);
+      setSelectedTransaction(null);
     },
     onError: (error) => {
       toast.error(error.message);
