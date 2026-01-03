@@ -10,13 +10,25 @@ import {
   PurchaseInstallment
 } from './database';
 
+// Helper to handle API response formats
+const wrapList = (Entity) => ({
+  ...Entity,
+  list: async (...args) => {
+    const response = await Entity.list(...args);
+    return Array.isArray(response) ? response : (response?.data || []);
+  }
+});
+
+const WrappedCustomer = wrapList(Customer);
+const WrappedSupplier = wrapList(Supplier);
+
 export {
   Transaction,
-  Customer,
+  WrappedCustomer as Customer,
   Category,
   Sale,
   Installment,
-  Supplier,
+  WrappedSupplier as Supplier,
   Purchase,
   PurchaseInstallment
 };

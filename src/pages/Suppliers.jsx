@@ -33,18 +33,19 @@ export default function SuppliersPage() {
   const { company } = useAuth();
   const queryClient = useQueryClient();
 
-  const { data: suppliers = [], isLoading } = useQuery({
+  const { data: suppliersData, isLoading, refetch } = useQuery({
     queryKey: ['/api/suppliers', company?.id],
     queryFn: () => Supplier.list(),
     enabled: !!company?.id,
-    refetchOnWindowFocus: true,
   });
+
+  const suppliers = Array.isArray(suppliersData) ? suppliersData : (suppliersData?.data || []);
 
   const { data: expenseCategories = [] } = useQuery({
     queryKey: ['/api/categories', company?.id],
     queryFn: async () => {
       const data = await Category.list();
-      return data || [];
+      return Array.isArray(data) ? data : (data?.data || []);
     },
     enabled: !!company?.id,
     staleTime: 1000 * 60 * 30, // 30 minutos
