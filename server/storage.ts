@@ -321,7 +321,13 @@ export class DatabaseStorage implements IStorage {
   async createTransaction(companyId: string, data: InsertTransaction): Promise<Transaction> {
     console.log("[Storage Debug] Creating transaction in DB:", { ...data, companyId });
     try {
-      const result = await db.insert(transactions).values({ ...data, companyId } as any).returning();
+      // Ensure date is handled as a Date object for Drizzle
+      const insertData = {
+        ...data,
+        companyId,
+        date: data.date instanceof Date ? data.date : (data.date ? new Date(data.date) : new Date())
+      };
+      const result = await db.insert(transactions).values(insertData as any).returning();
       console.log("[Storage Debug] Transaction created successfully:", result[0].id);
       return result[0];
     } catch (error) {
