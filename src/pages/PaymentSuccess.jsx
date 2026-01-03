@@ -24,22 +24,19 @@ export default function PaymentSuccess() {
     const id = params.get('payment_id') || params.get('paymentId');
     const status = params.get('status');
 
+    console.log('PaymentSuccess Debug:', { id, status, user: !!user });
+
     if (id) {
       setPaymentId(id);
       
-      // Se for uma aprovação simulada, não precisamos do StatusScreen que consulta a API do MP
+      // Se for uma aprovação simulada, não precisamos do StatusScreen
       if (id.startsWith('simulated_')) {
         setLoading(false);
-      }
-      
-      // Trigger confetti if payment is approved and not already celebrated
-      if ((status === 'approved' || id.startsWith('simulated_')) && user) {
-        // Confetti moved to first dashboard access
       }
     } else {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, window.location.search]);
 
   const initialization = {
     paymentId: paymentId,
@@ -67,17 +64,17 @@ export default function PaymentSuccess() {
 
           {paymentId ? (
             paymentId.startsWith('simulated_') ? (
-              <div className="text-center py-12">
-                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <div className="text-center py-12 flex flex-col items-center">
+                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6">
                   <Check className="w-10 h-10 text-green-600" />
                 </div>
                 <h2 className="text-3xl font-bold mb-4 text-slate-900">Pagamento Confirmado!</h2>
-                <p className="text-slate-600 mb-8 text-lg">
+                <p className="text-slate-600 mb-8 text-lg px-4">
                   Sua assinatura foi ativada com sucesso. Você já pode aproveitar todos os recursos do sistema.
                 </p>
                 <Button 
                   onClick={() => window.location.href = '/'} 
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold h-12 rounded-lg text-lg"
+                  className="w-full max-w-sm bg-blue-600 hover:bg-blue-700 text-white font-bold h-12 rounded-lg text-lg shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]"
                 >
                   Ir para o Painel
                 </Button>
