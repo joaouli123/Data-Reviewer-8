@@ -3,6 +3,7 @@ import authRoutes from "./auth";
 import adminRoutes from "./admin";
 import customerRoutes from "./customers";
 import { type Server } from "http";
+import { setupVite } from "../vite";
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   // Public Health Check
@@ -18,6 +19,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   
   // Customer Routes
   app.use("/api/customers", customerRoutes);
+
+  // Setup Vite dev server in development (MUST be last!)
+  const isDev = process.env.NODE_ENV !== "production";
+  if (isDev) {
+    await setupVite(httpServer, app);
+  }
 
   return httpServer;
 }
