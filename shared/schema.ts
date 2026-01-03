@@ -300,28 +300,32 @@ export const sales = pgTable("sales", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   companyId: varchar("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
   customerId: varchar("customer_id").references(() => customers.id, { onDelete: "cascade" }),
-  saleDate: timestamp("sale_date").notNull(),
-  totalAmount: decimal("total_amount", { precision: 15, scale: 2 }).notNull(),
+  date: timestamp("date").notNull().default(sql`now()`),
+  amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
   paidAmount: decimal("paid_amount", { precision: 15, scale: 2 }).default("0"),
   installmentCount: integer("installment_count").default(1),
   status: text("status").notNull().default("pendente"),
   description: text("description"),
   categoryId: varchar("category_id").references(() => categories.id, { onDelete: "set null" }),
   paymentMethod: text("payment_method"),
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
 });
 
 export const purchases = pgTable("purchases", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   companyId: varchar("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
   supplierId: varchar("supplier_id").references(() => suppliers.id, { onDelete: "cascade" }),
-  purchaseDate: timestamp("purchase_date").notNull(),
-  totalAmount: decimal("total_amount", { precision: 15, scale: 2 }).notNull(),
+  date: timestamp("date").notNull().default(sql`now()`),
+  amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
   paidAmount: decimal("paid_amount", { precision: 15, scale: 2 }).default("0"),
   installmentCount: integer("installment_count").default(1),
   status: text("status").notNull().default("pendente"),
   description: text("description"),
   categoryId: varchar("category_id").references(() => categories.id, { onDelete: "set null" }),
   paymentMethod: text("payment_method"),
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
 });
 
 export const installments = pgTable("installments", {
