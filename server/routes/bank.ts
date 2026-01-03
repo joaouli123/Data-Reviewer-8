@@ -19,44 +19,35 @@ export function registerBankRoutes(app: Express) {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const { ofxContent } = req.body;
       
-      // Sanitização agressiva para lidar com OFX de bancos brasileiros
-      // Alguns bancos brasileiros usam ISO-8859-1 ou caracteres especiais que quebram o XML
-      let sanitizedContent = ofxContent;
-      
-      // Tenta detectar se o conteúdo é XML ou se tem o cabeçalho OFX antigo
-      const ofxStart = sanitizedContent.indexOf('<OFX>');
+      if (!ofxContent) {
+        return res.status(400).json({ error: "Conteúdo do arquivo não fornecido" });
+      }
+
+      const ofxStart = ofxContent.indexOf('<OFX>');
       if (ofxStart === -1) {
         return res.status(400).json({ error: "Arquivo OFX inválido: tag <OFX> não encontrada" });
       }
 
-      const header = sanitizedContent.substring(0, ofxStart);
-      const body = sanitizedContent.substring(ofxStart);
+      const header = ofxContent.substring(0, ofxStart);
+      const body = ofxContent.substring(ofxStart);
       
-      // node-ofx-parser espera um formato bem específico. 
-      // Se falhar, tentamos uma limpeza mais agressiva ou retornamos erro amigável.
       let data;
       try {
-        // Tenta o parse direto primeiro, mas limpando fuso horário e espaços
-        const initialClean = sanitizedContent
-          .trim()
-          .replace(/\[-?\d+:\w+\]/g, '');
+        const initialClean = ofxContent.trim().replace(/\[-?\d+:\w+\]/g, '');
         data = ofx.parse(initialClean);
       } catch (parseError) {
         try {
-          // Tenta limpar tags não fechadas comuns em OFX de bancos brasileiros
           const cleanedXml = body
-            .replace(/<(\w+)>([^<\n\r]+)(?!\/<\1>)/g, '<$1>$2</$1>') // Fecha tags simples
-            .replace(/&(?!(amp|lt|gt|quot|apos);)/g, '&amp;') // Escapa ampersands
-            .replace(/\[-?\d+:\w+\]/g, ''); // Remove fuso horário
-          
+            .replace(/<(\w+)>([^<\n\r]+)(?!\/<\1>)/g, '<$1>$2</$1>')
+            .replace(/&(?!(amp|lt|gt|quot|apos);)/g, '&amp;')
+            .replace(/\[-?\d+:\w+\]/g, '');
           data = ofx.parse(header + cleanedXml);
         } catch (finalError) {
-          // Última tentativa: limpeza radical para SGML -> XML
           try {
             const extremeClean = body
-              .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '') // Remove caracteres de controle
-              .replace(/\[-?\d+:\w+\]/g, '') // Remove fuso horário
-              .replace(/<(\w+)>([^<\r\n]+)/g, '<$1>$2</$1>'); // Fecha TUDO que for tag SGML
+              .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+              .replace(/\[-?\d+:\w+\]/g, '')
+              .replace(/<(\w+)>([^<\r\n]+)/g, '<$1>$2</$1>');
             data = ofx.parse(extremeClean);
           } catch (e) {
             console.error('Falha crítica no parsing OFX:', finalError);
@@ -64,25 +55,30 @@ export function registerBankRoutes(app: Express) {
           }
         }
       }
+
+      if (!data || typeof data !== 'object') {
+        throw new Error("Falha ao gerar objeto de dados do OFX");
+      }
       
-      // Navigate the OFX structure
-      const stmttrns = data.OFX?.BANKMSGSRSV1?.STMTTRNRS?.STMTRS?.BANKTRANLIST?.STMTTRN;
+      const ofxObj = data.OFX || data;
+      const bankMsg = ofxObj.BANKMSGSRSV1?.STMTTRNRS?.STMTRS || 
+                     ofxObj.CREDITCARDMSGSRSV1?.CCSTMTTRNRS?.CCSTMTRS;
+      
+      const stmttrns = bankMsg?.BANKTRANLIST?.STMTTRN;
       
       if (!stmttrns) {
+        console.error("Estrutura OFX não reconhecida:", JSON.stringify(data).substring(0, 500));
         return res.status(400).json({ error: "Estrutura do arquivo OFX inválida ou sem transações" });
       }
 
       const transactions = Array.isArray(stmttrns) ? stmttrns : [stmttrns];
-      
       const newItems = [];
       let duplicateCount = 0;
-      
       const existing = await storage.getBankStatementItems(req.user.companyId);
       
       for (const trn of transactions) {
         const amount = parseFloat(trn.TRNAMT);
-        // OFX dates are usually YYYYMMDDHHMMSS
-        const rawDate = trn.DTPOSTED;
+        const rawDate = trn.DTPOSTED || "";
         const date = new Date(
           parseInt(rawDate.substring(0, 4)),
           parseInt(rawDate.substring(4, 6)) - 1,
