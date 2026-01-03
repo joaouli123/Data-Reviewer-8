@@ -238,7 +238,7 @@ export default function ProfilePage() {
     });
   };
 
-  const { data: invoices = [] } = useQuery({
+  const { data: invoices = [], isLoading: isLoadingInvoices } = useQuery({
     queryKey: ['/api/auth/invoices'],
     queryFn: async () => {
       try {
@@ -372,6 +372,50 @@ export default function ProfilePage() {
               <div className="text-sm text-muted-foreground mb-1">Valor Mensal</div>
               <div className="text-xl font-bold">R$ {company?.plan === "pro" ? "99,90" : "0,00"}</div>
             </div>
+          </div>
+
+          <div className="pt-4 border-t">
+            <h3 className="text-lg font-semibold mb-4">Histórico de Cobranças</h3>
+            {isLoadingInvoices ? (
+              <div className="text-center py-8 text-muted-foreground">Carregando...</div>
+            ) : (
+              <div className="rounded-md border overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50 border-b">
+                    <tr>
+                      <th className="px-4 py-3 text-left font-medium">Data</th>
+                      <th className="px-4 py-3 text-left font-medium">Plano</th>
+                      <th className="px-4 py-3 text-left font-medium">Valor</th>
+                      <th className="px-4 py-3 text-right font-medium">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {invoices && invoices.length > 0 ? invoices.map((inv, i) => (
+                      <tr key={i} className="hover:bg-muted/30">
+                        <td className="px-4 py-3">
+                          {inv.date ? (() => {
+                            try {
+                              return new Date(inv.date).toLocaleDateString('pt-BR');
+                            } catch (e) {
+                              return '---';
+                            }
+                          })() : '---'}
+                        </td>
+                        <td className="px-4 py-3 capitalize">{inv.plan}</td>
+                        <td className="px-4 py-3">R$ {parseFloat(inv.amount || 0).toFixed(2)}</td>
+                        <td className="px-4 py-3 text-right">
+                          <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">Pago</Badge>
+                        </td>
+                      </tr>
+                    )) : (
+                      <tr>
+                        <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground italic">Nenhuma cobrança encontrada.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
