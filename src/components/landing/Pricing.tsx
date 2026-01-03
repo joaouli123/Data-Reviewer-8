@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Check, Star } from 'lucide-react';
+import { Link } from "wouter";
 
 const Pricing: React.FC = () => {
   return (
