@@ -155,7 +155,10 @@ export default function Signup() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">Plano Selecionado</p>
-              <p className="text-lg font-bold text-blue-900 dark:text-blue-100">{PLANS[selectedPlan]?.name} - {PLANS[selectedPlan]?.price}/mês</p>
+              <p className="text-lg font-bold text-blue-900 dark:text-blue-100">
+                {PLANS[selectedPlan]?.name} - {PLANS[selectedPlan]?.price}
+                {selectedPlan === 'pro' ? ' (Pagamento Único)' : '/mês'}
+              </p>
               <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">{PLANS[selectedPlan]?.features}</p>
             </div>
             <Button 
