@@ -116,15 +116,45 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
 
   const confirmPaymentMutation = useMutation({
     mutationFn: async ({ saleId, paidAmount, interest, paymentDate, paymentMethod }) => {
-      // Use the new atomic payment endpoint
-      const response = await apiRequest('POST', `/api/sales/${saleId}/pay`, {
-        paidAmount,
-        interest,
-        paymentDate,
-        paymentMethod,
-        description: `Recebimento de venda para ${customer?.name}`
+      // Get the transaction first to check the amount
+      const currentTransaction = await apiRequest('GET', `/api/transactions/${saleId}`);
+
+      // Determine status based on paid amount vs total amount
+      const totalAmount = parseFloat(currentTransaction.amount || 0);
+      const paidAmountValue = parseFloat(paidAmount || 0);
+      const interestValue = parseFloat(interest || 0);
+      const totalPaid = paidAmountValue + interestValue;
+
+      // Status should be 'pago' only if fully paid
+      const status = totalPaid >= totalAmount ? 'pago' : 'parcial';
+
+      // Format payment date (NOT the due date - that stays unchanged)
+      let formattedPaymentDate = new Date().toISOString();
+      if (paymentDate && paymentDate.trim()) {
+        const [year, month, day] = paymentDate.split('-');
+        formattedPaymentDate = new Date(`${year}-${month}-${day}T12:00:00Z`).toISOString();
+      }
+
+      // Update the transaction
+      const transaction = await apiRequest('PATCH', `/api/transactions/${saleId}`, {
+        status: status,
+        paidAmount: paidAmount ? paidAmount.toString() : totalAmount.toString(),
+        interest: interest ? interest.toString() : '0',
+        paymentDate: formattedPaymentDate,
+        paymentMethod: paymentMethod
       });
-      return response;
+
+      // Create corresponding cash flow entry (inflow for sales)
+      await apiRequest('POST', '/api/cash-flow', {
+        date: formattedPaymentDate,
+        inflow: totalPaid.toFixed(2),
+        outflow: '0',
+        balance: totalPaid.toFixed(2),
+        description: `Recebimento: ${transaction.description}`,
+        shift: transaction.shift || 'manhã'
+      });
+
+      return transaction;
     },
     onSuccess: () => {
       toast.success('Pagamento confirmado!', { duration: 5000 });
@@ -140,10 +170,30 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
   });
 
   const cancelPaymentMutation = useMutation({
-    mutationFn: async (saleId) => {
-      // Use the new atomic cancel endpoint
-      const response = await apiRequest('POST', `/api/sales/${saleId}/cancel-payment`);
-      return response;
+    mutationFn: async (transactionId) => {
+      // Get the transaction first
+      const transaction = await apiRequest('GET', `/api/transactions/${transactionId}`);
+      
+      // Revert the transaction status to pending
+      const result = await apiRequest('PATCH', `/api/transactions/${transactionId}`, {
+        status: 'pendente',
+        paidAmount: null,
+        interest: '0',
+        paymentDate: null
+      });
+      
+      // Delete corresponding cash flow entry
+      try {
+        const cashFlows = await apiRequest('GET', '/api/cash-flow');
+        const relatedCashFlow = cashFlows.find(cf => cf.description?.includes(transaction.description));
+        if (relatedCashFlow) {
+          await apiRequest('DELETE', `/api/cash-flow/${relatedCashFlow.id}`);
+        }
+      } catch (err) {
+        console.warn('Could not delete related cash flow:', err);
+      }
+      
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });

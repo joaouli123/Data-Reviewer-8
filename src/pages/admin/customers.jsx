@@ -61,14 +61,11 @@ function CustomerListContent() {
 
   const { data: customers = [], isLoading } = useQuery({
     queryKey: ['/api/admin/customers'],
-    queryFn: () => apiRequest('/api/admin/customers'),
+    queryFn: () => apiRequest('GET', '/api/admin/customers'),
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data) => apiRequest(`/api/admin/customers/${data.id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    }),
+    mutationFn: (data) => apiRequest('PATCH', `/api/admin/customers/${data.id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/customers'] });
       toast({ title: 'Sucesso', description: 'Cliente atualizado com sucesso' });
@@ -80,7 +77,7 @@ function CustomerListContent() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => apiRequest(`/api/admin/customers/${id}`, { method: 'DELETE' }),
+    mutationFn: (id) => apiRequest('DELETE', `/api/admin/customers/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/customers'] });
       toast({ title: 'Sucesso', description: 'Cliente deletado com sucesso' });
@@ -92,10 +89,7 @@ function CustomerListContent() {
   });
 
   const toggleStatusMutation = useMutation({
-    mutationFn: (customer) => apiRequest(`/api/admin/customers/${customer.id}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ status: customer.status === 'active' ? 'blocked' : 'active' }),
-    }),
+    mutationFn: (customer) => apiRequest('PATCH', `/api/admin/customers/${customer.id}`, { status: customer.status === 'active' ? 'blocked' : 'active' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/customers'] });
       toast({ title: 'Sucesso', description: 'Status do cliente atualizado' });

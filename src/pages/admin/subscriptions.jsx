@@ -62,14 +62,11 @@ function SubscriptionListContent() {
 
   const { data: subscriptions = [], isLoading } = useQuery({
     queryKey: ['/api/admin/subscriptions'],
-    queryFn: () => apiRequest('/api/admin/subscriptions'),
+    queryFn: () => apiRequest('GET', '/api/admin/subscriptions'),
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data) => apiRequest(`/api/admin/subscriptions/${data.id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    }),
+    mutationFn: (data) => apiRequest('PATCH', `/api/admin/subscriptions/${data.id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/subscriptions'] });
       toast({ title: 'Sucesso', description: 'Assinatura atualizada com sucesso' });
@@ -81,7 +78,7 @@ function SubscriptionListContent() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => apiRequest(`/api/admin/subscriptions/${id}`, { method: 'DELETE' }),
+    mutationFn: (id) => apiRequest('DELETE', `/api/admin/subscriptions/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/subscriptions'] });
       toast({ title: 'Sucesso', description: 'Assinatura deletada com sucesso' });
@@ -93,12 +90,7 @@ function SubscriptionListContent() {
   });
 
   const toggleStatusMutation = useMutation({
-    mutationFn: (subscription) => apiRequest(`/api/admin/subscriptions/${subscription.id}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ 
-        status: subscription.status === 'active' ? 'blocked' : 'active' 
-      }),
-    }),
+    mutationFn: (subscription) => apiRequest('PATCH', `/api/admin/subscriptions/${subscription.id}`, { status: subscription.status === 'active' ? 'blocked' : 'active' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/subscriptions'] });
       toast({ title: 'Sucesso', description: 'Status da assinatura atualizado' });

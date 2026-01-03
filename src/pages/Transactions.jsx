@@ -53,14 +53,14 @@ export default function TransactionsPage() {
 
   const { data: categories } = useQuery({
     queryKey: ['/api/categories', company?.id],
-    queryFn: () => apiRequest('/api/categories'),
+    queryFn: () => apiRequest('GET', '/api/categories'),
     initialData: [],
     enabled: !!company?.id
   });
 
   const { data: transactionsData, isLoading } = useQuery({
     queryKey: ['/api/transactions', company?.id],
-    queryFn: () => apiRequest('/api/transactions'),
+    queryFn: () => apiRequest('GET', '/api/transactions'),
     initialData: [],
     enabled: !!company?.id,
     staleTime: 0,

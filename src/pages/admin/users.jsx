@@ -68,16 +68,13 @@ function UserListContent() {
 
   const { data: usersData, isLoading } = useQuery({
     queryKey: ['/api/admin/users'],
-    queryFn: () => apiRequest('/api/admin/users'),
+    queryFn: () => apiRequest('GET', '/api/admin/users'),
   });
 
   const users = usersData || [];
 
   const updateMutation = useMutation({
-    mutationFn: (data) => apiRequest(`/api/admin/users/${data.id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    }),
+    mutationFn: (data) => apiRequest('PATCH', `/api/admin/users/${data.id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
       toast({ title: 'Sucesso', description: 'Usuário atualizado' });
@@ -89,10 +86,7 @@ function UserListContent() {
   });
 
   const resetPasswordMutation = useMutation({
-    mutationFn: ({ userId, newPassword: pwd }) => apiRequest(`/api/admin/users/${userId}/reset-password`, {
-      method: 'POST',
-      body: JSON.stringify({ newPassword: pwd }),
-    }),
+    mutationFn: ({ userId, newPassword: pwd }) => apiRequest('POST', `/api/admin/users/${userId}/reset-password`, { newPassword: pwd }),
     onSuccess: () => {
       toast({ title: 'Sucesso', description: 'Senha redefinida com sucesso' });
       setResetPassword(null);
@@ -104,7 +98,7 @@ function UserListContent() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => apiRequest(`/api/admin/users/${id}`, { method: 'DELETE' }),
+    mutationFn: (id) => apiRequest('DELETE', `/api/admin/users/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
       queryClient.invalidateQueries({ queryKey: ['/api/users'] });
@@ -117,10 +111,7 @@ function UserListContent() {
   });
 
   const toggleStatusMutation = useMutation({
-    mutationFn: (user) => apiRequest(`/api/admin/users/${user.id}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ status: user.status === 'active' ? 'suspended' : 'active' }),
-    }),
+    mutationFn: (user) => apiRequest('PATCH', `/api/admin/users/${user.id}`, { status: user.status === 'active' ? 'suspended' : 'active' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
       toast({ title: 'Sucesso', description: 'Status do usuário atualizado' });

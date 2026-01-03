@@ -68,17 +68,17 @@ function SuperDashboardContent() {
   // Fetch data
   const { data: companies = [] } = useQuery({
     queryKey: ['/api/admin/companies'],
-    queryFn: () => apiRequest('/api/admin/companies'),
+    queryFn: () => apiRequest('GET', '/api/admin/companies'),
   });
 
   const { data: users = [] } = useQuery({
     queryKey: ['/api/admin/users'],
-    queryFn: () => apiRequest('/api/admin/users'),
+    queryFn: () => apiRequest('GET', '/api/admin/users'),
   });
 
   const { data: customers = [] } = useQuery({
     queryKey: ['/api/admin/customers'],
-    queryFn: () => apiRequest('/api/admin/customers'),
+    queryFn: () => apiRequest('GET', '/api/admin/customers'),
   });
 
   // Filter by period

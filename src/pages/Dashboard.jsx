@@ -77,10 +77,7 @@ export default function DashboardPage() {
       Promise.all(
         data.map(item => {
           console.log('Creating installment:', { amount: item.amount, installmentNumber: item.installmentNumber });
-          return apiRequest('/api/transactions', {
-            method: 'POST',
-            body: JSON.stringify(item)
-          });
+          return apiRequest('POST', '/api/transactions', item);
         })
       ).then(() => {
         queryClient.invalidateQueries({ queryKey: ['/api/transactions', company?.id] });
