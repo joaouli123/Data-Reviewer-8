@@ -1095,16 +1095,31 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       
       const companyId = req.user.companyId;
-      const saleId = req.params.id;
+      const id = req.params.id;
 
-      // Debug log
-      console.log(`[CANCEL_PAYMENT] Attempting to cancel payment for sale ${saleId} in company ${companyId}`);
+      console.log(`[CANCEL_PAYMENT] Attempting to cancel payment for ID ${id} in company ${companyId}`);
 
-      // Usar db.select diretamente para garantir que o filtro por companyId seja aplicado corretamente
-      const [sale] = await db.select().from(sales).where(and(eq(sales.companyId, companyId), eq(sales.id, saleId))).limit(1);
+      // 1. Tentar encontrar como Venda
+      let [sale] = await db.select().from(sales).where(and(eq(sales.companyId, companyId), eq(sales.id, id))).limit(1);
+      let saleId = id;
+
+      // 2. Se não for venda, tentar encontrar como Transação (para casos onde o ID enviado é da transação/parcela)
+      if (!sale) {
+        const [transaction] = await db.select().from(transactions).where(and(eq(transactions.companyId, companyId), eq(transactions.id, id))).limit(1);
+        if (transaction && transaction.description) {
+          // Extrair saleId da descrição "Venda #xxxxxxxx"
+          const match = transaction.description.match(/Venda #([a-f0-9-]+)/i);
+          if (match) {
+            const extractedId = match[1];
+            // Tentar encontrar a venda pelo ID extraído ou por prefixo (caso seja o ID curto)
+            [sale] = await db.select().from(sales).where(and(eq(sales.companyId, companyId), sql`${sales.id}::text LIKE ${extractedId + '%'}`)).limit(1);
+            if (sale) saleId = sale.id;
+          }
+        }
+      }
 
       if (!sale) {
-        console.warn(`[CANCEL_PAYMENT] Sale ${saleId} NOT FOUND for company ${companyId}`);
+        console.warn(`[CANCEL_PAYMENT] Sale record NOT FOUND for ID ${id} in company ${companyId}`);
         return res.status(404).json({ error: "Sale not found" });
       }
 
@@ -1144,7 +1159,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           "CANCEL_PAYMENT",
           "sale",
           saleId,
-          JSON.stringify({ originalStatus: sale.status, originalPaid: sale.paidAmount }),
+          JSON.stringify({ originalStatus: sale.status, originalPaid: sale.paidAmount, requestedId: id }),
           req.ip || "0.0.0.0",
           req.headers['user-agent'] || 'unknown'
         );
