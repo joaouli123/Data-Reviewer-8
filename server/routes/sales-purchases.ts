@@ -41,7 +41,8 @@ export function registerSalesPurchasesRoutes(app: Express) {
       if (customInstallments && customInstallments.length > 0) {
         for (let i = 0; i < customInstallments.length; i++) {
           const inst = customInstallments[i];
-          await storage.createTransaction(req.user.companyId, {
+          const transactionData = {
+            companyId: req.user.companyId,
             type: 'compra',
             description: `${description} (${i + 1}/${customInstallments.length})`,
             amount: String(inst.amount),
@@ -53,7 +54,8 @@ export function registerSalesPurchasesRoutes(app: Express) {
             installmentNumber: i + 1,
             installmentTotal: customInstallments.length,
             installmentGroup: installmentGroupId
-          } as any);
+          };
+          await storage.createTransaction(req.user.companyId, transactionData as any);
         }
       } else {
         const count = parseInt(installmentCount) || 1;
@@ -63,7 +65,8 @@ export function registerSalesPurchasesRoutes(app: Express) {
           const dueDate = new Date(purchaseDate);
           dueDate.setMonth(dueDate.getMonth() + i);
           
-          await storage.createTransaction(req.user.companyId, {
+          const transactionData = {
+            companyId: req.user.companyId,
             type: 'compra',
             description: count > 1 ? `${description} (${i + 1}/${count})` : description,
             amount: String(amountPerInstallment.toFixed(2)),
@@ -75,7 +78,8 @@ export function registerSalesPurchasesRoutes(app: Express) {
             installmentNumber: i + 1,
             installmentTotal: count,
             installmentGroup: installmentGroupId
-          } as any);
+          };
+          await storage.createTransaction(req.user.companyId, transactionData as any);
         }
       }
 
