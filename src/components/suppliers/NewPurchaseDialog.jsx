@@ -61,12 +61,12 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
 
   const { data: categories } = useQuery({
     queryKey: ['/api/categories', company?.id],
-    queryFn: () => Category.list(),
+    queryFn: () => apiRequest('GET', '/api/categories'),
     initialData: []
   });
 
   const createCategoryMutation = useMutation({
-    mutationFn: (data) => Category.create(data),
+    mutationFn: (data) => apiRequest('POST', '/api/categories', data),
     onSuccess: (newCat) => {
       queryClient.invalidateQueries({ queryKey: ['/api/categories', company?.id] });
       setFormData((prev) => ({ ...prev, category: newCat.name }));
@@ -118,6 +118,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
           const payload = {
             supplierId: supplier.id,
             categoryId: cat.id,
+            companyId: company?.id,
             type: 'compra',
             date: dueDateISO,
             shift: 'manhã',
@@ -146,6 +147,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
           const payload = {
             supplierId: supplier.id,
             categoryId: cat.id,
+            companyId: company?.id,
             type: 'compra',
             date: dueDateISO,
             shift: 'manhã',

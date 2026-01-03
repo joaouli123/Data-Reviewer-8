@@ -60,12 +60,12 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
 
   const { data: categories } = useQuery({
     queryKey: ['/api/categories', company?.id],
-    queryFn: () => Category.list(),
+    queryFn: () => apiRequest('GET', '/api/categories'),
     initialData: []
   });
 
   const createCategoryMutation = useMutation({
-    mutationFn: (data) => Category.create(data),
+    mutationFn: (data) => apiRequest('POST', '/api/categories', data),
     onSuccess: (newCat) => {
       queryClient.invalidateQueries({ queryKey: ['/api/categories', company?.id] });
       setFormData((prev) => ({ ...prev, category: newCat.name }));
@@ -111,6 +111,7 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
           const payload = {
             customerId: customer.id,
             categoryId: cat?.id,
+            companyId: company?.id,
             type: 'venda',
             date: dueDateISO,
             shift: 'manhã',
@@ -139,6 +140,7 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
           const payload = {
             customerId: customer.id,
             categoryId: cat?.id,
+            companyId: company?.id,
             type: 'venda',
             date: dueDateISO,
             shift: 'manhã',
