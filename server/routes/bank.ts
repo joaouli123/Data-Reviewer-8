@@ -19,40 +19,48 @@ export function registerBankRoutes(app: Express) {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const { ofxContent } = req.body;
       
-      // Sanitização básica do conteúdo OFX
+      // Sanitização agressiva para lidar com OFX de bancos brasileiros
       // Alguns bancos brasileiros usam ISO-8859-1 ou caracteres especiais que quebram o XML
       let sanitizedContent = ofxContent;
       
-      // Tenta encontrar o início do OFX
+      // Tenta detectar se o conteúdo é XML ou se tem o cabeçalho OFX antigo
       const ofxStart = sanitizedContent.indexOf('<OFX>');
       if (ofxStart === -1) {
         return res.status(400).json({ error: "Arquivo OFX inválido: tag <OFX> não encontrada" });
       }
 
-      const xmlBody = sanitizedContent.substring(ofxStart);
+      const header = sanitizedContent.substring(0, ofxStart);
+      const body = sanitizedContent.substring(ofxStart);
       
       // node-ofx-parser espera um formato bem específico. 
       // Se falhar, tentamos uma limpeza mais agressiva ou retornamos erro amigável.
       let data;
       try {
-        // Remove espaços em branco extras antes do processamento
-        const trimmedContent = ofxContent.trim();
-        data = ofx.parse(trimmedContent);
+        // Tenta o parse direto primeiro
+        data = ofx.parse(sanitizedContent);
       } catch (parseError) {
-        // Tenta encontrar o início real do conteúdo (ignora cabeçalhos proprietários se necessário)
-        const ofxStartPos = ofxContent.indexOf('<OFX>');
-        const contentToParse = ofxStartPos !== -1 ? ofxContent.substring(ofxStartPos) : ofxContent;
-        
-        // Tenta limpar tags não fechadas comuns em OFX de bancos brasileiros
-        const cleanedXml = contentToParse
-          .replace(/<(\w+)>([^<]+)(?!\/<\1>)/g, '<$1>$2</$1>') // Fecha tags simples
-          .replace(/&(?!(amp|lt|gt|quot|apos);)/g, '&amp;'); // Escapa ampersands apenas se não estiverem escapados
-        
         try {
-          data = ofx.parse(cleanedXml);
+          // Tenta limpar tags não fechadas comuns em OFX de bancos brasileiros
+          // Regex melhorada para fechar tags que não terminam com outra tag na mesma linha
+          const cleanedXml = body
+            .replace(/<(\w+)>([^<\n\r]+)(?!\/<\1>)/g, '<$1>$2</$1>') // Fecha tags simples
+            .replace(/&(?!(amp|lt|gt|quot|apos);)/g, '&amp;'); // Escapa ampersands
+          
+          data = ofx.parse(header + cleanedXml);
         } catch (finalError) {
-          console.error('Falha crítica no parsing OFX:', finalError);
-          throw finalError;
+          // Última tentativa: parse apenas do corpo XML limpando caracteres de controle
+          try {
+            const extremeClean = body
+              .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '') // Remove caracteres de controle
+              .replace(/<(\w+)>([^<]+)/g, (match, tag, content) => {
+                if (content.includes('</' + tag + '>')) return match;
+                return `<${tag}>${content.trim()}</${tag}>`;
+              });
+            data = ofx.parse(extremeClean);
+          } catch (e) {
+            console.error('Falha crítica no parsing OFX:', finalError);
+            throw finalError;
+          }
         }
       }
       
