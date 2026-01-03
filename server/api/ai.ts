@@ -8,45 +8,39 @@ export async function analyzeWithAI(prompt: string, responseJsonSchema: any = nu
     throw new Error('API_KEY_NOT_CONFIGURED');
   }
 
+  // Usando gemini-1.5-flash que é o modelo mais estável e suporta JSON nativo
   const model = genAI.getGenerativeModel({ 
-    model: "gemini-1.5-flash",
+    model: "gemini-1.5-flash"
   });
 
   let finalPrompt = prompt;
   if (responseJsonSchema) {
-    finalPrompt = `${prompt}\n\nResponda obrigatoriamente com um JSON válido que siga exatamente este schema: ${JSON.stringify(responseJsonSchema)}`;
+    finalPrompt = `${prompt}\n\nResponda APENAS com um objeto JSON seguindo este formato:\n${JSON.stringify(responseJsonSchema)}\nNão inclua markdown ou explicações.`;
   }
 
   try {
-    const result = await model.generateContent(finalPrompt);
-    const textContent = result.response.text().trim();
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts: [{ text: finalPrompt }] }]
+    });
+
+    const textContent = result.response.text().trim().replace(/^```json/, '').replace(/```$/, '');
 
     if (responseJsonSchema) {
-      return extractJSON(textContent);
+      try {
+        return JSON.parse(textContent);
+      } catch (parseError) {
+        // Fallback: tenta extrair JSON do texto caso a IA tenha incluído texto extra
+        const jsonMatch = textContent.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          return JSON.parse(jsonMatch[0]);
+        }
+        throw parseError;
+      }
     }
-    
+
     return textContent;
   } catch (error: any) {
     console.error("Gemini API Error:", error);
     throw new Error(`Erro na API Gemini: ${error.message}`);
   }
-}
-
-function extractJSON(text: string) {
-  try {
-    return JSON.parse(text);
-  } catch (e) {
-    const matches = text.match(/\{[\s\S]*?\}/g);
-    if (matches && matches.length > 0) {
-      const sortedMatches = matches.sort((a, b) => b.length - a.length);
-      for (const match of sortedMatches) {
-        try {
-          return JSON.parse(match);
-        } catch (e) {
-          continue;
-        }
-      }
-    }
-  }
-  throw new Error('Não foi possível extrair JSON válido da resposta da IA');
 }
