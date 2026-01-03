@@ -727,14 +727,17 @@ export class DatabaseStorage implements IStorage {
 
   // Bank Statement operations
   async getBankStatementItems(companyId: string): Promise<BankStatementItem[]> {
-    return await db
+    const items = await db
       .select()
       .from(bankStatementItems)
       .where(eq(bankStatementItems.companyId, companyId))
       .orderBy(desc(bankStatementItems.date));
+    console.log(`[Storage Debug] Itens para ${companyId}: ${items.length}`);
+    return items;
   }
 
   async createBankStatementItem(companyId: string, data: InsertBankStatementItem): Promise<BankStatementItem> {
+    console.log(`[Storage Debug] Criando item para ${companyId}:`, data.description);
     const [item] = await db
       .insert(bankStatementItems)
       .values({ ...data, companyId })
@@ -752,6 +755,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async matchBankStatementItem(companyId: string, bankItemId: string, transactionId: string): Promise<BankStatementItem> {
+    console.log(`[Storage Debug] Conciliando item ${bankItemId} com transação ${transactionId}`);
     return await db.transaction(async (tx) => {
       const result = await tx
         .update(bankStatementItems)
@@ -772,6 +776,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async clearBankStatementItems(companyId: string): Promise<void> {
+    console.log(`[Storage Debug] Limpando TUDO para ${companyId}`);
     await db.delete(bankStatementItems).where(eq(bankStatementItems.companyId, companyId));
   }
 }
