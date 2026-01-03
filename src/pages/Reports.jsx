@@ -236,6 +236,8 @@ PERÍODO SELECIONADO (${dateRange.label}):
 - Lucro: R$ ${profit.toFixed(0)}
 - Transações: ${filteredTxns.length}
 
+IMPORTANTE: No campo "month" da previsão de 3 meses, use APENAS os nomes: "Próximo Mês", "Mês 2" e "Mês 3".
+
 Forneça:
 1. executive_summary: Como está o negócio AGORA (1 frase) + O que vai acontecer nos próximos 3 meses (2 frases)
 2. cash_flow_forecast: Array com 3 meses de previsão (mês, predicted_revenue, predicted_expense) baseado no histórico
@@ -300,7 +302,7 @@ Forneça:
     const avgMonthlyRevenue = transactionCount > 0 ? totalRevenue / Math.max(3, Math.floor(transactionCount / 10)) : totalRevenue;
     const avgMonthlyExpense = transactionCount > 0 ? totalExpense / Math.max(3, Math.floor(transactionCount / 10)) : totalExpense;
     
-    const monthLabels = ['Próximo Mês', 'Mês +2', 'Mês +3'];
+    const monthLabels = ['Próximo Mês', 'Mês 2', 'Mês 3'];
     return monthLabels.map((label, idx) => ({
       month: label,
       predicted_revenue: Math.round(avgMonthlyRevenue * (0.95 + Math.random() * 0.1)),
