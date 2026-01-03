@@ -18,7 +18,14 @@ export function registerTransactionRoutes(app: Express) {
         transactions = transactions.filter(t => String(t.supplierId) === String(supplierId));
       }
       if (type) {
-        transactions = transactions.filter(t => t.type === type);
+        // Normalizar tipos para busca retrocompatível
+        if (type === 'venda') {
+          transactions = transactions.filter(t => t.type === 'venda' || t.type === 'income');
+        } else if (type === 'compra') {
+          transactions = transactions.filter(t => t.type === 'compra' || t.type === 'expense');
+        } else {
+          transactions = transactions.filter(t => t.type === type);
+        }
       }
       
       res.json(transactions);

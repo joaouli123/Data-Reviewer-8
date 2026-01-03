@@ -45,7 +45,10 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
   });
 
   const transactions = Array.isArray(transactionsData) ? transactionsData : (transactionsData?.data || []);
-  const sales = transactions; // Filtered by backend now
+  const sales = transactions; 
+  
+  // No frontend filter, show all sales
+  // const sales = transactions.filter(t => t.type === 'venda' || t.type === 'income'); 
   
   // Group sales by installment group
   const groupedSales = React.useMemo(() => {
