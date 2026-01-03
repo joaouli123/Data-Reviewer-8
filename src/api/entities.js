@@ -21,9 +21,10 @@ const wrapList = (Entity) => ({
 
 const WrappedCustomer = wrapList(Customer);
 const WrappedSupplier = wrapList(Supplier);
+const WrappedTransaction = wrapList(Transaction);
 
 export {
-  Transaction,
+  WrappedTransaction as Transaction,
   WrappedCustomer as Customer,
   Category,
   Sale,

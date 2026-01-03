@@ -83,22 +83,20 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
 
   const createPurchaseMutation = useMutation({
     mutationFn: async (data) => {
-      const selectedCategory = categories.find(c => c.name === data.category);
-      
       const payload = {
         supplierId: supplier.id,
-        purchaseDate: new Date(data.purchase_date).toISOString(),
-        totalAmount: String(data.total_amount),
-        paidAmount: data.status === 'pago' ? String(data.total_amount) : '0',
-        installmentCount: parseInt(data.installments) || 1,
+        date: new Date(data.purchase_date).toISOString(),
+        amount: String(data.total_amount),
+        type: 'compra',
         status: data.status,
         description: data.description,
-        categoryId: selectedCategory?.id || null,
+        category: data.category,
         paymentMethod: data.paymentMethod,
-        customInstallments: data.customInstallments || null
+        shift: 'day',
+        isReconciled: false
       };
 
-      const res = await apiRequest('POST', '/api/purchases', payload);
+      const res = await apiRequest('POST', '/api/transactions', payload);
       return res;
     },
     onSuccess: async () => {
