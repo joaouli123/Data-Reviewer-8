@@ -39,31 +39,59 @@ export function registerBankRoutes(app: Express) {
       let data;
       try {
         console.log("[OFX Debug] Tentando parse inicial...");
+        // Limpeza básica e remoção de fuso horário
         const initialClean = ofxContent.trim().replace(/\[-?\d+:\w+\]/g, '');
         data = ofx.parse(initialClean);
         console.log("[OFX Debug] Parse inicial bem-sucedido");
       } catch (parseError) {
-        console.warn("[OFX Debug] Falha no parse inicial, tentando limpeza SGML...");
+        console.warn("[OFX Debug] Falha no parse inicial, tentando limpeza SGML customizada...");
         try {
-          const cleanedXml = body
-            .replace(/<(\w+)>([^<\n\r]+)(?!\/<\1>)/g, '<$1>$2</$1>')
-            .replace(/&(?!(amp|lt|gt|quot|apos);)/g, '&amp;')
-            .replace(/\[-?\d+:\w+\]/g, '');
-          data = ofx.parse(header + cleanedXml);
-          console.log("[OFX Debug] Parse com limpeza SGML bem-sucedido");
-        } catch (finalError) {
-          console.warn("[OFX Debug] Falha na limpeza SGML, tentando limpeza radical...");
-          try {
-            const extremeClean = body
-              .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
-              .replace(/\[-?\d+:\w+\]/g, '')
-              .replace(/<(\w+)>([^<\r\n]+)/g, '<$1>$2</$1>');
-            data = ofx.parse(extremeClean);
-            console.log("[OFX Debug] Parse radical bem-sucedido");
-          } catch (e) {
-            console.error('[OFX Debug] Falha crítica em todos os níveis de parsing');
-            throw finalError;
+          // Lógica manual para converter SGML malformado em objeto JSON
+          // Baseado na estrutura do arquivo enviado pelo usuário
+          const transactions: any[] = [];
+          const lines = ofxContent.split('\n');
+          let currentTrn: any = null;
+          
+          for (let line of lines) {
+            line = line.trim();
+            if (line.includes('<STMTTRN>')) {
+              currentTrn = {};
+            } else if (line.includes('</STMTTRN>')) {
+              if (currentTrn) transactions.push(currentTrn);
+              currentTrn = null;
+            } else if (currentTrn) {
+              const match = line.match(/<(\w+)>([^<\n\r]+)/);
+              if (match) {
+                const tag = match[1];
+                let value = match[2].trim();
+                // Limpeza específica para data
+                if (tag === 'DTPOSTED') value = value.replace(/\[-?\d+:\w+\]/g, '');
+                currentTrn[tag] = value;
+              }
+            }
           }
+          
+          if (transactions.length > 0) {
+            data = {
+              OFX: {
+                BANKMSGSRSV1: {
+                  STMTTRNRS: {
+                    STMTRS: {
+                      BANKTRANLIST: {
+                        STMTTRN: transactions
+                      }
+                    }
+                  }
+                }
+              }
+            };
+            console.log("[OFX Debug] Parse manual SGML bem-sucedido. Transações:", transactions.length);
+          } else {
+            throw new Error("Nenhuma transação encontrada no parse manual");
+          }
+        } catch (manualError) {
+          console.error('[OFX Debug] Falha no parse manual:', manualError);
+          throw parseError;
         }
       }
 
