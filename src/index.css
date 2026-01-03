@@ -6,6 +6,9 @@ html { font-family: 'Inter', sans-serif; }
 @tailwind utilities;
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
   :root {
     /* Brand Colors - Blue Palette */
     --background: 0 0% 98%;
