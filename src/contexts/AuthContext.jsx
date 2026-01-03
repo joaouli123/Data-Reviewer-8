@@ -60,10 +60,19 @@ export function AuthProvider({ children }) {
         throw new Error(data.error || "Signup failed");
       }
 
-      setToken(data.token);
+      // If signup is successful, we set the state but mark as payment pending
       setUser(data.user);
       setCompany(data.company);
-      localStorage.setItem("auth", JSON.stringify({ ...data, plan }));
+      // We don't set the token yet to prevent dashboard access
+      // setToken(data.token); 
+      
+      localStorage.setItem("auth", JSON.stringify({ 
+        user: data.user, 
+        company: data.company, 
+        token: null, // Ensure token is null until payment
+        paymentPending: true,
+        plan 
+      }));
       return data;
     } catch (err) {
       setError(err.message);

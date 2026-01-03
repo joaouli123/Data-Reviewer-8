@@ -89,11 +89,11 @@ export default function Signup() {
       );
       
       // Check if this was a successful new signup
-      if (result.token) {
-        // O signup já salva no localStorage e seta isAuthenticated
+      if (result.user) {
+        // O signup já salva no localStorage e seta paymentPending
         // O App.jsx agora vai redirecionar automaticamente para /checkout
-        // baseado no status da assinatura da empresa
         toast.success("Conta criada! Redirecionando para pagamento...");
+        setTimeout(() => setLocation("/checkout?plan=" + formData.plan), 1000);
       }
     } catch (error) {
       // Handle duplicate company scenarios

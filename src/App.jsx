@@ -114,29 +114,17 @@ function AppContent() {
   }
 
   const isPublicPage = typeof window !== 'undefined' ? 
-    ["/", "/payment-success", "/accept-invite", "/terms", "/privacy", "/login", "/signup"].includes(window.location.pathname) : 
+    ["/", "/payment-success", "/accept-invite", "/terms", "/privacy", "/login", "/signup", "/checkout"].includes(window.location.pathname) : 
     false;
 
-  if ((isAuthenticated || paymentPending) && company && company.paymentStatus !== "approved" && !isPublicPage) {
-    if (typeof window !== 'undefined' && 
-        window.location.pathname !== '/checkout' && 
-        window.location.pathname !== '/payment-success' &&
-        window.location.pathname !== '/accept-invite' &&
-        window.location.pathname !== '/terms' &&
-        window.location.pathname !== '/privacy') {
-      window.location.href = '/checkout';
-      return null;
+  // Bloqueio rigoroso: se autenticado (ou pendente) e pagamento não aprovado, SÓ pode ver checkout/pagamento
+  if ((isAuthenticated || paymentPending) && company && company.paymentStatus !== "approved") {
+    if (!isPublicPage) {
+      if (typeof window !== 'undefined') {
+        window.location.href = '/checkout';
+        return null;
+      }
     }
-    return (
-      <Switch>
-        <Route path="/checkout" component={Checkout} />
-        <Route path="/payment-success" component={PaymentSuccess} />
-        <Route path="/accept-invite" component={AcceptInvite} />
-        <Route path="/terms" component={TermsOfUse} />
-        <Route path="/privacy" component={PrivacyPolicy} />
-        <Route component={Checkout} />
-      </Switch>
-    );
   }
 
   if (!isAuthenticated && !paymentPending) {
