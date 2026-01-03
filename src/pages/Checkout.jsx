@@ -105,7 +105,7 @@ export default function Checkout() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const plan = params.get('plan');
-    setSelectedPlan(plan && PLANS[plan] ? plan : 'pro');
+    setSelectedPlan(plan && PLANS[plan] ? plan : 'monthly');
     setLoading(false);
   }, []);
 
