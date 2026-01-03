@@ -42,7 +42,14 @@ export default function BankReconciliation({ open, onOpenChange }) {
     enabled: open
   });
 
-  // Fetch potential matches for a selected item
+  // Log para depuração
+  useEffect(() => {
+    if (bankItems.length > 0) {
+      console.log("[Bank Reconciliation] Itens recebidos:", bankItems);
+      console.log("[Bank Reconciliation] Status dos itens:", bankItems.map(i => i.status));
+    }
+  }, [bankItems]);
+
   const [selectedBankItemId, setSelectedBankItemId] = useState(null);
   const { data: suggestions = [], isLoading: isLoadingSuggestions } = useQuery({
     queryKey: ['/api/bank/suggest', selectedBankItemId],
@@ -163,8 +170,18 @@ export default function BankReconciliation({ open, onOpenChange }) {
     }
   }, [open, bankItems.length]);
 
-  const pendingItems = bankItems.filter(item => item.status.toUpperCase() === 'PENDING');
-  const reconciledItems = bankItems.filter(item => item.status.toUpperCase() === 'RECONCILED' || item.status.toUpperCase() === 'MATCHED');
+  const pendingItems = bankItems.filter(item => 
+    !item.status || 
+    item.status.toUpperCase() === 'PENDING' || 
+    item.status.toUpperCase() === 'PENDENTE'
+  );
+  const reconciledItems = bankItems.filter(item => 
+    item.status && (
+      item.status.toUpperCase() === 'RECONCILED' || 
+      item.status.toUpperCase() === 'MATCHED' || 
+      item.status.toUpperCase() === 'CONCILIADO'
+    )
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
