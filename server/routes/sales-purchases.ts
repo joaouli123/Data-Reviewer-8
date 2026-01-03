@@ -10,7 +10,8 @@ export function registerSalesPurchasesRoutes(app: Express) {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const salesData = await storage.getSales(req.user.companyId);
-      res.json(salesData);
+      // Ensure we only return sales associated with a customer
+      res.json(salesData.filter(s => s.customerId));
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch sales" });
     }
@@ -20,7 +21,8 @@ export function registerSalesPurchasesRoutes(app: Express) {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const purchasesData = await storage.getPurchases(req.user.companyId);
-      res.json(purchasesData);
+      // Ensure we only return purchases associated with a supplier
+      res.json(purchasesData.filter(p => p.supplierId));
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch purchases" });
     }

@@ -335,9 +335,10 @@ export class DatabaseStorage implements IStorage {
     `);
     
     return result.rows.map(row => ({
+      ...row,
       id: String(row.id),
       companyId: String(row.company_id),
-      date: row.date,
+      date: row.date ? new Date(row.date).toISOString() : null,
       type: String(row.type || ''),
       amount: String(row.amount || '0'),
       description: String(row.description || ''),

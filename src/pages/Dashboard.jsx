@@ -126,9 +126,14 @@ export default function DashboardPage() {
     
     // Filter transactions by date range
     const filteredTransactions = allTransactions.filter(t => {
-      const tDateStr = t.date.split('T')[0];
-      const tDate = parseISO(tDateStr);
-      return tDate >= startDate && tDate <= endDate;
+      if (!t.date) return false;
+      try {
+        const tDateStr = t.date.split('T')[0];
+        const tDate = parseISO(tDateStr);
+        return tDate >= startDate && tDate <= endDate;
+      } catch (e) {
+        return false;
+      }
     });
 
     const totalRevenue = filteredTransactions
@@ -170,6 +175,7 @@ export default function DashboardPage() {
     // Chart data - ONLY months with actual transactions
     const monthsWithData = new Map();
     allTransactions.forEach(t => {
+      if (!t.date) return;
       const monthKey = t.date.slice(0, 7); // YYYY-MM
       if (!monthsWithData.has(monthKey)) {
         monthsWithData.set(monthKey, []);
@@ -358,7 +364,13 @@ export default function DashboardPage() {
                         <div className="min-w-0">
                           <p className="font-medium text-foreground truncate text-xs">{t.description}</p>
                           <p className="text-xs text-muted-foreground">
-                            {format(parseISO(t.date.split('T')[0] + 'T12:00:00Z'), 'dd MMM', { locale: ptBR })}
+                            {t.date ? (() => {
+                              try {
+                                return format(parseISO(t.date.split('T')[0] + 'T12:00:00Z'), 'dd MMM', { locale: ptBR });
+                              } catch (e) {
+                                return '---';
+                              }
+                            })() : '---'}
                           </p>
                         </div>
                       </div>

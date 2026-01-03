@@ -14,8 +14,13 @@ import {
 const wrapList = (Entity) => ({
   ...Entity,
   list: async (...args) => {
-    const response = await Entity.list(...args);
-    return Array.isArray(response) ? response : (response?.data || []);
+    try {
+      const response = await Entity.list(...args);
+      return Array.isArray(response) ? response : (response?.data || []);
+    } catch (e) {
+      console.error('API Error:', e);
+      return [];
+    }
   }
 });
 
