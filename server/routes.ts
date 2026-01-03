@@ -919,9 +919,30 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const data = insertSaleSchema.parse(req.body);
-      const sale = await storage.createSale(req.user.companyId, { ...data, companyId: req.user.companyId });
+      
+      const sale = await db.transaction(async (tx) => {
+        // Create the sale record
+        const [newSale] = await tx.insert(sales).values({ ...data, companyId: req.user!.companyId }).returning();
+        
+        // Create a corresponding transaction record so it appears in the transactions page
+        await tx.insert(transactions).values({
+          companyId: req.user!.companyId,
+          customerId: data.customerId,
+          type: "venda",
+          amount: data.totalAmount,
+          paidAmount: data.paidAmount || "0",
+          date: data.saleDate,
+          description: `Venda #${newSale.id.substring(0, 8)}`,
+          shift: "Geral", // Default shift
+          status: parseFloat(data.paidAmount?.toString() || "0") >= parseFloat(data.totalAmount.toString()) ? "pago" : "pendente",
+        });
+
+        return newSale;
+      });
+
       res.status(201).json(sale);
     } catch (error: any) {
+      console.error("Sale creation error:", error);
       res.status(400).json({ error: error.message || "Invalid sale data" });
     }
   });
@@ -1009,7 +1030,27 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const data = insertPurchaseSchema.parse(req.body);
-      const purchase = await storage.createPurchase(req.user.companyId, { ...data, companyId: req.user.companyId });
+      
+      const purchase = await db.transaction(async (tx) => {
+        // Create the purchase record
+        const [newPurchase] = await tx.insert(purchases).values({ ...data, companyId: req.user!.companyId }).returning();
+        
+        // Create a corresponding transaction record so it appears in the transactions page
+        await tx.insert(transactions).values({
+          companyId: req.user!.companyId,
+          supplierId: data.supplierId,
+          type: "compra",
+          amount: data.totalAmount,
+          paidAmount: data.paidAmount || "0",
+          date: data.purchaseDate,
+          description: `Compra #${newPurchase.id.substring(0, 8)}`,
+          shift: "Geral", // Default shift
+          status: parseFloat(data.paidAmount?.toString() || "0") >= parseFloat(data.totalAmount.toString()) ? "pago" : "pendente",
+        });
+
+        return newPurchase;
+      });
+
       res.status(201).json(purchase);
     } catch (error: any) {
       res.status(400).json({ error: error.message || "Invalid purchase data" });
