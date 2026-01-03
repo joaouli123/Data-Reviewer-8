@@ -9,11 +9,9 @@ export async function analyzeWithAI(prompt: string, responseJsonSchema: any = nu
   if (!ai) throw new Error('API_KEY_NOT_CONFIGURED');
 
   try {
-    console.log("[AI Debug] Usando SDK Novo com Gemini 2.0...");
-
-    // Na biblioteca nova, a estrutura muda um pouco
+    // Usando gemini-2.0-flash-lite para máxima velocidade e menor custo
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash", 
+      model: "gemini-2.0-flash-lite", 
       config: {
         responseMimeType: responseJsonSchema ? "application/json" : "text/plain",
         temperature: 0.2,
