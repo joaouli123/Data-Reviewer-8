@@ -177,6 +177,7 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
       total_amount: Number(formData.total_amount),
       installments: Number(formData.installments),
       installment_amount: formData.installment_amount,
+      paymentMethod: formData.paymentMethod,
       customInstallments: customInstallments.length > 0 ? customInstallments : null
     });
   };

@@ -303,6 +303,9 @@ export const sales = pgTable("sales", {
   paidAmount: decimal("paid_amount", { precision: 15, scale: 2 }).default("0"),
   installmentCount: integer("installment_count").default(1),
   status: text("status").notNull().default("pendente"),
+  description: text("description"),
+  categoryId: varchar("category_id").references(() => categories.id, { onDelete: "set null" }),
+  paymentMethod: text("payment_method"),
 });
 
 export const purchases = pgTable("purchases", {
@@ -314,6 +317,9 @@ export const purchases = pgTable("purchases", {
   paidAmount: decimal("paid_amount", { precision: 15, scale: 2 }).default("0"),
   installmentCount: integer("installment_count").default(1),
   status: text("status").notNull().default("pendente"),
+  description: text("description"),
+  categoryId: varchar("category_id").references(() => categories.id, { onDelete: "set null" }),
+  paymentMethod: text("payment_method"),
 });
 
 export const installments = pgTable("installments", {
