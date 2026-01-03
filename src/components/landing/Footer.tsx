@@ -2,6 +2,7 @@
 import React from 'react';
 import { LogoIcon } from './constants';
 import { Facebook, Instagram, Mail, Phone, MapPin } from 'lucide-react';
+import { Link } from "wouter";
 
 // Custom WhatsApp Icon to match Lucide style
 const WhatsApp = ({ className }: { className?: string }) => (
@@ -32,12 +33,12 @@ const Footer: React.FC = () => {
           {/* Brand Column */}
           <div className="sm:col-span-2 lg:col-span-1">
             <div className="flex items-center gap-3 mb-6 md:mb-8">
-              <span className="text-xl md:text-2xl font-bold tracking-tighter">
+              <Link href="/" className="text-xl md:text-2xl font-bold tracking-tighter">
                 Hua<span className="text-blue-400">Consultoria</span>
-              </span>
+              </Link>
             </div>
             <p className="text-blue-100/70 mb-8 leading-relaxed text-sm md:text-base font-normal">
-              O software definitivo para gestão financeira de pequenas e médias empresas que buscam o próximo nível de lucratividade e organização.
+              O software definitivo para gestão financeira de pequenas e médias empresas que buscam o próximo nível de lucratividade e organization.
             </p>
             <div className="flex gap-4">
               {[Instagram, Facebook, WhatsApp].map((Icon, idx) => (
@@ -69,36 +70,34 @@ const Footer: React.FC = () => {
                 <span className="truncate">suporte@huaconsultoria.com.br</span>
               </li>
               <li className="flex items-center gap-3">
-                <Phone className="w-5 h-5 text-blue-400 shrink-0" />
-                <span>+55 (11) 99999-9999</span>
+                <Link href="/terms" className="hover:text-white transition-colors">Termos de Uso</Link>
               </li>
               <li className="flex items-center gap-3">
-                <MapPin className="w-5 h-5 text-blue-400 shrink-0" />
-                <span>São Paulo, SP - Digital HQ</span>
+                <Link href="/privacy" className="hover:text-white transition-colors">Política de Privacidade</Link>
               </li>
             </ul>
           </div>
 
           {/* CTA Card */}
           <div className="bg-blue-800/50 p-6 md:p-8 rounded-3xl border border-blue-700 backdrop-blur-sm sm:col-span-2 lg:col-span-1">
-            <h4 className="text-lg md:text-xl font-bold mb-4">Ainda tem dúvidas?</h4>
+            <h4 className="text-lg md:text-xl font-bold mb-4">Pronto para começar?</h4>
             <p className="text-xs md:text-sm text-blue-100/70 mb-6 font-normal">
-              Fale agora com um consultor especialista e descubra o plano ideal para sua empresa.
+              Garanta seu acesso vitalício agora mesmo e mude o patamar da sua empresa.
             </p>
-            <a 
-              href="https://wa.me/yournumber" 
-              className="w-full bg-green-500 hover:bg-green-600 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-3 transition-all shadow-lg active:scale-95"
+            <Link 
+              href="/signup?plan=pro" 
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-3 transition-all shadow-lg active:scale-95"
             >
-              WHATSAPP VIP
-            </a>
+              GARANTIR VITALÍCIO
+            </Link>
           </div>
         </div>
         
         <div className="pt-10 border-t border-blue-800 flex flex-col md:flex-row justify-between items-center gap-6 text-blue-300 text-[10px] md:text-xs font-medium text-center md:text-left">
           <p>© {currentYear} HuaConsultoria e Análise. Tecnologia Enterprise para PMEs.</p>
           <div className="flex gap-6 md:gap-8 font-normal">
-            <a href="/terms" className="hover:text-white transition-colors">Termos de Uso</a>
-            <a href="/privacy" className="hover:text-white transition-colors">Política de Privacidade</a>
+            <Link href="/terms" className="hover:text-white transition-colors">Termos de Uso</Link>
+            <Link href="/privacy" className="hover:text-white transition-colors">Política de Privacidade</Link>
           </div>
         </div>
       </div>

@@ -10,7 +10,8 @@ import { formatCNPJ } from "@/utils/masks";
 
 const PLANS = {
   basic: { name: 'Basic', price: 'R$ 99', features: 'Até 100 clientes, relatórios simples' },
-  pro: { name: 'Pro', price: 'R$ 299', features: 'Até 500 clientes, IA inclusa' },
+  monthly: { name: 'Mensal', price: 'R$ 97', features: 'Acesso completo, até 3 usuários' },
+  pro: { name: 'Vitalício', price: 'R$ 997', features: 'Acesso vitalício, usuários ilimitados' },
   enterprise: { name: 'Enterprise', price: 'Customizado', features: 'Ilimitado, suporte 24/7' }
 };
 

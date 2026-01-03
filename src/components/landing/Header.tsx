@@ -104,13 +104,13 @@ const Header: React.FC = () => {
             >
               Entrar
             </Link>
-            <a 
-              href="#precos" 
+            <Link 
+              href="/signup?plan=pro" 
               onClick={() => setIsMenuOpen(false)}
               className="w-full bg-blue-600 text-white text-center py-4 rounded-xl font-bold shadow-lg"
             >
               Garantir Acesso Vitalício
-            </a>
+            </Link>
           </div>
         </nav>
       </div>

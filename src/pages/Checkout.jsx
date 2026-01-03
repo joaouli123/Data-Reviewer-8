@@ -16,13 +16,21 @@ const PLANS = {
     features: ['Até 100 clientes', 'Gestão básica de vendas', 'Relatórios simples', 'Suporte por email', '5GB de armazenamento'],
     badge: 'Iniciante'
   },
-  pro: {
-    name: 'Pro',
-    price: 299,
+  monthly: {
+    name: 'Mensal',
+    price: 97,
     currency: 'BRL',
-    description: 'Para empresas em crescimento',
-    features: ['Até 500 clientes', 'Gestão avançada com IA', 'Relatórios inteligentes', 'Suporte prioritário', '100GB de armazenamento', 'Múltiplos usuários', 'Integração com banco'],
-    badge: 'Popular',
+    description: 'Ideal para testar a ferramenta',
+    features: ['Acesso completo ao sistema', 'Até 3 Usuários ativos', 'Controle de Fluxo de Caixa', 'Suporte via E-mail'],
+    badge: 'Individual'
+  },
+  pro: {
+    name: 'Vitalício',
+    price: 997,
+    currency: 'BRL',
+    description: 'Pague uma vez, use para sempre',
+    features: ['Acesso vitalício', 'Usuários ilimitados', 'Módulo de Equipe Avançado', 'Suporte VIP via WhatsApp', 'Todas as atualizações futuras'],
+    badge: 'Recomendado',
     isPopular: true
   },
   enterprise: {
@@ -399,7 +407,7 @@ export default function Checkout() {
                             data-testid="button-complete-payment"
                           >
                             <Lock className="w-4 h-4" />
-                            {isProcessing ? 'Processando...' : `Pagar ${formatCurrency(plan.price)}/mês`}
+                            {isProcessing ? 'Processando...' : `Pagar ${formatCurrency(plan.price)}${selectedPlan === 'pro' ? ' (Único)' : '/mês'}`}
                           </Button>
                         </div>
                       )}
@@ -421,7 +429,7 @@ export default function Checkout() {
                             data-testid="button-complete-payment"
                           >
                             <Lock className="w-4 h-4" />
-                            {isProcessing ? 'Processando...' : `Pagar ${formatCurrency(plan.price)}/mês`}
+                            {isProcessing ? 'Processando...' : `Pagar ${formatCurrency(plan.price)}${selectedPlan === 'pro' ? ' (Único)' : '/mês'}`}
                           </Button>
                         </div>
                       )}
@@ -443,7 +451,7 @@ export default function Checkout() {
                             data-testid="button-complete-payment"
                           >
                             <Lock className="w-4 h-4" />
-                            {isProcessing ? 'Processando...' : `Pagar ${formatCurrency(plan.price)}/mês`}
+                            {isProcessing ? 'Processando...' : `Pagar ${formatCurrency(plan.price)}${selectedPlan === 'pro' ? ' (Único)' : '/mês'}`}
                           </Button>
                         </div>
                       )}
@@ -496,9 +504,9 @@ export default function Checkout() {
                   <div>
                     <div className="flex items-baseline gap-1">
                       <span className="text-4xl font-bold text-slate-900">{formatCurrency(plan.price)}</span>
-                      <span className="text-slate-600">/mês</span>
+                      <span className="text-slate-600">{selectedPlan === 'pro' ? ' (Pagamento Único)' : '/mês'}</span>
                     </div>
-                    <p className="text-xs text-slate-500 mt-2">✓ Cobrança recorrente automática</p>
+                    <p className="text-xs text-slate-500 mt-2">✓ {selectedPlan === 'pro' ? 'Pagamento único sem renovação' : 'Cobrança recorrente automática'}</p>
                   </div>
                 )}
               </div>
