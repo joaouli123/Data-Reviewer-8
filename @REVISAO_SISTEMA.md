@@ -17,5 +17,11 @@
   - `/usuarios` -> `/users`
   - `/perfil` -> `/profile`
 
+## Correção: Exclusão de Transações
+- [x] Corrigido o endpoint de exclusão de transações no backend para suportar `/api/transactions/:id`.
+- [x] Verificado que o `DatabaseStorage` já implementa corretamente `deleteTransaction`, removendo a transação do banco de dados.
+- [x] Otimizada a atualização da interface (Transactions.jsx) para invalidar o cache do TanStack Query imediatamente após a exclusão, garantindo que a lista seja atualizada.
+- [x] Adicionado um `useEffect` para forçar a atualização dos dados ao entrar na página de transações, evitando dados em cache (stale data).
+
 ## Status Atual
-Navegação restaurada e fluida entre todos os módulos principais. O sistema agora entra diretamente no Dashboard após o sucesso do login.
+Navegação restaurada e fluida entre todos os módulos principais. O sistema agora entra diretamente no Dashboard após o sucesso do login e a exclusão de transações está refletindo imediatamente na interface.

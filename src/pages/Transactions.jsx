@@ -70,6 +70,13 @@ export default function TransactionsPage() {
     refetchOnWindowFocus: true,
   });
 
+  // Re-invalidate transactions on mount just in case
+  React.useEffect(() => {
+    if (company?.id) {
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions', company.id] });
+    }
+  }, [company?.id, queryClient]);
+
   const transactions = Array.isArray(transactionsData) ? transactionsData : (transactionsData?.data || []);
 
   const categoryMap = React.useMemo(() => {
