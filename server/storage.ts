@@ -455,15 +455,21 @@ export class DatabaseStorage implements IStorage {
 
   // Sale operations
   async createSale(companyId: string, data: InsertSale): Promise<Sale> {
-    const result = await db.insert(sales).values({ 
-      ...data, 
-      companyId, 
-      paidAmount: data.paidAmount || "0", 
-      installmentCount: data.installmentCount || 1, 
-      status: data.status || "pendente",
-      description: data.description || "Venda sem descrição"
-    } as any).returning();
-    return result[0];
+    console.log("[Storage Debug] DB insert sale:", { ...data, companyId });
+    try {
+      const result = await db.insert(sales).values({ 
+        ...data, 
+        companyId, 
+        paidAmount: data.paidAmount || "0", 
+        installmentCount: data.installmentCount || 1, 
+        status: data.status || "pendente",
+        description: data.description || "Venda sem descrição"
+      } as any).returning();
+      return result[0];
+    } catch (error) {
+      console.error("[Storage Error] Error inserting sale:", error);
+      throw error;
+    }
   }
 
   async getSales(companyId: string): Promise<Sale[]> {

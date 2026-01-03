@@ -46,6 +46,7 @@ export function registerSalesPurchasesRoutes(app: Express) {
         paymentMethod
       };
 
+      console.log("[Sales Debug] Creating sale with data:", saleData);
       const sale = await storage.createSale(req.user.companyId, saleData as any);
       const installmentGroupId = `sale-${sale.id}-${Date.now()}`;
 
