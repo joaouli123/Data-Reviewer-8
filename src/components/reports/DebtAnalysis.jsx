@@ -20,10 +20,17 @@ export default function DebtAnalysis({ transactions, purchases, purchaseInstallm
       categoryMap[cat.id] = cat.name || 'Sem Categoria';
     });
 
-    // Use ONLY filtered transactions (already filtered by dateRange)
+    // Use ONLY filtered transactions
     const compras = Array.isArray(transactions) 
       ? transactions.filter(t => t.type === 'compra' || t.type === 'expense')
       : [];
+
+    // Real income from transactions
+    const income = Array.isArray(transactions)
+      ? transactions.filter(t => t.type === 'venda' || t.type === 'income')
+      : [];
+    
+    const revenue = income.reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
 
     // Total debt from filtered transactions
     let totalDebt = compras.reduce((sum, t) => {
@@ -31,31 +38,43 @@ export default function DebtAnalysis({ transactions, purchases, purchaseInstallm
       return sum + (isNaN(amount) ? 0 : amount);
     }, 0);
 
-    // Revenue from filtered transactions
-    const revenue = compras.length > 0 ? totalDebt * 2 : 0; // Assume 50% profit margin for estimation
+    // Short-term vs Long-term from installments
+    const today = new Date();
+    const threeMonthsFromNow = addMonths(today, 3);
+    
+    let shortTermDebt = 0;
+    let longTermDebt = 0;
+
+    if (Array.isArray(purchaseInstallments)) {
+      purchaseInstallments.forEach(inst => {
+        const dueDate = parseISO(inst.dueDate);
+        const amount = parseFloat(inst.amount || 0);
+        if (dueDate <= threeMonthsFromNow) {
+          shortTermDebt += amount;
+        } else {
+          longTermDebt += amount;
+        }
+      });
+    } else {
+      // Fallback if no installments data
+      shortTermDebt = totalDebt * 0.5;
+      longTermDebt = totalDebt * 0.5;
+    }
+
     const avgMonthlyRevenue = revenue / 3;
     const debtToRevenueRatio = avgMonthlyRevenue > 0 ? (totalDebt / (avgMonthlyRevenue * 12)) * 100 : 0;
-
-    // Short-term debt (assume 50% in next 3 months)
-    const shortTermDebt = totalDebt * 0.5;
-    const longTermDebt = totalDebt * 0.5;
-    const monthlyDebtPayment = totalDebt / 3;
+    const monthlyDebtPayment = shortTermDebt / 3;
     const debtServiceRatio = avgMonthlyRevenue > 0 ? (monthlyDebtPayment / avgMonthlyRevenue) * 100 : 0;
 
-    // Debt by category from transactions - use categoryId mapping
+    // Debt by category
     const debtByCategory = {};
     compras.forEach(t => {
       let categoryName = 'Sem Categoria';
-      
-      // Try to map by categoryId first
       if (t.categoryId && categoryMap[t.categoryId]) {
         categoryName = categoryMap[t.categoryId];
-      } 
-      // Fallback to category string if available
-      else if (t.category) {
+      } else if (t.category) {
         categoryName = t.category;
       }
-      
       const amount = Math.abs(parseFloat(t.amount || 0));
       debtByCategory[categoryName] = (debtByCategory[categoryName] || 0) + amount;
     });

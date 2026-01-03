@@ -13,43 +13,59 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
   const [analysis, setAnalysis] = useState(null);
 
   const calculateWorkingCapital = () => {
-    // Use ONLY filtered transactions (already filtered by dateRange)
-    const vendas = Array.isArray(transactions)
-      ? transactions.filter(t => t.type === 'venda' || t.type === 'income')
-      : [];
+    const today = new Date();
+    const thirtyDaysFromNow = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+    // Receivables in next 30 days from installments
+    const next30DaysReceivables = Array.isArray(saleInstallments)
+      ? saleInstallments
+          .filter(inst => {
+            const dueDate = new Date(inst.dueDate);
+            return dueDate >= today && dueDate <= thirtyDaysFromNow && !inst.paidAt;
+          })
+          .reduce((sum, inst) => sum + parseFloat(inst.amount || 0), 0)
+      : 0;
+
+    // Payables in next 30 days from installments
+    const next30DaysPayables = Array.isArray(purchaseInstallments)
+      ? purchaseInstallments
+          .filter(inst => {
+            const dueDate = new Date(inst.dueDate);
+            return dueDate >= today && dueDate <= thirtyDaysFromNow && !inst.paidAt;
+          })
+          .reduce((sum, inst) => sum + parseFloat(inst.amount || 0), 0)
+      : 0;
+
+    // Current Cash (from transactions total balance)
+    const currentCash = Array.isArray(transactions)
+      ? transactions.reduce((sum, t) => {
+          const amount = parseFloat(t.amount || 0);
+          return sum + (t.type === 'venda' || t.type === 'income' ? amount : -amount);
+        }, 0)
+      : 0;
+
+    // Current Assets (Circulante) = Cash + Receivables (30d)
+    const currentAssets = Math.max(0, currentCash) + next30DaysReceivables;
     
-    const compras = Array.isArray(transactions)
-      ? transactions.filter(t => t.type === 'compra' || t.type === 'expense')
-      : [];
+    // Current Liabilities (Circulante) = Payables (30d)
+    const currentLiabilities = next30DaysPayables;
 
-    // Receivables = sum of all revenue in the period
-    const currentReceivables = vendas.reduce((sum, t) => {
-      const amount = Math.abs(parseFloat(t.amount || 0));
-      return sum + (isNaN(amount) ? 0 : amount);
-    }, 0);
+    // Working Capital = Assets - Liabilities
+    const workingCapital = currentAssets - currentLiabilities;
 
-    // Payables = sum of all expenses in the period
-    const currentPayables = compras.reduce((sum, t) => {
-      const amount = Math.abs(parseFloat(t.amount || 0));
-      return sum + (isNaN(amount) ? 0 : amount);
-    }, 0);
-
-    // Working Capital = Receivables - Payables
-    const workingCapital = currentReceivables - currentPayables;
-
-    // Average monthly expenses
-    const startDate = new Date(dateRange?.startDate);
-    const endDate = new Date(dateRange?.endDate);
-    const daysInPeriod = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
-    const monthsInPeriod = Math.max(1, Math.round(daysInPeriod / 30));
-    const avgMonthlyExpenses = currentPayables / monthsInPeriod;
-
-    // Recommended working capital (2 months of expenses as buffer)
+    // Average monthly expenses (past 3 months)
+    const pastExpenses = Array.isArray(transactions)
+      ? transactions
+          .filter(t => t.type === 'compra' || t.type === 'expense')
+          .reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0)
+      : 0;
+    
+    const avgMonthlyExpenses = pastExpenses / 3;
     const recommendedWorkingCapital = avgMonthlyExpenses * 2;
 
     return {
-      currentReceivables,
-      currentPayables,
+      currentReceivables: next30DaysReceivables,
+      currentPayables: next30DaysPayables,
       workingCapital,
       avgMonthlyExpenses,
       recommendedWorkingCapital,
