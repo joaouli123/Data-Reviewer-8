@@ -76,7 +76,7 @@ export default function PaymentSuccess() {
                   onClick={() => window.location.href = '/'} 
                   className="w-full max-w-sm bg-blue-600 hover:bg-blue-700 text-white font-bold h-12 rounded-lg text-lg shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]"
                 >
-                  Ir para o Painel
+                  Ir para o Dashboard
                 </Button>
               </div>
             ) : (
