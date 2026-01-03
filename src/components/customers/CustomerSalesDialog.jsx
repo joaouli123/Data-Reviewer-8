@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import PaymentEditDialog from '../suppliers/PaymentEditDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { Transaction } from '@/api/entities';
+import { apiRequest } from '@/lib/queryClient';
 
 export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
   const { company } = useAuth();
@@ -110,7 +111,7 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
     mutationFn: async ({ saleId, paidAmount, interest, paymentDate, paymentMethod }) => {
       
       // Get the transaction first to check the amount
-      const currentTransaction = await apiRequest('GET', `/api/transactions/${saleId}`);
+      const currentTransaction = await apiRequest(`/api/transactions/${saleId}`);
       
       // Determine status based on paid amount vs total amount
       const totalAmount = parseFloat(currentTransaction.amount || 0);
@@ -132,23 +133,29 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
       // IMPORTANT: Do NOT update 'date' field - that's the due date and must remain unchanged
       // IMPORTANT: Do NOT update 'description' - keep the base description to maintain grouping
       // Only update paymentDate (when payment was made), status, paidAmount, and interest
-      const transaction = await apiRequest('PATCH', `/api/transactions/${saleId}`, { 
-          status: status,
-          paidAmount: paidAmount ? paidAmount.toString() : undefined,
-          interest: interest ? interest.toString() : '0',
-          paymentDate: formattedPaymentDate,
-          paymentMethod: paymentMethod
+      const transaction = await apiRequest(`/api/transactions/${saleId}`, { 
+          method: 'PATCH',
+          body: JSON.stringify({ 
+            status: status,
+            paidAmount: paidAmount ? paidAmount.toString() : undefined,
+            interest: interest ? interest.toString() : '0',
+            paymentDate: formattedPaymentDate,
+            paymentMethod: paymentMethod
+          })
         });
       
       // Then create corresponding cash flow entry (using payment date, not due date)
       const totalReceived = parseFloat(paidAmount || 0) + parseFloat(interest || 0);
-      await apiRequest('POST', '/api/cash-flow', {
-          date: formattedPaymentDate,
-          inflow: totalReceived.toFixed(2),
-          outflow: '0',
-          balance: totalReceived.toFixed(2),
-          description: `Recebimento de venda: ${transaction.description}`,
-          shift: transaction.shift || 'manhã'
+      await apiRequest('/api/cash-flow', {
+          method: 'POST',
+          body: JSON.stringify({
+            date: formattedPaymentDate,
+            inflow: totalReceived.toFixed(2),
+            outflow: '0',
+            balance: totalReceived.toFixed(2),
+            description: `Recebimento de venda: ${transaction.description}`,
+            shift: transaction.shift || 'manhã'
+          })
         });
       
       return transaction;
@@ -171,21 +178,24 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
     mutationFn: async (saleId) => {
       
       // Get the transaction to know the amount to reverse
-      const transaction = await apiRequest('GET', `/api/transactions/${saleId}`);
+      const transaction = await apiRequest(`/api/transactions/${saleId}`);
       
       // Revert the transaction status (description stays the same)
-      const result = await apiRequest('PATCH', `/api/transactions/${saleId}`, { 
-          status: 'pendente', 
-          paidAmount: undefined, 
-          interest: '0'
+      const result = await apiRequest(`/api/transactions/${saleId}`, { 
+          method: 'PATCH',
+          body: JSON.stringify({ 
+            status: 'pendente', 
+            paidAmount: undefined, 
+            interest: '0'
+          })
         });
       
       // Delete corresponding cash flow entry
       try {
-        const cashFlows = await apiRequest('GET', '/api/cash-flow');
+        const cashFlows = await apiRequest('/api/cash-flow');
         const relatedCashFlow = cashFlows.find(cf => cf.description?.includes(transaction.description));
         if (relatedCashFlow) {
-          await apiRequest('DELETE', `/api/cash-flow/${relatedCashFlow.id}`);
+          await apiRequest(`/api/cash-flow/${relatedCashFlow.id}`, { method: 'DELETE' });
         }
       } catch (err) {
       }
