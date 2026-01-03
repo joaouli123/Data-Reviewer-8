@@ -33,11 +33,10 @@ export default function CustomersPage() {
   const { company } = useAuth();
   const queryClient = useQueryClient();
 
-  const { data: customersData, isLoading } = useQuery({
+  const { data: customersData, isLoading, refetch } = useQuery({
     queryKey: ['/api/customers', company?.id],
     queryFn: () => Customer.list(),
     enabled: !!company?.id,
-    refetchOnWindowFocus: true,
   });
 
   const customers = Array.isArray(customersData) ? customersData : (customersData?.data || []);
@@ -46,7 +45,7 @@ export default function CustomersPage() {
     queryKey: ['/api/categories', company?.id],
     queryFn: async () => {
       const data = await Category.list();
-      return data || [];
+      return Array.isArray(data) ? data : (data?.data || []);
     },
     enabled: !!company?.id,
     staleTime: 1000 * 60 * 30, // 30 minutos
