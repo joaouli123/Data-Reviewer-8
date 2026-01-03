@@ -255,7 +255,7 @@ export default function Checkout() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <Button 
             variant="ghost" 
-            onClick={() => setLocation('/')} 
+            onClick={() => window.location.href = '/'} 
             className="gap-2 text-slate-600 hover:text-slate-900"
             data-testid="button-back"
           >
