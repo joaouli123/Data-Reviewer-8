@@ -53,7 +53,8 @@ export function registerSalesPurchasesRoutes(app: Express) {
             paymentMethod,
             installmentNumber: i + 1,
             installmentTotal: customInstallments.length,
-            installmentGroup: installmentGroupId
+            installmentGroup: installmentGroupId,
+            shift: 'default' // Add default shift
           };
           await storage.createTransaction(req.user.companyId, transactionData as any);
         }
@@ -77,7 +78,8 @@ export function registerSalesPurchasesRoutes(app: Express) {
             paymentMethod,
             installmentNumber: i + 1,
             installmentTotal: count,
-            installmentGroup: installmentGroupId
+            installmentGroup: installmentGroupId,
+            shift: 'default' // Add default shift
           };
           await storage.createTransaction(req.user.companyId, transactionData as any);
         }
