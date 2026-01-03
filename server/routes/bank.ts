@@ -35,7 +35,7 @@ export function registerBankRoutes(app: Express) {
       // Se falhar, tentamos uma limpeza mais agressiva ou retornamos erro amigável.
       let data;
       try {
-        data = ofx.parse(xmlBody);
+        data = ofx.parse(ofxContent);
       } catch (parseError) {
         // Tenta limpar tags não fechadas comuns em OFX de bancos brasileiros
         const cleanedXml = xmlBody
