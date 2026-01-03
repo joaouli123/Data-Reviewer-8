@@ -854,11 +854,17 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.post("/api/cash-flow", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
-      const data = insertCashFlowSchema.parse(req.body);
-      const cashFlow = await storage.createCashFlow(req.user.companyId, data);
-      res.status(201).json(cashFlow);
-    } catch (error) {
-      res.status(400).json({ error: "Invalid cash flow data" });
+      const data = {
+        ...req.body,
+        balance: req.body.balance || "0",
+        shift: req.body.shift || "Geral"
+      };
+      const validated = insertCashFlowSchema.parse(data);
+      const cashFlowResult = await storage.createCashFlow(req.user.companyId, validated);
+      res.status(201).json(cashFlowResult);
+    } catch (error: any) {
+      console.error("Cash flow creation error:", error);
+      res.status(400).json({ error: "Invalid cash flow data", details: error.message });
     }
   });
 
