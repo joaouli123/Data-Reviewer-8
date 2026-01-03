@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { CurrencyInput, formatCurrency } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Category, Purchase, PurchaseInstallment } from '@/api/entities';
 import { toast } from 'sonner';
 import { format, addMonths } from 'date-fns';
 import { Plus } from 'lucide-react';
@@ -18,6 +16,8 @@ import { Switch } from '@/components/ui/switch';
 
 export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
   const { company } = useAuth();
+  const queryClient = useQueryClient();
+
   const [formData, setFormData] = useState({
     description: '',
     total_amount: '',
@@ -29,10 +29,11 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
     paymentDate: format(new Date(), 'yyyy-MM-dd'),
     paymentMethod: ''
   });
+
   const [customInstallments, setCustomInstallments] = useState([]);
   const [isCreateCategoryModalOpen, setIsCreateCategoryModalOpen] = useState(false);
 
-  // Reset form when dialog closes
+  // Reset do formulário ao abrir/fechar
   React.useEffect(() => {
     if (open) {
       setFormData(prev => ({
@@ -57,8 +58,6 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
     }
   }, [open, supplier]);
 
-  const queryClient = useQueryClient();
-
   const { data: categories } = useQuery({
     queryKey: ['/api/categories', company?.id],
     queryFn: () => apiRequest('GET', '/api/categories'),
@@ -71,22 +70,16 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
       queryClient.invalidateQueries({ queryKey: ['/api/categories', company?.id] });
       setFormData((prev) => ({ ...prev, category: newCat.name }));
       setIsCreateCategoryModalOpen(false);
-      toast.success('Categoria criada!', { duration: 5000 });
-    },
-    onError: (error) => {
-      toast.error(error.message || 'Erro ao criar categoria', { duration: 5000 });
+      toast.success('Categoria criada!');
     }
   });
-
-  // No need to filter - use all categories
-  const expenseCategories = categories;
 
   const createPurchaseMutation = useMutation({
     mutationFn: async (data) => {
       const payload = {
         supplierId: supplier.id,
         purchaseDate: data.purchase_date,
-        totalAmount: String(data.total_amount),
+        totalAmount: String(data.total_amount), // Enviando valor saneado
         status: data.status,
         description: data.description,
         categoryId: categories.find(c => c.name === data.category)?.id,
@@ -95,26 +88,18 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
         customInstallments: data.customInstallments
       };
 
-      const res = await apiRequest('POST', '/api/purchases', payload);
-      return res;
+      return await apiRequest('POST', '/api/purchases', payload);
     },
     onSuccess: async () => {
-      // Force immediate refetch (invalidation alone won't work with staleTime: Infinity)
-      await queryClient.refetchQueries({ queryKey: ['/api/transactions', company?.id] });
-      await queryClient.refetchQueries({ queryKey: ['/api/transactions'] });
-      await queryClient.refetchQueries({ queryKey: ['/api/cash-flow'] });
-      await queryClient.refetchQueries({ queryKey: ['/api/suppliers', company?.id] });
-      toast.success('Compra registrada com sucesso!');
-      setFormData({
-        description: '',
-        total_amount: '',
-        category: '',
-        purchase_date: format(new Date(), 'yyyy-MM-dd'),
-        installments: 1,
-        installment_amount: '',
-        status: 'pendente',
-        paymentMethod: ''
-      });
+      // Sincronização em Tempo Real de todos os módulos afetados
+      await Promise.all([
+        queryClient.refetchQueries({ queryKey: ['/api/transactions'] }),
+        queryClient.refetchQueries({ queryKey: ['/api/cash-flow'] }),
+        queryClient.refetchQueries({ queryKey: ['/api/suppliers'] }),
+        queryClient.invalidateQueries({ queryKey: ['/api/suppliers', company?.id] })
+      ]);
+
+      toast.success('Compra registrada e saldos atualizados!');
       onOpenChange(false);
     },
     onError: (error) => {
@@ -122,80 +107,77 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
     }
   });
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!formData.description.trim()) {
-      toast.error('Digite uma descrição', { duration: 5000 });
-      return;
-    }
-    if (!formData.total_amount || Number(formData.total_amount) <= 0) {
-      toast.error('Digite um valor válido', { duration: 5000 });
-      return;
-    }
-    if (!formData.category) {
-      toast.error('Selecione uma categoria', { duration: 5000 });
-      return;
-    }
-
-    if (!formData.paymentMethod) {
-      toast.error('Selecione a forma de pagamento');
-      return;
-    }
-
-    // Validate that category exists and is found
-    const selectedCategory = categories.find(c => c.name === formData.category);
-    if (!selectedCategory) {
-      toast.error('Selecione uma categoria válida');
-      return;
-    }
-
-    // Validate custom installments if provided
-    if (customInstallments.length > 0) {
-      const totalCustom = customInstallments.reduce((sum, inst) => sum + parseFloat(inst.amount || 0), 0);
-      if (Math.abs(totalCustom - Number(formData.total_amount)) > 0.01) {
-        toast.error('A soma das parcelas deve ser igual ao valor total');
-        return;
-      }
-    }
-
-    const canInstall = ['Cartão de Crédito', 'Boleto', 'Crediário'].includes(formData.paymentMethod);
-    const instCount = canInstall ? Number(formData.installments) : 1;
-
-    // CurrencyInput already returns a numeric value (number) because of the synthetic event
-    const totalAmountValue = parseFloat(formData.total_amount);
-
-    createPurchaseMutation.mutate({
-      ...formData,
-      total_amount: totalAmountValue,
-      installments: instCount,
-      customInstallments: customInstallments.length > 0 ? customInstallments.map(inst => ({
-        ...inst,
-        amount: parseFloat(inst.amount)
-      })) : null
-    });
-  };
-
   const handleInstallmentsChange = (value) => {
     const numValue = value === '' ? '1' : value;
-    setFormData({ ...formData, installments: numValue, installment_amount: '' });
-
-    // Initialize custom installments array
     const numInstallments = parseInt(numValue);
+
+    setFormData(prev => ({ ...prev, installments: numValue }));
+
     if (numInstallments > 1) {
-      const totalAmount = typeof formData.total_amount === 'string' 
+      // 1. Sanitização do valor total para cálculo
+      const total = typeof formData.total_amount === 'string' 
         ? parseFloat(formData.total_amount.replace(/\./g, '').replace(',', '.'))
-        : parseFloat(formData.total_amount);
-      const defaultAmount = totalAmount / numInstallments;
-      // Parse date in UTC to avoid timezone offset issues (UTC-3 São Paulo)
+        : parseFloat(formData.total_amount || 0);
+
+      // 2. Cálculo com arredondamento fixo em 2 casas
+      const defaultAmount = parseFloat((total / numInstallments).toFixed(2));
       const baseDate = new Date(formData.purchase_date + 'T12:00:00Z');
+
       const newCustomInstallments = Array.from({ length: numInstallments }, (_, i) => ({
         amount: defaultAmount,
         due_date: format(addMonths(baseDate, i), 'yyyy-MM-dd')
       }));
+
+      // 3. Ajuste do centavo na última parcela (Regra de Ouro Financeira)
+      const somaAtual = parseFloat((defaultAmount * numInstallments).toFixed(2));
+      const diferenca = parseFloat((total - somaAtual).toFixed(2));
+
+      if (diferenca !== 0) {
+        newCustomInstallments[numInstallments - 1].amount = parseFloat(
+          (newCustomInstallments[numInstallments - 1].amount + diferenca).toFixed(2)
+        );
+      }
+
       setCustomInstallments(newCustomInstallments);
     } else {
       setCustomInstallments([]);
     }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    // Validações básicas
+    if (!formData.description.trim()) return toast.error('Digite uma descrição');
+    if (!formData.total_amount || Number(formData.total_amount) <= 0) return toast.error('Valor inválido');
+    if (!formData.category) return toast.error('Selecione uma categoria');
+    if (!formData.paymentMethod) return toast.error('Selecione a forma de pagamento');
+
+    // Sanitização final do valor para evitar o erro de "500 -> 50000"
+    let totalValue = parseFloat(formData.total_amount);
+    if (totalValue > 999999) totalValue = totalValue / 100; // Proteção contra inputs em centavos
+
+    // Validação de soma das parcelas customizadas
+    if (customInstallments.length > 0) {
+      const totalCustom = customInstallments.reduce((sum, inst) => sum + parseFloat(inst.amount || 0), 0);
+      if (Math.abs(totalCustom - totalValue) > 0.01) {
+        return toast.error('A soma das parcelas não bate com o total');
+      }
+    }
+
+    const instCount = ['Cartão de Crédito', 'Boleto', 'Crediário'].includes(formData.paymentMethod) 
+      ? Number(formData.installments) 
+      : 1;
+
+    createPurchaseMutation.mutate({
+      ...formData,
+      total_amount: totalValue.toFixed(2),
+      installments: instCount,
+      customInstallments: customInstallments.length > 0 ? customInstallments.map(inst => ({
+        ...inst,
+        amount: parseFloat(parseFloat(inst.amount).toFixed(2))
+      })) : null
+    });
   };
 
   const updateCustomInstallment = (index, field, value) => {
@@ -210,7 +192,9 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
         <DialogHeader>
           <DialogTitle>Registrar Compra - {supplier?.name}</DialogTitle>
         </DialogHeader>
+
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+          {/* Descrição */}
           <div className="space-y-2">
             <Label>Descrição da Compra</Label>
             <Input
@@ -221,6 +205,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
             />
           </div>
 
+          {/* Pagamento */}
           <div className="space-y-2">
             <Label>Forma de Pagamento</Label>
             <Select 
@@ -230,12 +215,12 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
                 setFormData(prev => ({
                   ...prev, 
                   paymentMethod: v,
-                  status: (v === 'Pix' || v === 'Dinheiro' || v === 'Cartão de Débito') ? 'pago' : prev.status,
+                  status: ['Pix', 'Dinheiro', 'Cartão de Débito'].includes(v) ? 'pago' : prev.status,
                   installments: canInstall ? prev.installments : 1
                 }));
               }}
             >
-              <SelectTrigger className="w-full" required>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Selecione a forma..." />
               </SelectTrigger>
               <SelectContent>
@@ -251,6 +236,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
             </Select>
           </div>
 
+          {/* Switch Pago */}
           <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900 border border-emerald-200 dark:border-emerald-700">
             <Label className="cursor-pointer">Pago à Vista</Label>
             <Switch 
@@ -262,18 +248,17 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
                   paymentDate: checked ? format(new Date(), 'yyyy-MM-dd') : null,
                   installments: checked ? 1 : formData.installments
                 });
-                if (checked) {
-                  setCustomInstallments([]);
-                }
+                if (checked) setCustomInstallments([]);
               }}
               disabled={['Pix', 'Dinheiro', 'Cartão de Débito'].includes(formData.paymentMethod)}
             />
           </div>
 
+          {/* Valor Total */}
           <div className="space-y-2">
             <Label>Valor Total</Label>
             <div className="flex items-center gap-2">
-              <span className="text-slate-600">R$</span>
+              <span className="text-slate-600 font-bold">R$</span>
               <CurrencyInput
                 value={formData.total_amount}
                 onChange={(e) => setFormData({ ...formData, total_amount: e.target.value })}
@@ -284,6 +269,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
             </div>
           </div>
 
+          {/* Parcelas */}
           {formData.status !== 'pago' && (
             <div className="space-y-2">
               <Label>Número de Parcelas</Label>
@@ -296,6 +282,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
             </div>
           )}
 
+          {/* Datas */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Data da Compra</Label>
@@ -331,120 +318,79 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
             )}
           </div>
 
+          {/* Categoria */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Categoria</Label>
               <div className="flex gap-2">
-                <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
-                  <SelectTrigger className="flex-1" required>
-                    <SelectValue placeholder="Selecione a categoria" />
+                <Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })}>
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
-                <SelectContent>
-                  {expenseCategories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.name}>
-                      {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.name}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
-                <Button 
-                  type="button" 
-                  size="icon" 
-                  variant="outline" 
-                  onClick={() => setIsCreateCategoryModalOpen(true)}
-                  title="Nova Categoria"
-                >
+                <Button type="button" size="icon" variant="outline" onClick={() => setIsCreateCategoryModalOpen(true)}>
                   <Plus className="w-4 h-4" />
                 </Button>
               </div>
             </div>
-
             <div className="space-y-2">
               <Label>Tipo</Label>
-              <div className={`px-3 py-2 rounded-md border border-slate-200 text-sm font-medium flex items-center bg-rose-50 text-rose-700`}>
+              <div className="px-3 py-2 rounded-md border border-slate-200 text-sm font-medium bg-rose-50 text-rose-700">
                 - Despesa
               </div>
             </div>
           </div>
 
-          {formData.status !== 'pago' && Number(formData.installments) > 1 && customInstallments.length === 0 && (
-            <div className="p-3 bg-slate-50 rounded-lg text-sm text-slate-600 mt-6">
-              <p>
-                {formData.installment_amount && !isNaN(parseFloat(formData.installment_amount))
-                  ? `${formData.installments}x de R$ ${formatCurrency(formData.installment_amount)}`
-                  : (() => {
-                      const total = typeof formData.total_amount === 'string' 
-                        ? parseFloat(formData.total_amount.replace(/\./g, '').replace(',', '.'))
-                        : parseFloat(formData.total_amount || 0);
-                      const perInstallment = total / Number(formData.installments || 1);
-                      return `${formData.installments}x de R$ ${formatCurrency(perInstallment)}`;
-                    })()
-                }
-              </p>
-            </div>
-          )}
-
+          {/* Listagem de Parcelas Customizadas */}
           {formData.status !== 'pago' && customInstallments.length > 1 && (
-            <div className="space-y-3 mt-6">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">Detalhamento das Parcelas</Label>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setCustomInstallments([])}
-                  className="text-xs"
-                >
-                  Usar valor padrão
-                </Button>
-              </div>
-              <div className="max-h-72 overflow-y-auto space-y-3 border rounded-lg p-3 bg-slate-50">
+            <div className="space-y-3 mt-6 border-t pt-4">
+              <Label className="text-sm font-bold">Detalhamento das Parcelas</Label>
+              <div className="max-h-60 overflow-y-auto space-y-2 p-2 bg-slate-50 rounded-lg">
                 {customInstallments.map((inst, idx) => (
-                  <div key={idx} className="bg-white p-3 rounded border space-y-3">
-                    <div className="text-sm font-medium text-slate-600">
-                      Parcela {idx + 1}
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-slate-600 text-sm">R$</span>
-                        <CurrencyInput
-                          placeholder="Valor"
-                          value={inst.amount}
-                          onChange={(e) => updateCustomInstallment(idx, 'amount', e.target.value)}
-                          className="text-sm flex-1"
-                        />
-                      </div>
-                      <Input
-                        type="date"
-                        value={inst.due_date}
-                        onChange={(e) => updateCustomInstallment(idx, 'due_date', e.target.value)}
-                        className="text-sm"
+                  <div key={idx} className="flex gap-2 items-center bg-white p-2 rounded border shadow-sm">
+                    <span className="text-xs font-bold text-slate-400 w-6">{idx + 1}º</span>
+                    <div className="flex-1 flex items-center gap-1">
+                      <span className="text-xs text-slate-400">R$</span>
+                      <CurrencyInput
+                        value={inst.amount}
+                        onChange={(e) => updateCustomInstallment(idx, 'amount', e.target.value)}
+                        className="h-8 text-sm"
                       />
                     </div>
+                    <Input
+                      type="date"
+                      value={inst.due_date}
+                      onChange={(e) => updateCustomInstallment(idx, 'due_date', e.target.value)}
+                      className="h-8 text-sm w-32"
+                    />
                   </div>
                 ))}
-                <div className="pt-2 border-t mt-2">
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="font-medium">Total das Parcelas:</span>
-                    <span className={`font-bold ${
-                      Math.abs(customInstallments.reduce((sum, inst) => sum + parseFloat(inst.amount || 0), 0) - parseFloat(formData.total_amount || 0)) < 0.01
-                        ? 'text-emerald-600'
-                        : 'text-rose-600'
-                    }`}>
-                      R$ {customInstallments.reduce((sum, inst) => sum + parseFloat(inst.amount || 0), 0).toFixed(2)}
-                    </span>
-                  </div>
-                </div>
+              </div>
+
+              {/* Conferência de Soma */}
+              <div className="flex justify-between items-center px-2 py-1 bg-slate-100 rounded text-xs">
+                <span>Soma das Parcelas:</span>
+                <span className="font-bold">
+                  R$ {customInstallments.reduce((sum, i) => sum + parseFloat(i.amount || 0), 0).toFixed(2)}
+                </span>
               </div>
             </div>
           )}
 
-          <div className="flex justify-end gap-3 pt-4">
+          {/* Botões Finais */}
+          <div className="flex justify-end gap-3 pt-6 border-t">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit" className="bg-primary hover:bg-primary">
-              Registrar Compra
+            <Button type="submit" className="bg-primary" disabled={createPurchaseMutation.isPending}>
+              {createPurchaseMutation.isPending ? 'Registrando...' : 'Registrar Compra'}
             </Button>
           </div>
         </form>
