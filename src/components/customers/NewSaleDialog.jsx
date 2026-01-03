@@ -174,11 +174,14 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
 
     createSaleMutation.mutate({
       ...formData,
-      total_amount: Number(formData.total_amount),
+      total_amount: Number(String(formData.total_amount).replace(/\./g, '').replace(',', '.')),
       installments: Number(formData.installments),
       installment_amount: formData.installment_amount,
       paymentMethod: formData.paymentMethod,
-      customInstallments: customInstallments.length > 0 ? customInstallments : null
+      customInstallments: customInstallments.length > 0 ? customInstallments.map(inst => ({
+        ...inst,
+        amount: Number(String(inst.amount).replace(/\./g, '').replace(',', '.'))
+      })) : null
     });
   };
 
