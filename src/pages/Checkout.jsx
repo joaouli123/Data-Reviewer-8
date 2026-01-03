@@ -230,11 +230,27 @@ export default function Checkout() {
         // Se for uma simulação ou aprovação imediata
         if (result.status === 'approved') {
           // Chamada extra para garantir que o backend atualizou (importante para simulações)
-          await fetch('/api/payment/simulate-approval', {
+          const simRes = await fetch('/api/payment/simulate-approval', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ companyId: company?.id }),
           });
+          
+          const simData = await simRes.json();
+          
+          // Se recebemos um token novo, salvamos para evitar login manual
+          if (simData.token) {
+            const auth = localStorage.getItem("auth");
+            if (auth) {
+              const parsed = JSON.parse(auth);
+              localStorage.setItem("auth", JSON.stringify({
+                ...parsed,
+                token: simData.token,
+                paymentPending: false,
+                company: { ...parsed.company, paymentStatus: 'approved' }
+              }));
+            }
+          }
           
           toast.success('Assinatura ativada com sucesso!');
           setLocation(`/payment-success?payment_id=${result.id || 'simulated_' + Date.now()}`);

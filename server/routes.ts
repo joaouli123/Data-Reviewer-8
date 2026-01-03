@@ -317,7 +317,22 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         status: "active"
       } as any).where(eq(subscriptions.companyId, parseInt(companyId)));
 
-      res.json({ success: true, status: "approved" });
+      // Encontrar o administrador da empresa para gerar o token
+      const [adminUser] = await db.select().from(users).where(eq(users.companyId, parseInt(companyId))).limit(1);
+      
+      let token = null;
+      if (adminUser) {
+        token = generateToken({
+          userId: adminUser.id,
+          companyId: adminUser.companyId,
+          role: adminUser.role,
+          isSuperAdmin: adminUser.isSuperAdmin,
+        });
+        
+        await createSession(adminUser.id, adminUser.companyId, token);
+      }
+
+      res.json({ success: true, status: "approved", token });
     } catch (error) {
       console.error("Simulation error:", error);
       res.status(500).json({ error: "Failed to simulate approval" });
