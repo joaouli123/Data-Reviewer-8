@@ -525,7 +525,8 @@ export class DatabaseStorage implements IStorage {
         paidAmount: data.paidAmount || "0", 
         installmentCount: data.installmentCount || 1, 
         status: data.status || "pendente",
-        description: data.description || "Compra sem descrição"
+        description: data.description || "Compra sem descrição",
+        paymentMethod: data.paymentMethod
       } as any).returning();
       
       if (!result || result.length === 0) {
