@@ -54,8 +54,9 @@ export function registerAuthRoutes(app: Express) {
       ];
 
       try {
+        const storage = (req as any).storage;
         for (const cat of defaultCategories) {
-          await storage.createCategory(company.id, cat as any);
+          await db.insert(categories).values({ ...cat, companyId: company.id } as any);
         }
       } catch (catError) {
         console.error('Error creating default categories:', catError);
