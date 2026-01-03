@@ -338,6 +338,7 @@ src/
 2. [x] Remover `src/components/ui/use-toast.jsx`
 3. [x] Padronizar uso de `sonner` nos arquivos admin
 4. [x] Remover `src/api/geminiClient.js`
+5. [x] Corrigir importações órfãs de `useToast` (ex: `UserManagement.jsx`)
 
 ### Média Prioridade
 5. [ ] Dividir `server/routes.ts` em módulos
