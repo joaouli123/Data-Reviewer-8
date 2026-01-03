@@ -119,14 +119,24 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
         console.log('🔄 Forçando atualização das listas...');
 
         // refetchQueries força a busca ativa (Active Fetch)
-        // Isso atualiza a lista principal (Dashboard) e a lista do cliente
+        // Isso atualiza a lista principal (Dashboard), fluxo de caixa e a lista do cliente
         await queryClient.refetchQueries({ queryKey: ['/api/transactions'] });
         await queryClient.refetchQueries({ queryKey: ['/api/cash-flow'] });
+        
+        // Garante que a chave com companyId também seja atualizada se existir na aplicação
+        if (company?.id) {
+          await queryClient.refetchQueries({ queryKey: ['/api/transactions', company.id] });
+          await queryClient.refetchQueries({ queryKey: ['/api/customers', company.id] });
+        }
 
         // Se tiver um ID de cliente no contexto, força também a lista específica dele
         if (customer?.id) {
           await queryClient.refetchQueries({ 
             queryKey: ['/api/transactions', { customerId: customer.id }] 
+          });
+          // Algumas partes do app podem usar a rota de vendas do cliente diretamente
+          await queryClient.refetchQueries({ 
+            queryKey: [`/api/customers/${customer.id}/sales`] 
           });
         }
       }, 500);
