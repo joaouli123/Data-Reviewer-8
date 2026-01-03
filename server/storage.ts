@@ -325,9 +325,13 @@ export class DatabaseStorage implements IStorage {
 
   async getTransactions(companyId: string): Promise<Transaction[]> {
     const result = await db.execute(sql`
-      SELECT * FROM transactions 
-      WHERE company_id = ${companyId}
-      ORDER BY date DESC, id DESC
+      SELECT t.*, c.name as customer_name, s.name as supplier_name, cat.name as category_name
+      FROM transactions t
+      LEFT JOIN customers c ON t.customer_id = c.id
+      LEFT JOIN suppliers s ON t.supplier_id = s.id
+      LEFT JOIN categories cat ON t.category_id = cat.id
+      WHERE t.company_id = ${companyId}
+      ORDER BY t.date DESC, t.id DESC
     `);
     
     return result.rows.map(row => ({
@@ -337,11 +341,13 @@ export class DatabaseStorage implements IStorage {
       type: String(row.type || ''),
       amount: String(row.amount || '0'),
       description: String(row.description || ''),
-      category: String(row.category || ''),
+      category: String(row.category_name || row.category || ''),
       paymentMethod: String(row.payment_method || ''),
       status: String(row.status || 'pending'),
       customerId: row.customer_id ? String(row.customer_id) : null,
+      customerName: row.customer_name ? String(row.customer_name) : null,
       supplierId: row.supplier_id ? String(row.supplier_id) : null,
+      supplierName: row.supplier_name ? String(row.supplier_name) : null,
       createdAt: row.created_at,
       updatedAt: row.updated_at
     })) as unknown as Transaction[];

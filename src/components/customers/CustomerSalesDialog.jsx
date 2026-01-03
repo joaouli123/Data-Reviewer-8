@@ -34,7 +34,7 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
   const { data: transactionsData = [], isLoading } = useQuery({
     queryKey: ['/api/transactions', { customerId: customer?.id }],
     queryFn: async () => {
-      const response = await apiRequest('GET', `/api/transactions?customerId=${customer?.id}`);
+      const response = await apiRequest('GET', `/api/transactions?customerId=${customer?.id}&type=venda`);
       return response;
     },
     initialData: [],
