@@ -12,10 +12,10 @@ export function registerTransactionRoutes(app: Express) {
       let transactions = await storage.getTransactions(req.user.companyId);
       
       if (customerId) {
-        transactions = transactions.filter(t => t.customerId === customerId);
+        transactions = transactions.filter(t => String(t.customerId) === String(customerId));
       }
       if (supplierId) {
-        transactions = transactions.filter(t => t.supplierId === supplierId);
+        transactions = transactions.filter(t => String(t.supplierId) === String(supplierId));
       }
       if (type) {
         transactions = transactions.filter(t => t.type === type);
