@@ -19,6 +19,7 @@ import { Switch } from '@/components/ui/switch';
 const parseCurrency = (value) => {
   if (!value) return 0;
   if (typeof value === 'number') return value;
+  // Remove pontos de milhar e troca vírgula por ponto
   const cleanValue = value.toString().replace(/\./g, '').replace(',', '.');
   return parseFloat(cleanValue) || 0;
 };
@@ -87,19 +88,19 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
 
   const createSaleMutation = useMutation({
     mutationFn: async (data) => {
-      // CORREÇÃO: Limpa o valor monetário antes de enviar
+      // SEGURANÇA: Garante que o valor vai como Float limpo (ex: 5454.51)
       const rawTotal = parseCurrency(data.total_amount);
 
       const payload = {
         customerId: customer.id,
         saleDate: data.sale_date,
-        totalAmount: rawTotal, // Envia float limpo
+        totalAmount: rawTotal, 
         status: data.status,
         description: data.description,
         categoryId: categories.find(c => c.name === data.category)?.id,
         paymentMethod: data.paymentMethod,
         installmentCount: parseInt(data.installments) || 1,
-        // CORREÇÃO: Limpa também as parcelas customizadas
+        // SEGURANÇA: Limpa também as parcelas customizadas
         customInstallments: data.customInstallments?.map(inst => ({
           ...inst,
           amount: parseCurrency(inst.amount)
@@ -153,7 +154,6 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // CORREÇÃO: Converter para validação correta
     const rawTotal = parseCurrency(formData.total_amount);
 
     if (!formData.description.trim()) {
@@ -177,7 +177,7 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
     if (customInstallments.length > 0) {
       const totalCustom = customInstallments.reduce((sum, inst) => sum + parseCurrency(inst.amount), 0);
 
-      // Margem de erro de 0.05 centavos para arredondamentos
+      // Margem de erro pequena para arredondamentos
       if (Math.abs(totalCustom - rawTotal) > 0.05) {
         toast.error(`A soma das parcelas (R$ ${totalCustom.toFixed(2)}) deve ser igual ao total (R$ ${rawTotal.toFixed(2)})`, { duration: 5000 });
         return;
@@ -186,7 +186,6 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
 
     createSaleMutation.mutate({
       ...formData,
-      // Nota: o tratamento de parseCurrency é feito dentro do mutationFn agora
       installments: Number(formData.installments),
       installment_amount: formData.installment_amount,
       paymentMethod: formData.paymentMethod,
@@ -200,13 +199,16 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
 
     const numInstallments = parseInt(numValue);
     if (numInstallments > 1) {
-      // CORREÇÃO: Usar parseCurrency aqui também
       const totalAmount = parseCurrency(formData.total_amount);
 
-      const defaultAmount = totalAmount > 0 ? totalAmount / numInstallments : '';
+      // MELHORIA: toFixed(2) para garantir que não gere números como 33.333333 no input
+      const defaultAmount = totalAmount > 0 
+        ? (totalAmount / numInstallments).toFixed(2) 
+        : '';
+
       const baseDate = new Date(formData.sale_date + 'T12:00:00Z');
       const newCustomInstallments = Array.from({ length: numInstallments }, (_, i) => ({
-        amount: defaultAmount, // Aqui pode manter float, o input depois formata se precisar ou usa value normal
+        amount: defaultAmount, 
         due_date: format(addMonths(baseDate, i), 'yyyy-MM-dd')
       }));
       setCustomInstallments(newCustomInstallments);
