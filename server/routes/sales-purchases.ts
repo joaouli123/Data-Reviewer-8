@@ -134,6 +134,7 @@ export function registerSalesPurchasesRoutes(app: Express) {
         paymentMethod
       };
 
+      console.log("[Purchases Debug] Attempting to create purchase:", purchaseData);
       const purchase = await storage.createPurchase(req.user.companyId, purchaseData as any);
       const installmentGroupId = `purchase-${purchase.id}-${Date.now()}`;
 

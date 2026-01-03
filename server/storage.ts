@@ -517,15 +517,26 @@ export class DatabaseStorage implements IStorage {
 
   // Purchase operations
   async createPurchase(companyId: string, data: InsertPurchase): Promise<Purchase> {
-    const result = await db.insert(purchases).values({ 
-      ...data, 
-      companyId, 
-      paidAmount: data.paidAmount || "0", 
-      installmentCount: data.installmentCount || 1, 
-      status: data.status || "pendente",
-      description: data.description || "Compra sem descrição"
-    } as any).returning();
-    return result[0];
+    try {
+      console.log("[Storage Debug] Inserting purchase into DB:", { ...data, companyId });
+      const result = await db.insert(purchases).values({ 
+        ...data, 
+        companyId, 
+        paidAmount: data.paidAmount || "0", 
+        installmentCount: data.installmentCount || 1, 
+        status: data.status || "pendente",
+        description: data.description || "Compra sem descrição"
+      } as any).returning();
+      
+      if (!result || result.length === 0) {
+        throw new Error("No purchase record returned after insertion");
+      }
+      
+      return result[0];
+    } catch (error) {
+      console.error("[Storage Error] CRITICAL - Error inserting purchase:", error);
+      throw error;
+    }
   }
 
   async getPurchases(companyId: string): Promise<Purchase[]> {
