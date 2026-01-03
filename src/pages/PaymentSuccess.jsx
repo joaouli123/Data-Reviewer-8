@@ -3,7 +3,7 @@ import { useLocation } from 'wouter';
 import { initMercadoPago, StatusScreen } from '@mercadopago/sdk-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader } from 'lucide-react';
+import { ArrowLeft, Loader, Check } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useAuth } from '@/contexts/AuthContext';
 
