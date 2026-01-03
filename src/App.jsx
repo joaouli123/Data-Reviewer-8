@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { Switch, Route } from "wouter";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
@@ -31,164 +30,60 @@ import TeamPage from "./pages/settings/Team";
 import Profile from "./pages/Profile";
 import TermsOfUse from "./pages/TermsOfUse";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
-import { usePermission } from "@/hooks/usePermission";
 import Layout from "./components/Layout.jsx";
-
-function ProtectedRoute({ component: Component, permission }) {
-  const { user } = useAuth();
-  const { hasPermission } = usePermission();
-
-  if (user?.role === "admin") {
-    return <Component />;
-  }
-
-  if (permission && !hasPermission(permission)) {
-    return <AccessDenied />;
-  }
-
-  return <Component />;
-}
 
 function MainApp() {
   const { user } = useAuth();
-
-  if (user?.isSuperAdmin) {
-    return (
-      <Switch>
-        <Route path="/" component={SuperAdmin} />
-        <Route component={SuperAdmin} />
-      </Switch>
-    );
-  }
-
+  
   return (
     <Layout>
       <Switch>
         <Route path="/dashboard" component={Dashboard} />
-        <Route path="/" component={Dashboard} />
-        <Route path="/perfil" component={Profile} />
-        <Route path="/transacoes">{() => <ProtectedRoute component={Transactions} permission="view_transactions" />}</Route>
-        <Route path="/clientes">{() => <ProtectedRoute component={Customers} permission="view_customers" />}</Route>
-        <Route path="/analista-ia">{() => <ProtectedRoute component={Reports} permission="view_reports" />}</Route>
-        <Route path="/fornecedores">{() => <ProtectedRoute component={Suppliers} permission="view_suppliers" />}</Route>
-        <Route path="/fluxo-de-caixa">{() => <ProtectedRoute component={CashFlowForecast} permission="view_reports" />}</Route>
-        <Route path="/calculadora-precos" component={PricingCalculator} />
-        <Route path="/categorias" component={Categories} />
-        <Route path="/configuracoes/usuarios">{() => <ProtectedRoute component={UserManagement} permission="manage_users" />}</Route>
-        <Route path="/configuracoes/equipe">{() => <ProtectedRoute component={TeamPage} permission="manage_users" />}</Route>
-        <Route path="/usuarios">{() => <ProtectedRoute component={UserManagement} permission="manage_users" />}</Route>
-        <Route path="/permissoes">{() => <ProtectedRoute component={UserPermissions} permission="manage_users" />}</Route>
-        <Route path="/acesso-negado" component={AccessDenied} />
+        <Route path="/transactions" component={Transactions} />
+        <Route path="/customers" component={Customers} />
+        <Route path="/reports" component={Reports} />
+        <Route path="/suppliers" component={Suppliers} />
+        <Route path="/forecast" component={CashFlowForecast} />
+        <Route path="/pricing" component={PricingCalculator} />
+        <Route path="/categories" component={Categories} />
+        <Route path="/users" component={UserManagement} />
+        <Route path="/permissions" component={UserPermissions} />
+        <Route path="/team" component={TeamPage} />
+        <Route path="/profile" component={Profile} />
+        
+        {user?.role === "super_admin" && (
+          <>
+            <Route path="/admin" component={SuperAdminDashboard} />
+            <Route path="/admin/customers" component={AdminCustomers} />
+            <Route path="/admin/subscriptions" component={AdminSubscriptions} />
+            <Route path="/admin/users" component={AdminUsers} />
+          </>
+        )}
+        
+        <Route component={Dashboard} />
       </Switch>
     </Layout>
   );
 }
 
 function AppContent() {
-  const { isAuthenticated, company, loading, token, paymentPending } = useAuth();
-
-  useEffect(() => {
-    if (token) {
-      const initializeData = async () => {
-        try {
-          await fetch("/api/categories", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-        } catch (error) {
-          // Error handled by auth context
-        }
-      };
-      initializeData();
-    }
-  }, [token]);
-
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-background animate-in fade-in duration-700">
-        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="text-muted-foreground animate-pulse text-sm">Carregando...</p>
-      </div>
-    );
-  }
-
-  const isPublicPage = typeof window !== 'undefined' ? 
-    ["/", "/payment-success", "/accept-invite", "/terms", "/privacy", "/login", "/signup", "/checkout"].includes(window.location.pathname) : 
-    false;
-
-  // Bloqueio rigoroso: se pagamento não aprovado, NUNCA renderiza MainApp nem Layout
-  if ((isAuthenticated || paymentPending) && company && company.paymentStatus !== "approved") {
-    // Se o pagamento foi aprovado recentemente mas o estado global ainda não atualizou,
-    // podemos ter um pequeno delay. O dispatch Event('storage') no PaymentSuccess ajuda.
-    
-    const isAllowedPage = typeof window !== 'undefined' ? 
-      ["/", "/checkout", "/payment-success", "/terms", "/privacy"].includes(window.location.pathname) : 
-      false;
-
-    // Se estiver em uma página permitida, renderiza ela normalmente
-    if (isAllowedPage) {
-      return (
-        <Switch>
-          <Route path="/" component={LandingPage} />
-          <Route path="/checkout" component={Checkout} />
-          <Route path="/payment-success" component={PaymentSuccess} />
-          <Route path="/terms" component={TermsOfUse} />
-          <Route path="/privacy" component={PrivacyPolicy} />
-          <Route component={Checkout} />
-        </Switch>
-      );
-    }
-
-    // Caso contrário, redireciona
-    if (typeof window !== 'undefined') {
-      window.location.href = '/checkout';
-      return null;
-    }
-  }
-
-  if (!isAuthenticated && !paymentPending) {
-    return (
-      <Switch>
-        <Route path="/login" component={Login} />
-        <Route path="/signup" component={Signup} />
-        <Route path="/checkout" component={Checkout} />
-        <Route path="/payment-success" component={PaymentSuccess} />
-        <Route path="/accept-invite" component={AcceptInvite} />
-        <Route path="/terms" component={TermsOfUse} />
-        <Route path="/privacy" component={PrivacyPolicy} />
-        <Route path="/" component={LandingPage} />
-        <Route component={Login} />
-      </Switch>
-    );
-  }
-
-  // Se o usuário está autenticado e aprovado, ele não deve ver Checkout, Signup ou Login
-  if (isAuthenticated && company?.paymentStatus === "approved") {
-    const isRestricted = typeof window !== 'undefined' ? 
-      ["/checkout", "/signup", "/login"].includes(window.location.pathname) : 
-      false;
-    
-    if (isRestricted) {
-      if (typeof window !== 'undefined') {
-        window.location.href = '/dashboard';
-        return null;
-      }
-    }
-  }
-
-  if (window.location.pathname === "/payment-success") {
-    return <PaymentSuccess />;
-  }
+  const auth = useAuth();
+  
+  if (auth.loading) return null;
 
   return (
     <Switch>
+      <Route path="/login" component={Login} />
+      <Route path="/signup" component={Signup} />
+      <Route path="/checkout" component={Checkout} />
+      <Route path="/payment-success" component={PaymentSuccess} />
+      <Route path="/accept-invite" component={AcceptInvite} />
       <Route path="/terms" component={TermsOfUse} />
       <Route path="/privacy" component={PrivacyPolicy} />
-      <Route path="/access-denied" component={AccessDenied} />
-      <Route path="/dashboard" component={MainApp} />
-      <Route path="/" component={MainApp} />
-      <Route component={MainApp} />
+      <Route path="/" component={LandingPage} />
+      <Route>
+        {auth.user ? <MainApp /> : <Login />}
+      </Route>
     </Switch>
   );
 }

@@ -319,6 +319,38 @@ export default function ProfilePage() {
     );
   };
 
+  const SubscriptionTab = () => (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CreditCard className="w-5 h-5" />
+            Detalhes da Assinatura
+          </CardTitle>
+          <CardDescription>Gerencie seu plano e visualize o histórico de cobranças.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-4 rounded-lg bg-primary/5 border border-primary/10">
+              <div className="text-sm text-muted-foreground mb-1">Plano Atual</div>
+              <div className="text-xl font-bold capitalize">{company?.plan || "Free"}</div>
+            </div>
+            <div className="p-4 rounded-lg bg-primary/5 border border-primary/10">
+              <div className="text-sm text-muted-foreground mb-1">Status</div>
+              <Badge variant={company?.paymentStatus === "approved" ? "default" : "secondary"}>
+                {company?.paymentStatus === "approved" ? "Ativo" : "Pendente"}
+              </Badge>
+            </div>
+            <div className="p-4 rounded-lg bg-primary/5 border border-primary/10">
+              <div className="text-sm text-muted-foreground mb-1">Valor Mensal</div>
+              <div className="text-xl font-bold">R$ {company?.plan === "pro" ? "99,90" : "0,00"}</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
   const ProfileTab = () => (
     <div className="space-y-6">
       <Card>
