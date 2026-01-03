@@ -110,29 +110,19 @@ export default function CashFlowForecastPage() {
         }
         
         // Expand max date if there are newer transactions
-        // limit to 12 months from now to avoid excessive forecasting
-        const oneYearFromNow = new Date(today);
-        oneYearFromNow.setMonth(oneYearFromNow.getMonth() + 12);
-
         if (newestTransaction > maxDate) {
-          maxDate = newestTransaction > oneYearFromNow ? oneYearFromNow : new Date(newestTransaction);
+          maxDate = new Date(newestTransaction);
           maxDate = endOfDay(maxDate);
         }
       }
     }
     
     // Check pending installments for future dates
-    // limit to 12 months from now to avoid excessive forecasting
-    const todayLimit = startOfDay(new Date());
-    const oneYearFromNow = new Date(todayLimit);
-    oneYearFromNow.setMonth(oneYearFromNow.getMonth() + 12);
-
     if (saleInstallments && saleInstallments.length > 0) {
       saleInstallments.forEach(inst => {
         if (!inst.paid && inst.due_date) {
           try {
-            let dueDate = parseISO(inst.due_date);
-            if (dueDate > oneYearFromNow) dueDate = oneYearFromNow;
+            const dueDate = parseISO(inst.due_date);
             if (dueDate > maxDate) {
               maxDate = dueDate;
             }
@@ -147,8 +137,7 @@ export default function CashFlowForecastPage() {
       purchaseInstallments.forEach(inst => {
         if (!inst.paid && inst.due_date) {
           try {
-            let dueDate = parseISO(inst.due_date);
-            if (dueDate > oneYearFromNow) dueDate = oneYearFromNow;
+            const dueDate = parseISO(inst.due_date);
             if (dueDate > maxDate) {
               maxDate = dueDate;
             }
