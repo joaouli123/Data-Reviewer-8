@@ -215,8 +215,12 @@ export default function TransactionsPage() {
 
       txArray.forEach(t => {
         if (!t) return;
+        
+        // APENAS transações pagas ou completadas devem ser contabilizadas no saldo
         const isPaid = t.status === 'pago' || t.status === 'completed';
-        const relevantDate = isPaid && t.paymentDate ? t.paymentDate : t.date;
+        if (!isPaid) return;
+
+        const relevantDate = t.paymentDate || t.date;
         if (!relevantDate) return;
         
         let tDate;
