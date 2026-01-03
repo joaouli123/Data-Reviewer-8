@@ -116,15 +116,17 @@ export default function SuppliersPage() {
     setIsPurchasesViewDialogOpen(true);
   };
 
+  const { data: purchasesData = [] } = useQuery({
+    queryKey: ['/api/purchases', company?.id],
+    queryFn: async () => {
+      const data = await Purchase.list();
+      return Array.isArray(data) ? data : (data?.data || []);
+    },
+    enabled: !!company?.id,
+  });
+
   const getSupplierPurchases = (supplierId) => {
-    // Look at purchases table instead of transactions for total
-    const purchasesQuery = useQuery({
-      queryKey: ['/api/purchases', company?.id],
-      enabled: !!company?.id
-    });
-    
-    const purchases = Array.isArray(purchasesQuery.data) ? purchasesQuery.data : [];
-    return purchases
+    return (purchasesData || [])
       .filter(p => p.supplierId === supplierId)
       .reduce((acc, p) => acc + parseFloat(p.amount || 0), 0);
   };
