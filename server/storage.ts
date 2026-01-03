@@ -319,7 +319,6 @@ export class DatabaseStorage implements IStorage {
 
   // Transaction operations
   async createTransaction(companyId: string, data: InsertTransaction): Promise<Transaction> {
-    console.log("[Storage Debug] Creating transaction in DB:", { ...data, companyId });
     try {
       // Ensure date is handled as a Date object for Drizzle
       const insertData = {
@@ -328,7 +327,6 @@ export class DatabaseStorage implements IStorage {
         date: data.date instanceof Date ? data.date : (data.date ? new Date(data.date) : new Date())
       };
       const result = await db.insert(transactions).values(insertData as any).returning();
-      console.log("[Storage Debug] Transaction created successfully:", result[0].id);
       return result[0];
     } catch (error) {
       console.error("[Storage Error] Failed to create transaction:", error);
@@ -344,7 +342,7 @@ export class DatabaseStorage implements IStorage {
       LEFT JOIN suppliers s ON t.supplier_id = s.id
       LEFT JOIN categories cat ON t.category_id = cat.id
       WHERE t.company_id = ${companyId}
-      ORDER BY t.date DESC, t.id DESC
+      ORDER BY t.date DESC, t.created_at DESC NULLS LAST, t.id DESC
     `);
     
     return result.rows.map(row => ({
@@ -364,8 +362,8 @@ export class DatabaseStorage implements IStorage {
       customerName: row.customer_name ? String(row.customer_name) : null,
       supplierId: row.supplier_id ? String(row.supplier_id) : null,
       supplierName: row.supplier_name ? String(row.supplier_name) : null,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at
+      createdAt: row.created_at ? new Date(row.created_at).toISOString() : null,
+      updatedAt: row.updated_at ? new Date(row.updated_at).toISOString() : null
     })) as unknown as Transaction[];
   }
 
@@ -470,7 +468,6 @@ export class DatabaseStorage implements IStorage {
 
   // Sale operations
   async createSale(companyId: string, data: InsertSale): Promise<Sale> {
-    console.log("[Storage Debug] DB insert sale:", { ...data, companyId });
     try {
       const result = await db.insert(sales).values({ 
         ...data, 
@@ -492,7 +489,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(sales)
       .where(eq(sales.companyId, companyId))
-      .orderBy(desc(sales.saleDate));
+      .orderBy(desc(sales.saleDate), desc(sales.createdAt));
   }
 
   async getSale(companyId: string, id: string): Promise<Sale | undefined> {
@@ -536,7 +533,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(purchases)
       .where(eq(purchases.companyId, companyId))
-      .orderBy(desc(purchases.purchaseDate));
+      .orderBy(desc(purchases.purchaseDate), desc(purchases.createdAt));
   }
 
   async getPurchase(companyId: string, id: string): Promise<Purchase | undefined> {

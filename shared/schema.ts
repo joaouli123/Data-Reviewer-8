@@ -270,6 +270,8 @@ export const transactions = pgTable("transactions", {
   installmentTotal: integer("installment_total"),
   paymentMethod: text("payment_method"),
   isReconciled: boolean("is_reconciled").default(false),
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
 });
 
 export const bankStatementItems = pgTable("bank_statement_items", {
