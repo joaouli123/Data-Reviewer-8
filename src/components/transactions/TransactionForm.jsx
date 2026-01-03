@@ -307,6 +307,16 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
         transactions.push(payload);
       }
       onSubmit(transactions);
+      
+      // Invalidate queries to update UI in real-time
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/cash-flow'] });
+      if (formData.customerId) {
+        queryClient.invalidateQueries({ queryKey: ['/api/customers', company?.id] });
+      }
+      if (formData.supplierId) {
+        queryClient.invalidateQueries({ queryKey: ['/api/suppliers', company?.id] });
+      }
     } else {
       const payload = {
         categoryId: formData.categoryId,
@@ -335,6 +345,16 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
 
       console.log('Submitting payload:', payload);
       onSubmit(payload);
+      
+      // Invalidate queries to update UI in real-time
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/cash-flow'] });
+      if (formData.customerId) {
+        queryClient.invalidateQueries({ queryKey: ['/api/customers', company?.id] });
+      }
+      if (formData.supplierId) {
+        queryClient.invalidateQueries({ queryKey: ['/api/suppliers', company?.id] });
+      }
     }
   };
 
