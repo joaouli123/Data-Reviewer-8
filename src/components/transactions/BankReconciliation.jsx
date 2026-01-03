@@ -108,14 +108,17 @@ export default function BankReconciliation({ open, onOpenChange }) {
   const clearBankDataMutation = useMutation({
     mutationFn: () => apiRequest('DELETE', '/api/bank/clear'),
     onSuccess: () => {
-      // Invalida e limpa o cache imediatamente
+      // Limpa cache do queryClient imediatamente
       queryClient.setQueryData(['/api/bank/items'], []);
       queryClient.invalidateQueries({ queryKey: ['/api/bank/items'] });
       
+      // Limpa local storage e estado local
       localStorage.removeItem('lastBankStatementFile');
       setLastFileName(null);
       
       toast.success('Dados bancários removidos com sucesso');
+      // Fecha o modal para resetar completamente o estado interno dos hooks
+      onOpenChange(false);
     },
     onError: () => {
       toast.error('Erro ao remover dados bancários');

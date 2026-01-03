@@ -150,6 +150,7 @@ export function registerBankRoutes(app: Express) {
       }
       
       console.log("[OFX Debug] Importação finalizada. Novos:", newItems.length, "Duplicados:", duplicateCount);
+      console.log("[OFX Debug] Itens atuais no banco para esta empresa:", (await storage.getBankStatementItems(req.user.companyId)).length);
       res.json({ newItems, duplicateCount });
     } catch (error: any) {
       console.error('[OFX Debug] Erro fatal:', error);
