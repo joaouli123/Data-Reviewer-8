@@ -110,7 +110,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
     mutationFn: async ({ purchaseId, paidAmount, interest, paymentDate, paymentMethod }) => {
 
       // Get the transaction first to check the amount
-      const currentTransaction = await apiRequest(`/api/transactions/${purchaseId}`);
+      const currentTransaction = await apiRequest('GET', `/api/transactions/${purchaseId}`);
 
       // Determine status based on paid amount vs total amount
       const totalAmount = parseFloat(currentTransaction.amount || 0);
@@ -132,29 +132,23 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
       // IMPORTANT: Do NOT update 'date' field - that's the due date and must remain unchanged
       // IMPORTANT: Do NOT update 'description' - keep the base description to maintain grouping
       // Only update paymentDate (when payment was made), status, paidAmount, and interest
-      const transaction = await apiRequest(`/api/transactions/${purchaseId}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ 
+      const transaction = await apiRequest('PATCH', `/api/transactions/${purchaseId}`, {
           status: status,
           paidAmount: paidAmount ? paidAmount.toString() : totalAmount.toString(),
           interest: interest ? interest.toString() : '0',
           paymentDate: formattedPaymentDate,
           paymentMethod: paymentMethod
-        })
-      });
+        });
 
       // Then create corresponding cash flow entry (outflow for purchases, using payment date)
-      await apiRequest('/api/cash-flow', {
-        method: 'POST',
-        body: JSON.stringify({
+      await apiRequest('POST', '/api/cash-flow', {
           date: formattedPaymentDate,
           inflow: '0',
           outflow: totalPaid.toFixed(2),
           balance: (-totalPaid).toFixed(2),
           description: `Pagamento de compra: ${transaction.description}`,
           shift: transaction.shift || 'manhã'
-        })
-      });
+        });
 
       return transaction;
     },
@@ -175,24 +169,21 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
     mutationFn: async (purchaseId) => {
 
       // Get the transaction to know the amount to reverse
-      const transaction = await apiRequest(`/api/transactions/${purchaseId}`);
+      const transaction = await apiRequest('GET', `/api/transactions/${purchaseId}`);
 
       // Revert the transaction status (description stays the same)
-      const result = await apiRequest(`/api/transactions/${purchaseId}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ 
+      const result = await apiRequest('PATCH', `/api/transactions/${purchaseId}`, {
           status: 'pendente', 
           paidAmount: undefined, 
           interest: '0'
-        })
-      });
+        });
 
       // Delete corresponding cash flow entry
       try {
-        const cashFlows = await apiRequest('/api/cash-flow');
+        const cashFlows = await apiRequest('GET', '/api/cash-flow');
         const relatedCashFlow = cashFlows.find(cf => cf.description?.includes(transaction.description));
         if (relatedCashFlow) {
-          await apiRequest(`/api/cash-flow/${relatedCashFlow.id}`, { method: 'DELETE' });
+          await apiRequest('DELETE', `/api/cash-flow/${relatedCashFlow.id}`);
         }
       } catch (err) {
       }
@@ -211,9 +202,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
 
   const deletePurchaseMutation = useMutation({
     mutationFn: async (purchaseId) => {
-      await apiRequest(`/api/transactions/${purchaseId}`, {
-        method: 'DELETE'
-      });
+      await apiRequest('DELETE', `/api/transactions/${purchaseId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
