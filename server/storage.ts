@@ -324,10 +324,27 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTransactions(companyId: string): Promise<Transaction[]> {
-    return await db
-      .select()
-      .from(transactions)
-      .where(eq(transactions.companyId, companyId));
+    const result = await db.execute(sql`
+      SELECT * FROM transactions 
+      WHERE company_id = ${companyId}
+      ORDER BY date DESC, id DESC
+    `);
+    
+    return result.rows.map(row => ({
+      id: String(row.id),
+      companyId: String(row.company_id),
+      date: row.date,
+      type: String(row.type || ''),
+      amount: String(row.amount || '0'),
+      description: String(row.description || ''),
+      category: String(row.category || ''),
+      paymentMethod: String(row.payment_method || ''),
+      status: String(row.status || 'pending'),
+      customerId: row.customer_id ? String(row.customer_id) : null,
+      supplierId: row.supplier_id ? String(row.supplier_id) : null,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
+    })) as unknown as Transaction[];
   }
 
   async getTransaction(companyId: string, id: string): Promise<Transaction | undefined> {

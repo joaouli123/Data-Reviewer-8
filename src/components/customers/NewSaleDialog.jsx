@@ -81,18 +81,18 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
     mutationFn: async (data) => {
       const payload = {
         customerId: customer.id,
-        saleDate: new Date(data.sale_date).toISOString(),
-        totalAmount: String(data.total_amount),
-        paidAmount: data.status === 'pago' ? String(data.total_amount) : '0',
-        installmentCount: parseInt(data.installments) || 1,
+        date: new Date(data.sale_date).toISOString(),
+        amount: String(data.total_amount),
+        type: 'venda',
         status: data.status,
         description: data.description,
         category: data.category,
         paymentMethod: data.paymentMethod,
-        paymentDate: data.paymentDate ? new Date(data.paymentDate).toISOString() : null
+        shift: 'day', // Default shift
+        isReconciled: false
       };
 
-      const res = await apiRequest('POST', '/api/sales', payload);
+      const res = await apiRequest('POST', '/api/transactions', payload);
       return res;
     },
     onSuccess: async () => {
