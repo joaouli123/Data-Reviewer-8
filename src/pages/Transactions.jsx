@@ -28,7 +28,7 @@ export default function TransactionsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'paid', 'pending'
+  const [statusFilter, setStatusFilter] = useState('paid'); // 'all', 'paid', 'pending'
   const [paymentMethodFilter, setPaymentMethodFilter] = useState('all');
   // Initialize with local date (not UTC) to respect user timezone
   const getInitialDateRange = () => {
