@@ -42,10 +42,6 @@ export default function InviteUserModal({ open, onOpenChange, onInvite }) {
     }
     setLoading(true);
     try {
-        email: inviteData.email,
-        name: inviteData.name,
-        role: inviteData.role
-      });
       const result = await onInvite({
         email: inviteData.email,
         role: inviteData.role,
