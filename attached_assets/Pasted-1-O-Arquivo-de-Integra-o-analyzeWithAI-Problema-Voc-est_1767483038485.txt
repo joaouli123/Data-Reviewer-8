@@ -1,0 +1,87 @@
+1. O Arquivo de Integração (analyzeWithAI)
+Problema: Você está usando uma abordagem "antiga" (Regex) para extrair JSON e não está configurando os filtros de segurança.
+
+Por que mudar: O Gemini 1.5 Flash tem um modo nativo JSON (responseMimeType: "application/json"). Usar Regex é frágil e falha se a IA adicionar um texto antes do JSON.
+
+Segurança: Assuntos financeiros (dívida, risco, dinheiro) frequentemente ativam os filtros de segurança da Google (bloqueio por "Harassment" ou "Dangerous Content"). Você precisa desativá-los explicitamente.
+
+Solução: Substitua aquele arquivo pela versão que usa generationConfig e safetySettings (vou deixar o código final abaixo).
+
+2. O Arquivo DebtAnalysis (Dívida)
+Problema: A matemática está "chutada".
+
+Cálculo de Receita: Você está fazendo const revenue = totalDebt * 2. Isso é um "número mágico". Se a empresa tem pouca dívida, a receita parece baixa erradamente. Você deve somar as transações de entrada (income) reais.
+
+Curto vs Longo Prazo: O código faz totalDebt * 0.5. Ou seja, divide a dívida no meio. Como você tem os dados de purchaseInstallments, você deve somar o que vence em até 3 meses (Curto) e o resto é Longo. Isso dará uma análise real para a IA.
+
+3. O Arquivo WorkingCapitalAnalysis (Capital de Giro)
+Problema: Confusão entre "Fluxo de Caixa Passado" e "Liquidez Futura".
+
+Lógica Atual: O código olha as transações do período selecionado. Isso mostra o que já aconteceu.
+
+Lógica Correta: Capital de Giro (Liquidez) é sobre o futuro imediato.
+
+Ativo Circulante: Dinheiro em Caixa HOJE + O que vai entrar (Recebíveis) nos próximos 30 dias.
+
+Passivo Circulante: O que vence (A Pagar) nos próximos 30 dias.
+
+Se você não usar os installments (parcelas futuras), a análise de Capital de Giro fica incorreta.
+
+O Código "Chave" para consertar tudo (A Integração com a IA)
+Para que seus componentes React funcionem sem dar erro de AI analysis failed ou JSON inválido, use esta versão robusta da função de integração:
+
+TypeScript
+
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
+
+// CUIDADO: Em produção, chame isso via Backend para não expor a chave no navegador.
+const API_KEY = process.env.VITE_GOOGLE_GEMINI_API_KEY || "";
+const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
+
+export async function invokeGeminiAnalysis(prompt: string, responseSchema: any = null) {
+  if (!genAI) throw new Error('API_KEY_NOT_CONFIGURED');
+
+  try {
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash",
+      // 1. FORÇA O MODO JSON NATIVO
+      generationConfig: {
+        responseMimeType: responseSchema ? "application/json" : "text/plain",
+        temperature: 0.4, // Mais preciso, menos criativo
+      },
+      // 2. LIBERA FILTROS DE SEGURANÇA PARA TERMOS FINANCEIROS
+      safetySettings: [
+        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+      ],
+    });
+
+    // 3. REFINE O PROMPT PARA GARANTIR A ESTRUTURA
+    let finalPrompt = prompt;
+    if (responseSchema) {
+      finalPrompt = `${prompt}\n\nResponda ESTRITAMENTE com este JSON:\n${JSON.stringify(responseSchema)}`;
+    }
+
+    const result = await model.generateContent(finalPrompt);
+    const responseText = result.response.text();
+
+    if (responseSchema) {
+      try {
+        return JSON.parse(responseText);
+      } catch (e) {
+        console.error("Erro de Parse JSON:", responseText);
+        throw new Error("A IA não retornou um JSON válido.");
+      }
+    }
+    
+    return responseText;
+
+  } catch (error: any) {
+    console.error("Gemini Error:", error);
+    throw new Error(error.message || "Erro na análise de IA");
+  }
+}
+Resumo
+Você tem uma ótima base visual. Se você substituir a lógica matemática "estimada" (50/50, x2) pela lógica real usando os arrays de installments (parcelas) e atualizar a função da IA para usar o JSON Mode, seu dashboard será extremamente poderoso e profissional.
