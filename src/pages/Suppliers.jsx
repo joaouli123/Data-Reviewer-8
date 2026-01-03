@@ -122,10 +122,14 @@ export default function SuppliersPage() {
   };
 
   const filteredSuppliers = (suppliers || [])
-    .filter(s => 
-      s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      s.email?.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    .filter(s => {
+      const search = searchTerm.toLowerCase();
+      return (
+        (s.name?.toLowerCase() || '').includes(search) || 
+        (s.email?.toLowerCase() || '').includes(search) ||
+        (s.cnpj?.toLowerCase() || '').includes(search)
+      );
+    })
     // Sort by ID descending to show newest first
     .sort((a, b) => {
       if (typeof a.id === 'string' && typeof b.id === 'string') {

@@ -110,12 +110,15 @@ export default function CustomersPage() {
     return customer?.totalSales || 0;
   };
 
-  const filteredCustomers = customers
-    .filter(c => 
-      c.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      c.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.cnpj?.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+  const filteredCustomers = (customers || [])
+    .filter(c => {
+      const search = searchTerm.toLowerCase();
+      return (
+        (c.name?.toLowerCase() || '').includes(search) || 
+        (c.email?.toLowerCase() || '').includes(search) ||
+        (c.cnpj?.toLowerCase() || '').includes(search)
+      );
+    })
     // Sort by ID descending to show newest first
     .sort((a, b) => {
       if (typeof a.id === 'string' && typeof b.id === 'string') {

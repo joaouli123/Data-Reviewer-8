@@ -166,11 +166,21 @@ export class DatabaseStorage implements IStorage {
         ), 0) as total_sales
       FROM customers c
       WHERE c.company_id = ${companyId}
-      ORDER BY total_sales DESC
+      ORDER BY c.created_at DESC
     `);
     
     return result.rows.map(row => ({
       ...row,
+      id: row.id,
+      companyId: row.company_id,
+      name: row.name,
+      cnpj: row.cnpj,
+      contact: row.contact,
+      email: row.email,
+      phone: row.phone,
+      category: row.category,
+      status: row.status,
+      createdAt: row.created_at,
       totalSales: Number(row.total_sales || 0)
     })) as unknown as (Customer & { totalSales: number })[];
   }
@@ -211,25 +221,34 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getSuppliers(companyId: string): Promise<(Supplier & { totalPurchases: number })[]> {
-    const result = await db
-      .select({
-        id: suppliers.id,
-        companyId: suppliers.companyId,
-        name: suppliers.name,
-        cnpj: suppliers.cnpj,
-        email: suppliers.email,
-        phone: suppliers.phone,
-        contact: suppliers.contact,
-        category: suppliers.category,
-        status: suppliers.status,
-        createdAt: suppliers.createdAt,
-        totalPurchases: sql<number>`(SELECT COALESCE(SUM(CAST(${transactions.amount} AS NUMERIC)), 0) FROM ${transactions} WHERE ${transactions.supplierId} = ${suppliers.id} AND ${transactions.type} IN ('expense', 'compra', 'compra_prazo', 'despesa'))`.as('total_purchases'),
-      })
-      .from(suppliers)
-      .where(eq(suppliers.companyId, companyId))
-      .orderBy(desc(sql`total_purchases`));
+    const result = await db.execute(sql`
+      SELECT 
+        s.*,
+        COALESCE((
+          SELECT SUM(CAST(t.amount AS NUMERIC))
+          FROM transactions t
+          WHERE t.supplier_id = s.id 
+          AND t.type IN ('expense', 'compra', 'compra_prazo', 'despesa')
+        ), 0) as total_purchases
+      FROM suppliers s
+      WHERE s.company_id = ${companyId}
+      ORDER BY s.created_at DESC
+    `);
     
-    return result as (Supplier & { totalPurchases: number })[];
+    return result.rows.map(row => ({
+      ...row,
+      id: row.id,
+      companyId: row.company_id,
+      name: row.name,
+      cnpj: row.cnpj,
+      email: row.email,
+      phone: row.phone,
+      contact: row.contact,
+      category: row.category,
+      status: row.status,
+      createdAt: row.created_at,
+      totalPurchases: Number(row.total_purchases || 0)
+    })) as unknown as (Supplier & { totalPurchases: number })[];
   }
 
   async getSupplier(companyId: string, id: string): Promise<Supplier | undefined> {
