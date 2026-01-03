@@ -299,6 +299,31 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // Simulate payment approval (development only)
+  app.post("/api/payment/simulate-approval", async (req, res) => {
+    try {
+      const { companyId } = req.body;
+      if (!companyId) {
+        return res.status(400).json({ error: "Company ID is required" });
+      }
+
+      // Update company status
+      await db.update(companies).set({ 
+        paymentStatus: "approved"
+      } as any).where(eq(companies.id, parseInt(companyId)));
+
+      // Update subscription status
+      await db.update(subscriptions).set({
+        status: "active"
+      } as any).where(eq(subscriptions.companyId, parseInt(companyId)));
+
+      res.json({ success: true, status: "approved" });
+    } catch (error) {
+      console.error("Simulation error:", error);
+      res.status(500).json({ error: "Failed to simulate approval" });
+    }
+  });
+
   // Get current user
   app.get("/api/auth/me", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {

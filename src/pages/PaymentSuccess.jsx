@@ -30,20 +30,24 @@ export default function PaymentSuccess() {
       setPaymentId(id);
       
       // Se for uma aprovação simulada, não precisamos do StatusScreen
-      if (id.startsWith('simulated_')) {
+      if (id.startsWith('simulated_') || status === 'approved') {
         setLoading(false);
         // Persist payment status in localStorage and potentially update company context
         const auth = localStorage.getItem("auth");
         if (auth) {
           try {
             const parsed = JSON.parse(auth);
-            localStorage.setItem("auth", JSON.stringify({
+            const updatedAuth = {
               ...parsed,
               paymentPending: false,
               company: { ...parsed.company, paymentStatus: 'approved' }
-            }));
-            // We force a page reload to refresh AuthContext state if needed, 
-            // but the button click will do it anyway.
+            };
+            localStorage.setItem("auth", JSON.stringify(updatedAuth));
+            
+            // Dispatch storage event to notify AuthContext in other tabs or current tab
+            window.dispatchEvent(new Event('storage'));
+            
+            // Forçamos o reload se necessário, ou apenas deixamos o botão levar ao dashboard
           } catch (e) {
             console.error("Error updating auth state", e);
           }

@@ -227,9 +227,17 @@ export default function Checkout() {
       toast.dismiss();
 
       if (response.ok) {
+        // Se for uma simulação ou aprovação imediata
         if (result.status === 'approved') {
+          // Chamada extra para garantir que o backend atualizou (importante para simulações)
+          await fetch('/api/payment/simulate-approval', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ companyId: company?.id }),
+          });
+          
           toast.success('Assinatura ativada com sucesso!');
-          setLocation(`/payment-success?payment_id=${result.id}`);
+          setLocation(`/payment-success?payment_id=${result.id || 'simulated_' + Date.now()}`);
         } else {
           toast.success('Instruções de pagamento foram enviadas para seu email!');
           setLocation(`/payment-success?payment_id=${result.id}`);

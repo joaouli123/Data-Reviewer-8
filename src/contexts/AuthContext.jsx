@@ -23,25 +23,31 @@ export function AuthProvider({ children }) {
 
   // Load from localStorage on mount
   useEffect(() => {
-    const stored = localStorage.getItem("auth");
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        // Only set token if not pending payment
-        if (!parsed.paymentPending) {
-          setToken(parsed.token);
-          setIsPaymentPending(false);
-        } else {
-          setIsPaymentPending(true);
+    const handleStorageChange = () => {
+      const stored = localStorage.getItem("auth");
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (!parsed.paymentPending) {
+            setToken(parsed.token || (token ? token : null)); // Mantém token se já existir
+            setIsPaymentPending(false);
+          } else {
+            setIsPaymentPending(true);
+          }
+          setUser(parsed.user);
+          setCompany(parsed.company);
+        } catch (e) {
+          localStorage.removeItem("auth");
         }
-        setUser(parsed.user);
-        setCompany(parsed.company);
-      } catch (e) {
-        localStorage.removeItem("auth");
       }
-    }
+    };
+
+    handleStorageChange();
+    window.addEventListener('storage', handleStorageChange);
     setLoading(false);
-  }, []);
+
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [token]);
 
   const signup = async (companyName, companyDocument, username, email, password, name, plan) => {
     try {
