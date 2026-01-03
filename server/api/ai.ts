@@ -9,7 +9,7 @@ export async function analyzeWithAI(prompt: string, responseJsonSchema: any = nu
   }
 
   try {
-    const modelsToTry = ["gemini-1.5-flash", "gemini-pro", "gemini-1.5-pro"];
+    const modelsToTry = ["gemini-1.5-pro", "gemini-1.5-flash", "gemini-pro"];
     let model: GenerativeModel | null = null;
     let lastError: any = null;
 
