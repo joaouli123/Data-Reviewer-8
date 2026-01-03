@@ -65,18 +65,15 @@ export default function DashboardPage() {
       queryClient.invalidateQueries({ queryKey: ['/api/transactions', company?.id] });
     },
     onError: (error) => {
-      logger.error('Erro ao criar transação:', error);
     }
   });
 
   const handleSubmit = (data) => {
-    logger.log('handleSubmit received:', Array.isArray(data) ? `array of ${data.length}` : 'single object');
     
     if (Array.isArray(data)) {
       // Para parcelado: criar todas as parcelas sequencialmente
       Promise.all(
         data.map(item => {
-          logger.log('Creating installment:', { amount: item.amount, installmentNumber: item.installmentNumber });
           return apiRequest('POST', '/api/transactions', item);
         })
       ).then(() => {
@@ -84,7 +81,6 @@ export default function DashboardPage() {
         setIsFormOpen(false);
         toast.success(`${data.length} parcel(as) criada(s) com sucesso!`);
       }).catch(error => {
-        logger.error('Error creating installments:', error);
         toast.error(error.message || 'Erro ao salvar parcelado. Tente novamente.');
       });
     } else {

@@ -59,7 +59,6 @@ export default function UserManagement() {
   const { data: usersData, isLoading, error } = useQuery({
     queryKey: ["/api/users"],
     queryFn: async () => {
-      logger.log("[DEBUG] UserManagement fetching from /api/users...");
       const response = await fetch("/api/users", {
         headers: {
           Authorization: `Bearer ${JSON.parse(localStorage.getItem('auth') || '{}').token}`
@@ -74,7 +73,6 @@ export default function UserManagement() {
   });
 
   if (error) {
-    logger.error("User fetch error:", error);
   }
 
   const users = Array.isArray(usersData) ? usersData : [];
@@ -84,13 +82,11 @@ export default function UserManagement() {
       return apiRequest("POST", "/api/invitations", data);
     },
     onSuccess: () => {
-      logger.log("[DEBUG] Invitation mutation SUCCESS.");
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       setIsInviteOpen(false);
       toast.success("Sucesso: Usuário criado com sucesso!");
     },
     onError: (error) => {
-      logger.error("Mutation error:", error);
       toast.error("Erro: " + error.message);
     },
   });
@@ -110,7 +106,6 @@ export default function UserManagement() {
       return response.json();
     },
     onSuccess: () => {
-      logger.log("[DEBUG] User deletion SUCCESS. Invalidating queries...");
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
 
@@ -118,7 +113,6 @@ export default function UserManagement() {
       toast.success("Sucesso: Usuário removido com sucesso!");
     },
     onError: (error) => {
-      logger.error("[DEBUG] User deletion ERROR:", error);
       toast.error("Erro ao excluir: " + (error.message || "Não foi possível remover o usuário. Verifique os logs do servidor."));
       setUserToDelete(null);
     },
@@ -389,7 +383,6 @@ export default function UserManagement() {
         open={isInviteOpen} 
         onOpenChange={setIsInviteOpen}
         onInvite={(data) => {
-          logger.log("[DEBUG] UserManagement calling onInvite:", data);
           return inviteMutation.mutateAsync(data);
         }}
       />

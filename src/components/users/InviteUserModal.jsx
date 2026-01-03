@@ -42,7 +42,6 @@ export default function InviteUserModal({ open, onOpenChange, onInvite }) {
     }
     setLoading(true);
     try {
-      logger.log("[DEBUG] InviteUserModal calling onInvite with:", {
         email: inviteData.email,
         name: inviteData.name,
         role: inviteData.role
@@ -54,13 +53,11 @@ export default function InviteUserModal({ open, onOpenChange, onInvite }) {
         password: inviteData.password,
         companyId: company?.id
       });
-      logger.log("[DEBUG] InviteUserModal onInvite result:", result);
       
       // Toast de sucesso agora é gerenciado pelo componente pai via queryClient.invalidateQueries
       // mas mantemos o resetModal aqui para fechar o diálogo
       resetModal();
     } catch (error) {
-      logger.error("Error creating user:", error);
       toast.error(error.message || 'Erro ao criar usuário');
     } finally {
       setLoading(false);

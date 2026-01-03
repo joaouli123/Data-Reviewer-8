@@ -116,7 +116,6 @@ export default function Signup() {
                 paymentPending: true
               }));
             } catch (e) {
-              logger.error("Error saving auth to localStorage:", e);
             }
           }
           // Redirect to checkout for existing company

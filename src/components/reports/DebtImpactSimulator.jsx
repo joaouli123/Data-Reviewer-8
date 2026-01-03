@@ -142,7 +142,6 @@ FORNEÇA:
 
       // Validar resposta
       if (!response || typeof response !== 'object') {
-        logger.error('Resposta da IA não é um objeto:', response);
         toast.error('Resposta inválida da IA');
         setIsAnalyzing(false);
         return;
@@ -166,7 +165,6 @@ FORNEÇA:
       const hasMinimalValidData = hasViabilityAssessment || hasFinancialImpact || hasRiskAnalysis || hasAlternatives;
       
       if (!hasMinimalValidData) {
-        logger.error('Resposta da IA sem dados essenciais:', response);
         toast.error('IA não conseguiu gerar análise válida');
         setIsAnalyzing(false);
         return;
@@ -187,7 +185,6 @@ FORNEÇA:
 
       toast.success('Simulação concluída!');
     } catch (error) {
-      logger.error('Erro ao simular:', error);
       toast.error('Erro ao simular impacto: ' + (error.message || 'Desconhecido'));
     } finally {
       setIsAnalyzing(false);

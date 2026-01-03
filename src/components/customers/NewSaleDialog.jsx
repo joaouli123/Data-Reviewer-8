@@ -116,7 +116,6 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
 
       // 3. O "Pulo do Gato": Espera 500ms e FORÇA o recarregamento
       setTimeout(async () => {
-        logger.log('🔄 Forçando atualização das listas...');
 
         // refetchQueries força a busca ativa (Active Fetch)
         // Isso atualiza a lista principal (Dashboard), fluxo de caixa e a lista do cliente

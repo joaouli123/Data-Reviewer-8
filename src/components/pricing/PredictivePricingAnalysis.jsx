@@ -82,14 +82,12 @@ Crie uma análise preditiva incluindo:
         }
       });
 
-      logger.log("AI Analysis Response:", response);
       if (!response || Object.keys(response).length === 0) {
         throw new Error("Resposta da IA vazia");
       }
       setPredictions(response);
       toast.success('Análise preditiva concluída!', { duration: 5000 });
     } catch (error) {
-      logger.error("AI Analysis Error:", error);
       toast.error('Erro ao gerar análise preditiva: ' + (error.message || 'Erro desconhecido'), { duration: 5000 });
     } finally {
       setIsAnalyzing(false);

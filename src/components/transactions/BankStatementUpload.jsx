@@ -62,7 +62,6 @@ export default function BankStatementUpload({ open, onOpenChange, onExtracted })
       const content = await file.text();
       await uploadMutation.mutateAsync(content);
     } catch (error) {
-      logger.error(error);
       toast.error('Erro ao ler arquivo');
     } finally {
       setIsUploading(false);

@@ -100,7 +100,6 @@ FORNEÇA:
 
       // Validar resposta
       if (!response || typeof response !== 'object') {
-        logger.error('Resposta da IA não é um objeto:', response);
         toast.error('Resposta inválida da IA');
         setIsAnalyzing(false);
         return;
@@ -121,7 +120,6 @@ FORNEÇA:
       const hasMinimalValidData = hasAssessment || hasRecommendations || hasRiskLevel;
       
       if (!hasMinimalValidData) {
-        logger.error('Resposta da IA sem dados essenciais:', response);
         toast.error('IA não conseguiu gerar análise válida');
         setIsAnalyzing(false);
         return;
@@ -130,7 +128,6 @@ FORNEÇA:
       setAnalysis(validatedAnalysis);
       toast.success('Análise concluída!');
     } catch (error) {
-      logger.error('Erro ao analisar:', error);
       toast.error('Erro ao analisar capital de giro: ' + error.message);
     } finally {
       setIsAnalyzing(false);

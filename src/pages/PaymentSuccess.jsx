@@ -24,7 +24,6 @@ export default function PaymentSuccess() {
     const id = params.get('payment_id') || params.get('paymentId');
     const status = params.get('status');
 
-    logger.log('PaymentSuccess Debug:', { id, status, user: !!user });
 
     if (id) {
       setPaymentId(id);
@@ -49,7 +48,6 @@ export default function PaymentSuccess() {
             
             // Forçamos o reload se necessário, ou apenas deixamos o botão levar ao dashboard
           } catch (e) {
-            logger.error("Error updating auth state", e);
           }
         }
       }
@@ -63,7 +61,6 @@ export default function PaymentSuccess() {
   };
 
   const onError = (error) => {
-    logger.error('Status Screen Brick Error:', error);
     setLoading(false);
   };
 
