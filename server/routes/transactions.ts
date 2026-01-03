@@ -17,7 +17,16 @@ export function registerTransactionRoutes(app: Express) {
   app.post("/api/transactions", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
-      const data = insertTransactionSchema.parse(req.body);
+      
+      const body = { ...req.body };
+      if (body.date && typeof body.date === 'string') {
+        body.date = new Date(body.date);
+      }
+      if (body.paymentDate && typeof body.paymentDate === 'string') {
+        body.paymentDate = new Date(body.paymentDate);
+      }
+      
+      const data = insertTransactionSchema.parse(body);
       const transaction = await storage.createTransaction(req.user.companyId, data);
       res.status(201).json(transaction);
     } catch (error: any) {

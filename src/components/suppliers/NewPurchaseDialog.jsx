@@ -85,7 +85,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
     mutationFn: async (data) => {
       const payload = {
         supplierId: supplier.id,
-        date: new Date(data.purchase_date).toISOString(),
+        date: data.purchase_date, // Send string, backend will parse
         amount: String(data.total_amount),
         type: 'compra',
         status: data.status,
