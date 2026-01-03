@@ -19,3 +19,4 @@
 ## 4. Performance e Monitoramento
 - Implementado `logger` condicional (`src/lib/logger.js`).
 - Otimizado `staleTime` global para queries do TanStack Query (5 minutos).
+Revisão concluída e bugs críticos corrigidos.
