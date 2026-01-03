@@ -1919,14 +1919,21 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   // Profile update route
   app.patch("/api/auth/profile", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
-      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      if (!req.user) return res.status(401).json({ error: "Não autorizado" });
 
-      const { name, phone, avatar } = req.body;
+      const { name, phone, avatar, cep, endereco, rua, numero, complemento, estado, cidade, companyPhone } = req.body;
       const updateData: any = {};
       
       if (name !== undefined) updateData.name = name;
       if (phone !== undefined) updateData.phone = phone;
       if (avatar !== undefined) updateData.avatar = avatar;
+      if (cep !== undefined) updateData.cep = cep;
+      if (endereco !== undefined) updateData.endereco = endereco;
+      if (rua !== undefined) updateData.rua = rua;
+      if (numero !== undefined) updateData.numero = numero;
+      if (complemento !== undefined) updateData.complemento = complemento;
+      if (estado !== undefined) updateData.estado = estado;
+      if (cidade !== undefined) updateData.cidade = cidade;
 
       // Handle both regular users and super admin (who have null companyId)
       let updated;
@@ -1939,26 +1946,25 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         updated = await storage.updateUser(req.user.companyId, req.user.id, updateData);
       }
 
+      if (companyPhone !== undefined && req.user.companyId) {
+        await db.update(companies).set({
+          phone: companyPhone
+        }).where(eq(companies.id, req.user.companyId));
+      }
+
       if (!updated) {
-        return res.status(404).json({ error: "User not found" });
+        return res.status(404).json({ error: "Usuário não encontrado" });
       }
       
       res.json({
         user: {
-          id: updated.id,
-          username: updated.username,
-          email: updated.email,
-          name: updated.name,
-          phone: updated.phone,
-          avatar: updated.avatar,
-          role: updated.role,
-          companyId: updated.companyId,
+          ...updated,
           permissions: updated.permissions ? JSON.parse(updated.permissions) : {}
         }
       });
     } catch (error: any) {
-      console.error("Profile update error:", error);
-      res.status(500).json({ error: error.message || "Failed to update profile" });
+      console.error("Erro ao atualizar perfil:", error);
+      res.status(500).json({ error: error.message || "Falha ao atualizar perfil" });
     }
   });
 

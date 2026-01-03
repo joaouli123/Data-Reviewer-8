@@ -104,6 +104,7 @@ export default function ProfilePage() {
     complemento: user?.complemento || '',
     estado: user?.estado || '',
     cidade: user?.cidade || '',
+    companyPhone: company?.phone || '',
   });
 
   const [cities, setCities] = useState(CITIES_BY_STATE[formData.estado] || []);
@@ -123,6 +124,7 @@ export default function ProfilePage() {
       const res = await apiRequest('PATCH', '/api/auth/profile', {
           name: data.name || '',
           phone: data.phone || '',
+          companyPhone: data.companyPhone || '',
           avatar: data.avatar,
           cep: data.cep || '',
           endereco: data.endereco || '',
@@ -288,8 +290,12 @@ export default function ProfilePage() {
             <Input 
               id="new" 
               type="password" 
+              autoComplete="new-password"
               value={passwords.new} 
-              onChange={e => setPasswords(prev => ({...prev, new: e.target.value}))} 
+              onChange={e => {
+                const val = e.target.value;
+                setPasswords(prev => ({...prev, new: val}));
+              }} 
             />
           </div>
           <div className="space-y-2">
@@ -297,8 +303,12 @@ export default function ProfilePage() {
             <Input 
               id="confirm" 
               type="password" 
+              autoComplete="new-password"
               value={passwords.confirm} 
-              onChange={e => setPasswords(prev => ({...prev, confirm: e.target.value}))} 
+              onChange={e => {
+                const val = e.target.value;
+                setPasswords(prev => ({...prev, confirm: val}));
+              }} 
             />
           </div>
         </div>
@@ -346,8 +356,12 @@ export default function ProfilePage() {
                 <Input id="name" name="name" value={formData.name} onChange={handleInputChange} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="phone">Telefone</Label>
+                <Label htmlFor="phone">Telefone Pessoal</Label>
                 <Input id="phone" name="phone" value={formData.phone} onChange={handleInputChange} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="companyPhone">Telefone da Empresa</Label>
+                <Input id="companyPhone" name="companyPhone" value={formData.companyPhone} onChange={handleInputChange} placeholder="(00) 00000-0000" />
               </div>
             </div>
 
@@ -399,6 +413,7 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
 
+      <Card>
         <CardHeader><CardTitle className="flex items-center gap-2"><Lock className="w-5 h-5" /> Redefinir Senha</CardTitle></CardHeader>
         <CardContent>
           <RedefinirSenhaForm />
@@ -407,59 +422,28 @@ export default function ProfilePage() {
 
       <Card>
         <CardHeader><CardTitle className="flex items-center gap-2"><Mail className="w-5 h-5" /> Conta</CardTitle></CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-3 bg-muted/50 rounded-lg border">
-            <Label className="text-xs text-muted-foreground block mb-1">Email</Label>
-            <p className="text-sm font-medium">{formData.email}</p>
-          </div>
-          <div className="p-3 bg-muted/50 rounded-lg border">
-            <Label className="text-xs text-muted-foreground block mb-1">Cargo</Label>
-            <Badge variant="outline" className="capitalize">{formData.role === 'admin' ? 'Admin' : 'Operacional'}</Badge>
-          </div>
-          <div className="p-3 bg-muted/50 rounded-lg border">
-            <Label className="text-xs text-muted-foreground block mb-1">CNPJ/CPF</Label>
-            <p className="text-sm font-medium">{company?.document || 'Não definido'}</p>
-          </div>
-          <div className="p-3 bg-muted/50 rounded-lg border flex items-center justify-between gap-2">
-            <div>
-              <Label className="text-xs text-muted-foreground block mb-1">ID da Empresa</Label>
-              <p className="text-xs font-mono truncate">{company?.id}</p>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-3 bg-muted/50 rounded-lg border">
+              <Label className="text-xs text-muted-foreground block mb-1">Email</Label>
+              <p className="text-sm font-medium">{formData.email}</p>
             </div>
-            <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => {
-              navigator.clipboard.writeText(company?.id);
-              toast.success('ID copiado!');
-            }}>Copiar</Button>
+            <div className="p-3 bg-muted/50 rounded-lg border">
+              <Label className="text-xs text-muted-foreground block mb-1">Cargo</Label>
+              <Badge variant="outline" className="capitalize">{formData.role === 'admin' ? 'Administrador' : 'Operacional'}</Badge>
+            </div>
+            <div className="p-3 bg-muted/50 rounded-lg border">
+              <Label className="text-xs text-muted-foreground block mb-1">CNPJ/CPF</Label>
+              <p className="text-sm font-medium">{company?.document || 'Não definido'}</p>
+            </div>
+            <div className="p-3 bg-muted/50 rounded-lg border">
+              <Label className="text-xs text-muted-foreground block mb-1">Telefone da Empresa</Label>
+              <p className="text-sm font-medium">{company?.phone || 'Não definido'}</p>
+            </div>
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
 
-  const { data: invoices = [] } = useQuery({
-    queryKey: ['/api/transactions'],
-    queryFn: async () => {
-      const transactions = await apiRequest('GET', '/api/transactions');
-      // Filter for subscription-related transactions if they exist, or just show sales of type 'venda' if that's what's intended
-      // But typically invoices are subscriptions. Let's look for type 'subscription' or similar.
-      return transactions.filter(t => t.description?.toLowerCase().includes('assinatura') || t.type === 'subscription');
-    },
-    enabled: !!company?.id
-  });
-
-  const cancelSubscriptionMutation = useMutation({
-    mutationFn: async () => {
-      const res = await apiRequest('POST', '/api/subscriptions/cancel');
-      return res;
-    },
-    onSuccess: () => {
-      toast.success('Assinatura cancelada. Você ainda terá acesso até o fim do período atual.');
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
-    },
-    onError: (error) => toast.error(error.message)
-  });
-
-  const SubscriptionTab = () => (
-    <div className="space-y-6">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-4">
           <CardTitle className="flex items-center gap-2">
