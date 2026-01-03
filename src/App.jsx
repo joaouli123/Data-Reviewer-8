@@ -123,23 +123,24 @@ function AppContent() {
       ["/checkout", "/payment-success", "/terms", "/privacy"].includes(window.location.pathname) : 
       false;
 
-    if (!isAllowedPage) {
-      if (typeof window !== 'undefined') {
-        window.location.href = '/checkout';
-        return null;
-      }
+    // Se estiver em uma página permitida, renderiza ela normalmente
+    if (isAllowedPage) {
+      return (
+        <Switch>
+          <Route path="/checkout" component={Checkout} />
+          <Route path="/payment-success" component={PaymentSuccess} />
+          <Route path="/terms" component={TermsOfUse} />
+          <Route path="/privacy" component={PrivacyPolicy} />
+          <Route component={Checkout} />
+        </Switch>
+      );
     }
-    
-    // Força a renderização APENAS das rotas permitidas para quem não pagou
-    return (
-      <Switch>
-        <Route path="/checkout" component={Checkout} />
-        <Route path="/payment-success" component={PaymentSuccess} />
-        <Route path="/terms" component={TermsOfUse} />
-        <Route path="/privacy" component={PrivacyPolicy} />
-        <Route component={Checkout} />
-      </Switch>
-    );
+
+    // Caso contrário, redireciona
+    if (typeof window !== 'undefined') {
+      window.location.href = '/checkout';
+      return null;
+    }
   }
 
   if (!isAuthenticated && !paymentPending) {
