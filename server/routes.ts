@@ -1021,14 +1021,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const { paidAmount, interest, paymentMethod, paymentDate, description } = req.body;
       
-      if (!paidAmount || isNaN(parseFloat(paidAmount.toString()))) {
+      const paid = parseFloat(paidAmount?.toString() || "0");
+      if (isNaN(paid)) {
         return res.status(400).json({ error: "Invalid paid amount" });
       }
 
       const sale = await storage.getSale(req.user.companyId, req.params.id);
       if (!sale) return res.status(404).json({ error: "Sale not found" });
 
-      const paid = parseFloat(paidAmount.toString());
       const interestAmount = interest ? parseFloat(interest.toString()) : 0;
       const newPaidAmount = (sale.paidAmount ? parseFloat(sale.paidAmount.toString()) : 0) + paid;
       const totalDue = parseFloat(sale.totalAmount.toString()) + interestAmount;
@@ -1086,6 +1086,54 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     } catch (error: any) {
       console.error("Sale payment error:", error);
       res.status(500).json({ error: error.message || "Failed to process payment" });
+    }
+  });
+
+  // Cancel sale payment - revert to pending/partial
+  app.post("/api/sales/:id/cancel-payment", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      
+      const sale = await storage.getSale(req.user.companyId, req.params.id);
+      if (!sale) return res.status(404).json({ error: "Sale not found" });
+
+      // In a real scenario, we might want to target specific payments
+      // For now, we'll revert the last payment impact if it was fully paid
+      // or just reset the paid amount for simplicity in this MVP stage
+      
+      await db.transaction(async (tx) => {
+        // Reset sale status
+        await tx
+          .update(sales)
+          .set({
+            paidAmount: "0",
+            status: "pendente"
+          })
+          .where(and(eq(sales.companyId, req.user!.companyId), eq(sales.id, req.params.id)));
+
+        // Remove related transactions and cash flow entries
+        // This is a simple cleanup for the MVP
+        await tx
+          .delete(transactions)
+          .where(and(
+            eq(transactions.companyId, req.user!.companyId),
+            eq(transactions.customerId, sale.customerId),
+            eq(transactions.type, "venda"),
+            sql`description LIKE ${`%Venda #${sale.id.substring(0, 8)}%`}`
+          ));
+
+        await tx
+          .delete(cashFlow)
+          .where(and(
+            eq(cashFlow.companyId, req.user!.companyId),
+            sql`description LIKE ${`%Venda #${sale.id.substring(0, 8)}%`}`
+          ));
+      });
+
+      res.json({ success: true, status: "pendente" });
+    } catch (error: any) {
+      console.error("Cancel payment error:", error);
+      res.status(500).json({ error: "Failed to cancel payment" });
     }
   });
 

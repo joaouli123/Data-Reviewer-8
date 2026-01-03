@@ -109,59 +109,23 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
 
   const confirmPaymentMutation = useMutation({
     mutationFn: async ({ saleId, paidAmount, interest, paymentDate, paymentMethod }) => {
-      
-      // Get the transaction first to check the amount
-      const currentTransaction = await apiRequest('GET', `/api/transactions/${saleId}`);
-      
-      // Determine status based on paid amount vs total amount
-      const totalAmount = parseFloat(currentTransaction.amount || 0);
-      const paidAmountValue = parseFloat(paidAmount || 0);
-      const interestValue = parseFloat(interest || 0);
-      const totalPaid = paidAmountValue + interestValue;
-      
-      // Status should be 'pago' only if fully paid
-      const status = totalPaid >= totalAmount ? 'pago' : 'parcial';
-      
-      // Format payment date (NOT the due date - that stays unchanged)
-      let formattedPaymentDate = new Date().toISOString(); // Default to today
-      if (paymentDate && paymentDate.trim()) {
-        // Parse yyyy-MM-dd format correctly with timezone awareness (use noon UTC to avoid -1 day offset)
-        const [year, month, day] = paymentDate.split('-');
-        formattedPaymentDate = new Date(`${year}-${month}-${day}T12:00:00Z`).toISOString();
-      }
-      
-      // IMPORTANT: Do NOT update 'date' field - that's the due date and must remain unchanged
-      // IMPORTANT: Do NOT update 'description' - keep the base description to maintain grouping
-      // Only update paymentDate (when payment was made), status, paidAmount, and interest
-      const transaction = await apiRequest('PATCH', `/api/transactions/${saleId}`, { 
-            status: status,
-            paidAmount: paidAmount ? paidAmount.toString() : undefined,
-            interest: interest ? interest.toString() : '0',
-            paymentDate: formattedPaymentDate,
-            paymentMethod: paymentMethod
-          });
-      
-      // Then create corresponding cash flow entry (using payment date, not due date)
-      const totalReceived = parseFloat(paidAmount || 0) + parseFloat(interest || 0);
-      await apiRequest('POST', '/api/cash-flow', {
-            date: formattedPaymentDate,
-            inflow: totalReceived.toFixed(2),
-            outflow: '0',
-            balance: totalReceived.toFixed(2),
-            description: `Recebimento de venda: ${transaction.description}`,
-            shift: transaction.shift || 'manhã'
-          });
-      
-      return transaction;
-    },
-    onSuccess: (data) => {
-      toast.success('Pagamento confirmado!', { duration: 5000 });
-      // Invalidate and refetch the specific transaction query for this customer
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions', customer?.id] });
-      queryClient.refetchQueries({ queryKey: ['/api/transactions', customer?.id] }).then(() => {
-        setPaymentEditOpen(false);
-        setSelectedTransaction(null);
+      // Use the new atomic payment endpoint
+      const response = await apiRequest('POST', `/api/sales/${saleId}/pay`, {
+        paidAmount,
+        interest,
+        paymentDate,
+        paymentMethod,
+        description: `Recebimento de venda para ${customer?.name}`
       });
+      return response;
+    },
+    onSuccess: () => {
+      toast.success('Pagamento confirmado!', { duration: 5000 });
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/cash-flow'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions', customer?.id] });
+      setPaymentEditOpen(false);
+      setSelectedTransaction(null);
     },
     onError: (error) => {
       toast.error(error.message, { duration: 5000 });
@@ -170,32 +134,14 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
 
   const cancelPaymentMutation = useMutation({
     mutationFn: async (saleId) => {
-      
-      // Get the transaction to know the amount to reverse
-      const transaction = await apiRequest('GET', `/api/transactions/${saleId}`);
-      
-      // Revert the transaction status (description stays the same)
-      const result = await apiRequest('PATCH', `/api/transactions/${saleId}`, { 
-            status: 'pendente', 
-            paidAmount: undefined, 
-            interest: '0'
-          });
-      
-      // Delete corresponding cash flow entry
-      try {
-        const cashFlows = await apiRequest('GET', '/api/cash-flow');
-        const relatedCashFlow = cashFlows.find(cf => cf.description?.includes(transaction.description));
-        if (relatedCashFlow) {
-          await apiRequest('DELETE', `/api/cash-flow/${relatedCashFlow.id}`);
-        }
-      } catch (err) {
-      }
-      
-      return result;
+      // Use the new atomic cancel endpoint
+      const response = await apiRequest('POST', `/api/sales/${saleId}/cancel-payment`);
+      return response;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions', customer?.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/cash-flow'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions', customer?.id] });
       toast.success('Pagamento cancelado!', { duration: 5000 });
     },
     onError: (error) => {
