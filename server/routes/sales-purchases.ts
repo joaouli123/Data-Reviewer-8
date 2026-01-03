@@ -79,14 +79,16 @@ export function registerSalesPurchasesRoutes(app: Express) {
         
         for (let i = 0; i < count; i++) {
           const dueDate = new Date(saleDate);
-          dueDate.setMonth(dueDate.getMonth() + i);
+          // Ensure we don't modify the same date object
+          const currentDueDate = new Date(dueDate);
+          currentDueDate.setMonth(currentDueDate.getMonth() + i);
           
           const transactionData = {
             companyId: req.user.companyId,
             type: 'income',
             description: count > 1 ? `${description || 'Venda'} (${i + 1}/${count})` : (description || 'Venda'),
             amount: String(amountPerInstallment.toFixed(2)),
-            date: dueDate,
+            date: currentDueDate,
             status: status === 'pago' ? 'pago' : 'pendente',
             categoryId,
             customerId,
@@ -101,6 +103,7 @@ export function registerSalesPurchasesRoutes(app: Express) {
         }
       }
 
+      console.log("[Sales Debug] Sale and transactions created successfully");
       res.status(201).json(sale);
     } catch (error: any) {
       res.status(400).json({ error: error.message || "Failed to create sale" });
