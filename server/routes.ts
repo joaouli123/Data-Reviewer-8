@@ -918,23 +918,35 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.post("/api/sales", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
-      const data = insertSaleSchema.parse(req.body);
+      
+      const { customerId, saleDate, totalAmount, status, description, category, paymentMethod, installments, customInstallments, paymentDate } = req.body;
       
       const sale = await db.transaction(async (tx) => {
         // Create the sale record
-        const [newSale] = await tx.insert(sales).values({ ...data, companyId: req.user!.companyId }).returning();
+        const [newSale] = await tx.insert(sales).values({ 
+          companyId: req.user!.companyId,
+          customerId,
+          saleDate: new Date(saleDate),
+          totalAmount: String(totalAmount),
+          status,
+          installmentCount: parseInt(String(installments)) || 1
+        }).returning();
         
         // Create a corresponding transaction record so it appears in the transactions page
         await tx.insert(transactions).values({
           companyId: req.user!.companyId,
-          customerId: data.customerId,
+          customerId: customerId,
           type: "venda",
-          amount: data.totalAmount,
-          paidAmount: data.paidAmount || "0",
-          date: data.saleDate,
-          description: `Venda #${newSale.id.substring(0, 8)}`,
+          amount: String(totalAmount),
+          paidAmount: status === 'pago' ? String(totalAmount) : '0',
+          date: new Date(saleDate),
+          paymentDate: status === 'pago' ? new Date(paymentDate || saleDate) : null,
+          description: description || `Venda #${newSale.id.substring(0, 8)}`,
           shift: "Geral", // Default shift
-          status: parseFloat(data.paidAmount?.toString() || "0") >= parseFloat(data.totalAmount.toString()) ? "pago" : "pendente",
+          status: status === 'pago' ? 'pago' : 'pendente',
+          paymentMethod: paymentMethod,
+          categoryId: null, // We might want to look up category ID by name if needed
+          isReconciled: false
         });
 
         return newSale;

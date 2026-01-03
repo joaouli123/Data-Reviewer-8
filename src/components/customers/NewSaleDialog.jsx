@@ -86,6 +86,10 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
         paidAmount: data.status === 'pago' ? String(data.total_amount) : '0',
         installmentCount: parseInt(data.installments) || 1,
         status: data.status,
+        description: data.description,
+        category: data.category,
+        paymentMethod: data.paymentMethod,
+        paymentDate: data.paymentDate ? new Date(data.paymentDate).toISOString() : null
       };
 
       const res = await apiRequest('POST', '/api/sales', payload);
