@@ -29,7 +29,18 @@ export default function SupplierFormDialog({ open, onOpenChange, supplier = null
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(formData);
+    
+    // Garantir que campos vazios sejam enviados como null para o backend
+    const cleanCNPJ = formData.cnpj?.trim();
+    const payload = {
+      name: formData.name.trim(),
+      cnpj: cleanCNPJ && cleanCNPJ.length > 0 ? cleanCNPJ : null,
+      email: formData.email?.trim() || null,
+      phone: formData.phone?.trim() || null,
+      status: 'ativo'
+    };
+
+    onSubmit(payload);
   };
 
   const isEditing = !!supplier;

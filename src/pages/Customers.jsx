@@ -37,7 +37,6 @@ export default function CustomersPage() {
     queryKey: ['/api/customers', company?.id],
     queryFn: () => Customer.list(),
     enabled: !!company?.id,
-    staleTime: 1000 * 60 * 5, // Cache por 5 minutos
     refetchOnWindowFocus: true,
   });
 
@@ -187,7 +186,7 @@ export default function CustomersPage() {
                                     </div>
                                 </TableCell>
                                 <TableCell className="text-left">
-                                    {c.cnpj ? <span className="font-medium text-slate-700">{formatCNPJ(c.cnpj)}</span> : <span className="text-slate-400">-</span>}
+                                    {c.cnpj ? <span className="font-medium text-slate-700">{c.cnpj}</span> : <span className="text-slate-400">-</span>}
                                 </TableCell>
                                 <TableCell className="text-left">
                                     {c.email ? <div className="flex items-center gap-2 text-sm text-slate-700"><Mail className="w-3 h-3" /> {c.email}</div> : <span className="text-slate-400">-</span>}

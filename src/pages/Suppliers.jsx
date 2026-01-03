@@ -37,7 +37,6 @@ export default function SuppliersPage() {
     queryKey: ['/api/suppliers', company?.id],
     queryFn: () => Supplier.list(),
     enabled: !!company?.id,
-    staleTime: 1000 * 60 * 5, // Cache por 5 minutos
     refetchOnWindowFocus: true,
   });
 
@@ -202,7 +201,7 @@ export default function SuppliersPage() {
                       </div>
                     </TableCell>
                     <TableCell className="text-left">
-                      {s.cnpj ? <span className="font-medium text-slate-700">{formatCNPJ(s.cnpj)}</span> : <span className="text-slate-400">-</span>}
+                      {s.cnpj ? <span className="font-medium text-slate-700">{s.cnpj}</span> : <span className="text-slate-400">-</span>}
                     </TableCell>
                     <TableCell className="text-left">
                       {s.email ? <div className="flex items-center gap-2 text-sm text-slate-700"><Mail className="w-3 h-3" /> {s.email}</div> : <span className="text-slate-400">-</span>}

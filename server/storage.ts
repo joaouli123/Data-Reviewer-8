@@ -162,7 +162,7 @@ export class DatabaseStorage implements IStorage {
           SELECT SUM(CAST(t.amount AS NUMERIC))
           FROM transactions t
           WHERE t.customer_id = c.id 
-          AND t.type IN ('income', 'venda')
+          AND t.type IN ('income', 'venda', 'venda_prazo', 'receita')
         ), 0) as total_sales
       FROM customers c
       WHERE c.company_id = ${companyId}
@@ -223,7 +223,7 @@ export class DatabaseStorage implements IStorage {
         category: suppliers.category,
         status: suppliers.status,
         createdAt: suppliers.createdAt,
-        totalPurchases: sql<number>`(SELECT COALESCE(SUM(CAST(${transactions.amount} AS NUMERIC)), 0) FROM ${transactions} WHERE ${transactions.supplierId} = ${suppliers.id} AND ${transactions.type} IN ('expense', 'compra'))`.as('total_purchases'),
+        totalPurchases: sql<number>`(SELECT COALESCE(SUM(CAST(${transactions.amount} AS NUMERIC)), 0) FROM ${transactions} WHERE ${transactions.supplierId} = ${suppliers.id} AND ${transactions.type} IN ('expense', 'compra', 'compra_prazo', 'despesa'))`.as('total_purchases'),
       })
       .from(suppliers)
       .where(eq(suppliers.companyId, companyId))
