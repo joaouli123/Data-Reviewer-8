@@ -4,7 +4,7 @@ import http from "http";
 import { fileURLToPath } from "url";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
-import { registerRoutes } from "./routes/index";
+import { registerAllRoutes } from "./routes/index";
 
 const app = express();
 const PORT = parseInt(process.env.PORT || "5000", 10);
@@ -66,7 +66,7 @@ const httpServer = http.createServer(app);
 // Initialize server
 (async () => {
   // Register all routes
-  await registerRoutes(httpServer, app);
+  registerAllRoutes(app);
 
   // Start server
   httpServer.listen(PORT, "0.0.0.0", () => {
