@@ -35,13 +35,25 @@ export function registerBankRoutes(app: Express) {
       // Se falhar, tentamos uma limpeza mais agressiva ou retornamos erro amigável.
       let data;
       try {
-        data = ofx.parse(ofxContent);
+        // Remove espaços em branco extras antes do processamento
+        const trimmedContent = ofxContent.trim();
+        data = ofx.parse(trimmedContent);
       } catch (parseError) {
+        // Tenta encontrar o início real do conteúdo (ignora cabeçalhos proprietários se necessário)
+        const ofxStartPos = ofxContent.indexOf('<OFX>');
+        const contentToParse = ofxStartPos !== -1 ? ofxContent.substring(ofxStartPos) : ofxContent;
+        
         // Tenta limpar tags não fechadas comuns em OFX de bancos brasileiros
-        const cleanedXml = xmlBody
+        const cleanedXml = contentToParse
           .replace(/<(\w+)>([^<]+)(?!\/<\1>)/g, '<$1>$2</$1>') // Fecha tags simples
-          .replace(/&/g, '&amp;'); // Escapa ampersands
-        data = ofx.parse(cleanedXml);
+          .replace(/&(?!(amp|lt|gt|quot|apos);)/g, '&amp;'); // Escapa ampersands apenas se não estiverem escapados
+        
+        try {
+          data = ofx.parse(cleanedXml);
+        } catch (finalError) {
+          console.error('Falha crítica no parsing OFX:', finalError);
+          throw finalError;
+        }
       }
       
       // Navigate the OFX structure
