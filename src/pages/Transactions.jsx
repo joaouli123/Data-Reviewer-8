@@ -63,7 +63,8 @@ export default function TransactionsPage() {
     queryFn: () => apiRequest('/api/transactions'),
     initialData: [],
     enabled: !!company?.id,
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    staleTime: 0, // Force fresh data on every visit
+    refetchOnMount: 'always', // Re-fetch every time the component mounts
     refetchOnWindowFocus: true,
   });
 
