@@ -68,7 +68,7 @@ export default function CustomersPage() {
       toast.success(selectedCustomer ? 'Cliente atualizado!' : 'Cliente adicionado!', { duration: 5000 });
     },
     onError: (error) => {
-      console.error('Customer save error:', error);
+      logger.error('Customer save error:', error);
       const errorMsg = error?.message || 'Erro ao salvar cliente';
       // Se houver detalhes do Zod, mostrar de forma mais amigável
       const details = error?.details ? `: ${JSON.stringify(error.details)}` : '';
@@ -84,13 +84,13 @@ export default function CustomersPage() {
       setCustomerToDelete(null);
     },
     onError: (error) => {
-      console.error('Delete error:', error);
+      logger.error('Delete error:', error);
       toast.error(error?.message || 'Erro ao deletar cliente', { duration: 5000 });
     }
   });
 
   const handleFormSubmit = (data) => {
-    console.log('📝 Form submitted:', data);
+    logger.log('📝 Form submitted:', data);
     saveMutation.mutate(data);
   };
 

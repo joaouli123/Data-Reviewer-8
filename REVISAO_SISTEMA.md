@@ -342,13 +342,13 @@ src/
 
 ### Média Prioridade
 5. [x] Dividir `server/routes.ts` em módulos
-6. [ ] Refatorar componentes grandes (>500 linhas)
-7. [ ] Mover chamadas de IA para o backend
+6. [x] Refatorar componentes grandes (>500 linhas)
+7. [x] Mover chamadas de IA para o backend
 
 ### Baixa Prioridade
-8. [ ] Otimizar staleTime das queries
-9. [ ] Implementar logger condicional
-10. [ ] Verificar tabelas não utilizadas no banco
+8. [x] Otimizar staleTime das queries
+9. [x] Implementar logger condicional
+10. [x] Verificar tabelas não utilizadas no banco
 
 ---
 

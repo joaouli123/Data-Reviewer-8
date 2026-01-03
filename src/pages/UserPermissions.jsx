@@ -103,7 +103,7 @@ export default function UserPermissionsPage() {
       try {
         userPerms = typeof user.permissions === 'string' ? JSON.parse(user.permissions) : user.permissions;
       } catch (e) {
-        console.error("Error parsing user permissions", e);
+        logger.error("Error parsing user permissions", e);
         userPerms = DEFAULT_PERMISSIONS[user.role] || {};
       }
     } else {

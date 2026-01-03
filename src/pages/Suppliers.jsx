@@ -80,7 +80,7 @@ export default function SuppliersPage() {
       toast.success(selectedSupplier ? 'Fornecedor atualizado!' : 'Fornecedor adicionado!', { duration: 5000 });
     },
     onError: (error) => {
-      console.error('Supplier save error:', error);
+      logger.error('Supplier save error:', error);
       const errorMsg = error?.message || 'Erro ao salvar fornecedor';
       toast.error(errorMsg, { duration: 5000 });
     }
@@ -94,7 +94,7 @@ export default function SuppliersPage() {
       setSupplierToDelete(null);
     },
     onError: (error) => {
-      console.error('Delete error:', error);
+      logger.error('Delete error:', error);
       toast.error(error?.message || 'Erro ao deletar fornecedor', { duration: 5000 });
     }
   });

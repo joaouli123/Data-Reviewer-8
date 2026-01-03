@@ -43,7 +43,7 @@ export default function CustomerFormDialog({ open, onOpenChange, customer = null
       status: 'ativo'
     };
 
-    console.log('📤 Enviando payload para cliente:', payload);
+    logger.log('📤 Enviando payload para cliente:', payload);
     onSubmit(payload);
   };
 

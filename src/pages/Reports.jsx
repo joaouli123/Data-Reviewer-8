@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { InvokeLLM, UploadFile, ExtractDataFromUploadedFile } from '@/api/integrations';
 import React, { useState } from 'react';
 import { Transaction, Customer, Category, Installment, PurchaseInstallment, Purchase } from '@/api/entities';
@@ -70,7 +71,7 @@ export default function ReportsPage() {
         return;
     }
     
-    console.log("📅 setQuickPeriod:", { period, start, end, startISO: start.toISOString(), endISO: end.toISOString() });
+    logger.log("📅 setQuickPeriod:", { period, start, end, startISO: start.toISOString(), endISO: end.toISOString() });
     
     setDateRange({
       startDate: start,
@@ -164,7 +165,7 @@ export default function ReportsPage() {
       return tStr >= startStr && tStr <= endStr;
     });
     
-    console.log(`✅ Filtered ${filtered.length} transactions (${startStr} to ${endStr})`);
+    logger.log(`✅ Filtered ${filtered.length} transactions (${startStr} to ${endStr})`);
     
     // Category filter
     if (categoryFilter !== 'all') {
@@ -290,7 +291,7 @@ Forneça:
       setAnalysisResult(response);
       toast.success("Análise completa gerada com sucesso!", { duration: 5000 });
     } catch (error) {
-      console.error("❌ Erro na análise:", error);
+      logger.error("❌ Erro na análise:", error);
       toast.error("Erro ao gerar análise. Tente novamente.", { duration: 5000 });
       setAnalysisResult(null);
     } finally {

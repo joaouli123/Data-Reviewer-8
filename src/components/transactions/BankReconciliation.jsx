@@ -140,7 +140,7 @@ export default function BankReconciliation({ open, onOpenChange }) {
           reconciliationCount++;
         }
       } catch (error) {
-        console.error('Auto-reconciliation error:', error);
+        logger.error('Auto-reconciliation error:', error);
       }
     }
     

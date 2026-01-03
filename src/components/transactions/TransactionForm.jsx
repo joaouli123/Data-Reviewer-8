@@ -343,7 +343,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
         console.warn('Supplier selected but no supplierId provided');
       }
 
-      console.log('Submitting payload:', payload);
+      logger.log('Submitting payload:', payload);
       onSubmit(payload);
       
       // Invalidate queries to update UI in real-time

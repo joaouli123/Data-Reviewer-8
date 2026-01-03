@@ -210,7 +210,7 @@ export default function Checkout() {
           payload.token = cardToken.id;
           payload.payment_method_id = 'master';
         } catch (tokenErr) {
-          console.error("Tokenization error", tokenErr);
+          logger.error("Tokenization error", tokenErr);
           toast.error("Erro ao processar dados do cartão");
           setIsProcessing(false);
           return;
@@ -262,7 +262,7 @@ export default function Checkout() {
         toast.error(result.message || 'Erro no processamento');
       }
     } catch (error) {
-      console.error('Checkout error:', error);
+      logger.error('Checkout error:', error);
       toast.error('Falha na comunicação com o servidor');
     } finally {
       setIsProcessing(false);

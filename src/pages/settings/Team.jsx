@@ -55,13 +55,13 @@ export default function TeamPage() {
       queryKey: ['/api/users'],
       queryFn: async () => {
         const token = JSON.parse(localStorage.getItem('auth') || '{}').token;
-        console.log("[DEBUG] Fetching team members for companyId:", company?.id);
+        logger.log("[DEBUG] Fetching team members for companyId:", company?.id);
         const res = await fetch('/api/users', {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error('Failed to fetch team');
         const data = await res.json();
-        console.log("[DEBUG] Team members received:", data);
+        logger.log("[DEBUG] Team members received:", data);
         return data;
       },
       staleTime: 0,
@@ -93,7 +93,7 @@ export default function TeamPage() {
       return res.json();
     },
     onSuccess: (data) => {
-      console.log("[DEBUG] Team page direct user creation SUCCESS:", data);
+      logger.log("[DEBUG] Team page direct user creation SUCCESS:", data);
       queryClient.invalidateQueries({ queryKey: ['/api/users'] });
       // Forçar limpeza total
       queryClient.removeQueries({ queryKey: ['/api/users'] });

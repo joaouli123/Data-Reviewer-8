@@ -87,7 +87,7 @@ export default function TransactionsPage() {
       toast.success('Transação criada com sucesso!', { duration: 5000 });
     },
     onError: (error) => {
-      console.error('Erro ao criar transação:', error);
+      logger.error('Erro ao criar transação:', error);
       toast.error(error.message || 'Erro ao salvar transação. Tente novamente.');
     }
   });
@@ -101,7 +101,7 @@ export default function TransactionsPage() {
       toast.success('Transação atualizada!', { duration: 5000 });
     },
     onError: (error) => {
-      console.error('Erro ao atualizar transação:', error);
+      logger.error('Erro ao atualizar transação:', error);
       toast.error(error.message || 'Erro ao atualizar transação. Tente novamente.');
     }
   });
@@ -113,7 +113,7 @@ export default function TransactionsPage() {
       toast.success('Transação removida.', { duration: 5000 });
     },
     onError: (error) => {
-      console.error('Erro ao deletar transação:', error);
+      logger.error('Erro ao deletar transação:', error);
       toast.error(error.message || 'Erro ao remover transação. Tente novamente.');
     }
   });

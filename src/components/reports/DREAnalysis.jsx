@@ -82,7 +82,7 @@ export default function DREAnalysis({ transactions = [], categories = [] }) {
       setForecast(response);
       toast.success('Análise gerada!');
     } catch (error) {
-      console.error('Erro:', error);
+      logger.error('Erro:', error);
       toast.error('Erro ao gerar análise');
     } finally {
       setIsAnalyzing(false);
