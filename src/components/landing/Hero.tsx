@@ -24,9 +24,27 @@ const Hero: React.FC = () => {
         <p className="text-base md:text-lg text-slate-600 mb-10 max-w-3xl mx-auto leading-relaxed px-4 font-normal">
           Assuma o controle financeiro de nível bancário com gestão de equipe avançada. <span className="text-blue-700 font-semibold">Pague uma única vez e use para sempre.</span>
         </p>
-        
-        <div className="flex flex-col items-center gap-6 mb-16">
-            <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+
+        {/* Video Player Section */}
+        <div className="relative group max-w-5xl mx-auto mb-16">
+          <div className="absolute -inset-4 bg-blue-500 rounded-[2rem] md:rounded-[3rem] blur-2xl opacity-10 group-hover:opacity-20 transition duration-700"></div>
+          <div className="relative rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden border-4 border-white shadow-2xl bg-slate-900 aspect-video flex items-center justify-center">
+            <img 
+              src="https://images.unsplash.com/photo-1551288049-bbbda536339a?q=80&w=2070&auto=format&fit=crop" 
+              alt="HUA Consultoria Dashboard" 
+              className="w-full h-full object-cover brightness-[0.7] group-hover:scale-105 transition-transform duration-1000"
+            />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-20 h-20 md:w-32 md:h-32 bg-blue-600/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-2xl transform group-hover:scale-110 transition-all duration-300">
+                <Play className="w-8 h-8 md:w-14 md:h-14 text-white fill-current ml-2" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* CTA Buttons after Video */}
+        <div className="flex flex-col items-center gap-6">
+          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
             <a 
               href="#precos" 
               className="group w-full sm:w-auto relative inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white text-base md:text-lg px-10 py-5 rounded-xl font-bold transition-all shadow-xl shadow-blue-500/30 active:scale-95"
@@ -51,23 +69,6 @@ const Hero: React.FC = () => {
               <Zap className="w-4 h-4 text-blue-500" />
               Ativação Imediata
             </span>
-          </div>
-        </div>
-
-        {/* Video Player Section */}
-        <div className="relative group max-w-5xl mx-auto">
-          <div className="absolute -inset-4 bg-blue-500 rounded-[2rem] md:rounded-[3rem] blur-2xl opacity-10 group-hover:opacity-20 transition duration-700"></div>
-          <div className="relative rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden border-4 border-white shadow-2xl bg-slate-900 aspect-video flex items-center justify-center">
-            <img 
-              src="https://images.unsplash.com/photo-1551288049-bbbda536339a?q=80&w=2070&auto=format&fit=crop" 
-              alt="HUA Consultoria Dashboard" 
-              className="w-full h-full object-cover brightness-[0.7] group-hover:scale-105 transition-transform duration-1000"
-            />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-20 h-20 md:w-32 md:h-32 bg-blue-600/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-2xl transform group-hover:scale-110 transition-all duration-300">
-                <Play className="w-8 h-8 md:w-14 md:h-14 text-white fill-current ml-2" />
-              </div>
-            </div>
           </div>
         </div>
       </div>
