@@ -56,4 +56,23 @@ export function registerTransactionRoutes(app: Express) {
       res.status(500).json({ error: "Failed to delete transaction" });
     }
   });
+
+  app.patch("/api/transactions/:id", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      
+      const body = { ...req.body };
+      if (body.date && typeof body.date === 'string') {
+        body.date = new Date(body.date);
+      }
+      if (body.paymentDate && typeof body.paymentDate === 'string') {
+        body.paymentDate = new Date(body.paymentDate);
+      }
+      
+      const transaction = await storage.updateTransaction(req.user.companyId, req.params.id, body);
+      res.json(transaction);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message || "Failed to update transaction" });
+    }
+  });
 }

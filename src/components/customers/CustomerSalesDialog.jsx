@@ -126,7 +126,7 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
       const totalPaid = paidAmountValue + interestValue;
 
       // Status should be 'pago' only if fully paid
-      const status = totalPaid >= totalAmount ? 'pago' : 'parcial';
+      const status = totalPaid >= totalAmount ? 'completed' : 'parcial';
 
       // Format payment date (NOT the due date - that stays unchanged)
       let formattedPaymentDate = new Date().toISOString();
