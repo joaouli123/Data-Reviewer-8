@@ -114,7 +114,7 @@ function AppContent() {
   }
 
   const isPublicPage = typeof window !== 'undefined' ? 
-    ["/", "/payment-success", "/accept-invite", "/terms", "/privacy"].includes(window.location.pathname) : 
+    ["/", "/payment-success", "/accept-invite", "/terms", "/privacy", "/login", "/signup"].includes(window.location.pathname) : 
     false;
 
   if ((isAuthenticated || paymentPending) && company && company.paymentStatus !== "approved" && !isPublicPage) {
