@@ -154,4 +154,14 @@ export function registerBankRoutes(app: Express) {
       res.status(400).json({ error: "Erro ao processar arquivo OFX: formato inválido ou corrompido" });
     }
   });
+
+  app.delete("/api/bank/clear", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      await storage.clearBankStatementItems(req.user.companyId);
+      res.json({ message: "Dados bancários removidos com sucesso" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to clear bank statement items" });
+    }
+  });
 }

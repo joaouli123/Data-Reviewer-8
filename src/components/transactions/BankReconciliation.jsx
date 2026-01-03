@@ -97,6 +97,8 @@ export default function BankReconciliation({ open, onOpenChange }) {
       queryClient.invalidateQueries({ queryKey: ['/api/bank/items'] });
       localStorage.removeItem('lastBankStatementFile');
       setLastFileName(null);
+      // Forçar atualização local dos itens para garantir que a UI reflita a limpeza
+      queryClient.setQueryData(['/api/bank/items'], []);
       toast.success('Dados bancários removidos com sucesso');
     },
     onError: () => {
@@ -160,8 +162,8 @@ export default function BankReconciliation({ open, onOpenChange }) {
     }
   }, [open, bankItems.length]);
 
-  const pendingItems = bankItems.filter(item => item.status === 'PENDING');
-  const reconciledItems = bankItems.filter(item => item.status === 'RECONCILED');
+  const pendingItems = bankItems.filter(item => item.status.toUpperCase() === 'PENDING');
+  const reconciledItems = bankItems.filter(item => item.status.toUpperCase() === 'RECONCILED' || item.status.toUpperCase() === 'MATCHED');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
