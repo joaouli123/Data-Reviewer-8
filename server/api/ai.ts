@@ -1,56 +1,44 @@
-import { z } from "zod";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const API_KEY = process.env.GROQ_API_KEY;
-const API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+const API_KEY = process.env.VITE_GOOGLE_GEMINI_API_KEY;
+const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
 
 export async function analyzeWithAI(prompt: string, responseJsonSchema: any = null) {
-  if (!API_KEY) {
+  if (!genAI) {
     throw new Error('API_KEY_NOT_CONFIGURED');
   }
 
-  let finalPrompt = prompt;
-  if (responseJsonSchema) {
-    finalPrompt = `${prompt}\n\nResponda APENAS com um JSON válido que corresponda a este schema: ${JSON.stringify(responseJsonSchema)}\n\nNão inclua texto antes ou depois do JSON. Retorne APENAS o objeto JSON, nada mais.`;
-  }
-
-  const requestBody = {
-    model: 'llama-3.1-8b-instant',
-    messages: [
-      {
-        role: 'system',
-        content: 'Você é um assistente financeiro experiente. Forneça análises detalhadas e precisas em português brasileiro. Quando pedido para retornar JSON, retorne APENAS o JSON válido, sem texto adicional.'
-      },
-      {
-        role: 'user',
-        content: finalPrompt
-      }
-    ],
-    temperature: 0.5,
-    max_tokens: 2048
-  };
-
-  const response = await fetch(API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${API_KEY}`
-    },
-    body: JSON.stringify(requestBody)
+  const model = genAI.getGenerativeModel({ 
+    model: "gemini-1.5-pro",
+    generationConfig: {
+      temperature: 0.5,
+      maxOutputTokens: 2048,
+      responseMimeType: responseJsonSchema ? "application/json" : "text/plain"
+    }
   });
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error?.message || 'Erro na API Groq');
-  }
-
-  const data = await response.json();
-  const textContent = data.choices[0].message.content.trim();
-
+  let finalPrompt = prompt;
   if (responseJsonSchema) {
-    return extractJSON(textContent);
+    finalPrompt = `${prompt}\n\nResponda obrigatoriamente com um JSON válido que siga exatamente este schema: ${JSON.stringify(responseJsonSchema)}`;
   }
-  
-  return textContent;
+
+  try {
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts: [{ text: finalPrompt }] }],
+      systemInstruction: "Você é um assistente financeiro experiente para o mercado brasileiro. Forneça análises detalhadas, precisas e profissionais em português brasileiro. Quando solicitado JSON, retorne apenas o objeto JSON sem explicações adicionais."
+    });
+
+    const textContent = result.response.text().trim();
+
+    if (responseJsonSchema) {
+      return extractJSON(textContent);
+    }
+    
+    return textContent;
+  } catch (error: any) {
+    console.error("Gemini API Error:", error);
+    throw new Error(`Erro na API Gemini: ${error.message}`);
+  }
 }
 
 function extractJSON(text: string) {
@@ -69,5 +57,5 @@ function extractJSON(text: string) {
       }
     }
   }
-  throw new Error('Não foi possível extrair JSON válido');
+  throw new Error('Não foi possível extrair JSON válido da resposta da IA');
 }
