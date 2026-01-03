@@ -123,8 +123,8 @@ export function registerSalesPurchasesRoutes(app: Express) {
       const purchaseData = {
         companyId: req.user.companyId,
         supplierId,
-        purchaseDate: new Date(purchaseDate),
-        totalAmount: String(totalAmount),
+        date: new Date(purchaseDate),
+        amount: String(totalAmount),
         installmentCount: parseInt(installmentCount) || 1,
         status: status || 'pago',
         paidAmount: status === 'pago' ? String(totalAmount) : '0',
