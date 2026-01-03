@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Zap, ArrowRight, ShieldCheck, Play } from 'lucide-react';
+import { Link } from "wouter";
 
 const Hero: React.FC = () => {
   return (

@@ -40,12 +40,12 @@ const Pricing: React.FC = () => {
               </li>
             </ul>
 
-            <a 
-              href="/checkout?plan=monthly" 
+            <Link 
+              href="/signup?plan=monthly" 
               className="w-full py-4 rounded-xl border-2 border-slate-300 text-slate-900 font-bold text-center text-base hover:bg-slate-100 transition-all"
             >
               ASSINAR MENSAL
-            </a>
+            </Link>
           </div>
 
           {/* Lifetime Plan */}
@@ -80,12 +80,12 @@ const Pricing: React.FC = () => {
               ))}
             </ul>
 
-            <a 
-              href="/checkout?plan=pro" 
+            <Link 
+              href="/signup?plan=pro" 
               className="w-full py-5 rounded-xl bg-white text-blue-600 font-bold text-center text-lg sm:text-xl shadow-xl hover:bg-blue-50 transition-all active:scale-95 px-4 flex items-center justify-center whitespace-nowrap"
             >
               QUERO O VITALÍCIO
-            </a>
+            </Link>
             <p className="text-center mt-6 text-xs font-bold text-blue-200 uppercase tracking-widest animate-pulse">
               ⚡ Oferta limitada para início de ano.
             </p>
