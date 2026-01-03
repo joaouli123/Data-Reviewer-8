@@ -9,12 +9,11 @@ export async function analyzeWithAI(prompt: string, responseJsonSchema: any = nu
   if (!ai) throw new Error('API_KEY_NOT_CONFIGURED');
 
   try {
-    // Usando gemini-2.0-flash-lite para máxima velocidade e menor custo
     const response = await ai.models.generateContent({
       model: "gemini-2.0-flash-lite", 
       config: {
         responseMimeType: responseJsonSchema ? "application/json" : "text/plain",
-        temperature: 0.2,
+        temperature: 0.1,
       },
       contents: [
         {
@@ -26,27 +25,32 @@ export async function analyzeWithAI(prompt: string, responseJsonSchema: any = nu
 
     const responseText = response.text;
 
-    if (!responseText) throw new Error("IA retornou resposta vazia");
+    if (!responseText) {
+      console.error("[AI Debug] Resposta vazia do modelo");
+      throw new Error("IA retornou resposta vazia");
+    }
 
-    let cleanText = responseText;
-    // Tratamento de JSON
+    console.log("[AI Debug] Resposta bruta recebida:", responseText);
+
     if (responseJsonSchema) {
-      // Reforço para garantir JSON limpo se a IA mandar markdown
-      cleanText = responseText.replace(/```json|```/g, '').trim();
+      // Limpeza robusta do JSON
+      const cleanText = responseText.replace(/```json|```/g, '').trim();
       try {
-        return JSON.parse(cleanText);
+        const parsed = JSON.parse(cleanText);
+        console.log("[AI Debug] JSON parseado com sucesso");
+        return parsed;
       } catch (e) {
-        console.error("Erro Parse JSON:", cleanText);
-        // Tenta extrair JSON se houver texto ao redor
+        console.error("[AI Debug] Erro Parse JSON:", cleanText);
         const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
+          console.log("[AI Debug] JSON extraído via Regex com sucesso");
           return JSON.parse(jsonMatch[0]);
         }
         throw new Error("A IA não retornou um JSON válido.");
       }
     }
     
-    return cleanText;
+    return responseText;
 
   } catch (error: any) {
     console.error("Erro SDK Novo:", error);
