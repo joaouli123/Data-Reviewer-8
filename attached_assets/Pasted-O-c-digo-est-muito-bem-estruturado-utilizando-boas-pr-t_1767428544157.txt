@@ -1,0 +1,79 @@
+O código está muito bem estruturado, utilizando boas práticas modernas de React (Hooks, React Query, componentes funcionais) e uma interface limpa (Shadcn UI/Tailwind). A lógica de separação entre o modal de listagem e o modal de edição (PaymentEditDialog) está correta.
+
+No entanto, identifiquei 3 pontos críticos que podem causar problemas de performance e precisão financeira conforme o sistema escala.
+
+Aqui está a análise detalhada:
+
+1. Gargalo de Performance (Critical)
+O maior problema está na forma como você busca os dados.
+
+JavaScript
+
+// O código atual
+const { data: transactionsData = [], isLoading } = useQuery({
+  queryKey: ['/api/transactions', customer?.id],
+  queryFn: () => Transaction.list(), // <--- AQUI ESTÁ O PERIGO
+  // ...
+});
+
+// O filtro acontece APÓS baixar tudo
+const sales = transactions.filter(t => t.customerId === customer?.id ...);
+O Problema: Você está baixando todas as transações da empresa (podem ser milhares) para filtrar no front-end apenas as desse cliente. Isso deixará o sistema lento rapidamente.
+
+A Solução: Passe o ID do cliente para a API e filtre no Back-end.
+
+JavaScript
+
+// Sugestão de refatoração
+const { data: transactionsData = [], isLoading } = useQuery({
+  queryKey: ['/api/transactions', { customerId: customer?.id }], // Objeto no queryKey ajuda no cache
+  queryFn: () => Transaction.list({ customerId: customer?.id }), // A API deve suportar filtros
+  enabled: !!customer?.id && open,
+});
+// Assim, 'transactionsData' já virá filtrado, removendo a necessidade do .filter() pesado
+2. Precisão Matemática (Float Math)
+Você está usando parseFloat e soma simples para valores monetários: acc + parseFloat(s.amount || 0)
+
+O Problema: O JavaScript tem problemas conhecidos com ponto flutuante (ex: 0.1 + 0.2 = 0.30000000000000004). Em sistemas financeiros, isso gera erros de centavos acumulados.
+
+A Solução:
+
+Ideal: Trabalhar com inteiros (centavos) e dividir por 100 apenas na exibição.
+
+Prático (para agora): Usar uma biblioteca como decimal.js ou currency.js, ou garantir o arredondamento em cada operação.
+
+JavaScript
+
+// Exemplo de correção simples (arredondamento preventivo)
+const totalAmount = sortedInstallments.reduce((acc, s) => {
+    const val = parseFloat(s.amount || 0);
+    return Math.round((acc + val) * 100) / 100; // Mantém precisão de 2 casas
+}, 0);
+3. Fragilidade no Agrupamento (Regex)
+A lógica para agrupar parcelas depende de uma string: const baseDescription = (s.description || '').replace(/\s*\(\d+\/\d+\)\s*$/, '').trim();
+
+O Problema: Se alguém editar a descrição da venda manualmente e remover o padrão (1/5), o agrupamento quebra e as parcelas ficarão soltas.
+
+A Solução: Confie preferencialmente no installmentGroup (UUID de agrupamento) vindo do banco de dados. Use o regex apenas como fallback de último caso, ou exiba as transações sem agrupar caso não haja ID de grupo.
+
+Outras Melhorias Sugeridas
+Ordenação de Datas: No seu useMemo, você usa new Date(a.date).getTime(). Como você já importou parseISO do date-fns, use-o para garantir consistência em todos os navegadores (Safari costuma ter problemas com new Date(string)).
+
+JavaScript
+
+// Melhor
+import { compareDesc, parseISO } from 'date-fns';
+// ...
+groups.sort((a, b) => compareDesc(parseISO(a.main.date), parseISO(b.main.date)))
+Feedback Visual de Carregamento: Você tem um spinner para o carregamento inicial, o que é ótimo. Porém, ao clicar em "Confirmar Recebimento", o botão fica disabled, mas seria interessante mostrar um ícone de loading dentro do botão específico para melhor UX.
+
+Resumo da Revisão
+Categoria	Status	Ação Recomendada
+Lógica React	✅	O uso de Hooks e Contexto está excelente.
+Interface	✅	Componentes bem estruturados e responsivos.
+Performance	⚠️	Mover o filtro de cliente para o Back-end urgentemente.
+Matemática	⚠️	Cuidado com somas de ponto flutuante em reduce.
+
+Exportar para as Planilhas
+
+Próximo passo: Gostaria que eu reescrevesse a parte do useQuery e do groupedSales aplicando essas correções de performance e ordenação?

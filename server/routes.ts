@@ -632,10 +632,19 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       
       const companyId = req.user.companyId;
-      const { startDate, endDate, shift } = req.query;
+      const { startDate, endDate, shift, customerId } = req.query;
       
       let transactionsList;
-      if (startDate && endDate) {
+      if (customerId) {
+        transactionsList = await db
+          .select()
+          .from(transactions)
+          .where(and(
+            eq(transactions.companyId, companyId),
+            eq(transactions.customerId, String(customerId))
+          ))
+          .orderBy(desc(transactions.date));
+      } else if (startDate && endDate) {
         const start = new Date(startDate as string);
         const end = new Date(endDate as string);
         start.setHours(0, 0, 0, 0);
@@ -648,7 +657,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       }
       
       // Filter by shift if provided as query param but not used in storage query
-      if (shift && !startDate) {
+      if (shift && !startDate && !customerId) {
          transactionsList = transactionsList.filter(t => t.shift === shift);
       }
 

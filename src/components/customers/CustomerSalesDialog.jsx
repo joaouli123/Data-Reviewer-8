@@ -32,8 +32,11 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
 
   // Fetch transactions specific to this customer when modal opens
   const { data: transactionsData = [], isLoading } = useQuery({
-    queryKey: ['/api/transactions', customer?.id],
-    queryFn: () => Transaction.list(),
+    queryKey: ['/api/transactions', { customerId: customer?.id }],
+    queryFn: async () => {
+      const response = await apiRequest('GET', `/api/transactions?customerId=${customer?.id}`);
+      return response;
+    },
     initialData: [],
     enabled: !!customer?.id && open,
     staleTime: 0,
@@ -42,7 +45,7 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
   });
 
   const transactions = Array.isArray(transactionsData) ? transactionsData : (transactionsData?.data || []);
-  const sales = transactions.filter(t => t.customerId === customer?.id && (t.type === 'venda' || t.type === 'income'));
+  const sales = transactions; // Filtered by backend now
   
   // Group sales by installment group
   const groupedSales = React.useMemo(() => {
@@ -63,7 +66,13 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
     return Object.values(groups).map(group => {
       const sortedInstallments = group.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
       const main = sortedInstallments[0];
-      const totalAmount = sortedInstallments.reduce((acc, s) => acc + parseFloat(s.amount || 0), 0);
+      
+      // Precision math for total amount
+      const totalAmount = sortedInstallments.reduce((acc, s) => {
+        const val = parseFloat(s.amount || 0);
+        return Math.round((acc + val) * 100) / 100;
+      }, 0);
+
       const isPaid = sortedInstallments.every(s => s.status === 'completed' || s.status === 'pago');
       // Get base description without installment number
       const baseDescription = (main.description || '').replace(/\s*\(\d+\/\d+\)\s*$/, '').trim() || 'Venda';
@@ -83,27 +92,25 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
 
   const getTotalReceived = () => {
     return sales.reduce((acc, s) => {
+      let amountToAdd = 0;
       if (s.status === 'completed' || s.status === 'pago') {
-        // Fully paid: add full amount + interest
-        return acc + parseFloat(s.amount || 0) + parseFloat(s.interest || 0);
+        amountToAdd = parseFloat(s.amount || 0) + parseFloat(s.interest || 0);
       } else if (s.status === 'parcial') {
-        // Partially paid: add only paid amount + interest
-        return acc + parseFloat(s.paidAmount || 0) + parseFloat(s.interest || 0);
+        amountToAdd = parseFloat(s.paidAmount || 0) + parseFloat(s.interest || 0);
       }
-      return acc;
+      return Math.round((acc + amountToAdd) * 100) / 100;
     }, 0);
   };
 
   const getTotalPending = () => {
     return sales.reduce((acc, s) => {
+      let amountToAdd = 0;
       if (s.status === 'pendente') {
-        // Pending: full amount is pending
-        return acc + parseFloat(s.amount || 0);
+        amountToAdd = parseFloat(s.amount || 0);
       } else if (s.status === 'parcial') {
-        // Partially paid: remaining amount is pending
-        return acc + (parseFloat(s.amount || 0) - parseFloat(s.paidAmount || 0));
+        amountToAdd = parseFloat(s.amount || 0) - parseFloat(s.paidAmount || 0);
       }
-      return acc;
+      return Math.round((acc + amountToAdd) * 100) / 100;
     }, 0);
   };
 
@@ -123,7 +130,7 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
       toast.success('Pagamento confirmado!', { duration: 5000 });
       queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/cash-flow'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions', customer?.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions', { customerId: customer?.id }] });
       setPaymentEditOpen(false);
       setSelectedTransaction(null);
     },
@@ -141,7 +148,7 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/cash-flow'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions', customer?.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions', { customerId: customer?.id }] });
       toast.success('Pagamento cancelado!', { duration: 5000 });
     },
     onError: (error) => {
