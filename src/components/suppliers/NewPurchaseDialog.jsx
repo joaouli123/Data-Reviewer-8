@@ -130,7 +130,11 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
             installmentTotal: installmentCount
           };
 
-          promises.push(Purchase.create(payload));
+          const res = await apiRequest('/api/transactions', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+          });
+          promises.push(res);
         }
       } else {
         // Use default calculation with addMonths from purchase_date
@@ -157,7 +161,12 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
             installmentTotal: installmentCount
           };
 
-          promises.push(Purchase.create(payload));
+          const res = await apiRequest('/api/transactions', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+          });
+
+          promises.push(res);
         }
       }
 

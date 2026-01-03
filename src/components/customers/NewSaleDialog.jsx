@@ -123,12 +123,11 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
             installmentTotal: installmentCount
           };
 
-          const promise = apiRequest('/api/transactions', {
+          const res = await apiRequest('/api/transactions', {
             method: 'POST',
             body: JSON.stringify(payload)
           });
-
-          promises.push(promise);
+          promises.push(res);
         }
       } else {
         // Use default calculation with addMonths from sale_date
@@ -155,12 +154,12 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
             installmentTotal: installmentCount
           };
 
-          const promise = apiRequest('/api/transactions', {
+          const res = await apiRequest('/api/transactions', {
             method: 'POST',
             body: JSON.stringify(payload)
           });
 
-          promises.push(promise);
+          promises.push(res);
         }
       }
 
