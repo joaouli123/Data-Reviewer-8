@@ -29,5 +29,9 @@
 - [x] Adicionado suporte a `installmentGroup` e numeração de parcelas (ex: "Compra (1/3)") para melhor organização no histórico financeiro.
 - [x] Corrigido o cálculo de valores e datas para parcelas customizadas.
 
+## Correção: Categorias Padrão
+- [x] Implementada a criação automática de categorias padrão (Vendas, Aluguel, Salários, Fornecedores, etc.) ao cadastrar uma nova empresa.
+- [x] Garantido que novas contas já comecem com uma estrutura financeira básica pronta para uso.
+
 ## Status Atual
 Navegação restaurada e fluida entre todos os módulos principais. O sistema agora entra diretamente no Dashboard após o sucesso do login. A exclusão de transações está refletindo imediatamente e o registro de compras de fornecedores agora salva a descrição corretamente e gera as parcelas financeiras de forma precisa.
