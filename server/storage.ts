@@ -321,9 +321,11 @@ export class DatabaseStorage implements IStorage {
   async createTransaction(companyId: string, data: InsertTransaction): Promise<Transaction> {
     try {
       // Ensure date is handled as a Date object for Drizzle
+      // and amount is rounded to 2 decimal places to avoid numeric field overflow
       const insertData = {
         ...data,
         companyId,
+        amount: data.amount ? parseFloat(String(data.amount)).toFixed(2) : "0.00",
         date: data.date instanceof Date ? data.date : (data.date ? new Date(data.date) : new Date())
       };
       const result = await db.insert(transactions).values(insertData as any).returning();
