@@ -125,7 +125,7 @@ export function registerSalesPurchasesRoutes(app: Express) {
         companyId: req.user.companyId,
         supplierId,
         date: new Date(purchaseDate),
-        amount: String(totalAmount),
+        amount: String(totalAmount), // This is already a clean float string from frontend
         installmentCount: parseInt(installmentCount) || 1,
         status: status || 'pago',
         paidAmount: status === 'pago' ? String(totalAmount) : '0',
