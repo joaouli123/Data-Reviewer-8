@@ -9,7 +9,7 @@ export async function analyzeWithAI(prompt: string, responseJsonSchema: any = nu
   }
 
   const model = genAI.getGenerativeModel({ 
-    model: "gemini-1.5-pro",
+    model: "gemini-1.5-flash",
     generationConfig: {
       temperature: 0.5,
       maxOutputTokens: 2048,
