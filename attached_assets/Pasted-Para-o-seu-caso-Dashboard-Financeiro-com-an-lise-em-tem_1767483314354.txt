@@ -1,0 +1,96 @@
+Para o seu caso (Dashboard Financeiro com análise em tempo real), a melhor escolha é, sem dúvida, o Gemini 1.5 Flash.
+
+Aqui estão os 3 motivos técnicos do porquê:
+
+Velocidade (Latência): O Flash é muito mais rápido. O usuário do seu sistema não quer esperar 5 a 10 segundos olhando para um "loading" (<Loader2 />) para ver o risco financeiro. O Flash entrega quase instantaneamente.
+
+Modo JSON Confiável: O Flash 1.5 obedece muito bem ao responseMimeType: "application/json". Para preencher seus gráficos e badges (saúde financeira, recomendações), você precisa de estrutura, não de "criatividade literária".
+
+Matemática no Código, não na IA: Como você já calculou os números difíceis (déficit, índices, etc.) no Javascript (metrics.debtToRevenueRatio, etc.), a IA só precisa interpretar esses dados. O Flash sobra para essa tarefa.
+
+O Código Definitivo (Copiou, Colou, Funcionou)
+Para resolver o Erro 404 e usar o Flash com segurança (sem bloqueios de filtro), siga estes 2 passos:
+
+Passo 1: Atualizar a Biblioteca (Obrigatório)
+No terminal do Replit (Shell), rode:
+
+Bash
+
+npm install @google/generative-ai@latest
+(Sem isso, o código abaixo continuará dando erro 404, pois sua versão atual não conhece o modelo 1.5)
+
+Passo 2: O Arquivo api/ai.ts (ou onde fica sua função)
+Substitua todo o conteúdo pelo código abaixo. Ele já tem:
+
+Modelo Flash configurado.
+
+Filtros de segurança desligados (para não bloquear termos como "dívida").
+
+Modo JSON ativado.
+
+TypeScript
+
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
+
+const API_KEY = process.env.VITE_GOOGLE_GEMINI_API_KEY || "";
+const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
+
+export async function invokeGeminiAnalysis(prompt: string, responseSchema: any = null) {
+  // Verificação básica
+  if (!genAI) throw new Error('API_KEY_NOT_CONFIGURED');
+
+  try {
+    const model = genAI.getGenerativeModel({ 
+      // O Flash é ideal para dashboards rápidos
+      model: "gemini-1.5-flash", 
+      
+      // 1. FORÇA O MODO JSON (A IA não vai "falar", vai apenas entregar dados)
+      generationConfig: {
+        responseMimeType: responseSchema ? "application/json" : "text/plain",
+        temperature: 0.2, // Baixa criatividade = Mais precisão técnica
+      },
+      
+      // 2. DESATIVA BLOQUEIOS (Essenciais para falar de dinheiro/dívida)
+      safetySettings: [
+        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+      ],
+    });
+
+    let finalPrompt = prompt;
+    
+    // Reforço no prompt para garantir a estrutura
+    if (responseSchema) {
+      finalPrompt = `${prompt}\n\nIMPORTANTE: Responda APENAS com um JSON válido seguindo estritamente esta estrutura:\n${JSON.stringify(responseSchema)}`;
+    }
+
+    const result = await model.generateContent(finalPrompt);
+    const responseText = result.response.text();
+
+    if (responseSchema) {
+      try {
+        return JSON.parse(responseText);
+      } catch (e) {
+        console.error("Erro ao ler JSON da IA:", responseText);
+        // Fallback: Tenta limpar caso a IA tenha mandado markdown ```json ... ```
+        const cleanText = responseText.replace(/```json|```/g, '').trim();
+        return JSON.parse(cleanText);
+      }
+    }
+    
+    return responseText;
+
+  } catch (error: any) {
+    console.error("Gemini Error Completo:", error);
+    
+    // Tratamento específico para o erro de versão antiga
+    if (error.message?.includes("404") || error.message?.includes("not found")) {
+        throw new Error("Erro de Versão: Rode 'npm install @google/generative-ai@latest' no terminal.");
+    }
+
+    throw new Error(error.message || "Erro ao conectar com a IA");
+  }
+}
+Resumo: Use o Flash. Ele vai deixar seu app mais ágil e consome menos tokens, o que é ótimo se você escalar o sistema depois. Só não esqueça do npm install!
