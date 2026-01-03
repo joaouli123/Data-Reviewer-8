@@ -38,8 +38,9 @@ export function registerSalesPurchasesRoutes(app: Express) {
         customerId,
         saleDate: new Date(saleDate),
         totalAmount: String(totalAmount),
-        installmentCount: installmentCount || 1,
+        installmentCount: parseInt(installmentCount) || 1,
         status: status || 'pago',
+        paidAmount: status === 'pago' ? String(totalAmount) : '0',
         description: description || 'Venda sem descrição',
         categoryId,
         paymentMethod
@@ -48,13 +49,14 @@ export function registerSalesPurchasesRoutes(app: Express) {
       const sale = await storage.createSale(req.user.companyId, saleData as any);
       const installmentGroupId = `sale-${sale.id}-${Date.now()}`;
 
+      // Register transaction
       if (customInstallments && customInstallments.length > 0) {
         for (let i = 0; i < customInstallments.length; i++) {
           const inst = customInstallments[i];
           const transactionData = {
             companyId: req.user.companyId,
-            type: 'venda',
-            description: `${description} (${i + 1}/${customInstallments.length})`,
+            type: 'income',
+            description: `${description || 'Venda'} (${i + 1}/${customInstallments.length})`,
             amount: String(inst.amount),
             date: new Date(inst.due_date),
             status: status === 'pago' ? 'pago' : 'pendente',
@@ -70,7 +72,8 @@ export function registerSalesPurchasesRoutes(app: Express) {
         }
       } else {
         const count = parseInt(installmentCount) || 1;
-        const amountPerInstallment = parseFloat(totalAmount) / count;
+        const totalValue = parseFloat(totalAmount);
+        const amountPerInstallment = totalValue / count;
         
         for (let i = 0; i < count; i++) {
           const dueDate = new Date(saleDate);
@@ -78,8 +81,8 @@ export function registerSalesPurchasesRoutes(app: Express) {
           
           const transactionData = {
             companyId: req.user.companyId,
-            type: 'venda',
-            description: count > 1 ? `${description} (${i + 1}/${count})` : description,
+            type: 'income',
+            description: count > 1 ? `${description || 'Venda'} (${i + 1}/${count})` : (description || 'Venda'),
             amount: String(amountPerInstallment.toFixed(2)),
             date: dueDate,
             status: status === 'pago' ? 'pago' : 'pendente',
@@ -114,6 +117,7 @@ export function registerSalesPurchasesRoutes(app: Express) {
         totalAmount: String(totalAmount),
         installmentCount: installmentCount || 1,
         status: status || 'pago',
+        paidAmount: status === 'pago' ? String(totalAmount) : '0',
         description: description || 'Compra sem descrição',
         categoryId,
         paymentMethod
@@ -128,8 +132,8 @@ export function registerSalesPurchasesRoutes(app: Express) {
           const inst = customInstallments[i];
           const transactionData = {
             companyId: req.user.companyId,
-            type: 'compra',
-            description: `${description} (${i + 1}/${customInstallments.length})`,
+            type: 'expense',
+            description: `${description || 'Compra'} (${i + 1}/${customInstallments.length})`,
             amount: String(inst.amount),
             date: new Date(inst.due_date),
             status: status === 'pago' ? 'pago' : 'pendente',
@@ -139,13 +143,14 @@ export function registerSalesPurchasesRoutes(app: Express) {
             installmentNumber: i + 1,
             installmentTotal: customInstallments.length,
             installmentGroup: installmentGroupId,
-            shift: 'default' // Add default shift
+            shift: 'default'
           };
           await storage.createTransaction(req.user.companyId, transactionData as any);
         }
       } else {
         const count = parseInt(installmentCount) || 1;
-        const amountPerInstallment = parseFloat(totalAmount) / count;
+        const totalValue = parseFloat(totalAmount);
+        const amountPerInstallment = totalValue / count;
         
         for (let i = 0; i < count; i++) {
           const dueDate = new Date(purchaseDate);
@@ -153,8 +158,8 @@ export function registerSalesPurchasesRoutes(app: Express) {
           
           const transactionData = {
             companyId: req.user.companyId,
-            type: 'compra',
-            description: count > 1 ? `${description} (${i + 1}/${count})` : description,
+            type: 'expense',
+            description: count > 1 ? `${description || 'Compra'} (${i + 1}/${count})` : (description || 'Compra'),
             amount: String(amountPerInstallment.toFixed(2)),
             date: dueDate,
             status: status === 'pago' ? 'pago' : 'pendente',
@@ -164,7 +169,7 @@ export function registerSalesPurchasesRoutes(app: Express) {
             installmentNumber: i + 1,
             installmentTotal: count,
             installmentGroup: installmentGroupId,
-            shift: 'default' // Add default shift
+            shift: 'default'
           };
           await storage.createTransaction(req.user.companyId, transactionData as any);
         }

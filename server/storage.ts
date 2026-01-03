@@ -455,7 +455,14 @@ export class DatabaseStorage implements IStorage {
 
   // Sale operations
   async createSale(companyId: string, data: InsertSale): Promise<Sale> {
-    const result = await db.insert(sales).values({ ...data, companyId } as any).returning();
+    const result = await db.insert(sales).values({ 
+      ...data, 
+      companyId, 
+      paidAmount: data.paidAmount || "0", 
+      installmentCount: data.installmentCount || 1, 
+      status: data.status || "pendente",
+      description: data.description || "Venda sem descrição"
+    } as any).returning();
     return result[0];
   }
 
@@ -492,7 +499,14 @@ export class DatabaseStorage implements IStorage {
 
   // Purchase operations
   async createPurchase(companyId: string, data: InsertPurchase): Promise<Purchase> {
-    const result = await db.insert(purchases).values({ ...data, companyId } as any).returning();
+    const result = await db.insert(purchases).values({ 
+      ...data, 
+      companyId, 
+      paidAmount: data.paidAmount || "0", 
+      installmentCount: data.installmentCount || 1, 
+      status: data.status || "pendente",
+      description: data.description || "Compra sem descrição"
+    } as any).returning();
     return result[0];
   }
 
