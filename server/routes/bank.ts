@@ -36,8 +36,11 @@ export function registerBankRoutes(app: Express) {
       // Se falhar, tentamos uma limpeza mais agressiva ou retornamos erro amigável.
       let data;
       try {
-        // Tenta o parse direto primeiro
-        data = ofx.parse(sanitizedContent);
+        // Tenta o parse direto primeiro, mas limpando espaços e fuso horário
+        const initialClean = sanitizedContent
+          .trim()
+          .replace(/\[-?\d+:\w+\]/g, '');
+        data = ofx.parse(initialClean);
       } catch (parseError) {
         try {
           // Tenta limpar tags não fechadas comuns em OFX de bancos brasileiros
@@ -50,15 +53,12 @@ export function registerBankRoutes(app: Express) {
           
           data = ofx.parse(header + cleanedXml);
         } catch (finalError) {
-          // Última tentativa: parse apenas do corpo XML limpando caracteres de controle
+          // Última tentativa: limpeza radical de SGML para XML
           try {
             const extremeClean = body
               .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '') // Remove caracteres de controle
               .replace(/\[-?\d+:\w+\]/g, '') // Remove fuso horário
-              .replace(/<(\w+)>([^<]+)/g, (match, tag, content) => {
-                if (content.includes('</' + tag + '>')) return match;
-                return `<${tag}>${content.trim()}</${tag}>`;
-              });
+              .replace(/<(\w+)>([^<]+)(?:\r?\n|\r|$)/g, '<$1>$2</$1>'); // Fecha tags SGML de forma agressiva
             data = ofx.parse(extremeClean);
           } catch (e) {
             console.error('Falha crítica no parsing OFX:', finalError);
