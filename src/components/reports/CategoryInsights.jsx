@@ -23,12 +23,16 @@ export default function CategoryInsights({ transactions, categories }) {
     const recentTransactions = transactions
       .filter(t => new Date(t.date) >= threeMonthsAgo)
       .map(t => {
-        let categoryName = 'Sem categoria';
+        let categoryName = 'Outros';
         
         // Try to map by categoryId first
         if (t.categoryId && categoryMap[t.categoryId]) {
           categoryName = categoryMap[t.categoryId];
         } 
+        // Fallback to category name string from backend
+        else if (t.categoryName) {
+          categoryName = t.categoryName;
+        }
         // Fallback to category string if available
         else if (t.category) {
           categoryName = t.category;
@@ -93,12 +97,16 @@ export default function CategoryInsights({ transactions, categories }) {
       const recentTransactions = transactions
         .filter(t => new Date(t.date) >= threeMonthsAgo)
         .map(t => {
-          let categoryName = 'Sem categoria';
+          let categoryName = 'Outros';
           
           // Try to map by categoryId first
           if (t.categoryId && categoryMap[t.categoryId]) {
             categoryName = categoryMap[t.categoryId];
           } 
+          // Fallback to category name string from backend
+          else if (t.categoryName) {
+            categoryName = t.categoryName;
+          }
           // Fallback to category string if available
           else if (t.category) {
             categoryName = t.category;
