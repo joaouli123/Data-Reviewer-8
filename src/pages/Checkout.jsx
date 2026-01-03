@@ -293,10 +293,9 @@ export default function Checkout() {
                       id === 'credit_card' ? 'border-blue-200 bg-blue-50/30' : 'border-slate-200'
                     }`}>
                       {/* Tab Header */}
-                      <button
-                        type="button"
+                      <div
                         onClick={() => setPaymentMethod(paymentMethod === id ? null : id)}
-                        className={`w-full flex items-start gap-4 p-4 transition-all ${
+                        className={`w-full flex items-start gap-4 p-4 cursor-pointer transition-all ${
                           paymentMethod === id
                             ? id === 'credit_card' ? 'bg-blue-100/50' : 'bg-blue-50'
                             : id === 'credit_card' ? 'bg-blue-50/30 hover:bg-blue-50/50' : 'bg-white hover:bg-slate-50'
@@ -308,16 +307,15 @@ export default function Checkout() {
                           name="payment-method"
                           value={id}
                           checked={paymentMethod === id}
-                          onChange={() => {}}
+                          onChange={() => setPaymentMethod(id)}
                           className="w-5 h-5 mt-1 cursor-pointer"
-                          onClick={(e) => e.stopPropagation()}
                         />
                         <Icon className={`w-6 h-6 flex-shrink-0 mt-0.5 ${paymentMethod === id ? 'text-blue-600' : 'text-slate-400'}`} />
                         <div className="flex-1 text-left">
                           <p className={`font-medium ${paymentMethod === id ? 'text-blue-900' : 'text-slate-900'}`}>{label}</p>
                           <p className="text-xs text-slate-500">{desc}</p>
                         </div>
-                      </button>
+                      </div>
 
                       {/* Tab Content - Cartão de Crédito */}
                       {paymentMethod === id && id === 'credit_card' && (
