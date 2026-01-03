@@ -16,17 +16,6 @@ import {
   users,
   invitations,
   bankStatementItems,
-  type BankStatementItem,
-  type InsertBankStatementItem,
-  type InsertCustomer,
-  type InsertSupplier,
-  type InsertCategory,
-  type InsertTransaction,
-  type InsertCashFlow,
-  type InsertSale,
-  type InsertPurchase,
-  type InsertInstallment,
-  type InsertPurchaseInstallment,
   type Customer,
   type Supplier,
   type Category,
@@ -39,25 +28,53 @@ import {
   type Company,
   type Subscription,
   type AuditLog,
+  type User,
+  type Invitation,
+  type BankStatementItem,
+  type InsertCustomer,
+  type InsertSupplier,
+  type InsertCategory,
+  type InsertTransaction,
+  type InsertCashFlow,
+  type InsertSale,
+  type InsertPurchase,
+  type InsertInstallment,
+  type InsertPurchaseInstallment,
   type InsertSubscription,
   type InsertAuditLog,
-  type User,
   type InsertUser,
-  type Invitation,
   type InsertInvitation,
+  type InsertBankStatementItem,
 } from "../shared/schema";
+
+// FUNÇÃO AUXILIAR PARA LIMPAR MOEDA (PT-BR -> US)
+// Transforma "5.545,45" em 5545.45
+function sanitizeMoney(value: any): string {
+  if (value === null || value === undefined) return "0.00";
+  const str = String(value);
+  // Se já for um número puro em string (ex: "5545.45"), apenas garante 2 casas
+  if (/^\d+(\.\d+)?$/.test(str)) return parseFloat(str).toFixed(2);
+
+  // Se tiver vírgula, remove pontos de milhar e troca vírgula por ponto
+  const cleanValue = str
+    .replace(/\./g, '')    // Remove pontos (milhar)
+    .replace(',', '.');    // Troca vírgula por ponto (decimal)
+
+  const parsed = parseFloat(cleanValue);
+  return isNaN(parsed) ? "0.00" : parsed.toFixed(2);
+}
 
 export interface IStorage {
   // Customer operations
   createCustomer(companyId: string, data: InsertCustomer): Promise<Customer>;
-  getCustomers(companyId: string): Promise<Customer[]>;
+  getCustomers(companyId: string): Promise<(Customer & { totalSales: number })[]>;
   getCustomer(companyId: string, id: string): Promise<Customer | undefined>;
   updateCustomer(companyId: string, id: string, data: Partial<InsertCustomer>): Promise<Customer>;
   deleteCustomer(companyId: string, id: string): Promise<void>;
 
   // Supplier operations
   createSupplier(companyId: string, data: InsertSupplier): Promise<Supplier>;
-  getSuppliers(companyId: string): Promise<Supplier[]>;
+  getSuppliers(companyId: string): Promise<(Supplier & { totalPurchases: number })[]>;
   getSupplier(companyId: string, id: string): Promise<Supplier | undefined>;
   updateSupplier(companyId: string, id: string, data: Partial<InsertSupplier>): Promise<Supplier>;
   deleteSupplier(companyId: string, id: string): Promise<void>;
@@ -120,21 +137,21 @@ export interface IStorage {
   getCompany(id: string): Promise<Company | undefined>;
   updateCompanySubscription(companyId: string, data: Partial<InsertSubscription>): Promise<Subscription>;
   getCompanySubscription(companyId: string): Promise<Subscription | undefined>;
-  
+
   // User operations
   getUsers(companyId: string): Promise<User[]>;
   getUser(companyId: string, id: string): Promise<User | undefined>;
   updateUserPermissions(companyId: string, userId: string, permissions: Record<string, boolean>): Promise<User>;
   updateUser(companyId: string, userId: string, data: Partial<InsertUser>): Promise<User>;
   deleteUser(companyId: string, userId: string): Promise<void>;
-  
+
   // Invitation operations
   createInvitation(companyId: string, createdBy: string, data: InsertInvitation): Promise<Invitation>;
   getInvitations(companyId: string): Promise<Invitation[]>;
   getInvitationByToken(token: string): Promise<Invitation | undefined>;
   acceptInvitation(token: string, userId: string): Promise<User>;
   deleteInvitation(token: string): Promise<void>;
-  
+
   // Audit log operations
   createAuditLog(data: InsertAuditLog): Promise<AuditLog>;
   getAuditLogs(companyId: string, limit?: number): Promise<AuditLog[]>;
@@ -159,7 +176,7 @@ export class DatabaseStorage implements IStorage {
       SELECT 
         c.*,
         COALESCE((
-          SELECT SUM(CAST(t.amount AS NUMERIC))
+          SELECT SUM(ROUND(CAST(t.amount AS NUMERIC), 2))
           FROM transactions t
           WHERE t.customer_id = c.id 
           AND t.type IN ('income', 'venda', 'venda_prazo', 'receita')
@@ -168,7 +185,7 @@ export class DatabaseStorage implements IStorage {
       WHERE c.company_id = ${companyId}
       ORDER BY c.created_at DESC
     `);
-    
+
     return result.rows.map(row => ({
       ...row,
       id: String(row.id),
@@ -203,15 +220,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteCustomer(companyId: string, id: string): Promise<void> {
-    // Delete related transactions first (sales/income for this customer)
-    await db
-      .delete(transactions)
-      .where(and(eq(transactions.companyId, companyId), eq(transactions.customerId, id)));
-    
-    // Then delete the customer
-    await db
-      .delete(customers)
-      .where(and(eq(customers.companyId, companyId), eq(customers.id, id)));
+    await db.delete(transactions).where(and(eq(transactions.companyId, companyId), eq(transactions.customerId, id)));
+    await db.delete(customers).where(and(eq(customers.companyId, companyId), eq(customers.id, id)));
   }
 
   // Supplier operations
@@ -225,7 +235,7 @@ export class DatabaseStorage implements IStorage {
       SELECT 
         s.*,
         COALESCE((
-          SELECT SUM(CAST(t.amount AS NUMERIC))
+          SELECT SUM(ROUND(CAST(t.amount AS NUMERIC), 2))
           FROM transactions t
           WHERE t.supplier_id = s.id 
           AND t.type IN ('expense', 'compra', 'compra_prazo', 'despesa')
@@ -234,7 +244,7 @@ export class DatabaseStorage implements IStorage {
       WHERE s.company_id = ${companyId}
       ORDER BY s.created_at DESC
     `);
-    
+
     return result.rows.map(row => ({
       ...row,
       id: String(row.id),
@@ -269,63 +279,41 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteSupplier(companyId: string, id: string): Promise<void> {
-    // Delete related transactions first (purchases for this supplier)
-    await db
-      .delete(transactions)
-      .where(and(eq(transactions.companyId, companyId), eq(transactions.supplierId, id)));
-    
-    // Then delete the supplier
-    await db
-      .delete(suppliers)
-      .where(and(eq(suppliers.companyId, companyId), eq(suppliers.id, id)));
+    await db.delete(transactions).where(and(eq(transactions.companyId, companyId), eq(transactions.supplierId, id)));
+    await db.delete(suppliers).where(and(eq(suppliers.companyId, companyId), eq(suppliers.id, id)));
   }
 
   // Category operations
   async createCategory(companyId: string, data: InsertCategory): Promise<Category> {
     const result = await db.insert(categories).values({ ...data, companyId } as any).returning();
-    if (!result[0]) throw new Error("Failed to create category");
     return result[0];
   }
 
   async getCategories(companyId: string): Promise<Category[]> {
-    return await db
-      .select()
-      .from(categories)
-      .where(eq(categories.companyId, companyId));
+    return await db.select().from(categories).where(eq(categories.companyId, companyId));
   }
 
   async getCategory(companyId: string, id: string): Promise<Category | undefined> {
-    const result = await db
-      .select()
-      .from(categories)
-      .where(and(eq(categories.companyId, companyId), eq(categories.id, id)));
+    const result = await db.select().from(categories).where(and(eq(categories.companyId, companyId), eq(categories.id, id)));
     return result[0];
   }
 
   async updateCategory(companyId: string, id: string, data: Partial<InsertCategory>): Promise<Category> {
-    const result = await db
-      .update(categories)
-      .set(data)
-      .where(and(eq(categories.companyId, companyId), eq(categories.id, id)))
-      .returning();
+    const result = await db.update(categories).set(data).where(and(eq(categories.companyId, companyId), eq(categories.id, id))).returning();
     return result[0];
   }
 
   async deleteCategory(companyId: string, id: string): Promise<void> {
-    await db
-      .delete(categories)
-      .where(and(eq(categories.companyId, companyId), eq(categories.id, id)));
+    await db.delete(categories).where(and(eq(categories.companyId, companyId), eq(categories.id, id)));
   }
 
   // Transaction operations
   async createTransaction(companyId: string, data: InsertTransaction): Promise<Transaction> {
     try {
-      // Ensure date is handled as a Date object for Drizzle
-      // and amount is rounded to 2 decimal places to avoid numeric field overflow
       const insertData = {
         ...data,
         companyId,
-        amount: data.amount ? parseFloat(String(data.amount)).toFixed(2) : "0.00",
+        amount: sanitizeMoney(data.amount), // BLINDAGEM CONTRA 554.000,00
         date: data.date instanceof Date ? data.date : (data.date ? new Date(data.date) : new Date())
       };
       const result = await db.insert(transactions).values(insertData as any).returning();
@@ -346,7 +334,7 @@ export class DatabaseStorage implements IStorage {
       WHERE t.company_id = ${companyId}
       ORDER BY t.date DESC, t.created_at DESC NULLS LAST, t.id DESC
     `);
-    
+
     return result.rows.map(row => ({
       ...row,
       id: String(row.id),
@@ -358,58 +346,40 @@ export class DatabaseStorage implements IStorage {
       categoryId: row.category_id ? String(row.category_id) : null,
       paymentMethod: row.payment_method ? String(row.payment_method) : null,
       category: String(row.category_name || row.category || ''),
-      paymentMethodName: String(row.payment_method || ''),
       status: String(row.status || 'pending'),
       customerId: row.customer_id ? String(row.customer_id) : null,
       customerName: row.customer_name ? String(row.customer_name) : null,
       supplierId: row.supplier_id ? String(row.supplier_id) : null,
       supplierName: row.supplier_name ? String(row.supplier_name) : null,
-      createdAt: row.created_at ? new Date(row.created_at).toISOString() : null,
-      updatedAt: row.updated_at ? new Date(row.updated_at).toISOString() : null
     })) as unknown as Transaction[];
   }
 
   async getTransaction(companyId: string, id: string): Promise<Transaction | undefined> {
-    const result = await db
-      .select()
-      .from(transactions)
-      .where(and(eq(transactions.companyId, companyId), eq(transactions.id, id)));
+    const result = await db.select().from(transactions).where(and(eq(transactions.companyId, companyId), eq(transactions.id, id)));
     return result[0];
   }
 
   async updateTransaction(companyId: string, id: string, data: Partial<InsertTransaction>): Promise<Transaction> {
-    const result = await db
-      .update(transactions)
-      .set(data)
+    const result = await db.update(transactions)
+      .set({
+        ...data,
+        amount: data.amount ? sanitizeMoney(data.amount) : undefined
+      })
       .where(and(eq(transactions.companyId, companyId), eq(transactions.id, id)))
       .returning();
     return result[0];
   }
 
   async deleteTransaction(companyId: string, id: string): Promise<void> {
-    await db
-      .delete(transactions)
-      .where(and(eq(transactions.companyId, companyId), eq(transactions.id, id)));
+    await db.delete(transactions).where(and(eq(transactions.companyId, companyId), eq(transactions.id, id)));
   }
 
   async getTransactionsByDateRange(companyId: string, startDate: Date, endDate: Date): Promise<Transaction[]> {
-    return await db
-      .select()
-      .from(transactions)
-      .where(
-        and(
-          eq(transactions.companyId, companyId),
-          gte(transactions.date, startDate),
-          lte(transactions.date, endDate)
-        )
-      );
+    return await db.select().from(transactions).where(and(eq(transactions.companyId, companyId), gte(transactions.date, startDate), lte(transactions.date, endDate)));
   }
 
   async getTransactionsByShift(companyId: string, shift: string): Promise<Transaction[]> {
-    return await db
-      .select()
-      .from(transactions)
-      .where(and(eq(transactions.companyId, companyId), eq(transactions.shift, shift)));
+    return await db.select().from(transactions).where(and(eq(transactions.companyId, companyId), eq(transactions.shift, shift)));
   }
 
   // Cash Flow operations
@@ -419,53 +389,29 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCashFlows(companyId: string): Promise<CashFlow[]> {
-    return await db
-      .select()
-      .from(cashFlow)
-      .where(eq(cashFlow.companyId, companyId));
+    return await db.select().from(cashFlow).where(eq(cashFlow.companyId, companyId));
   }
 
   async getCashFlow(companyId: string, id: string): Promise<CashFlow | undefined> {
-    const result = await db
-      .select()
-      .from(cashFlow)
-      .where(and(eq(cashFlow.companyId, companyId), eq(cashFlow.id, id)));
+    const result = await db.select().from(cashFlow).where(and(eq(cashFlow.companyId, companyId), eq(cashFlow.id, id)));
     return result[0];
   }
 
   async updateCashFlow(companyId: string, id: string, data: Partial<InsertCashFlow>): Promise<CashFlow> {
-    const result = await db
-      .update(cashFlow)
-      .set(data)
-      .where(and(eq(cashFlow.companyId, companyId), eq(cashFlow.id, id)))
-      .returning();
+    const result = await db.update(cashFlow).set(data).where(and(eq(cashFlow.companyId, companyId), eq(cashFlow.id, id))).returning();
     return result[0];
   }
 
   async deleteCashFlow(companyId: string, id: string): Promise<void> {
-    await db
-      .delete(cashFlow)
-      .where(and(eq(cashFlow.companyId, companyId), eq(cashFlow.id, id)));
+    await db.delete(cashFlow).where(and(eq(cashFlow.companyId, companyId), eq(cashFlow.id, id)));
   }
 
   async getCashFlowsByDateRange(companyId: string, startDate: Date, endDate: Date): Promise<CashFlow[]> {
-    return await db
-      .select()
-      .from(cashFlow)
-      .where(
-        and(
-          eq(cashFlow.companyId, companyId),
-          gte(cashFlow.date, startDate),
-          lte(cashFlow.date, endDate)
-        )
-      );
+    return await db.select().from(cashFlow).where(and(eq(cashFlow.companyId, companyId), gte(cashFlow.date, startDate), lte(cashFlow.date, endDate)));
   }
 
   async getCashFlowsByShift(companyId: string, shift: string): Promise<CashFlow[]> {
-    return await db
-      .select()
-      .from(cashFlow)
-      .where(and(eq(cashFlow.companyId, companyId), eq(cashFlow.shift, shift)));
+    return await db.select().from(cashFlow).where(and(eq(cashFlow.companyId, companyId), eq(cashFlow.shift, shift)));
   }
 
   // Sale operations
@@ -474,10 +420,10 @@ export class DatabaseStorage implements IStorage {
       const result = await db.insert(sales).values({ 
         ...data, 
         companyId, 
-        paidAmount: data.paidAmount || "0", 
+        totalAmount: sanitizeMoney(data.totalAmount),
+        paidAmount: sanitizeMoney(data.paidAmount),
         installmentCount: data.installmentCount || 1, 
         status: data.status || "pendente",
-        description: data.description || "Venda sem descrição"
       } as any).returning();
       return result[0];
     } catch (error) {
@@ -487,344 +433,137 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getSales(companyId: string): Promise<Sale[]> {
-    return await db
-      .select()
-      .from(sales)
-      .where(eq(sales.companyId, companyId))
-      .orderBy(desc(sales.date), desc(sales.createdAt));
+    return await db.select().from(sales).where(eq(sales.companyId, companyId)).orderBy(desc(sales.date), desc(sales.createdAt));
   }
 
   async getSale(companyId: string, id: string): Promise<Sale | undefined> {
-    const result = await db
-      .select()
-      .from(sales)
-      .where(and(eq(sales.companyId, companyId), eq(sales.id, id)));
+    const result = await db.select().from(sales).where(and(eq(sales.companyId, companyId), eq(sales.id, id)));
     return result[0];
   }
 
   async updateSale(companyId: string, id: string, data: Partial<InsertSale>): Promise<Sale> {
-    const result = await db
-      .update(sales)
-      .set(data)
-      .where(and(eq(sales.companyId, companyId), eq(sales.id, id)))
-      .returning();
+    const result = await db.update(sales).set(data).where(and(eq(sales.companyId, companyId), eq(sales.id, id))).returning();
     return result[0];
   }
 
   async deleteSale(companyId: string, id: string): Promise<void> {
-    await db
-      .delete(sales)
-      .where(and(eq(sales.companyId, companyId), eq(sales.id, id)));
+    await db.delete(sales).where(and(eq(sales.companyId, companyId), eq(sales.id, id)));
   }
 
   // Purchase operations
   async createPurchase(companyId: string, data: InsertPurchase): Promise<Purchase> {
     try {
-      console.log("[Storage Debug] Inserting purchase into DB:", { ...data, companyId });
       const result = await db.insert(purchases).values({ 
         ...data, 
         companyId, 
-        paidAmount: data.paidAmount || "0", 
+        totalAmount: sanitizeMoney(data.totalAmount),
+        paidAmount: sanitizeMoney(data.paidAmount),
         installmentCount: data.installmentCount || 1, 
         status: data.status || "pendente",
-        description: data.description || "Compra sem descrição",
-        paymentMethod: data.paymentMethod
       } as any).returning();
-      
-      if (!result || result.length === 0) {
-        throw new Error("No purchase record returned after insertion");
-      }
-      
       return result[0];
     } catch (error) {
-      console.error("[Storage Error] CRITICAL - Error inserting purchase:", error);
+      console.error("[Storage Error] Error inserting purchase:", error);
       throw error;
     }
   }
 
   async getPurchases(companyId: string): Promise<Purchase[]> {
-    return await db
-      .select()
-      .from(purchases)
-      .where(eq(purchases.companyId, companyId))
-      .orderBy(desc(purchases.date), desc(purchases.createdAt));
+    return await db.select().from(purchases).where(eq(purchases.companyId, companyId)).orderBy(desc(purchases.date), desc(purchases.createdAt));
   }
 
   async getPurchase(companyId: string, id: string): Promise<Purchase | undefined> {
-    const result = await db
-      .select()
-      .from(purchases)
-      .where(and(eq(purchases.companyId, companyId), eq(purchases.id, id)));
+    const result = await db.select().from(purchases).where(and(eq(purchases.companyId, companyId), eq(purchases.id, id)));
     return result[0];
   }
 
   async updatePurchase(companyId: string, id: string, data: Partial<InsertPurchase>): Promise<Purchase> {
-    const result = await db
-      .update(purchases)
-      .set(data)
-      .where(and(eq(purchases.companyId, companyId), eq(purchases.id, id)))
-      .returning();
+    const result = await db.update(purchases).set(data).where(and(eq(purchases.companyId, companyId), eq(purchases.id, id))).returning();
     return result[0];
   }
 
   async deletePurchase(companyId: string, id: string): Promise<void> {
-    await db
-      .delete(purchases)
-      .where(and(eq(purchases.companyId, companyId), eq(purchases.id, id)));
+    await db.delete(purchases).where(and(eq(purchases.companyId, companyId), eq(purchases.id, id)));
   }
 
   // Installment operations
   async createInstallment(companyId: string, data: InsertInstallment): Promise<Installment> {
-    const result = await db.insert(installments).values({ ...data, companyId } as any).returning();
-    return result[0];
-  }
-
-  async getInstallments(companyId: string): Promise<Installment[]> {
-    return await db
-      .select()
-      .from(installments)
-      .where(eq(installments.companyId, companyId));
-  }
-
-  async getInstallment(companyId: string, id: string): Promise<Installment | undefined> {
-    const result = await db
-      .select()
-      .from(installments)
-      .where(and(eq(installments.companyId, companyId), eq(installments.id, id)));
-    return result[0];
-  }
-
-  async updateInstallment(companyId: string, id: string, data: Partial<InsertInstallment>): Promise<Installment> {
-    const result = await db
-      .update(installments)
-      .set(data)
-      .where(and(eq(installments.companyId, companyId), eq(installments.id, id)))
-      .returning();
-    return result[0];
-  }
-
-  async deleteInstallment(companyId: string, id: string): Promise<void> {
-    await db
-      .delete(installments)
-      .where(and(eq(installments.companyId, companyId), eq(installments.id, id)));
-  }
-
-  // Purchase Installment operations
-  async createPurchaseInstallment(companyId: string, data: InsertPurchaseInstallment): Promise<PurchaseInstallment> {
-    const result = await db.insert(purchaseInstallments).values({ ...data, companyId } as any).returning();
-    return result[0];
-  }
-
-  async getPurchaseInstallments(companyId: string): Promise<PurchaseInstallment[]> {
-    return await db
-      .select()
-      .from(purchaseInstallments)
-      .where(eq(purchaseInstallments.companyId, companyId));
-  }
-
-  async getPurchaseInstallment(companyId: string, id: string): Promise<PurchaseInstallment | undefined> {
-    const result = await db
-      .select()
-      .from(purchaseInstallments)
-      .where(and(eq(purchaseInstallments.companyId, companyId), eq(purchaseInstallments.id, id)));
-    return result[0];
-  }
-
-  async updatePurchaseInstallment(companyId: string, id: string, data: Partial<InsertPurchaseInstallment>): Promise<PurchaseInstallment> {
-    const result = await db
-      .update(purchaseInstallments)
-      .set(data)
-      .where(and(eq(purchaseInstallments.companyId, companyId), eq(purchaseInstallments.id, id)))
-      .returning();
-    return result[0];
-  }
-
-  async deletePurchaseInstallment(companyId: string, id: string): Promise<void> {
-    await db
-      .delete(purchaseInstallments)
-      .where(and(eq(purchaseInstallments.companyId, companyId), eq(purchaseInstallments.id, id)));
-  }
-
-  // Subscription operations
-  async getCompanies(): Promise<Company[]> {
-    return await db.select().from(companies).orderBy(desc(companies.createdAt));
-  }
-
-  async getCompany(id: string): Promise<Company | undefined> {
-    const result = await db.select().from(companies).where(eq(companies.id, id));
-    return result[0];
-  }
-
-  async updateCompanySubscription(companyId: string, data: Partial<InsertSubscription>): Promise<Subscription> {
-    const result = await db
-      .update(subscriptions)
-      .set(data)
-      .where(eq(subscriptions.companyId, companyId))
-      .returning();
-    return result[0];
-  }
-
-  async getCompanySubscription(companyId: string): Promise<Subscription | undefined> {
-    const result = await db
-      .select()
-      .from(subscriptions)
-      .where(eq(subscriptions.companyId, companyId));
-    return result[0];
-  }
-
-  // Audit log operations
-  async createAuditLog(data: InsertAuditLog): Promise<AuditLog> {
-    const result = await db.insert(auditLogs).values(data as any).returning();
-    return result[0];
-  }
-
-  async getAuditLogs(companyId: string, limit: number = 100): Promise<AuditLog[]> {
-    return await db
-      .select({
-        id: auditLogs.id,
-        userId: auditLogs.userId,
-        companyId: auditLogs.companyId,
-        action: auditLogs.action,
-        resourceType: auditLogs.resourceType,
-        resourceId: auditLogs.resourceId,
-        details: auditLogs.details,
-        ipAddress: auditLogs.ipAddress,
-        userAgent: auditLogs.userAgent,
-        status: auditLogs.status,
-        createdAt: auditLogs.createdAt,
-        userName: users.name,
-      })
-      .from(auditLogs)
-      .leftJoin(users, eq(auditLogs.userId, users.id))
-      .where(eq(auditLogs.companyId, companyId))
-      .orderBy(desc(auditLogs.createdAt))
-      .limit(limit);
-  }
-
-  // User operations
-  async getUsers(companyId: string): Promise<User[]> {
-    return await db.select().from(users).where(eq(users.companyId, companyId));
-  }
-
-  async getUser(companyId: string, id: string): Promise<User | undefined> {
-    const result = await db.select().from(users).where(and(eq(users.companyId, companyId), eq(users.id, id)));
-    return result[0];
-  }
-
-  async updateUserPermissions(companyId: string, userId: string, permissions: Record<string, boolean>): Promise<User> {
-    const permissionsString = JSON.stringify(permissions);
-    const result = await db.update(users).set({ permissions: permissionsString }).where(and(eq(users.companyId, companyId), eq(users.id, userId))).returning();
-    return result[0];
-  }
-
-  async updateUserPermissions(companyId: string, userId: string, permissions: Record<string, boolean>): Promise<User> {
-    const permsString = JSON.stringify(permissions);
-    const result = await db
-      .update(users)
-      .set({ permissions: permsString })
-      .where(and(eq(users.companyId, companyId), eq(users.id, userId)))
-      .returning();
-    
-    if (!result[0]) throw new Error("User not found or not in company");
-    return result[0];
-  }
-
-  async updateUser(companyId: string, userId: string, data: Partial<InsertUser>): Promise<User> {
-    const result = await db.update(users).set(data).where(and(eq(users.companyId, companyId), eq(users.id, userId))).returning();
-    return result[0];
-  }
-
-  async deleteUser(companyId: string, userId: string): Promise<void> {
-    await db.delete(users).where(and(eq(users.companyId, companyId), eq(users.id, userId)));
-  }
-
-  // Invitation operations
-  async createInvitation(companyId: string, createdBy: string, data: InsertInvitation): Promise<Invitation> {
-    const token = require('crypto').randomBytes(32).toString('hex');
-    const result = await db.insert(invitations).values({ 
+    const result = await db.insert(installments).values({ 
       ...data, 
-      companyId, 
-      token, 
-      createdBy,
-      expiresAt: data.expiresAt ? new Date(data.expiresAt) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      companyId,
+      amount: sanitizeMoney(data.amount)
     } as any).returning();
     return result[0];
   }
 
-  async getInvitations(companyId: string): Promise<Invitation[]> {
-    return await db.select().from(invitations).where(eq(invitations.companyId, companyId));
+  async getInstallments(companyId: string): Promise<Installment[]> {
+    return await db.select().from(installments).where(eq(installments.companyId, companyId));
   }
 
-  async getInvitationByToken(token: string): Promise<Invitation | undefined> {
-    const result = await db.select().from(invitations).where(eq(invitations.token, token));
+  async getInstallment(companyId: string, id: string): Promise<Installment | undefined> {
+    const result = await db.select().from(installments).where(and(eq(installments.companyId, companyId), eq(installments.id, id)));
     return result[0];
   }
 
-  async acceptInvitation(token: string, userId: string): Promise<User> {
-    const invitation = await this.getInvitationByToken(token);
-    if (!invitation) throw new Error('Invalid invitation');
-    await db.update(invitations).set({ acceptedAt: new Date(), acceptedBy: userId }).where(eq(invitations.token, token));
-    return (await db.select().from(users).where(eq(users.id, userId)))[0];
+  async updateInstallment(companyId: string, id: string, data: Partial<InsertInstallment>): Promise<Installment> {
+    const result = await db.update(installments).set(data).where(and(eq(installments.companyId, companyId), eq(installments.id, id))).returning();
+    return result[0];
   }
 
-  async deleteInvitation(token: string): Promise<void> {
-    await db.delete(invitations).where(eq(invitations.token, token));
+  async deleteInstallment(companyId: string, id: string): Promise<void> {
+    await db.delete(installments).where(and(eq(installments.companyId, companyId), eq(installments.id, id)));
   }
 
-  // Bank Statement operations
-  async getBankStatementItems(companyId: string): Promise<BankStatementItem[]> {
-    const items = await db
-      .select()
-      .from(bankStatementItems)
-      .where(eq(bankStatementItems.companyId, companyId))
-      .orderBy(desc(bankStatementItems.date));
-    console.log(`[Storage Debug] Itens para ${companyId}: ${items.length}`);
-    return items;
+  // Purchase Installment operations
+  async createPurchaseInstallment(companyId: string, data: InsertPurchaseInstallment): Promise<PurchaseInstallment> {
+    const result = await db.insert(purchaseInstallments).values({ 
+      ...data, 
+      companyId,
+      amount: sanitizeMoney(data.amount)
+    } as any).returning();
+    return result[0];
   }
 
-  async createBankStatementItem(companyId: string, data: InsertBankStatementItem): Promise<BankStatementItem> {
-    console.log(`[Storage Debug] Criando item para ${companyId}:`, data.description);
-    const [item] = await db
-      .insert(bankStatementItems)
-      .values({ ...data, companyId })
-      .returning();
-    return item;
+  async getPurchaseInstallments(companyId: string): Promise<PurchaseInstallment[]> {
+    return await db.select().from(purchaseInstallments).where(eq(purchaseInstallments.companyId, companyId));
   }
 
-  async updateBankStatementItem(companyId: string, id: string, data: Partial<InsertBankStatementItem>): Promise<BankStatementItem> {
-    const [item] = await db
-      .update(bankStatementItems)
-      .set(data)
-      .where(and(eq(bankStatementItems.companyId, companyId), eq(bankStatementItems.id, id)))
-      .returning();
-    return item;
+  async getPurchaseInstallment(companyId: string, id: string): Promise<PurchaseInstallment | undefined> {
+    const result = await db.select().from(purchaseInstallments).where(and(eq(purchaseInstallments.companyId, companyId), eq(purchaseInstallments.id, id)));
+    return result[0];
   }
 
-  async matchBankStatementItem(companyId: string, bankItemId: string, transactionId: string): Promise<BankStatementItem> {
-    console.log(`[Storage Debug] Conciliando item ${bankItemId} com transação ${transactionId}`);
-    return await db.transaction(async (tx) => {
-      const result = await tx
-        .update(bankStatementItems)
-        .set({ 
-          status: "RECONCILED", 
-          transactionId 
-        })
-        .where(and(eq(bankStatementItems.companyId, companyId), eq(bankStatementItems.id, bankItemId)))
-        .returning();
-
-      await tx
-        .update(transactions)
-        .set({ isReconciled: true })
-        .where(and(eq(transactions.companyId, companyId), eq(transactions.id, transactionId)));
-
-      return result[0];
-    });
+  async updatePurchaseInstallment(companyId: string, id: string, data: Partial<InsertPurchaseInstallment>): Promise<PurchaseInstallment> {
+    const result = await db.update(purchaseInstallments).set(data).where(and(eq(purchaseInstallments.companyId, companyId), eq(purchaseInstallments.id, id))).returning();
+    return result[0];
   }
 
-  async clearBankStatementItems(companyId: string): Promise<void> {
-    console.log(`[Storage Debug] Limpando TUDO para ${companyId}`);
-    await db.delete(bankStatementItems).where(eq(bankStatementItems.companyId, companyId));
+  async deletePurchaseInstallment(companyId: string, id: string): Promise<void> {
+    await db.delete(purchaseInstallments).where(and(eq(purchaseInstallments.companyId, companyId), eq(purchaseInstallments.id, id)));
   }
+
+  // Subscription, User, Invitation, Bank Statement (sem alterações necessárias)
+  async getCompanies(): Promise<Company[]> { return await db.select().from(companies).orderBy(desc(companies.createdAt)); }
+  async getCompany(id: string): Promise<Company | undefined> { const result = await db.select().from(companies).where(eq(companies.id, id)); return result[0]; }
+  async updateCompanySubscription(companyId: string, data: Partial<InsertSubscription>): Promise<Subscription> { const result = await db.update(subscriptions).set(data).where(eq(subscriptions.companyId, companyId)).returning(); return result[0]; }
+  async getCompanySubscription(companyId: string): Promise<Subscription | undefined> { const result = await db.select().from(subscriptions).where(eq(subscriptions.companyId, companyId)); return result[0]; }
+  async getUsers(companyId: string): Promise<User[]> { return await db.select().from(users).where(eq(users.companyId, companyId)); }
+  async getUser(companyId: string, id: string): Promise<User | undefined> { const result = await db.select().from(users).where(and(eq(users.companyId, companyId), eq(users.id, id))); return result[0]; }
+  async updateUserPermissions(companyId: string, userId: string, permissions: Record<string, boolean>): Promise<User> { const permsString = JSON.stringify(permissions); const result = await db.update(users).set({ permissions: permsString }).where(and(eq(users.companyId, companyId), eq(users.id, userId))).returning(); if (!result[0]) throw new Error("User not found"); return result[0]; }
+  async updateUser(companyId: string, userId: string, data: Partial<InsertUser>): Promise<User> { const result = await db.update(users).set(data).where(and(eq(users.companyId, companyId), eq(users.id, userId))).returning(); return result[0]; }
+  async deleteUser(companyId: string, userId: string): Promise<void> { await db.delete(users).where(and(eq(users.companyId, companyId), eq(users.id, userId))); }
+  async createInvitation(companyId: string, createdBy: string, data: InsertInvitation): Promise<Invitation> { const token = require('crypto').randomBytes(32).toString('hex'); const result = await db.insert(invitations).values({ ...data, companyId, token, createdBy, expiresAt: data.expiresAt ? new Date(data.expiresAt) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) } as any).returning(); return result[0]; }
+  async getInvitations(companyId: string): Promise<Invitation[]> { return await db.select().from(invitations).where(eq(invitations.companyId, companyId)); }
+  async getInvitationByToken(token: string): Promise<Invitation | undefined> { const result = await db.select().from(invitations).where(eq(invitations.token, token)); return result[0]; }
+  async acceptInvitation(token: string, userId: string): Promise<User> { const invitation = await this.getInvitationByToken(token); if (!invitation) throw new Error('Invalid invitation'); await db.update(invitations).set({ acceptedAt: new Date(), acceptedBy: userId }).where(eq(invitations.token, token)); return (await db.select().from(users).where(eq(users.id, userId)))[0]; }
+  async deleteInvitation(token: string): Promise<void> { await db.delete(invitations).where(eq(invitations.token, token)); }
+  async createAuditLog(data: InsertAuditLog): Promise<AuditLog> { const result = await db.insert(auditLogs).values(data as any).returning(); return result[0]; }
+  async getAuditLogs(companyId: string, limit: number = 100): Promise<AuditLog[]> { return await db.select({ id: auditLogs.id, userId: auditLogs.userId, companyId: auditLogs.companyId, action: auditLogs.action, resourceType: auditLogs.resourceType, resourceId: auditLogs.resourceId, details: auditLogs.details, ipAddress: auditLogs.ipAddress, userAgent: auditLogs.userAgent, status: auditLogs.status, createdAt: auditLogs.createdAt, userName: users.name, }).from(auditLogs).leftJoin(users, eq(auditLogs.userId, users.id)).where(eq(auditLogs.companyId, companyId)).orderBy(desc(auditLogs.createdAt)).limit(limit); }
+  async getBankStatementItems(companyId: string): Promise<BankStatementItem[]> { return await db.select().from(bankStatementItems).where(eq(bankStatementItems.companyId, companyId)).orderBy(desc(bankStatementItems.date)); }
+  async createBankStatementItem(companyId: string, data: InsertBankStatementItem): Promise<BankStatementItem> { const [item] = await db.insert(bankStatementItems).values({ ...data, companyId }).returning(); return item; }
+  async updateBankStatementItem(companyId: string, id: string, data: Partial<InsertBankStatementItem>): Promise<BankStatementItem> { const [item] = await db.update(bankStatementItems).set(data).where(and(eq(bankStatementItems.companyId, companyId), eq(bankStatementItems.id, id))).returning(); return item; }
+  async matchBankStatementItem(companyId: string, bankItemId: string, transactionId: string): Promise<BankStatementItem> { return await db.transaction(async (tx) => { const result = await tx.update(bankStatementItems).set({ status: "RECONCILED", transactionId }).where(and(eq(bankStatementItems.companyId, companyId), eq(bankStatementItems.id, bankItemId))).returning(); await tx.update(transactions).set({ isReconciled: true }).where(and(eq(transactions.companyId, companyId), eq(transactions.id, transactionId))); return result[0]; }); }
+  async clearBankStatementItems(companyId: string): Promise<void> { await db.delete(bankStatementItems).where(eq(bankStatementItems.companyId, companyId)); }
 }
 
 export const storage = new DatabaseStorage();
