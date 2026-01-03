@@ -33,11 +33,12 @@ export function registerSalesPurchasesRoutes(app: Express) {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const { customerId, saleDate, totalAmount, installmentCount, status, description, categoryId, paymentMethod, customInstallments } = req.body;
 
+      // Create sale record
       const saleData = {
         companyId: req.user.companyId,
         customerId,
-        saleDate: new Date(saleDate),
-        totalAmount: String(totalAmount),
+        date: new Date(saleDate),
+        amount: String(totalAmount),
         installmentCount: parseInt(installmentCount) || 1,
         status: status || 'pago',
         paidAmount: status === 'pago' ? String(totalAmount) : '0',
