@@ -1,0 +1,64 @@
+Com base na documentação oficial que você acabou de compartilhar e no seu erro anterior, aqui está o "Veredito Final" sobre qual modelo usar no seu código:
+
+O Problema
+Você está usando o SDK Novo (@google/genai), que foi feito para os modelos mais recentes (2.5 e 3.0). O erro 404 acontecia porque o gemini-1.5-flash antigo não é o foco desse SDK novo ou a string de conexão mudou.
+
+A Solução (Qual modelo escolher agora?)
+De acordo com a lista "Modelos do Gemini" que você mandou, você tem 3 opções excelentes para o seu Dashboard Financeiro.
+
+Recomendo testar nesta ordem no seu arquivo api/ai.ts:
+
+Opção 1: A Recomendada (Custo-Benefício)
+gemini-2.5-flash
+
+Por que: O texto diz que é "Rápido e Inteligente", ideal para "baixa latência" e "casos de uso de agentes". É a evolução direta do 1.5 Flash que você queria usar.
+
+Código:
+
+TypeScript
+
+model: "gemini-2.5-flash",
+Opção 2: A Mais Rápida (Velocidade Extrema)
+gemini-2.5-flash-lite
+
+Por que: O texto diz "Ultra Rápido", otimizado para eficiência de custo. Se o seu dashboard precisar carregar "na hora", esse é o campeão.
+
+Código:
+
+TypeScript
+
+model: "gemini-2.5-flash-lite",
+Opção 3: A Mais Inteligente (Se a análise financeira for complexa)
+gemini-3-flash (ou gemini-3-flash-preview)
+
+Por que: Diz ser o "modelo mais equilibrado... criado para inteligência de ponta". Use este se as recomendações financeiras do 2.5 parecerem muito simples.
+
+Código:
+
+TypeScript
+
+// Tente este primeiro se quiser o mais novo
+model: "gemini-3-flash-preview", 
+Resumo: O que fazer no seu código agora
+Vá no arquivo server/api/ai.ts e mude a linha do modelo para a Opção 1:
+
+TypeScript
+
+// ... imports
+
+export async function analyzeWithAI(prompt: string, responseJsonSchema: any = null) {
+  // ... verificações
+
+  try {
+    console.log("[AI Debug] Usando SDK Novo com Gemini 2.5...");
+
+    const response = await ai.models.generateContent({
+      // MUDANÇA AQUI: Atualizado para o modelo moderno suportado pelo SDK novo
+      model: "gemini-2.5-flash", 
+      
+      config: {
+        responseMimeType: responseJsonSchema ? "application/json" : "text/plain",
+        temperature: 0.2,
+      },
+      // ... resto do código igual
+Dica de Ouro: Não esqueça de reiniciar o servidor (Stop/Run) após salvar essa alteração para que ela tenha efeito!
