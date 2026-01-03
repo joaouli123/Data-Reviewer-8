@@ -19,7 +19,7 @@ app.use(helmet({
 // Basic Rate Limiting
 const rateLimitMap = new Map<string, { count: number; lastReset: number }>();
 const RATE_LIMIT_WINDOW = 1 * 60 * 1000; // 1 minute window
-const MAX_REQUESTS = 8; // Increased to 8 requests per minute
+const MAX_REQUESTS = 1000; // Reset to a very high value temporarily to unblock the user
 
 app.use((req, res, next) => {
   const ip = req.ip || "unknown";
