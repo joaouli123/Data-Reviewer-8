@@ -418,7 +418,7 @@ export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({
   createdAt: true,
 }) as any;
 
-export const insertSaleSchema = createInsertSchema(sales, {
+export const insertSaleSchema = createInsertSchema(sales).extend({
   saleDate: z.coerce.date(),
   totalAmount: z.string().or(z.number()).transform(v => String(v)),
   paidAmount: z.string().or(z.number()).transform(v => String(v)).optional(),
@@ -427,7 +427,7 @@ export const insertSaleSchema = createInsertSchema(sales, {
   companyId: true,
 }) as any;
 
-export const insertPurchaseSchema = createInsertSchema(purchases, {
+export const insertPurchaseSchema = createInsertSchema(purchases).extend({
   purchaseDate: z.coerce.date(),
   totalAmount: z.string().or(z.number()).transform(v => String(v)),
   paidAmount: z.string().or(z.number()).transform(v => String(v)).optional(),
