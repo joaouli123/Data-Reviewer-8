@@ -418,22 +418,22 @@ export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({
   createdAt: true,
 }) as any;
 
-export const insertSaleSchema = createInsertSchema(sales).extend({
+export const insertSaleSchema = z.object({
+  customerId: z.string().min(1, "Cliente é obrigatório"),
   saleDate: z.coerce.date(),
   totalAmount: z.string().or(z.number()).transform(v => String(v)),
   paidAmount: z.string().or(z.number()).transform(v => String(v)).optional(),
-}).omit({
-  id: true,
-  companyId: true,
+  installmentCount: z.number().int().min(1).optional(),
+  status: z.string().min(1, "Status é obrigatório"),
 });
 
-export const insertPurchaseSchema = createInsertSchema(purchases).extend({
+export const insertPurchaseSchema = z.object({
+  supplierId: z.string().min(1, "Fornecedor é obrigatório"),
   purchaseDate: z.coerce.date(),
   totalAmount: z.string().or(z.number()).transform(v => String(v)),
   paidAmount: z.string().or(z.number()).transform(v => String(v)).optional(),
-}).omit({
-  id: true,
-  companyId: true,
+  installmentCount: z.number().int().min(1).optional(),
+  status: z.string().min(1, "Status é obrigatório"),
 });
 
 export const insertInstallmentSchema = createInsertSchema(installments).omit({
