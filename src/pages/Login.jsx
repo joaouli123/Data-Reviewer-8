@@ -36,7 +36,7 @@ export default function Login() {
       
       const userName = data.user?.name || "usuário";
       toast.success(`Seja bem vindo, ${userName}!`);
-      setLocation("/");
+      setLocation("/dashboard");
     } catch (error) {
       toast.error(error.message);
     } finally {
