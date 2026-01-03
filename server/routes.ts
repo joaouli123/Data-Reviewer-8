@@ -634,22 +634,25 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const companyId = req.user.companyId;
       const { startDate, endDate, shift } = req.query;
       
-      let transactions;
+      let transactionsList;
       if (startDate && endDate) {
-        // Normalizar datas para cobrir o dia inteiro
         const start = new Date(startDate as string);
         const end = new Date(endDate as string);
         start.setHours(0, 0, 0, 0);
         end.setHours(23, 59, 59, 999);
-        
-        transactions = await storage.getTransactionsByDateRange(companyId, start, end);
+        transactionsList = await storage.getTransactionsByDateRange(companyId, start, end);
       } else if (shift) {
-        transactions = await storage.getTransactionsByShift(companyId, shift as string);
+        transactionsList = await storage.getTransactionsByShift(companyId, shift as string);
       } else {
-        transactions = await storage.getTransactions(companyId);
+        transactionsList = await storage.getTransactions(companyId);
       }
       
-      const converted = transactions.map(t => ({
+      // Filter by shift if provided as query param but not used in storage query
+      if (shift && !startDate) {
+         transactionsList = transactionsList.filter(t => t.shift === shift);
+      }
+
+      const converted = transactionsList.map(t => ({
         ...t,
         amount: t.amount ? parseFloat(t.amount.toString()) : 0,
         paidAmount: t.paidAmount ? parseFloat(t.paidAmount.toString()) : null,
@@ -657,8 +660,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       }));
       
       // Explicitly sort by date descending to ensure newest appear first
-      const sorted = converted.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      const sorted = converted.sort((a, b) => {
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        if (dateA !== dateB) return dateB - dateA;
+        return parseInt(b.id) - parseInt(a.id); // Tie-breaker for same date
+      });
       
+      console.log(`[DEBUG] Returning ${sorted.length} transactions for company ${companyId}`);
       res.json(sorted);
     } catch (error: any) {
       console.error("❌ [GET /api/transactions] Error:", error.message);
@@ -826,7 +835,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         paidAmount: t.paidAmount ? parseFloat(t.paidAmount.toString()) : null,
         interest: t.interest ? parseFloat(t.interest.toString()) : 0
       }));
-      res.json(converted);
+      // Sort by date desc
+      const sorted = converted.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      res.json(sorted);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch transactions" });
     }

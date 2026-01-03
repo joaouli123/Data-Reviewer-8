@@ -323,7 +323,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
         amount: amount,
         date: isoDate,
         paymentDate: paymentDateISO,
-        shift: 'turno1',
+        shift: 'Geral',
         type: formData.type,
         description: formData.description,
         status: formData.status,
