@@ -949,6 +949,19 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           isReconciled: false
         });
 
+        // Also update cash flow if it is paid
+        if (status === 'pago') {
+          await tx.insert(cashFlow).values({
+            companyId: req.user!.companyId,
+            date: new Date(paymentDate || saleDate),
+            inflow: String(totalAmount),
+            outflow: "0",
+            balance: String(totalAmount), // This balance logic might be simplified, usually it should be cumulative
+            description: description || `Venda #${newSale.id.substring(0, 8)}`,
+            shift: "Geral"
+          });
+        }
+
         return newSale;
       });
 
