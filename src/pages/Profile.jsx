@@ -238,6 +238,33 @@ export default function ProfilePage() {
     });
   };
 
+  const { data: invoices = [] } = useQuery({
+    queryKey: ['/api/auth/invoices'],
+    queryFn: async () => {
+      try {
+        const res = await apiRequest('GET', '/api/auth/invoices');
+        return Array.isArray(res) ? res : [];
+      } catch (e) {
+        console.error('Invoices fetch error:', e);
+        return [];
+      }
+    },
+    enabled: !!company?.id
+  });
+
+  const cancelSubscriptionMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest('POST', '/api/auth/cancel-subscription');
+    },
+    onSuccess: () => {
+      toast.success('Assinatura cancelada com sucesso');
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Erro ao cancelar assinatura');
+    }
+  });
+
   const getInitials = (name) => {
     return name
       ?.split(' ')
@@ -364,7 +391,7 @@ export default function ProfilePage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="flex flex-col gap-4 items-center pb-6 border-b">
               <Avatar className="w-24 h-24">
-                <AvatarImage src={previewUrl || user?.avatar} alt={user?.name} />
+                <AvatarImage src={previewUrl || user?.avatar || ''} alt={user?.name || 'User'} />
                 <AvatarFallback>{getInitials(user?.name)}</AvatarFallback>
               </Avatar>
               <div className="flex flex-col gap-2 items-center">
