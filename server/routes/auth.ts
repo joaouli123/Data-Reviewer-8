@@ -39,6 +39,28 @@ export function registerAuthRoutes(app: Express) {
       }
       const company = await createCompany(companyName, companyDocument);
       const user = await createUser(company.id, username, email, password, name, "admin");
+      
+      // Create default categories for the new company
+      const defaultCategories = [
+        { name: 'Vendas', type: 'income', color: '#10b981' },
+        { name: 'Serviços', type: 'income', color: '#3b82f6' },
+        { name: 'Outras Receitas', type: 'income', color: '#6366f1' },
+        { name: 'Aluguel', type: 'expense', color: '#ef4444' },
+        { name: 'Salários', type: 'expense', color: '#f59e0b' },
+        { name: 'Fornecedores', type: 'expense', color: '#ec4899' },
+        { name: 'Impostos', type: 'expense', color: '#8b5cf6' },
+        { name: 'Marketing', type: 'expense', color: '#06b6d4' },
+        { name: 'Outras Despesas', type: 'expense', color: '#64748b' }
+      ];
+
+      try {
+        for (const cat of defaultCategories) {
+          await storage.createCategory(company.id, cat as any);
+        }
+      } catch (catError) {
+        console.error('Error creating default categories:', catError);
+      }
+
       const subscriptionPlan = plan || "pro";
       try {
         await db.insert(subscriptions).values({ companyId: company.id, plan: subscriptionPlan, status: "active" } as any);
