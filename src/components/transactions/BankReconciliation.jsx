@@ -42,13 +42,15 @@ export default function BankReconciliation({ open, onOpenChange }) {
     enabled: open
   });
 
-  // Log para depuração
+  // Log para depuração profunda
   useEffect(() => {
+    console.log("[Bank Reconciliation Debug] Estado do modal:", open);
+    console.log("[Bank Reconciliation Debug] bankItems length:", bankItems.length);
     if (bankItems.length > 0) {
-      console.log("[Bank Reconciliation] Itens recebidos:", bankItems);
-      console.log("[Bank Reconciliation] Status dos itens:", bankItems.map(i => i.status));
+      console.log("[Bank Reconciliation Debug] Primeiro item:", bankItems[0]);
+      console.log("[Bank Reconciliation Debug] Todos os status:", [...new Set(bankItems.map(i => i.status))]);
     }
-  }, [bankItems]);
+  }, [bankItems, open]);
 
   // Atualizar lista após upload bem-sucedido
   useEffect(() => {
@@ -184,6 +186,7 @@ export default function BankReconciliation({ open, onOpenChange }) {
   }, [open, bankItems.length]);
 
   const pendingItems = bankItems.filter(item => {
+    console.log("[Bank Reconciliation Debug] Filtrando item:", item.description, "Status:", item.status);
     const status = (item.status || 'PENDING').toUpperCase();
     return status === 'PENDING' || status === 'PENDENTE';
   });
@@ -192,6 +195,9 @@ export default function BankReconciliation({ open, onOpenChange }) {
     const status = item.status.toUpperCase();
     return status === 'RECONCILED' || status === 'MATCHED' || status === 'CONCILIADO';
   });
+
+  console.log("[Bank Reconciliation Debug] Itens filtrados - Pendentes:", pendingItems.length, "Conciliados:", reconciledItems.length);
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

@@ -7,8 +7,12 @@ export function registerBankRoutes(app: Express) {
   app.get("/api/bank/items", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      console.log(`[Bank API] Buscando itens para empresa: ${req.user.companyId}`);
       const items = await storage.getBankStatementItems(req.user.companyId);
       console.log(`[Bank API] Retornando ${items.length} itens para empresa ${req.user.companyId}`);
+      if (items.length > 0) {
+        console.log(`[Bank API] Amostra do primeiro item:`, JSON.stringify(items[0]));
+      }
       res.json(items);
     } catch (error) {
       console.error("[Bank API] Erro ao buscar itens:", error);
