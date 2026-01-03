@@ -77,14 +77,9 @@ export default function DashboardPage() {
       Promise.all(
         data.map(item => {
           console.log('Creating installment:', { amount: item.amount, installmentNumber: item.installmentNumber });
-          return fetch('/api/transactions', {
+          return apiRequest('/api/transactions', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
             body: JSON.stringify(item)
-          }).then(res => {
-            if (!res.ok) throw new Error(`Error: ${res.statusText}`);
-            return res.json();
           });
         })
       ).then(() => {
