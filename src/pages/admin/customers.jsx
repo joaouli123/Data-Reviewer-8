@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { Download, MoreVertical, Trash2, Eye, Power } from 'lucide-react';
 import { CustomerEditModal } from '@/components/admin/CustomerEditModal';
 import { formatDateWithTimezone } from '@/utils/dateFormatter';
@@ -54,7 +54,6 @@ const exportToExcel = (data) => {
 };
 
 function CustomerListContent() {
-  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
@@ -68,11 +67,11 @@ function CustomerListContent() {
     mutationFn: (data) => apiRequest('PATCH', `/api/admin/customers/${data.id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/customers'] });
-      toast({ title: 'Sucesso', description: 'Cliente atualizado com sucesso' });
+      toast.success('Sucesso: Cliente atualizado com sucesso');
       setSelectedCustomer(null);
     },
     onError: (error) => {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+      toast.error('Erro: ' + error.message);
     },
   });
 
@@ -80,11 +79,11 @@ function CustomerListContent() {
     mutationFn: (id) => apiRequest('DELETE', `/api/admin/customers/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/customers'] });
-      toast({ title: 'Sucesso', description: 'Cliente deletado com sucesso' });
+      toast.success('Sucesso: Cliente deletado com sucesso');
       setDeleteConfirm(null);
     },
     onError: (error) => {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+      toast.error('Erro: ' + error.message);
     },
   });
 
@@ -92,10 +91,10 @@ function CustomerListContent() {
     mutationFn: (customer) => apiRequest('PATCH', `/api/admin/customers/${customer.id}`, { status: customer.status === 'active' ? 'blocked' : 'active' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/customers'] });
-      toast({ title: 'Sucesso', description: 'Status do cliente atualizado' });
+      toast.success('Sucesso: Status do cliente atualizado');
     },
     onError: (error) => {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+      toast.error('Erro: ' + error.message);
     },
   });
 

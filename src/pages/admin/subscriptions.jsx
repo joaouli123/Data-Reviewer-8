@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { Download, MoreVertical, Trash2, Eye, Lock, Unlock } from 'lucide-react';
 import { SubscriptionEditModal } from '@/components/admin/SubscriptionEditModal';
 import { formatDateWithTimezone } from '@/utils/dateFormatter';
@@ -55,7 +55,6 @@ const exportToExcel = (data) => {
 };
 
 function SubscriptionListContent() {
-  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSubscription, setSelectedSubscription] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
@@ -69,11 +68,11 @@ function SubscriptionListContent() {
     mutationFn: (data) => apiRequest('PATCH', `/api/admin/subscriptions/${data.id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/subscriptions'] });
-      toast({ title: 'Sucesso', description: 'Assinatura atualizada com sucesso' });
+      toast.success('Sucesso: Assinatura atualizada com sucesso');
       setSelectedSubscription(null);
     },
     onError: (error) => {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+      toast.error('Erro: ' + error.message);
     },
   });
 
@@ -81,11 +80,11 @@ function SubscriptionListContent() {
     mutationFn: (id) => apiRequest('DELETE', `/api/admin/subscriptions/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/subscriptions'] });
-      toast({ title: 'Sucesso', description: 'Assinatura deletada com sucesso' });
+      toast.success('Sucesso: Assinatura deletada com sucesso');
       setDeleteConfirm(null);
     },
     onError: (error) => {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+      toast.error('Erro: ' + error.message);
     },
   });
 
@@ -93,10 +92,10 @@ function SubscriptionListContent() {
     mutationFn: (subscription) => apiRequest('PATCH', `/api/admin/subscriptions/${subscription.id}`, { status: subscription.status === 'active' ? 'blocked' : 'active' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/subscriptions'] });
-      toast({ title: 'Sucesso', description: 'Status da assinatura atualizado' });
+      toast.success('Sucesso: Status da assinatura atualizado');
     },
     onError: (error) => {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+      toast.error('Erro: ' + error.message);
     },
   });
 

@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input as FormInput } from '@/components/ui/input';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
 import { Download, MoreVertical, Trash2, Eye, Lock, Power, RotateCcw } from 'lucide-react';
 import { UserEditModal } from '@/components/admin/UserEditModal';
@@ -59,7 +59,6 @@ const exportToExcel = (data) => {
 };
 
 function UserListContent() {
-  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState(null);
   const [resetPassword, setResetPassword] = useState(null);
@@ -77,23 +76,23 @@ function UserListContent() {
     mutationFn: (data) => apiRequest('PATCH', `/api/admin/users/${data.id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
-      toast({ title: 'Sucesso', description: 'Usuário atualizado' });
+      toast.success('Sucesso: Usuário atualizado');
       setSelectedUser(null);
     },
     onError: (error) => {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+      toast.error('Erro: ' + error.message);
     },
   });
 
   const resetPasswordMutation = useMutation({
     mutationFn: ({ userId, newPassword: pwd }) => apiRequest('POST', `/api/admin/users/${userId}/reset-password`, { newPassword: pwd }),
     onSuccess: () => {
-      toast({ title: 'Sucesso', description: 'Senha redefinida com sucesso' });
+      toast.success('Sucesso: Senha redefinida com sucesso');
       setResetPassword(null);
       setNewPassword('');
     },
     onError: (error) => {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+      toast.error('Erro: ' + error.message);
     },
   });
 
@@ -102,11 +101,11 @@ function UserListContent() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
       queryClient.invalidateQueries({ queryKey: ['/api/users'] });
-      toast({ title: 'Sucesso', description: 'Usuário deletado' });
+      toast.success('Sucesso: Usuário deletado');
       setDeleteConfirm(null);
     },
     onError: (error) => {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+      toast.error('Erro: ' + error.message);
     },
   });
 
@@ -114,10 +113,10 @@ function UserListContent() {
     mutationFn: (user) => apiRequest('PATCH', `/api/admin/users/${user.id}`, { status: user.status === 'active' ? 'suspended' : 'active' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
-      toast({ title: 'Sucesso', description: 'Status do usuário atualizado' });
+      toast.success('Sucesso: Status do usuário atualizado');
     },
     onError: (error) => {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+      toast.error('Erro: ' + error.message);
     },
   });
 
