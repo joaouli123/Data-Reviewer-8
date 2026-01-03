@@ -78,14 +78,14 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
         installments: sortedInstallments
       };
     }).sort((a, b) => {
-      const dateDiff = new Date(b.main.date).getTime() - new Date(a.main.date).getTime();
-      if (dateDiff !== 0) return dateDiff;
+      const dateB = new Date(b.main.date).getTime();
+      const dateA = new Date(a.main.date).getTime();
+      if (dateB !== dateA) return dateB - dateA;
       
-      // Secondary sort by createdAt if available
-      if (a.main.createdAt && b.main.createdAt) {
-        return new Date(b.main.createdAt).getTime() - new Date(a.main.createdAt).getTime();
-      }
-      
+      const createB = b.main.createdAt ? new Date(b.main.createdAt).getTime() : 0;
+      const createA = a.main.createdAt ? new Date(a.main.createdAt).getTime() : 0;
+      if (createB !== createA) return createB - createA;
+
       return b.main.id.localeCompare(a.main.id);
     });
   }, [purchases]);
