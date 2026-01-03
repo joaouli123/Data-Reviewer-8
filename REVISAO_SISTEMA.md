@@ -335,7 +335,7 @@ src/
 
 ### Alta Prioridade (Fazer primeiro)
 1. [x] Remover `src/api/base44Client.js`
-2. [ ] Remover `src/components/ui/use-toast.jsx`
+2. [x] Remover `src/components/ui/use-toast.jsx`
 3. [ ] Padronizar uso de `sonner` nos arquivos admin
 4. [ ] Remover `src/api/geminiClient.js`
 
