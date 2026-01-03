@@ -2,6 +2,8 @@ import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold, GenerativeModel }
 
 const API_KEY = process.env.VITE_GOOGLE_GEMINI_API_KEY || "";
 const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
+// Versão da lib carregada (removido require para evitar erro ESM)
+console.log("[AI Init] Carregando integração Gemini...");
 
 export async function analyzeWithAI(prompt: string, responseJsonSchema: any = null) {
   // Verificação básica
@@ -9,16 +11,11 @@ export async function analyzeWithAI(prompt: string, responseJsonSchema: any = nu
 
   try {
     const model = genAI.getGenerativeModel({ 
-      // O Flash é ideal para dashboards rápidos
       model: "gemini-1.5-flash", 
-      
-      // 1. FORÇA O MODO JSON (A IA não vai "falar", vai apenas entregar dados)
       generationConfig: {
         responseMimeType: responseJsonSchema ? "application/json" : "text/plain",
-        temperature: 0.2, // Baixa criatividade = Mais precisão técnica
+        temperature: 0.2,
       },
-      
-      // 2. DESATIVA BLOQUEIOS (Essenciais para falar de dinheiro/dívida)
       safetySettings: [
         { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
         { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
