@@ -136,6 +136,19 @@ export function registerSalesPurchasesRoutes(app: Express) {
 
       console.log("[Purchases Debug] Attempting to create purchase:", purchaseData);
       const purchase = await storage.createPurchase(req.user.companyId, purchaseData as any);
+      
+      // Also create a transaction for the total amount to ensure it shows up in reports/supplier totals
+      await storage.createTransaction(req.user.companyId, {
+        type: 'compra',
+        category: 'Compra',
+        amount: String(totalAmount),
+        date: new Date(purchaseDate),
+        description: description || `Compra - ${purchase.id}`,
+        status: 'pendente',
+        supplierId: supplierId,
+        companyId: req.user.companyId
+      } as any);
+
       const installmentGroupId = `purchase-${purchase.id}-${Date.now()}`;
 
       // Create transactions based on installments
