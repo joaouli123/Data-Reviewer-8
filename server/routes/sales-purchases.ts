@@ -154,27 +154,39 @@ export function registerSalesPurchasesRoutes(app: Express) {
 
       // Create transactions based on installments
       if (customInstallments && customInstallments.length > 0) {
-        for (let i = 0; i < customInstallments.length; i++) {
-          const inst = customInstallments[i];
-          // Ensure we are using a numeric value and not a string that could be misinterpreted
-          const installmentAmount = parseFloat(String(inst.amount)).toFixed(2);
+        // Use the professional rounding logic to ensure cent precision
+        const totalValue = parseFloat(totalAmount);
+        const numParcelas = customInstallments.length;
+        const valorBase = Math.floor((totalValue / numParcelas) * 100) / 100;
+        
+        for (let i = 0; i < numParcelas; i++) {
+          const isLast = i === numParcelas - 1;
+          let installmentAmount;
           
+          if (isLast) {
+            const somaAnteriores = valorBase * (numParcelas - 1);
+            installmentAmount = (totalValue - somaAnteriores).toFixed(2);
+          } else {
+            installmentAmount = valorBase.toFixed(2);
+          }
+          
+          const inst = customInstallments[i];
           const transactionData = {
             companyId: req.user.companyId,
             type: 'expense',
-            description: `${description || 'Compra'} (${i + 1}/${customInstallments.length})`,
+            description: `${description || 'Compra'} (${i + 1}/${numParcelas})`,
             amount: installmentAmount,
-            date: new Date(inst.date || inst.due_date), // Safe date handling
+            date: new Date(inst.date || inst.due_date),
             status: status === 'pago' ? 'pago' : 'pendente',
             categoryId,
             supplierId,
             paymentMethod,
             installmentNumber: i + 1,
-            installmentTotal: customInstallments.length,
+            installmentTotal: numParcelas,
             installmentGroup: installmentGroupId,
             shift: 'Normal'
           };
-          console.log("[Purchases Debug] Creating installment transaction:", transactionData);
+          console.log(`[Purchases Debug] Creating installment ${i + 1}/${numParcelas} with amount:`, installmentAmount);
           await storage.createTransaction(req.user.companyId, transactionData as any);
         }
       } else {
