@@ -42,9 +42,11 @@ export function registerBankRoutes(app: Express) {
         try {
           // Tenta limpar tags não fechadas comuns em OFX de bancos brasileiros
           // Regex melhorada para fechar tags que não terminam com outra tag na mesma linha
+          // Adicionado suporte para datas com fuso horário [-3:BRT] que quebram alguns parsers
           const cleanedXml = body
             .replace(/<(\w+)>([^<\n\r]+)(?!\/<\1>)/g, '<$1>$2</$1>') // Fecha tags simples
-            .replace(/&(?!(amp|lt|gt|quot|apos);)/g, '&amp;'); // Escapa ampersands
+            .replace(/&(?!(amp|lt|gt|quot|apos);)/g, '&amp;') // Escapa ampersands
+            .replace(/\[-?\d+:\w+\]/g, ''); // Remove fuso horário tipo [-3:BRT] que invalida datas no parsing SGML/XML
           
           data = ofx.parse(header + cleanedXml);
         } catch (finalError) {
@@ -52,6 +54,7 @@ export function registerBankRoutes(app: Express) {
           try {
             const extremeClean = body
               .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '') // Remove caracteres de controle
+              .replace(/\[-?\d+:\w+\]/g, '') // Remove fuso horário
               .replace(/<(\w+)>([^<]+)/g, (match, tag, content) => {
                 if (content.includes('</' + tag + '>')) return match;
                 return `<${tag}>${content.trim()}</${tag}>`;
