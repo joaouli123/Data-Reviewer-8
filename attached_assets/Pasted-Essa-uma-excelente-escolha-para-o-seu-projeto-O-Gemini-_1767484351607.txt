@@ -1,0 +1,66 @@
+Essa é uma excelente escolha para o seu projeto!
+
+O Gemini 2.0 Flash-Lite é perfeito para o seu Dashboard Financeiro por três motivos:
+
+Suporte a JSON (Respostas estruturadas): A documentação que você colou confirma: "Respostas estruturadas: Compatível". Isso é essencial para preencher seus gráficos.
+
+Compatibilidade: Como é um modelo da família 2.0, ele é nativo do novo SDK que você instalou.
+
+Velocidade: É otimizado para "baixa latência", ou seja, o usuário clica e a análise aparece quase na hora.
+
+O Código Final (Para resolver o erro 404 de vez)
+Vá no seu arquivo server/api/ai.ts e use exatamente este ID de modelo:
+
+TypeScript
+
+import { GoogleGenAI } from "@google/genai";
+
+const API_KEY = process.env.VITE_GOOGLE_GEMINI_API_KEY || "";
+const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;
+
+export async function analyzeWithAI(prompt: string, responseJsonSchema: any = null) {
+  if (!ai) throw new Error('API_KEY_NOT_CONFIGURED');
+
+  try {
+    console.log("[AI Debug] Usando Gemini 2.0 Flash-Lite...");
+
+    const response = await ai.models.generateContent({
+      // AQUI ESTÁ A MÁGICA: O modelo exato que você achou
+      model: "gemini-2.0-flash-lite", 
+      
+      config: {
+        responseMimeType: responseJsonSchema ? "application/json" : "text/plain",
+        temperature: 0.2, // Baixa temperatura para dados financeiros precisos
+      },
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: prompt }]
+        }
+      ]
+    });
+
+    let responseText = response.text();
+
+    if (!responseText) throw new Error("IA retornou resposta vazia");
+
+    if (responseJsonSchema) {
+      responseText = responseText.replace(/```json|```/g, '').trim();
+      try {
+        return JSON.parse(responseText);
+      } catch (e) {
+        console.error("Erro Parse JSON:", responseText);
+        throw new Error("A IA não retornou um JSON válido.");
+      }
+    }
+    
+    return responseText;
+
+  } catch (error: any) {
+    console.error("Erro SDK:", error);
+    throw new Error(error.message || "Erro na IA");
+  }
+}
+
+export const invokeGeminiAnalysis = analyzeWithAI;
+Não esqueça: Salve o arquivo e reinicie o servidor (Stop/Run) para aplicar a mudança. Isso deve acabar com o erro 404.
