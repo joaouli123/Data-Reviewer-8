@@ -12,14 +12,14 @@ const isDev = process.env.NODE_ENV !== "production";
 
 // Security Headers
 app.use(helmet({
-  contentSecurityPolicy: false, // Permitir Inline Scripts se necessário
+  contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false
 }));
 
 // Basic Rate Limiting
 const rateLimitMap = new Map<string, { count: number; lastReset: number }>();
-const RATE_LIMIT_WINDOW = 1 * 60 * 1000; // 1 minute window
-const MAX_REQUESTS = 100000000; // Effectively disabled for the user
+const RATE_LIMIT_WINDOW = 1 * 60 * 1000;
+const MAX_REQUESTS = 100000000;
 
 app.use((req, res, next) => {
   const ip = req.ip || "unknown";
@@ -33,10 +33,6 @@ app.use((req, res, next) => {
     userData.count++;
   }
   rateLimitMap.set(ip, userData);
-  if (userData.count > MAX_REQUESTS) {
-    console.log(`Rate limit exceeded for IP: ${ip}`);
-    return res.status(429).json({ error: "Muitas requisições. Tente novamente mais tarde." });
-  }
   next();
 });
 
@@ -49,30 +45,25 @@ app.use(cookieParser());
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Serve static files in production
-if (!isDev) {
-  const staticPath = path.join(__dirname, "..", "dist", "public");
-  app.use(express.static(staticPath));
-  
-  // SPA fallback
-  app.get("*", (req, res) => {
-    res.sendFile(path.join(staticPath, "index.html"));
-  });
-}
+// Register API routes
+registerAllRoutes(app);
 
 // Create HTTP server
 const httpServer = http.createServer(app);
 
-// Initialize server
 (async () => {
-  // Register all routes
-  registerAllRoutes(app);
+  if (isDev) {
+    const { setupVite } = await import("./vite");
+    // CRITICAL FIX: setupVite expects (server, app), not (app, server)
+    await setupVite(httpServer, app);
+  } else {
+    const { serveStatic } = await import("./vite");
+    serveStatic(app);
+  }
 
   // Start server
   httpServer.listen(PORT, "0.0.0.0", () => {
     console.log(`🚀 Server running on http://0.0.0.0:${PORT}`);
-    console.log(`📝 Environment: ${isDev ? "development" : "production"}`);
-    console.log(`🔐 Multi-tenant SaaS with Authentication`);
   });
 })();
 
