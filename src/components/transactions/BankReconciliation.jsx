@@ -119,6 +119,8 @@ export default function BankReconciliation({ open, onOpenChange }) {
       toast.success('Dados bancários removidos com sucesso');
       // Fecha o modal para resetar completamente o estado interno dos hooks
       onOpenChange(false);
+      // Forçar um recarregamento da página ou estado global se necessário
+      window.location.reload(); 
     },
     onError: () => {
       toast.error('Erro ao remover dados bancários');
