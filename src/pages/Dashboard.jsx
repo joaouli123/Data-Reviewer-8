@@ -138,11 +138,19 @@ export default function DashboardPage() {
 
     const totalRevenue = filteredTransactions
       .filter(t => t.type === 'venda')
-      .reduce((acc, curr) => acc + Math.abs((parseFloat(curr.amount || 0) + parseFloat(curr.interest || 0))), 0);
+      .reduce((acc, curr) => {
+        const amount = parseFloat(curr.amount) || 0;
+        const interest = parseFloat(curr.interest) || 0;
+        return acc + Math.abs(amount + interest);
+      }, 0);
     
     const totalExpenses = filteredTransactions
       .filter(t => t.type === 'compra')
-      .reduce((acc, curr) => acc + Math.abs((parseFloat(curr.amount || 0) + parseFloat(curr.interest || 0))), 0);
+      .reduce((acc, curr) => {
+        const amount = parseFloat(curr.amount) || 0;
+        const interest = parseFloat(curr.interest) || 0;
+        return acc + Math.abs(amount + interest);
+      }, 0);
 
     const netProfit = totalRevenue - totalExpenses;
 
@@ -366,7 +374,9 @@ export default function DashboardPage() {
                           <p className="text-xs text-muted-foreground">
                             {t.date ? (() => {
                               try {
-                                return format(parseISO(t.date.split('T')[0] + 'T12:00:00Z'), 'dd MMM', { locale: ptBR });
+                                const d = typeof t.date === 'string' ? parseISO(t.date.split('T')[0] + 'T12:00:00Z') : new Date(t.date);
+                                if (isNaN(d.getTime())) return '---';
+                                return format(d, 'dd MMM', { locale: ptBR });
                               } catch (e) {
                                 return '---';
                               }
