@@ -171,15 +171,15 @@ export class DatabaseStorage implements IStorage {
     
     return result.rows.map(row => ({
       ...row,
-      id: row.id,
-      companyId: row.company_id,
-      name: row.name,
-      cnpj: row.cnpj,
-      contact: row.contact,
-      email: row.email,
-      phone: row.phone,
-      category: row.category,
-      status: row.status,
+      id: String(row.id),
+      companyId: String(row.company_id),
+      name: String(row.name || ''),
+      cnpj: row.cnpj ? String(row.cnpj) : null,
+      contact: row.contact ? String(row.contact) : null,
+      email: row.email ? String(row.email) : null,
+      phone: row.phone ? String(row.phone) : null,
+      category: row.category ? String(row.category) : null,
+      status: row.status ? String(row.status) : 'active',
       createdAt: row.created_at,
       totalSales: Number(row.total_sales || 0)
     })) as unknown as (Customer & { totalSales: number })[];
@@ -237,15 +237,15 @@ export class DatabaseStorage implements IStorage {
     
     return result.rows.map(row => ({
       ...row,
-      id: row.id,
-      companyId: row.company_id,
-      name: row.name,
-      cnpj: row.cnpj,
-      email: row.email,
-      phone: row.phone,
-      contact: row.contact,
-      category: row.category,
-      status: row.status,
+      id: String(row.id),
+      companyId: String(row.company_id),
+      name: String(row.name || ''),
+      cnpj: row.cnpj ? String(row.cnpj) : null,
+      email: row.email ? String(row.email) : null,
+      phone: row.phone ? String(row.phone) : null,
+      contact: row.contact ? String(row.contact) : null,
+      category: row.category ? String(row.category) : null,
+      status: row.status ? String(row.status) : 'active',
       createdAt: row.created_at,
       totalPurchases: Number(row.total_purchases || 0)
     })) as unknown as (Supplier & { totalPurchases: number })[];
