@@ -54,11 +54,14 @@ const httpServer = http.createServer(app);
 (async () => {
   if (isDev) {
     const { setupVite } = await import("./vite");
-    // CRITICAL FIX: setupVite expects (server, app), not (app, server)
+    // setupVite in this environment expects (server, app)
     await setupVite(httpServer, app);
   } else {
-    const { serveStatic } = await import("./vite");
-    serveStatic(app);
+    const staticPath = path.join(__dirname, "..", "dist", "public");
+    app.use(express.static(staticPath));
+    app.get("*", (_req, res) => {
+      res.sendFile(path.join(staticPath, "index.html"));
+    });
   }
 
   // Start server
