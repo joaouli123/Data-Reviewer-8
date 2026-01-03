@@ -157,6 +157,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
       // Invalidate both general and specific queries
       queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/cash-flow'] });
+      queryClient.refetchQueries({ queryKey: ['/api/transactions', { supplierId: supplier?.id }] });
       
       setPaymentEditOpen(false);
       setSelectedTransaction(null);
