@@ -181,18 +181,15 @@ export default function BankReconciliation({ open, onOpenChange }) {
     }
   }, [open, bankItems.length]);
 
-  const pendingItems = bankItems.filter(item => 
-    !item.status || 
-    item.status.toUpperCase() === 'PENDING' || 
-    item.status.toUpperCase() === 'PENDENTE'
-  );
-  const reconciledItems = bankItems.filter(item => 
-    item.status && (
-      item.status.toUpperCase() === 'RECONCILED' || 
-      item.status.toUpperCase() === 'MATCHED' || 
-      item.status.toUpperCase() === 'CONCILIADO'
-    )
-  );
+  const pendingItems = bankItems.filter(item => {
+    const status = (item.status || 'PENDING').toUpperCase();
+    return status === 'PENDING' || status === 'PENDENTE';
+  });
+  const reconciledItems = bankItems.filter(item => {
+    if (!item.status) return false;
+    const status = item.status.toUpperCase();
+    return status === 'RECONCILED' || status === 'MATCHED' || status === 'CONCILIADO';
+  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
