@@ -81,7 +81,7 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
     mutationFn: async (data) => {
       const payload = {
         customerId: customer.id,
-        date: new Date(data.sale_date).toISOString(),
+        date: data.sale_date, // Send string, backend will parse
         amount: String(data.total_amount),
         type: 'venda',
         status: data.status,
