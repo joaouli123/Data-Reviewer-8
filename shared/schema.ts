@@ -418,12 +418,20 @@ export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({
   createdAt: true,
 }) as any;
 
-export const insertSaleSchema = createInsertSchema(sales).omit({
+export const insertSaleSchema = createInsertSchema(sales, {
+  saleDate: z.coerce.date(),
+  totalAmount: z.string().or(z.number()).transform(v => String(v)),
+  paidAmount: z.string().or(z.number()).transform(v => String(v)).optional(),
+}).omit({
   id: true,
   companyId: true,
 }) as any;
 
-export const insertPurchaseSchema = createInsertSchema(purchases).omit({
+export const insertPurchaseSchema = createInsertSchema(purchases, {
+  purchaseDate: z.coerce.date(),
+  totalAmount: z.string().or(z.number()).transform(v => String(v)),
+  paidAmount: z.string().or(z.number()).transform(v => String(v)).optional(),
+}).omit({
   id: true,
   companyId: true,
 }) as any;
