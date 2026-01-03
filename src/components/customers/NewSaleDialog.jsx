@@ -96,25 +96,11 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
       return res;
     },
     onSuccess: async () => {
-      onOpenChange(false); // Fecha modal primeiro
-      toast.success('Venda registrada com sucesso!', { duration: 5000 });
+      // 1. Fecha o modal e avisa o usuário (UX imediata)
+      onOpenChange(false);
+      toast.success('Venda registrada com sucesso!');
 
-      // Pequeno delay para garantir consistência do banco
-      setTimeout(async () => {
-        console.log('🔄 Forçando atualização das listas...');
-        // Força o recarregamento ativo de todas as transações e fluxo de caixa
-        await queryClient.refetchQueries({ queryKey: ['/api/transactions'] });
-        await queryClient.refetchQueries({ queryKey: ['/api/cash-flow'] });
-        await queryClient.refetchQueries({ queryKey: ['/api/customers', company?.id] });
-        
-        // Se tiver cliente, força a lista específica dele também
-        if (customer?.id) {
-          await queryClient.refetchQueries({ 
-            queryKey: ['/api/transactions', { customerId: customer.id }] 
-          });
-        }
-      }, 300);
-
+      // 2. Limpa o formulário
       setFormData({
         description: '',
         total_amount: '',
@@ -122,10 +108,28 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
         sale_date: format(new Date(), 'yyyy-MM-dd'),
         installments: '1',
         installment_amount: '',
-        status: 'pendente',
+        status: 'pago',
+        paymentDate: format(new Date(), 'yyyy-MM-dd'),
         paymentMethod: ''
       });
       setCustomInstallments([]);
+
+      // 3. O "Pulo do Gato": Espera 500ms e FORÇA o recarregamento
+      setTimeout(async () => {
+        console.log('🔄 Forçando atualização das listas...');
+
+        // refetchQueries força a busca ativa (Active Fetch)
+        // Isso atualiza a lista principal (Dashboard) e a lista do cliente
+        await queryClient.refetchQueries({ queryKey: ['/api/transactions'] });
+        await queryClient.refetchQueries({ queryKey: ['/api/cash-flow'] });
+
+        // Se tiver um ID de cliente no contexto, força também a lista específica dele
+        if (customer?.id) {
+          await queryClient.refetchQueries({ 
+            queryKey: ['/api/transactions', { customerId: customer.id }] 
+          });
+        }
+      }, 500);
     },
     onError: (error) => {
       toast.error(error.message || 'Erro ao registrar venda', { duration: 5000 });
