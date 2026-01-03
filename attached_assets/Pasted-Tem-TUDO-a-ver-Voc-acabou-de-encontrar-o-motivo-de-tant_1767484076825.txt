@@ -1,0 +1,56 @@
+Tem TUDO a ver! Você acabou de encontrar o motivo de tanta confusão.O Google lançou uma NOVA biblioteca recentemente (chamada "SDK v2" ou Google GenAI SDK) para suportar os novos modelos (Gemini 2.0 e 3.0).Aqui está a diferença crucial que está no texto que você colou:CaracterísticaSeu Código Atual (Velho)Texto que você colou (Novo)Nome do Pacote@google/generative-ai@google/genaiImportaçãoGoogleGenerativeAIGoogleGenAIModelosFoca no 1.0 e 1.5Foca no 2.5 e 3.0StatusEstável (Legacy)Beta / FuturoO que isso significa para você?Você está tentando usar o modelo gemini-1.5-flash usando a biblioteca antiga, mas o Replit está travado numa versão muito antiga dela.Temos duas opções. A Opção 2 pode ser a salvação se o Replit continuar travado.Opção 1: Insistir na biblioteca antiga (O que estávamos fazendo)Se você conseguir fazer o npm install @google/generative-ai@latest funcionar, seu código atual roda.Opção 2: Mudar para a biblioteca NOVA (Recomendado se a 1 falhar)Já que o Replit não quer atualizar a velha, vamos instalar a NOVA biblioteca do zero. Isso geralmente resolve porque não tem cache antigo atrapalhando.Passo 1: Instale a nova bibliotecaNo terminal (Shell):Bashnpm install @google/genai
+Passo 2: Atualize o código do api/ai.tsO código muda um pouco. Copie e cole este código novo, adaptado para a biblioteca nova que você viu no tutorial:TypeScript// ATENÇÃO: Note que o import mudou!
+import { GoogleGenAI } from "@google/genai";
+
+const API_KEY = process.env.VITE_GOOGLE_GEMINI_API_KEY || "";
+
+// Inicialização diferente (conforme o texto que você mandou)
+const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;
+
+export async function analyzeWithAI(prompt: string, responseJsonSchema: any = null) {
+  if (!ai) throw new Error('API_KEY_NOT_CONFIGURED');
+
+  try {
+    console.log("[AI Debug] Usando SDK Novo (@google/genai)...");
+
+    // Na biblioteca nova, a estrutura muda um pouco
+    const response = await ai.models.generateContent({
+      model: "gemini-1.5-flash", // Ou "gemini-2.0-flash-exp" se quiser testar o novo
+      config: {
+        responseMimeType: responseJsonSchema ? "application/json" : "text/plain",
+        temperature: 0.2,
+      },
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: prompt }]
+        }
+      ]
+    });
+
+    let responseText = response.text();
+
+    if (!responseText) throw new Error("IA retornou resposta vazia");
+
+    // Tratamento de JSON igual ao anterior
+    if (responseJsonSchema) {
+      // Reforço para garantir JSON limpo se a IA mandar markdown
+      responseText = responseText.replace(/```json|```/g, '').trim();
+      try {
+        return JSON.parse(responseText);
+      } catch (e) {
+        console.error("Erro Parse JSON:", responseText);
+        throw new Error("A IA não retornou um JSON válido.");
+      }
+    }
+    
+    return responseText;
+
+  } catch (error: any) {
+    console.error("Erro SDK Novo:", error);
+    throw new Error(error.message || "Erro na IA");
+  }
+}
+
+export const invokeGeminiAnalysis = analyzeWithAI;
+Resumo: O texto que você achou é a solução "moderna". Se o Replit não atualiza a velha, instalar a nova (@google/genai) é a melhor saída.

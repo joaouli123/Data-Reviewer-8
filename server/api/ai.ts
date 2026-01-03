@@ -1,65 +1,58 @@
-import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold, GenerativeModel } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 
 const API_KEY = process.env.VITE_GOOGLE_GEMINI_API_KEY || "";
-const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
-// Versão da lib carregada (removido require para evitar erro ESM)
-console.log("[AI Init] Carregando integração Gemini...");
+
+// Inicialização diferente (conforme o texto que você mandou)
+const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;
 
 export async function analyzeWithAI(prompt: string, responseJsonSchema: any = null) {
-  // Verificação básica
-  if (!genAI) throw new Error('API_KEY_NOT_CONFIGURED');
+  if (!ai) throw new Error('API_KEY_NOT_CONFIGURED');
 
   try {
-    const model = genAI.getGenerativeModel({ 
-      // Voltando para o Flash após reinstalação limpa
+    console.log("[AI Debug] Usando SDK Novo (@google/genai)...");
+
+    // Na biblioteca nova, a estrutura muda um pouco
+    const response = await ai.models.generateContent({
       model: "gemini-1.5-flash", 
-      generationConfig: {
+      config: {
         responseMimeType: responseJsonSchema ? "application/json" : "text/plain",
         temperature: 0.2,
       },
-      safetySettings: [
-        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
-        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
-        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-      ],
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: prompt }]
+        }
+      ]
     });
 
-    let finalPrompt = prompt;
-    
-    // Reforço no prompt para garantir a estrutura
-    if (responseJsonSchema) {
-      finalPrompt = `${prompt}\n\nIMPORTANTE: Responda APENAS com um JSON válido seguindo estritamente esta estrutura:\n${JSON.stringify(responseJsonSchema)}`;
-    }
+    let responseText = response.text();
 
-    console.log(`[AI Debug] Enviando prompt real para ${model.model}...`);
-    const result = await model.generateContent(finalPrompt);
-    const responseText = result.response.text();
+    if (!responseText) throw new Error("IA retornou resposta vazia");
 
+    // Tratamento de JSON
     if (responseJsonSchema) {
+      // Reforço para garantir JSON limpo se a IA mandar markdown
+      responseText = responseText.replace(/```json|```/g, '').trim();
       try {
         return JSON.parse(responseText);
       } catch (e) {
-        console.error("Erro ao ler JSON da IA:", responseText);
-        // Fallback: Tenta limpar caso a IA tenha mandado markdown ```json ... ```
-        const cleanText = responseText.replace(/```json|```/g, '').trim();
-        return JSON.parse(cleanText);
+        console.error("Erro Parse JSON:", responseText);
+        // Tenta extrair JSON se houver texto ao redor
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          return JSON.parse(jsonMatch[0]);
+        }
+        throw new Error("A IA não retornou um JSON válido.");
       }
     }
     
     return responseText;
 
   } catch (error: any) {
-    console.error("Gemini Error Completo:", error);
-    
-    // Tratamento específico para o erro de versão antiga
-    if (error.message?.includes("404") || error.message?.includes("not found")) {
-        throw new Error("Erro de Versão: Rode 'npm install @google/generative-ai@latest' no terminal.");
-    }
-
-    throw new Error(error.message || "Erro ao conectar com a IA");
+    console.error("Erro SDK Novo:", error);
+    throw new Error(error.message || "Erro na IA");
   }
 }
 
-// Mantendo o alias para compatibilidade se necessário
 export const invokeGeminiAnalysis = analyzeWithAI;
