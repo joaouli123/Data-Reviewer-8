@@ -122,21 +122,21 @@ export function AuthProvider({ children }) {
   };
 
   const logout = () => {
-    // Clear storage immediately to prevent re-authentication
-    localStorage.removeItem("auth");
-    sessionStorage.clear();
-
-    // Clear state
+    // Clear state FIRST to trigger re-renders
     setToken(null);
     setUser(null);
     setCompany(null);
+
+    // Clear storage
+    localStorage.removeItem("auth");
+    sessionStorage.clear();
     
-    // Redirect immediately
+    // Redirect using window.location for a clean state reset
     if (typeof window !== 'undefined') {
       window.location.href = '/login';
     }
 
-    // Background cleanup (optional and won't block redirect)
+    // Background cleanup
     import("@/lib/queryClient").then(({ queryClient }) => {
       queryClient.clear();
     }).catch(() => {});
