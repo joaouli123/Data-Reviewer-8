@@ -155,8 +155,8 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
     onSuccess: (data) => {
       toast.success('Pagamento confirmado!');
       // Invalidate both general and specific queries
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions'], exact: false });
-      queryClient.invalidateQueries({ queryKey: ['/api/cash-flow'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/cash-flow'] });
       
       setPaymentEditOpen(false);
       setSelectedTransaction(null);
