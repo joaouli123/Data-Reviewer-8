@@ -18,8 +18,8 @@ app.use(helmet({
 
 // Basic Rate Limiting
 const rateLimitMap = new Map<string, { count: number; lastReset: number }>();
-const RATE_LIMIT_WINDOW = 15 * 60 * 1000;
-const MAX_REQUESTS = 1000;
+const RATE_LIMIT_WINDOW = 1 * 60 * 1000; // 1 minute window
+const MAX_REQUESTS = 8; // Increased to 8 requests per minute
 
 app.use((req, res, next) => {
   const ip = req.ip || "unknown";
@@ -34,6 +34,7 @@ app.use((req, res, next) => {
   }
   rateLimitMap.set(ip, userData);
   if (userData.count > MAX_REQUESTS) {
+    console.log(`Rate limit exceeded for IP: ${ip}`);
     return res.status(429).json({ error: "Muitas requisições. Tente novamente mais tarde." });
   }
   next();
