@@ -51,8 +51,13 @@ import {
 // Transforma "5.545,45" em 5545.45
 function sanitizeMoney(value: any): string {
   if (value === null || value === undefined) return "0.00";
+  
+  // Se já for um número puro (number), apenas garante 2 casas
+  if (typeof value === 'number') return value.toFixed(2);
+  
   const str = String(value);
-  // Se já for um número puro em string (ex: "5545.45"), apenas garante 2 casas
+  
+  // Se já for uma string numérica pura (ex: "5545.45"), apenas garante 2 casas
   if (/^\d+(\.\d+)?$/.test(str)) return parseFloat(str).toFixed(2);
 
   // Se tiver vírgula, remove pontos de milhar e troca vírgula por ponto
@@ -314,7 +319,11 @@ export class DatabaseStorage implements IStorage {
         ...data,
         companyId,
         amount: sanitizeMoney(data.amount), // BLINDAGEM CONTRA 554.000,00
-        date: data.date instanceof Date ? data.date : (data.date ? new Date(data.date) : new Date())
+        date: (() => {
+          const d = data.date instanceof Date ? data.date : (data.date ? new Date(data.date) : new Date());
+          d.setUTCHours(12, 0, 0, 0);
+          return d;
+        })()
       };
       const result = await db.insert(transactions).values(insertData as any).returning();
       return result[0];
@@ -363,7 +372,12 @@ export class DatabaseStorage implements IStorage {
     const result = await db.update(transactions)
       .set({
         ...data,
-        amount: data.amount ? sanitizeMoney(data.amount) : undefined
+        amount: data.amount ? sanitizeMoney(data.amount) : undefined,
+        date: data.date ? (() => {
+          const d = data.date instanceof Date ? data.date : new Date(data.date);
+          d.setUTCHours(12, 0, 0, 0);
+          return d;
+        })() : undefined
       })
       .where(and(eq(transactions.companyId, companyId), eq(transactions.id, id)))
       .returning();
@@ -422,6 +436,11 @@ export class DatabaseStorage implements IStorage {
         companyId, 
         totalAmount: sanitizeMoney(data.totalAmount),
         paidAmount: sanitizeMoney(data.paidAmount),
+        date: (() => {
+          const d = data.date instanceof Date ? data.date : (data.date ? new Date(data.date) : new Date());
+          d.setUTCHours(12, 0, 0, 0);
+          return d;
+        })(),
         installmentCount: data.installmentCount || 1, 
         status: data.status || "pendente",
       } as any).returning();
@@ -458,6 +477,11 @@ export class DatabaseStorage implements IStorage {
         companyId, 
         totalAmount: sanitizeMoney(data.totalAmount),
         paidAmount: sanitizeMoney(data.paidAmount),
+        date: (() => {
+          const d = data.date instanceof Date ? data.date : (data.date ? new Date(data.date) : new Date());
+          d.setUTCHours(12, 0, 0, 0);
+          return d;
+        })(),
         installmentCount: data.installmentCount || 1, 
         status: data.status || "pendente",
       } as any).returning();
