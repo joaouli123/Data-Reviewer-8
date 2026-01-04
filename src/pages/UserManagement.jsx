@@ -174,38 +174,38 @@ export default function UserManagement() {
       {
         group: "TRANSAÇÕES",
         perms: [
-          { id: PERMISSIONS.VIEW_TRANSACTIONS, label: "View Transactions" },
-          { id: PERMISSIONS.CREATE_TRANSACTIONS, label: "Create Transactions" },
-          { id: PERMISSIONS.EDIT_TRANSACTIONS, label: "Edit Transactions" },
-          { id: PERMISSIONS.DELETE_TRANSACTIONS, label: "Delete Transactions" },
-          { id: PERMISSIONS.IMPORT_BANK, label: "Import Bank" }
+          { id: PERMISSIONS.VIEW_TRANSACTIONS, label: "Ver Transações" },
+          { id: PERMISSIONS.CREATE_TRANSACTIONS, label: "Criar Transações" },
+          { id: PERMISSIONS.EDIT_TRANSACTIONS, label: "Editar Transações" },
+          { id: PERMISSIONS.DELETE_TRANSACTIONS, label: "Excluir Transações" },
+          { id: PERMISSIONS.IMPORT_BANK, label: "Importar Banco (OFX)" }
         ]
       },
       {
         group: "RELATÓRIOS",
         perms: [
-          { id: PERMISSIONS.VIEW_REPORTS, label: "View Reports" },
-          { id: PERMISSIONS.VIEW_PROFIT, label: "View Profit" },
-          { id: PERMISSIONS.EXPORT_REPORTS, label: "Export Reports" }
+          { id: PERMISSIONS.VIEW_REPORTS, label: "Ver Relatórios" },
+          { id: PERMISSIONS.VIEW_PROFIT, label: "Ver Lucratividade" },
+          { id: PERMISSIONS.EXPORT_REPORTS, label: "Exportar Relatórios (PDF/XLS)" }
         ]
       },
       {
         group: "ENTIDADES",
         perms: [
-          { id: PERMISSIONS.VIEW_CUSTOMERS, label: "View Customers" },
-          { id: PERMISSIONS.MANAGE_CUSTOMERS, label: "Manage Customers" },
-          { id: PERMISSIONS.VIEW_SUPPLIERS, label: "View Suppliers" },
-          { id: PERMISSIONS.MANAGE_SUPPLIERS, label: "Manage Suppliers" }
+          { id: PERMISSIONS.VIEW_CUSTOMERS, label: "Ver Clientes" },
+          { id: PERMISSIONS.MANAGE_CUSTOMERS, label: "Gerenciar Clientes" },
+          { id: PERMISSIONS.VIEW_SUPPLIERS, label: "Ver Fornecedores" },
+          { id: PERMISSIONS.MANAGE_SUPPLIERS, label: "Gerenciar Fornecedores" }
         ]
       },
       {
         group: "SISTEMA",
         perms: [
           { id: PERMISSIONS.PRICE_CALC, label: "Cálculo de Preços" },
-          { id: PERMISSIONS.MANAGE_USERS, label: "Manage Users" },
-          { id: PERMISSIONS.INVITE_USERS, label: "Invite Users" },
-          { id: PERMISSIONS.VIEW_SETTINGS, label: "View Settings" },
-          { id: PERMISSIONS.MANAGE_SETTINGS, label: "Manage Settings" }
+          { id: PERMISSIONS.MANAGE_USERS, label: "Gerenciar Usuários" },
+          { id: PERMISSIONS.INVITE_USERS, label: "Convidar Usuários" },
+          { id: PERMISSIONS.VIEW_SETTINGS, label: "Ver Configurações" },
+          { id: PERMISSIONS.MANAGE_SETTINGS, label: "Gerenciar Configurações" }
         ]
       }
     ];
