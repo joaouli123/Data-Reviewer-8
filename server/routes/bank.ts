@@ -127,7 +127,7 @@ export function registerBankRoutes(app: Express) {
       const transactions = Array.isArray(stmttrns) ? stmttrns : [stmttrns];
       console.log("[OFX Debug] Número de transações encontradas:", transactions.length);
       
-      const newItems = [];
+      const newItems: any[] = [];
       let duplicateCount = 0;
       const existing = await storage.getBankStatementItems(req.user.companyId);
       
@@ -162,8 +162,7 @@ export function registerBankRoutes(app: Express) {
       console.log("[OFX Debug] Importação finalizada. Novos:", newItems.length, "Duplicados:", duplicateCount);
       const totalItems = await storage.getBankStatementItems(req.user.companyId);
       console.log("[OFX Debug] Itens totais no banco para esta empresa:", totalItems.length);
-      console.log("[OFX Debug] IDs dos itens:", totalItems.map(i => i.id));
-      res.json({ newItems, duplicateCount });
+      res.json({ newItems, duplicateCount, totalItems: totalItems.length });
     } catch (error: any) {
       console.error('[OFX Debug] Erro fatal:', error);
       res.status(400).json({ error: "Erro ao processar arquivo OFX: formato inválido ou corrompido" });

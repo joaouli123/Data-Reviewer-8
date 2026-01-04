@@ -35,13 +35,15 @@ export default function BankReconciliation({ open, onOpenChange }) {
     queryFn: () => apiRequest('GET', '/api/categories')
   });
 
-  const { data: bankItems = [], isLoading: isLoadingItems, refetch: refetchBankItems } = useQuery({
+  const { data: bankItemsRaw = [], isLoading: isLoadingItems, refetch: refetchBankItems } = useQuery({
     queryKey: ['/api/bank/items'],
     queryFn: () => apiRequest('GET', '/api/bank/items'),
     enabled: true,
-    staleTime: 0, // Ensure we always get fresh data
+    staleTime: 0,
     gcTime: 0
   });
+
+  const bankItems = Array.isArray(bankItemsRaw) ? bankItemsRaw : (bankItemsRaw.data || []);
 
   // Log para depuração profunda
   useEffect(() => {
