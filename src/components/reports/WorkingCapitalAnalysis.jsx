@@ -79,7 +79,7 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
     try {
       const wc = calculateWorkingCapital();
       
-      const prompt = `Você é um analista financeiro. Analise a situação de capital de giro e retorne recomendações estruturadas.
+    const prompt = `Você é um analista financeiro sênior. Analise a situação de capital de giro e retorne recomendações estruturadas e detalhadas.
 
 SITUAÇÃO ATUAL:
 - Capital de Giro Atual: R$ ${wc.workingCapital.toFixed(2)}
@@ -89,10 +89,12 @@ SITUAÇÃO ATUAL:
 - Capital de Giro Recomendado (2 meses): R$ ${wc.recommendedWorkingCapital.toFixed(2)}
 - Déficit/Superávit: R$ ${(wc.workingCapital - wc.recommendedWorkingCapital).toFixed(2)}
 
-FORNEÇA:
-1. Assessment: análise da situação atual (1-2 frases)
-2. Recommendations: lista com 2-3 ações específicas (action: string, impact: string, priority: high/medium/low)
-3. Risk Level: low, medium ou high`;
+REQUISITOS DA RESPOSTA:
+1. "assessment": Uma análise profunda da saúde financeira atual (mínimo 3 frases).
+2. "recommendations": Uma lista com exatamente 3 ações práticas. Cada ação deve ter "action" (o que fazer), "impact" (qual o resultado esperado) e "priority" ("high", "medium" ou "low").
+3. "risk_level": Nível de risco ("low", "medium" ou "high").
+
+Responda em JSON seguindo rigorosamente os nomes das chaves acima.`;
 
       const schema = {
         properties: {
@@ -123,20 +125,33 @@ FORNEÇA:
 
       // Garantir estrutura mínima - ser mais flexível
       const validatedAnalysis = {
-        assessment: response.assessment || response.avaliacao || 'Análise de capital de giro concluída',
+        assessment: response.assessment || response.avaliacao || response.overall_assessment || 'Análise de capital de giro concluída',
         recommendations: Array.isArray(response.recommendations) ? response.recommendations : 
-                         Array.isArray(response.recomendacoes) ? response.recomendacoes : [],
-        risk_level: response.risk_level || response.nivel_risco || 'medium'
+                         Array.isArray(response.recomendacoes) ? response.recomendacoes : 
+                         Array.isArray(response.key_recommendations) ? response.key_recommendations : [],
+        risk_level: response.risk_level || response.nivel_risco || response.risk || 'medium'
       };
 
-      // Mapear campos internos se a IA responder em português
+      // Mapear campos internos se a IA responder em português ou formatos alternativos
       if (validatedAnalysis.recommendations.length > 0) {
-        validatedAnalysis.recommendations = validatedAnalysis.recommendations.map(rec => ({
-          action: rec.action || rec.acao || 'Ação sugerida',
-          impact: rec.impact || rec.impacto || 'Impacto positivo',
-          priority: rec.priority || rec.prioridade || 'medium'
-        }));
+        validatedAnalysis.recommendations = validatedAnalysis.recommendations.map(rec => {
+          // Extrair ação
+          const action = rec.action || rec.acao || rec.suggestion || rec.strategy || 'Ação sugerida';
+          // Extrair impacto
+          const impact = rec.impact || rec.impacto || rec.expected_impact || rec.rationale || 'Impacto positivo';
+          // Extrair prioridade
+          const priority = (rec.priority || rec.prioridade || rec.risk_level || 'medium').toLowerCase();
+          
+          return {
+            action,
+            impact,
+            priority: priority.includes('alta') || priority.includes('high') ? 'high' :
+                      priority.includes('baixa') || priority.includes('low') ? 'low' : 'medium'
+          };
+        });
       }
+
+      console.log("[AI Debug] Análise Validada:", validatedAnalysis);
 
       // Validar que temos pelo menos ALGUNS dados
       const hasAssessment = validatedAnalysis.assessment && validatedAnalysis.assessment.length > 0;
