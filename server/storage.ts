@@ -56,6 +56,19 @@ export class DatabaseStorage {
   // copiando do seu arquivo original, pois eles são necessários para o resto do sistema.
   // Vou colocar os principais aqui para garantir que compile:
 
+  async getCategories(companyId: any) {
+    return await db.select().from(categories).where(eq(categories.companyId, companyId));
+  }
+
+  async createCategory(companyId: any, data: any) {
+    const [category] = await db.insert(categories).values({ ...data, companyId }).returning();
+    return category;
+  }
+
+  async deleteCategory(companyId: any, id: any) {
+    await db.delete(categories).where(and(eq(categories.companyId, companyId), eq(categories.id, id)));
+  }
+
   async getTransactions(companyId: any) {
     return await db.select().from(transactions).where(eq(transactions.companyId, companyId)).orderBy(desc(transactions.date));
   }

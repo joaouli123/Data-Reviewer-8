@@ -57,8 +57,7 @@ export const Supplier = {
 export const Category = {
   async list() {
     const data = await apiRequest('GET', '/api/categories') || [];
-    // Filter out invalid categories (with timestamp IDs instead of UUIDs)
-    return data.filter(cat => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cat.id));
+    return data;
   },
   async get(id) {
     return apiRequest('GET', `/api/categories/${id}`);
