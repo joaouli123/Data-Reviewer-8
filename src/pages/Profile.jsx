@@ -292,11 +292,18 @@ export default function ProfilePage() {
 
   const invoices = Array.isArray(invoicesResult) ? invoicesResult : [];
 
-  const getInitials = (name) => name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'US';
+  const planTranslation = {
+    'monthly': 'Mensal',
+    'pro': 'Pro / Vitalício',
+    'basic': 'Básico',
+    'enterprise': 'Empresarial'
+  };
 
-  const currentSubscription = company?.subscriptionPlan || "Free";
+  const currentSubscription = planTranslation[company?.subscriptionPlan] || company?.subscriptionPlan || "Free";
   const subscriptionStatus = company?.paymentStatus === "approved" ? "Ativo" : "Pendente";
-  const planValue = company?.subscriptionPlan === "pro" ? "99,90" : "0,00";
+  const planValue = company?.subscriptionPlan === "pro" ? "997,00" : (company?.subscriptionPlan === "monthly" ? "97,00" : "0,00");
+
+  const getInitials = (name) => name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'US';
 
   return (
     <div className="container max-w-4xl py-8 space-y-8">
@@ -362,7 +369,7 @@ export default function ProfilePage() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="cidade">Cidade</Label>
-                      <Select value={formData.cidade} onValueChange={v => setFormData(p => ({...p, cidade: v}))}>
+                      <Select value={formData.cidade} onValueChange={v => setFormData(p => ({...p, city: v}))}>
                         <SelectTrigger disabled={!formData.estado}><SelectValue placeholder={formData.cidade || "Cidade"} /></SelectTrigger>
                         <SelectContent>
                           {cities.length > 0 ? (
@@ -396,7 +403,7 @@ export default function ProfilePage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <CreditCard className="w-5 h-5" />
-                  Detalhes da Assinatura
+                  Detalhes Financeiros
                 </CardTitle>
                 <CardDescription>Gerencie seu plano e visualize o histórico de cobranças.</CardDescription>
               </CardHeader>
@@ -438,8 +445,8 @@ export default function ProfilePage() {
                               <td className="px-4 py-3">
                                 {inv.date ? new Date(inv.date).toLocaleDateString('pt-BR') : '---'}
                               </td>
-                              <td className="px-4 py-3 capitalize">{inv.plan}</td>
-                              <td className="px-4 py-3">R$ {parseFloat(inv.amount || 0).toFixed(2)}</td>
+                              <td className="px-4 py-3 capitalize">{planTranslation[inv.plan] || inv.plan}</td>
+                              <td className="px-4 py-3">R$ {parseFloat(inv.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                               <td className="px-4 py-3 text-right">
                                 <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">Pago</Badge>
                               </td>
