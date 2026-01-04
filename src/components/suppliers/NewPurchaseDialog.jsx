@@ -356,20 +356,22 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
                 {customInstallments.map((inst, idx) => (
                   <div key={idx} className="flex gap-2 items-center bg-white p-2 rounded border shadow-sm">
                     <span className="text-xs font-bold text-slate-400 w-6">{idx + 1}º</span>
-                    <div className="flex-1 flex items-center gap-1">
+                    <div className="flex-[2] flex items-center gap-1">
                       <span className="text-xs text-slate-400">R$</span>
                       <CurrencyInput
                         value={inst.amount}
                         onChange={(e) => updateCustomInstallment(idx, 'amount', e.target.value)}
-                        className="h-8 text-sm"
+                        className="h-8 text-sm w-full"
                       />
                     </div>
-                    <Input
-                      type="date"
-                      value={inst.due_date}
-                      onChange={(e) => updateCustomInstallment(idx, 'due_date', e.target.value)}
-                      className="h-8 text-sm w-32"
-                    />
+                    <div className="flex-[3]">
+                      <Input
+                        type="date"
+                        value={inst.due_date}
+                        onChange={(e) => updateCustomInstallment(idx, 'due_date', e.target.value)}
+                        className="h-8 text-sm w-full px-2"
+                      />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -381,7 +383,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
                    ? 'text-emerald-600' 
                    : 'text-rose-600'
                 }`}>
-                  R$ {customInstallments.reduce((sum, i) => sum + parseCurrency(i.amount), 0).toFixed(2)}
+                  R$ {customInstallments.reduce((sum, i) => sum + parseCurrency(i.amount), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               </div>
             </div>

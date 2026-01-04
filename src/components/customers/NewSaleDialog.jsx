@@ -354,25 +354,23 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
               </div>
               <div className="max-h-60 overflow-y-auto space-y-2 border rounded-lg p-3 bg-slate-50 pr-2">
                 {customInstallments.map((inst, idx) => (
-                  <div key={idx} className="grid grid-cols-2 gap-2 items-center bg-white p-2 rounded border">
-                    <div className="space-y-2">
-                      <div className="text-sm font-medium text-slate-600">
-                        Parcela {idx + 1}
-                      </div>
+                  <div key={idx} className="flex gap-2 items-center bg-white p-2 rounded border shadow-sm pr-1">
+                    <span className="text-xs font-bold text-slate-400 w-8 pl-1">{idx + 1}º</span>
+                    <div className="flex-[2] flex items-center gap-1">
+                      <span className="text-xs text-slate-400">R$</span>
                       <CurrencyInput
                         placeholder="Valor"
                         value={inst.amount}
                         onChange={(e) => updateCustomInstallment(idx, 'amount', e.target.value)}
-                        className="text-sm"
+                        className="h-8 text-sm w-full"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs text-slate-500">Vencimento</Label>
+                    <div className="flex-[3]">
                       <Input
                         type="date"
                         value={inst.due_date}
                         onChange={(e) => updateCustomInstallment(idx, 'due_date', e.target.value)}
-                        className="text-sm"
+                        className="h-8 text-sm w-full px-2"
                       />
                     </div>
                   </div>
@@ -385,7 +383,7 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
                         ? 'text-emerald-600'
                         : 'text-rose-600'
                     }`}>
-                      R$ {customInstallments.reduce((sum, inst) => sum + parseCurrency(inst.amount), 0).toFixed(2)}
+                      R$ {customInstallments.reduce((sum, inst) => sum + parseCurrency(inst.amount), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </div>
                 </div>
