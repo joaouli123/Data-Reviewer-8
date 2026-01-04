@@ -101,7 +101,7 @@ export default function DashboardPage() {
   const { data: allTxData = [], isLoading } = useQuery({
     queryKey: ['/api/transactions', company?.id],
     queryFn: () => Transaction.list(),
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    staleTime: 0, // Invalida imediatamente para refletir novos dados
     refetchOnWindowFocus: true,
     enabled: !!company?.id
   });
@@ -137,7 +137,7 @@ export default function DashboardPage() {
     });
 
     const totalRevenue = filteredTransactions
-      .filter(t => t.type === 'venda')
+      .filter(t => ['venda', 'venda_prazo', 'receita', 'income'].includes(t.type))
       .reduce((acc, curr) => {
         const amount = parseFloat(curr.amount) || 0;
         const interest = parseFloat(curr.interest) || 0;
@@ -145,7 +145,7 @@ export default function DashboardPage() {
       }, 0);
     
     const totalExpenses = filteredTransactions
-      .filter(t => t.type === 'compra')
+      .filter(t => ['compra', 'compra_prazo', 'despesa', 'expense'].includes(t.type))
       .reduce((acc, curr) => {
         const amount = parseFloat(curr.amount) || 0;
         const interest = parseFloat(curr.interest) || 0;
@@ -163,7 +163,7 @@ export default function DashboardPage() {
     const futureRevenueTransactions = allTransactions.filter(t => {
       const tDateStr = t.date.split('T')[0];
       const tDate = parseISO(tDateStr);
-      return t.type === 'venda' && tDate >= today && tDate <= thirtyDaysFromNow;
+      return ['venda', 'venda_prazo', 'receita', 'income'].includes(t.type) && tDate >= today && tDate <= thirtyDaysFromNow;
     });
     
     const futureRevenue = futureRevenueTransactions.reduce((sum, t) => sum + Math.abs((parseFloat(t.amount || 0) + parseFloat(t.interest || 0))), 0);
@@ -171,7 +171,7 @@ export default function DashboardPage() {
     const futureExpensesTransactions = allTransactions.filter(t => {
       const tDateStr = t.date.split('T')[0];
       const tDate = parseISO(tDateStr);
-      return t.type === 'compra' && tDate >= today && tDate <= thirtyDaysFromNow;
+      return ['compra', 'compra_prazo', 'despesa', 'expense'].includes(t.type) && tDate >= today && tDate <= thirtyDaysFromNow;
     });
     
     const futureExpenses = futureExpensesTransactions.reduce((sum, t) => sum + Math.abs((parseFloat(t.amount || 0) + parseFloat(t.interest || 0))), 0);
@@ -196,10 +196,10 @@ export default function DashboardPage() {
     const chartData = sortedMonths.map(monthKey => {
       const monthTrans = monthsWithData.get(monthKey);
       const income = monthTrans
-        .filter(t => t.type === 'venda')
+        .filter(t => ['venda', 'venda_prazo', 'receita', 'income'].includes(t.type))
         .reduce((acc, t) => acc + Math.abs((parseFloat(t.amount || 0) + parseFloat(t.interest || 0))), 0);
       const expenseRaw = monthTrans
-        .filter(t => t.type === 'compra')
+        .filter(t => ['compra', 'compra_prazo', 'despesa', 'expense'].includes(t.type))
         .reduce((acc, t) => acc + ((parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0)), 0);
       
       const [year, month] = monthKey.split('-');
@@ -358,12 +358,12 @@ export default function DashboardPage() {
                       <div className="flex items-center gap-2 flex-1 min-w-0">
                         <div
                           className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                            t.type === 'venda'
+                            ['venda', 'venda_prazo', 'receita', 'income'].includes(t.type)
                               ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400'
                               : 'bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400'
                           }`}
                         >
-                          {t.type === 'venda' ? (
+                          {['venda', 'venda_prazo', 'receita', 'income'].includes(t.type) ? (
                             <TrendingUp className="w-3 h-3" />
                           ) : (
                             <DollarSign className="w-3 h-3" />
@@ -386,10 +386,10 @@ export default function DashboardPage() {
                       </div>
                       <span
                         className={`font-semibold text-xs flex-shrink-0 whitespace-nowrap ${
-                          t.type === 'venda' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
+                          ['venda', 'venda_prazo', 'receita', 'income'].includes(t.type) ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
                         }`}
                       >
-                        {t.type === 'venda' ? '+' : '-'} R${' '}
+                        {['venda', 'venda_prazo', 'receita', 'income'].includes(t.type) ? '+' : '-'} R${' '}
                         {Math.abs(parseFloat(t.amount || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </span>
                     </div>
