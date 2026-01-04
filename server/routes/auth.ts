@@ -286,4 +286,81 @@ export function registerAuthRoutes(app: Express) {
   app.post("/api/auth/logout", authMiddleware, async (req: AuthenticatedRequest, res) => {
     res.json({ message: "Logged out" });
   });
+
+  // User Management Routes
+  app.get("/api/users", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      
+      const companyUsers = await db.select()
+        .from(users)
+        .where(eq(users.companyId, req.user.companyId))
+        .orderBy(desc(users.createdAt));
+      
+      res.json(companyUsers.map(u => ({
+        id: u.id,
+        username: u.username,
+        email: u.email,
+        name: u.name,
+        role: u.role,
+        status: u.status,
+        permissions: u.permissions ? JSON.parse(u.permissions) : {}
+      })));
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ error: "Failed to fetch users" });
+    }
+  });
+
+  app.post("/api/invitations", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      const { email, role, permissions, name, username, password } = req.body;
+
+      // For direct creation in this simplified version as seen in the UI's onInvite
+      const hashedPassword = await hashPassword(password || "mudar123");
+      const [newUser] = await db.insert(users).values({
+        companyId: req.user.companyId,
+        username: username || email,
+        email,
+        name,
+        password: hashedPassword,
+        role: role || "user",
+        permissions: permissions ? JSON.stringify(permissions) : "{}",
+        status: "active"
+      }).returning();
+
+      res.status(201).json(newUser);
+    } catch (error) {
+      console.error("Error creating user:", error);
+      res.status(500).json({ error: "Failed to create user" });
+    }
+  });
+
+  app.delete("/api/users/:id", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      if (req.user.id === req.params.id) return res.status(400).json({ error: "Cannot delete yourself" });
+
+      await db.delete(users).where(and(eq(users.id, req.params.id), eq(users.companyId, req.user.companyId)));
+      res.json({ message: "User deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete user" });
+    }
+  });
+
+  app.patch("/api/users/:id/permissions", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      const { permissions } = req.body;
+
+      await db.update(users)
+        .set({ permissions: JSON.stringify(permissions), updatedAt: new Date() })
+        .where(and(eq(users.id, req.params.id), eq(users.companyId, req.user.companyId)));
+
+      res.json({ message: "Permissions updated successfully" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update permissions" });
+    }
+  });
 }
