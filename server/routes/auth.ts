@@ -151,8 +151,11 @@ export function registerAuthRoutes(app: Express) {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const { name, phone, cep, rua, numero, complemento, estado, cidade, avatar } = req.body;
       
+      const updateData: any = { name, phone, cep, rua, numero, complemento, estado, cidade, updatedAt: new Date() };
+      if (avatar) updateData.avatar = avatar;
+
       const [updatedUser] = await db.update(users)
-        .set({ name, phone, cep, rua, numero, complemento, estado, cidade, avatar })
+        .set(updateData)
         .where(eq(users.id, req.user.id))
         .returning();
 
@@ -175,6 +178,29 @@ export function registerAuthRoutes(app: Express) {
     } catch (error) {
       console.error("Error updating profile:", error);
       res.status(500).json({ error: "Failed to update profile" });
+    }
+  });
+
+  // Reset Password
+  app.post("/api/auth/reset-password", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      const { newPassword } = req.body;
+      if (!newPassword || newPassword.length < 6) {
+        return res.status(400).json({ error: "Password must be at least 6 characters" });
+      }
+
+      const { hashPassword } = await import("../auth");
+      const hashedPassword = await hashPassword(newPassword);
+
+      await db.update(users)
+        .set({ password: hashedPassword, updatedAt: new Date() })
+        .where(eq(users.id, req.user.id));
+
+      res.json({ message: "Password updated successfully" });
+    } catch (error) {
+      console.error("Error resetting password:", error);
+      res.status(500).json({ error: "Failed to reset password" });
     }
   });
 

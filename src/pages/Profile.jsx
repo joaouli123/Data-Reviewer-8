@@ -260,7 +260,21 @@ export default function ProfilePage() {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.name?.trim()) return toast.error('Nome completo é obrigatório');
-    updateProfileMutation.mutate({ ...formData, avatar: previewUrl || user?.avatar });
+    
+    // Send all address fields
+    const profileData = {
+      name: formData.name,
+      phone: formData.phone,
+      cep: formData.cep,
+      rua: formData.rua,
+      numero: formData.numero,
+      complemento: formData.complemento,
+      estado: formData.estado,
+      cidade: formData.cidade,
+      avatar: previewUrl || user?.avatar
+    };
+    
+    updateProfileMutation.mutate(profileData);
   };
 
   const handlePasswordReset = (e) => {
@@ -349,8 +363,14 @@ export default function ProfilePage() {
                     <div className="space-y-2">
                       <Label htmlFor="cidade">Cidade</Label>
                       <Select value={formData.cidade} onValueChange={v => setFormData(p => ({...p, cidade: v}))}>
-                        <SelectTrigger disabled={!formData.estado}><SelectValue placeholder="Cidade" /></SelectTrigger>
-                        <SelectContent>{cities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                        <SelectTrigger disabled={!formData.estado}><SelectValue placeholder={formData.cidade || "Cidade"} /></SelectTrigger>
+                        <SelectContent>
+                          {cities.length > 0 ? (
+                            cities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)
+                          ) : (
+                            formData.cidade && <SelectItem value={formData.cidade}>{formData.cidade}</SelectItem>
+                          )}
+                        </SelectContent>
                       </Select>
                     </div>
                   </div>
