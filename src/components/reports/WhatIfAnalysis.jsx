@@ -125,17 +125,28 @@ export default function WhatIfAnalysis({ transactions, saleInstallments, purchas
       });
 
       // Use AI to analyze scenarios
-      const prompt = `Analise os seguintes cenários de fluxo de caixa para os próximos 6 meses:
+      const prompt = `Você é um analista financeiro sênior especializado em simulações de cenários. Analise os seguintes dados de fluxo de caixa para os próximos 6 meses e forneça uma visão estratégica profunda em JSON.
 
-Cenário Base: ${JSON.stringify(baseline)}
-Cenário com Alterações (${scenarioInputs.revenueIncrease}% receita, ${scenarioInputs.expenseIncrease}% despesa): ${JSON.stringify(withChanges)}
-Cenário Otimista: ${JSON.stringify(optimistic)}
-Cenário Pessimista: ${JSON.stringify(pessimistic)}
+DADOS DA SIMULAÇÃO:
+- Cenário Base: ${JSON.stringify(baseline)}
+- Cenário com Alterações (${scenarioInputs.revenueIncrease}% receita, ${scenarioInputs.expenseIncrease}% despesa): ${JSON.stringify(withChanges)}
+- Cenário Otimista: ${JSON.stringify(optimistic)}
+- Cenário Pessimista: ${JSON.stringify(pessimistic)}
+- Atraso Médio Recebimentos: ${receivableDelay} dias
+- Atraso Médio Pagamentos: ${payableDelay} dias
 
-Atraso Recebimentos: ${receivableDelay} dias
-Atraso Pagamentos: ${payableDelay} dias
+REQUISITOS DA RESPOSTA (JSON):
+1. scenario_analysis: Objeto com análises textuais detalhadas (mínimo 2 frases cada):
+   - base_case: Análise da tendência atual sem mudanças.
+   - with_changes: Impacto das alterações manuais sugeridas pelo usuário.
+   - optimistic: O que acontece se tudo der certo (aumento de receita e corte de custos).
+   - pessimistic: Riscos caso a receita caia e custos subam.
 
-Forneça análise detalhada e recomendações estratégicas.`;
+2. key_risks: Array de objetos com {risk, probability ("high", "medium", "low"), impact}.
+3. recommendations: Array de objetos com {action, scenario, priority ("critical", "high", "medium", "low")}.
+4. cash_flow_impact: Resumo executivo do impacto final na liquidez.
+
+RESPOSTA OBRIGATÓRIA EM JSON.`;
 
       const response = await InvokeLLM(prompt, {
         properties: {
@@ -174,18 +185,30 @@ Forneça análise detalhada e recomendações estratégicas.`;
         }
       });
 
-      // Garantir que a resposta tenha a estrutura esperada para evitar tela branca
+      // Mapeamento flexível para aceitar português e garantir preenchimento
+      const rawAnalysis = response?.scenario_analysis || response;
       const safeAnalysis = {
         scenario_analysis: {
-          base_case: response?.scenario_analysis?.base_case || response?.base_case || "Análise indisponível",
-          with_changes: response?.scenario_analysis?.with_changes || response?.with_changes || "Análise indisponível",
-          optimistic: response?.scenario_analysis?.optimistic || response?.optimistic || "Análise indisponível",
-          pessimistic: response?.scenario_analysis?.pessimistic || response?.pessimistic || "Análise indisponível"
+          base_case: rawAnalysis?.base_case || response?.analise_base || response?.cenario_base || "Análise do cenário base indisponível no momento.",
+          with_changes: rawAnalysis?.with_changes || response?.analise_alteracoes || response?.com_alteracoes || "Análise do cenário com alterações indisponível no momento.",
+          optimistic: rawAnalysis?.optimistic || response?.analise_otimista || response?.cenario_otimista || "Análise do cenário otimista indisponível no momento.",
+          pessimistic: rawAnalysis?.pessimistic || response?.analise_pessimista || response?.cenario_pessimista || "Análise do cenário pessimista indisponível no momento."
         },
-        key_risks: response?.key_risks || [],
-        recommendations: response?.recommendations || [],
-        cash_flow_impact: response?.cash_flow_impact || ""
+        key_risks: Array.isArray(response?.key_risks) ? response.key_risks : 
+                   Array.isArray(response?.riscos_chave) ? response.riscos_chave : [],
+        recommendations: Array.isArray(response?.recommendations) ? response.recommendations : 
+                         Array.isArray(response?.recomendacoes) ? response.recomendacoes : [],
+        cash_flow_impact: response?.cash_flow_impact || response?.impacto_fluxo_caixa || ""
       };
+
+      // Normalizar recomendações
+      if (safeAnalysis.recommendations.length > 0) {
+        safeAnalysis.recommendations = safeAnalysis.recommendations.map(rec => ({
+          action: rec.action || rec.acao || "Ação não especificada",
+          scenario: rec.scenario || rec.cenario || "Todos",
+          priority: rec.priority || rec.prioridade || "medium"
+        }));
+      }
 
       setScenarios({
         baseline,
