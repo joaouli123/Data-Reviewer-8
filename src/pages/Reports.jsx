@@ -222,7 +222,9 @@ export default function ReportsPage() {
         .reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
 
       // Improved prompt with complete history context
-      const prompt = `Você é consultor financeiro. Baseado no histórico COMPLETO de transações, analise MUITO BREVEMENTE:
+      const prompt = `Você é um consultor financeiro sênior especializado em PME. Analise o histórico COMPLETO de transações e forneça insights estratégicos em JSON.
+
+IMPORTANTE: Toda a sua resposta deve estar em PORTUGUÊS (BR), incluindo os campos de texto dentro do JSON.
 
 HISTÓRICO COMPLETO:
 - Receita Total: R$ ${allRevenue.toFixed(0)}
@@ -236,14 +238,14 @@ PERÍODO SELECIONADO (${dateRange.label}):
 - Lucro: R$ ${profit.toFixed(0)}
 - Transações: ${filteredTxns.length}
 
-IMPORTANTE: No campo "month" da previsão de 3 meses, use APENAS os nomes: "Próximo Mês", "Mês 2" e "Mês 3".
+REQUISITOS DA RESPOSTA (JSON EM PORTUGUÊS):
+1. executive_summary: Resumo executivo da saúde financeira atual e projeção (mínimo 3 frases).
+2. cash_flow_forecast: Array com 3 meses de previsão (month, predicted_revenue, predicted_expense). Use meses reais ou nomes relativos.
+3. expense_reduction_opportunities: Array de { suggestion: 'sugestão em PT-BR' } com pelo menos 2 oportunidades de corte.
+4. revenue_growth_suggestions: Array de { strategy: 'estratégia em PT-BR', rationale: 'por que fazer em PT-BR', target_customer_segment: 'quem focar em PT-BR' } com pelo menos 3 estratégias.
+5. anomalies: Array de { title, description } com riscos identificados.
 
-Forneça:
-1. executive_summary: Como está o negócio AGORA (1 frase) + O que vai acontecer nos próximos 3 meses (2 frases)
-2. cash_flow_forecast: Array com 3 meses de previsão (mês, predicted_revenue, predicted_expense) baseado no histórico
-3. expense_reduction_opportunities: Array com 2 sugestões de corte de custos
-4. revenue_growth_suggestions: Array com 2 estratégias para vender mais
-5. anomalies: Array com riscos iminentes (se houver)`;
+RESPOSTA OBRIGATÓRIA EM JSON E EM PORTUGUÊS DO BRASIL.`;
 
       const response = await InvokeLLM(prompt, {
         properties: {
@@ -254,13 +256,10 @@ Forneça:
               type: "object",
               properties: {
                 month: { type: "string" },
-                predicted_revenue: { type: "number", description: "Numerical value only, no R$ prefix" },
-                predicted_expense: { type: "number", description: "Numerical value only, no R$ prefix" },
-                reasoning: { type: "string" }
-              },
-              required: ["month", "predicted_revenue", "predicted_expense"]
-            },
-            minItems: 3
+                predicted_revenue: { type: "number" },
+                predicted_expense: { type: "number" }
+              }
+            }
           },
           expense_reduction_opportunities: {
             type: "array",
@@ -268,7 +267,14 @@ Forneça:
           },
           revenue_growth_suggestions: {
             type: "array",
-            items: { type: "object", properties: { strategy: { type: "string" } } }
+            items: { 
+              type: "object", 
+              properties: { 
+                strategy: { type: "string" },
+                rationale: { type: "string" },
+                target_customer_segment: { type: "string" }
+              } 
+            }
           },
           anomalies: {
             type: "array",

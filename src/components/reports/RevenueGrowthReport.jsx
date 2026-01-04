@@ -174,7 +174,7 @@ export default function RevenueGrowthReport({ strategies, transactions, customer
         </div>
 
         {/* Growth Strategies */}
-        {strategies && strategies.length > 0 && (
+        {strategies && strategies.length > 0 ? (
         <div>
           <div className="flex items-center gap-2 mb-4">
             <Lightbulb className="w-5 h-5 text-emerald-600" />
@@ -184,15 +184,21 @@ export default function RevenueGrowthReport({ strategies, transactions, customer
           <div className="space-y-4">
             {strategies.map((strategy, idx) => (
               <div key={idx} className="p-4 rounded-lg bg-emerald-50 border border-emerald-100">
-                <h5 className="font-semibold text-emerald-900 mb-2">{strategy.strategy || strategy.acao}</h5>
-                <p className="text-sm text-emerald-800 mb-3 leading-relaxed">{strategy.rationale || strategy.justificativa || strategy.impacto}</p>
+                <h5 className="font-semibold text-emerald-900 mb-2">{strategy.strategy || strategy.acao || strategy.estrategia || "Estratégia sugerida"}</h5>
+                <p className="text-sm text-emerald-800 mb-3 leading-relaxed">{strategy.rationale || strategy.justificativa || strategy.impacto || strategy.descricao || "Aguardando análise detalhada..."}</p>
                 <Badge variant="outline" className="bg-white text-emerald-700 border-emerald-200">
-                  Alvo: {strategy.target_customer_segment || strategy.segmento_alvo || 'Geral'}
+                  Alvo: {strategy.target_customer_segment || strategy.segmento_alvo || strategy.alvo || 'Geral'}
                 </Badge>
               </div>
             ))}
           </div>
         </div>
+        ) : (
+          <div className="p-8 text-center border-2 border-dashed rounded-xl bg-slate-50 border-slate-200">
+            <Lightbulb className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+            <p className="text-slate-500 text-sm">Nenhuma estratégia de crescimento gerada para este período.</p>
+            <p className="text-slate-400 text-xs mt-1">Clique em "Filtro Avançado" e "Iniciar Análise IA" para gerar insights.</p>
+          </div>
         )}
       </CardContent>
     </Card>
