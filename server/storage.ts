@@ -35,17 +35,16 @@ export class DatabaseStorage {
 
   // --- MÉTODOS BANCÁRIOS (Versão Corrigida para UUID) ---
 
-  async getBankStatementItems(companyId: any) {
-    // REMOVIDO parseInt! Agora aceita o UUID como string pura.
-    console.log(`[Storage] Buscando itens para CompanyID: ${companyId}`);
+  async getBankStatementItems(companyId: string) {
+    if (!companyId) return [];
     return await db.select()
                    .from(bankStatementItems)
                    .where(eq(bankStatementItems.companyId, companyId))
                    .orderBy(desc(bankStatementItems.date));
   }
 
-  async createBankStatementItem(companyId: any, data: any) {
-    // Salva direto, sem converter ID
+  async createBankStatementItem(companyId: string, data: any) {
+    if (!companyId) throw new Error("Company ID is required");
     const [item] = await db.insert(bankStatementItems)
                            .values({ ...data, companyId })
                            .returning();
