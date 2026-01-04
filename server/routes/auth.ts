@@ -138,6 +138,39 @@ export function registerAuthRoutes(app: Express) {
     }
   });
 
+  // Update Profile
+  app.patch("/api/auth/profile", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      const { name, phone, cep, rua, numero, complemento, estado, cidade } = req.body;
+      
+      const [updatedUser] = await db.update(users)
+        .set({ name, phone, cep, rua, numero, complemento, estado, cidade })
+        .where(eq(users.id, req.user.id))
+        .returning();
+
+      if (!updatedUser) return res.status(404).json({ error: "User not found" });
+
+      res.json({
+        user: { 
+          id: updatedUser.id, 
+          username: updatedUser.username, 
+          email: updatedUser.email, 
+          name: updatedUser.name, 
+          phone: updatedUser.phone, 
+          avatar: updatedUser.avatar, 
+          role: updatedUser.role, 
+          isSuperAdmin: updatedUser.isSuperAdmin, 
+          companyId: updatedUser.companyId, 
+          permissions: updatedUser.permissions ? JSON.parse(updatedUser.permissions) : {} 
+        }
+      });
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      res.status(500).json({ error: "Failed to update profile" });
+    }
+  });
+
   app.post("/api/auth/logout", authMiddleware, async (req: AuthenticatedRequest, res) => {
     res.json({ message: "Logged out" });
   });

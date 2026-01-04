@@ -179,8 +179,19 @@ export function AuthProvider({ children }) {
     setUser(newUserData);
     const authData = localStorage.getItem("auth");
     if (authData) {
-      const current = JSON.parse(authData);
-      localStorage.setItem("auth", JSON.stringify({ ...current, user: newUserData }));
+      try {
+        const current = JSON.parse(authData);
+        // Garante que o token e outras informações críticas sejam preservados
+        localStorage.setItem("auth", JSON.stringify({ 
+          ...current, 
+          user: {
+            ...current.user,
+            ...newUserData
+          }
+        }));
+      } catch (e) {
+        console.error("Error updating localStorage auth:", e);
+      }
     }
   };
 
