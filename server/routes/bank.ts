@@ -171,6 +171,43 @@ export function registerBankRoutes(app: Express) {
     }
   });
 
+  app.get("/api/bank/suggest/:id", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      const item = await storage.getBankStatementItemById(req.user.companyId, req.params.id);
+      if (!item) return res.status(404).json({ error: "Item not found" });
+
+      console.log(`[IA Debug] Buscando sugestões para item ${req.params.id} (${item.description})`);
+      
+      const transactions = await storage.getTransactions(req.user.companyId);
+      const suggestions = transactions.filter(t => {
+        const bankDesc = item.description.toLowerCase();
+        const transDesc = (t.description || "").toLowerCase();
+        
+        const amountMatch = Math.abs(parseFloat(t.amount) - Math.abs(parseFloat(item.amount))) < 0.01;
+        const descMatch = transDesc.includes(bankDesc) || bankDesc.includes(transDesc);
+        
+        return amountMatch || descMatch;
+      }).slice(0, 5);
+      
+      res.json(suggestions);
+    } catch (error) {
+      console.error("[IA Debug] Erro ao buscar sugestões:", error);
+      res.status(500).json({ error: "Failed to fetch suggestions" });
+    }
+  });
+
+  app.post("/api/bank/match", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      const { bankItemId, transactionId } = req.body;
+      const matched = await storage.matchBankStatementItem(req.user.companyId, bankItemId, transactionId);
+      res.json(matched);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to match bank item" });
+    }
+  });
+
   app.delete("/api/bank/clear", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
