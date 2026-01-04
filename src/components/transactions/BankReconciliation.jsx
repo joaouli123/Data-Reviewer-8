@@ -120,13 +120,12 @@ export default function BankReconciliation({ open, onOpenChange }) {
       
       // Limpa local storage e estado local
       localStorage.removeItem('lastBankStatementFile');
+      localStorage.removeItem('lastBankStatementContent'); // Adicionado para garantir limpeza total
       setLastFileName(null);
       
       toast.success('Dados bancários removidos com sucesso');
-      // Fecha o modal para resetar completamente o estado interno dos hooks
+      // Fecha o modal para resetar completamente o estado interno
       onOpenChange(false);
-      // Forçar um recarregamento da página ou estado global se necessário
-      window.location.reload(); 
     },
     onError: () => {
       toast.error('Erro ao remover dados bancários');

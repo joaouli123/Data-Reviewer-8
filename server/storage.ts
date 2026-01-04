@@ -597,7 +597,10 @@ export class DatabaseStorage implements IStorage {
   async createBankStatementItem(companyId: string, data: InsertBankStatementItem): Promise<BankStatementItem> { const [item] = await db.insert(bankStatementItems).values({ ...data, companyId }).returning(); return item; }
   async updateBankStatementItem(companyId: string, id: string, data: Partial<InsertBankStatementItem>): Promise<BankStatementItem> { const [item] = await db.update(bankStatementItems).set(data).where(and(eq(bankStatementItems.companyId, companyId), eq(bankStatementItems.id, id))).returning(); return item; }
   async matchBankStatementItem(companyId: string, bankItemId: string, transactionId: string): Promise<BankStatementItem> { return await db.transaction(async (tx) => { const result = await tx.update(bankStatementItems).set({ status: "RECONCILED", transactionId }).where(and(eq(bankStatementItems.companyId, companyId), eq(bankStatementItems.id, bankItemId))).returning(); await tx.update(transactions).set({ isReconciled: true }).where(and(eq(transactions.companyId, companyId), eq(transactions.id, transactionId))); return result[0]; }); }
-  async clearBankStatementItems(companyId: string): Promise<void> { await db.delete(bankStatementItems).where(eq(bankStatementItems.companyId, companyId)); }
+  async clearBankStatementItems(companyId: string): Promise<void> { 
+    console.log(`[Storage Debug] Limpando todos os itens bancários para empresa: ${companyId}`);
+    await db.delete(bankStatementItems).where(eq(bankStatementItems.companyId, companyId)); 
+  }
 }
 
 export const storage = new DatabaseStorage();
