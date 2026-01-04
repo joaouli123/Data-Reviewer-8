@@ -211,9 +211,14 @@ export default function ProfilePage() {
       if (dataUrl) {
         try {
           const result = await apiRequest('POST', '/api/auth/avatar', { avatarDataUrl: dataUrl });
-          updateUser(result.user);
-          toast.success('Foto atualizada com sucesso!');
+          
+          // Se o servidor retornou o usuário atualizado, atualizamos o contexto e o localStorage
+          if (result && result.user) {
+            updateUser(result.user);
+            toast.success('Foto atualizada com sucesso!');
+          }
         } catch (error) {
+          console.error('Erro no upload do avatar:', error);
           toast.error('Falha ao fazer upload');
         }
       }
