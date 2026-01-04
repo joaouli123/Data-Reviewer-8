@@ -203,7 +203,7 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
 
       // MELHORIA: toFixed(2) para garantir que não gere números como 33.333333 no input
       const defaultAmount = totalAmount > 0 
-        ? (totalAmount / numInstallments).toFixed(2) 
+        ? parseFloat((totalAmount / numInstallments).toFixed(2)) 
         : '';
 
       const baseDate = new Date(formData.sale_date + 'T12:00:00Z');
@@ -211,6 +211,17 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
         amount: defaultAmount, 
         due_date: format(addMonths(baseDate, i), 'yyyy-MM-dd')
       }));
+
+      // Ajuste do centavo na última parcela para bater o total exato
+      if (typeof defaultAmount === 'number') {
+        const somaAtual = parseFloat((defaultAmount * numInstallments).toFixed(2));
+        const diferenca = parseFloat((totalAmount - somaAtual).toFixed(2));
+        if (diferenca !== 0) {
+          newCustomInstallments[numInstallments - 1].amount = parseFloat(
+            (newCustomInstallments[numInstallments - 1].amount + diferenca).toFixed(2)
+          );
+        }
+      }
       setCustomInstallments(newCustomInstallments);
     } else {
       setCustomInstallments([]);

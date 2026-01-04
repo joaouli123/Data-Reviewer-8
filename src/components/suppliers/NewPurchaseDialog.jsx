@@ -136,7 +136,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
       const baseDate = new Date(formData.purchase_date + 'T12:00:00Z');
 
       const newCustomInstallments = Array.from({ length: numInstallments }, (_, i) => ({
-        amount: defaultAmount,
+        amount: defaultAmount || '',
         due_date: format(addMonths(baseDate, i), 'yyyy-MM-dd')
       }));
 
