@@ -310,8 +310,8 @@ export default function ProfilePage() {
                        {invoices.length > 0 ? invoices.map((inv, i) => (
                           <tr key={i} className="border-b last:border-0">
                              <td className="p-3">{inv.date ? new Date(inv.date).toLocaleDateString() : '-'}</td>
-                             <td className="p-3 capitalize">{inv.plan}</td>
-                             <td className="p-3 text-right">R$ {parseFloat(inv.amount||0).toFixed(2)}</td>
+                             <td className="p-3">{planTranslation[inv.plan] || inv.plan}</td>
+                             <td className="p-3 text-right">R$ {parseFloat(inv.amount||0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                           </tr>
                        )) : <tr><td colSpan={3} className="p-4 text-center text-muted-foreground">Nenhuma fatura encontrada</td></tr>}
                     </tbody>

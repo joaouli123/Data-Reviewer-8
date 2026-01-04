@@ -54,7 +54,6 @@ export function registerAuthRoutes(app: Express) {
       ];
 
       try {
-        const storage = (req as any).storage;
         for (const cat of defaultCategories) {
           await db.insert(categories).values({ ...cat, companyId: company.id } as any);
         }
@@ -64,16 +63,20 @@ export function registerAuthRoutes(app: Express) {
 
       const subscriptionPlan = plan || "pro";
       try {
-        const amount = subscriptionPlan === "pro" ? "997.00" : (subscriptionPlan === "monthly" ? "97.00" : "0.00");
-        await db.insert(subscriptions).values({ 
-          companyId: company.id, 
-          plan: subscriptionPlan, 
-          status: "active",
-          amount: amount,
-          subscriberName: name || username,
-          createdAt: new Date()
-        } as any);
-        await db.update(companies).set({ subscriptionPlan: subscriptionPlan, paymentStatus: "approved" } as any).where(eq(companies.id, company.id));
+        // Check if subscription already exists to prevent duplication on retries/errors
+        const existingSubs = await db.select().from(subscriptions).where(eq(subscriptions.companyId, company.id));
+        if (existingSubs.length === 0) {
+          const amount = subscriptionPlan === "pro" ? "997.00" : (subscriptionPlan === "monthly" ? "97.00" : "0.00");
+          await db.insert(subscriptions).values({ 
+            companyId: company.id, 
+            plan: subscriptionPlan, 
+            status: "active",
+            amount: amount,
+            subscriberName: name || username,
+            createdAt: new Date()
+          } as any);
+          await db.update(companies).set({ subscriptionPlan: subscriptionPlan, paymentStatus: "approved" } as any).where(eq(companies.id, company.id));
+        }
       } catch (err) {
         console.error("Error setting up company subscription:", err);
       }
