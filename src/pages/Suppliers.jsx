@@ -29,6 +29,9 @@ export default function SuppliersPage() {
   const { company } = useAuth();
   const queryClient = useQueryClient();
 
+  // Log para depuração
+  console.log("[Suppliers Page] Empresa logada:", company);
+
   // 1. Query Principal
   const { 
     data: suppliersData, 
