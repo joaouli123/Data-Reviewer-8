@@ -5,28 +5,20 @@
 ### Overview
 Desenvolvido um Super Admin Dashboard completo para gerenciamento global de empresas, clientes, usuários e assinaturas em um sistema SaaS multi-tenant com autenticação segura.
 
-### Recent Changes (Session 8 - ARCHITECTURAL CLEANUP & AI MIGRATION)
-**🔧 Reestruturação: Modularização de Rotas e Migração de IA**
+### Recent Changes (Session 9 - PROFILE & DEPLOY FIXES)
+**🔧 Ajustes de Perfil e Correção de Build**
 
-**Melhorias Implementadas:**
+1.  **Perfil do Usuário:**
+    - ✅ Removido o salvamento automático. Agora os dados são salvos apenas ao clicar no botão "Salvar".
+    - ✅ Corrigido o erro que deslogava o usuário ao atualizar o perfil (preservação de token no `localStorage`).
+    - ✅ Adicionados campos de endereço (CEP, Rua, etc.) ao esquema de usuário e à página de perfil.
 
-1.  **Modularização de Rotas (server/routes/):**
-    - ✅ O arquivo gigante `server/routes.ts` foi dividido em módulos: `auth.ts`, `customers.ts`, `transactions.ts`, `suppliers.ts`, `categories.ts`, `sales-purchases.ts`, `ai.ts`.
-    - ✅ Ponto de entrada centralizado em `server/routes/index.ts`.
+2.  **Assinatura:**
+    - ✅ Aba de assinatura agora exibe corretamente o plano atual, status e valor mensal baseados nos dados da empresa.
 
-2.  **Migração de IA para Backend (server/api/ai.ts):**
-    - ✅ Lógica de integração com Groq (Llama 3.1 8B) movida para o servidor.
-    - ✅ Novo endpoint seguro: `POST /api/ai/analyze`.
-    - ✅ Cliente frontend (`src/api/openaiClient.js`) agora atua como um proxy seguro.
-    - ⚠️ **Nota:** Requer configuração da chave `GROQ_API_KEY` nos Secrets do Replit.
-
-3.  **Limpeza de Código e Padronização:**
-    - ✅ Removidos arquivos mortos: `base44Client.js`, `geminiClient.js`.
-    - ✅ Padronizado o uso de `sonner` para notificações em todas as páginas admin.
-    - ✅ Implementado logger condicional em `src/lib/logger.js`.
-
-4.  **Performance:**
-    - ✅ Otimizado `staleTime` das queries do TanStack Query para 5 minutos.
+3.  **Correção de Build/Deploy:**
+    - ✅ Instalada a dependência `canvas-confetti` que estava faltando e quebrando o build no Railway.
+    - ✅ Sincronizado o banco de dados para incluir os novos campos de endereço.
 
 ### Recent Changes (Session 7 - PAYMENT CONFIRMATION FIXES)
 ... [conteúdo anterior preservado] ...
