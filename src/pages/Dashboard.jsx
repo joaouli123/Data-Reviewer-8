@@ -12,6 +12,7 @@ import RevenueChart from '../components/dashboard/RevenueChart';
 import QuickActionsFAB from '../components/dashboard/QuickActionsFAB';
 import PeriodFilter from '../components/dashboard/PeriodFilter';
 import TransactionForm from '../components/transactions/TransactionForm';
+import { apiRequest } from '@/lib/queryClient';
 import { Transaction, Installment } from '@/api/entities';
 import { PurchaseInstallment } from '@/api/entities';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
