@@ -151,7 +151,20 @@ export function registerAuthRoutes(app: Express) {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const { name, phone, cep, rua, numero, complemento, estado, cidade, avatar } = req.body;
       
-      const updateData: any = { name, phone, cep, rua, numero, complemento, estado, cidade, updatedAt: new Date() };
+      console.log(`[Auth] Updating profile for user ${req.user.id}:`, { name, phone, cep, rua, numero, complemento, estado, cidade });
+
+      const updateData: any = { 
+        name, 
+        phone, 
+        cep, 
+        rua, 
+        numero, 
+        complemento, 
+        estado, 
+        cidade, 
+        updatedAt: new Date() 
+      };
+      
       if (avatar) updateData.avatar = avatar;
 
       const [updatedUser] = await db.update(users)
@@ -161,6 +174,8 @@ export function registerAuthRoutes(app: Express) {
 
       if (!updatedUser) return res.status(404).json({ error: "User not found" });
 
+      console.log(`[Auth] Profile updated successfully for user ${req.user.id}`);
+
       res.json({
         user: { 
           id: updatedUser.id, 
@@ -169,6 +184,12 @@ export function registerAuthRoutes(app: Express) {
           name: updatedUser.name, 
           phone: updatedUser.phone, 
           avatar: updatedUser.avatar, 
+          cep: updatedUser.cep,
+          rua: updatedUser.rua,
+          numero: updatedUser.numero,
+          complemento: updatedUser.complemento,
+          estado: updatedUser.estado,
+          cidade: updatedUser.cidade,
           role: updatedUser.role, 
           isSuperAdmin: updatedUser.isSuperAdmin, 
           companyId: updatedUser.companyId, 

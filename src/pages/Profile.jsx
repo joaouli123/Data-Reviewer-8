@@ -177,6 +177,27 @@ export default function ProfilePage() {
     companyPhone: company?.phone || '',
   });
 
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || '',
+        phone: user.phone || '',
+        email: user.email || '',
+        role: user.role || '',
+        cep: user.cep || '',
+        rua: user.rua || '',
+        numero: user.numero || '',
+        complemento: user.complemento || '',
+        estado: user.estado || '',
+        cidade: user.cidade || '',
+        companyPhone: company?.phone || '',
+      });
+      if (user.estado) {
+        setCities(CITIES_BY_STATE[user.estado] || []);
+      }
+    }
+  }, [user, company]);
+
   const [passwords, setPasswords] = useState({ new: '', confirm: '' });
   const [cities, setCities] = useState(CITIES_BY_STATE[formData.estado] || []);
 
@@ -369,7 +390,7 @@ export default function ProfilePage() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="cidade">Cidade</Label>
-                      <Select value={formData.cidade} onValueChange={v => setFormData(p => ({...p, city: v}))}>
+                      <Select value={formData.cidade} onValueChange={v => setFormData(p => ({...p, cidade: v}))}>
                         <SelectTrigger disabled={!formData.estado}><SelectValue placeholder={formData.cidade || "Cidade"} /></SelectTrigger>
                         <SelectContent>
                           {cities.length > 0 ? (
