@@ -89,18 +89,19 @@ export function registerBankRoutes(app: Express) {
         // Log para depuração de duplicatas
         console.log(`[Bank API] Verificando item: ${description} | Data: ${date.toISOString()} | Valor: ${amount} | Empresa: ${companyId}`);
 
+        // Busca no banco se já existe ESSA transação para ESSA empresa
         const existingItem = existingDbItems.find(item => 
           item.description === description && 
           new Date(item.date).toDateString() === date.toDateString() && 
-          Math.abs(parseFloat(item.amount) - amount) < 0.01 &&
-          item.companyId === companyId
+          Math.abs(parseFloat(item.amount) - amount) < 0.01
         );
 
         if (existingItem) {
+          console.log(`[Bank API] Item ignorado (já existe): ${description}`);
           processedItems.push(existingItem);
           duplicateCount++;
         } else {
-          console.log(`[Bank API] Criando novo item: ${description} - ${amount}`);
+          console.log(`[Bank API] Criando novo item: ${description} - ${amount} para empresa ${companyId}`);
           const newItem = await storage.createBankStatementItem(companyId, {
             date,
             amount: amount.toString(),
