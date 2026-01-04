@@ -2,7 +2,7 @@ import { db } from "./db";
 import { eq, and, desc } from "drizzle-orm";
 import {
   bankStatementItems, transactions, users, customers, suppliers, categories,
-  companies, // Adicione outros imports se necessário
+  companies, sales, purchases
 } from "../shared/schema";
 
 // Função para formatar dinheiro corretamente
@@ -13,6 +13,25 @@ function sanitizeMoney(value: any): string {
 }
 
 export class DatabaseStorage {
+
+  // --- MÉTODOS DE VENDAS E COMPRAS ---
+  async getSales(companyId: any) {
+    return await db.select().from(sales).where(eq(sales.companyId, companyId)).orderBy(desc(sales.date));
+  }
+
+  async createSale(companyId: any, data: any) {
+    const [sale] = await db.insert(sales).values({ ...data, companyId }).returning();
+    return sale;
+  }
+
+  async getPurchases(companyId: any) {
+    return await db.select().from(purchases).where(eq(purchases.companyId, companyId)).orderBy(desc(purchases.date));
+  }
+
+  async createPurchase(companyId: any, data: any) {
+    const [purchase] = await db.insert(purchases).values({ ...data, companyId }).returning();
+    return purchase;
+  }
 
   // --- MÉTODOS BANCÁRIOS (Versão Corrigida para UUID) ---
 
