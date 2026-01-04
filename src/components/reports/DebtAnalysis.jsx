@@ -108,7 +108,11 @@ export default function DebtAnalysis({ transactions, purchases, purchaseInstallm
     try {
       const metrics = calculateDebtMetrics();
       
-      const prompt = `Analise a situação de endividamento:
+      const prompt = `Você é um analista financeiro sênior. Analise a situação de endividamento da empresa e forneça recomendações estratégicas em JSON.
+
+IMPORTANTE: Toda a sua resposta deve estar em PORTUGUÊS (BR), incluindo os campos de texto dentro do JSON.
+
+DADOS ATUAIS:
 - Dívida Total: R$ ${metrics.totalDebt.toFixed(2)}
 - Dívida Curto Prazo (3 meses): R$ ${metrics.shortTermDebt.toFixed(2)}
 - Dívida Longo Prazo: R$ ${metrics.longTermDebt.toFixed(2)}
@@ -117,7 +121,13 @@ export default function DebtAnalysis({ transactions, purchases, purchaseInstallm
 - Pagamento Mensal de Dívidas: R$ ${metrics.monthlyDebtPayment.toFixed(2)}
 - Índice de Cobertura de Dívida: ${metrics.debtServiceRatio.toFixed(1)}%
 
-Forneça uma análise detalhada e recomendações para gestão de endividamento.`;
+FORNEÇA (JSON EM PORTUGUÊS):
+1. overall_assessment: 'avaliação geral da saúde financeira em PT-BR'
+2. health_score: 'excellent'|'good'|'fair'|'poor'|'critical'
+3. key_concerns: array de strings em PT-BR com as principais preocupações
+4. recommendations: array de { strategy: 'estratégia em PT-BR', timeline: 'prazo em PT-BR', expected_impact: 'impacto esperado em PT-BR' }
+
+RESPOSTA OBRIGATÓRIA EM JSON E EM PORTUGUÊS DO BRASIL.`;
 
       const response = await InvokeLLM(prompt, {
         properties: {
