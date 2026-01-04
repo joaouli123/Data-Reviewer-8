@@ -74,7 +74,9 @@ export default function DebtImpactSimulator({ currentMetrics }) {
       // AI Analysis
       const newDebtServiceRatio = (metrics.monthlyDebtPayment + monthlyPayment) / metrics.avgMonthlyRevenue * 100;
       
-      const prompt = `Você é um analista financeiro. Analise o impacto de uma nova dívida e retorne análise estruturada.
+      const prompt = `Você é um analista financeiro sênior. Analise o impacto de uma nova dívida e forneça uma visão estratégica profunda em JSON.
+
+IMPORTANTE: Toda a sua resposta deve estar em PORTUGUÊS (BR), incluindo os campos de texto dentro do JSON.
 
 SITUAÇÃO ATUAL:
 - Dívida Total: R$ ${metrics.totalDebt.toFixed(2)}
@@ -92,14 +94,14 @@ NOVA DÍVIDA PROPOSTA:
 - Propósito: ${newDebtInputs.purposeDescription || 'Não especificado'}
 - Novo Índice de Cobertura: ${newDebtServiceRatio.toFixed(1)}%
 
-FORNEÇA:
-1. Recomendação: 'recommended', 'caution', ou 'not_recommended'
-2. Reasoning: explicação breve (1-2 frases)
-3. Score 0-100 da viabilidade
-4. Impacto de caixa, liquidez e alavancagem (strings descritivas)
-5. Lista com 2-3 riscos (risk_factor, severity: high/medium/low, mitigation)
-6. 2-3 alternativas sugeridas
-7. Análise do ponto de equilíbrio`;
+FORNEÇA (JSON EM PORTUGUÊS):
+1. viability_assessment: { recommendation: 'recommended'|'caution'|'not_recommended', reasoning: 'explicação em PT-BR', score: 0-100 }
+2. financial_impact: { cash_flow_impact: 'descrição do impacto no caixa em PT-BR', liquidity_impact: 'descrição da liquidez em PT-BR', leverage_impact: 'descrição da alavancagem em PT-BR' }
+3. risk_analysis: array de { risk_factor: 'fator em PT-BR', severity: 'high'|'medium'|'low', mitigation: 'mitigação em PT-BR' }
+4. alternative_suggestions: array de strings em PT-BR
+5. break_even_analysis: string descrevendo o novo ponto de equilíbrio em PT-BR
+
+RESPOSTA OBRIGATÓRIA EM JSON E EM PORTUGUÊS DO BRASIL.`;
 
       const schema = {
         properties: {
@@ -108,7 +110,7 @@ FORNEÇA:
             properties: {
               recommendation: { type: "string", enum: ["recommended", "caution", "not_recommended"] },
               reasoning: { type: "string" },
-              score: { type: "number", description: "0-100" }
+              score: { type: "number" }
             }
           },
           financial_impact: {
@@ -147,13 +149,23 @@ FORNEÇA:
         return;
       }
 
-      // Garantir estrutura mínima - ser mais flexível com validação
+      // Garantir estrutura mínima - ser mais flexível com mapeamento de campos (PT/EN)
       const validatedAnalysis = {
-        viability_assessment: response.viability_assessment || { recommendation: 'caution', reasoning: 'Análise incompleta da IA', score: 50 },
-        financial_impact: response.financial_impact || { cash_flow_impact: 'Não disponível', liquidity_impact: 'Não disponível', leverage_impact: 'Não disponível' },
-        risk_analysis: Array.isArray(response.risk_analysis) ? response.risk_analysis : [],
-        alternative_suggestions: Array.isArray(response.alternative_suggestions) ? response.alternative_suggestions : [],
-        break_even_analysis: response.break_even_analysis || 'Análise não disponível'
+        viability_assessment: response.viability_assessment || response.avaliacao_viabilidade || { 
+          recommendation: response.recommendation || response.recomendacao || 'caution', 
+          reasoning: response.reasoning || response.justificativa || 'Análise incompleta da IA', 
+          score: response.score || response.pontuacao || 50 
+        },
+        financial_impact: response.financial_impact || response.impacto_financeiro || { 
+          cash_flow_impact: response.cash_flow_impact || response.impacto_caixa || 'Não disponível', 
+          liquidity_impact: response.liquidity_impact || response.impacto_liquidez || 'Não disponível', 
+          leverage_impact: response.leverage_impact || response.impacto_alavancagem || 'Não disponível' 
+        },
+        risk_analysis: Array.isArray(response.risk_analysis) ? response.risk_analysis : 
+                       Array.isArray(response.analise_riscos) ? response.analise_riscos : [],
+        alternative_suggestions: Array.isArray(response.alternative_suggestions) ? response.alternative_suggestions : 
+                                 Array.isArray(response.sugestoes_alternativas) ? response.sugestoes_alternativas : [],
+        break_even_analysis: response.break_even_analysis || response.analise_ponto_equilibrio || response.ponto_equilibrio || 'Análise não disponível'
       };
 
       // Validar que temos pelo menos ALGUNS dados
