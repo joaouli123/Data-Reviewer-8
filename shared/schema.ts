@@ -155,6 +155,12 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   name: text("name"),
   phone: text("phone"),
+  cep: text("cep"),
+  rua: text("rua"),
+  numero: text("numero"),
+  complemento: text("complemento"),
+  estado: text("estado"),
+  cidade: text("cidade"),
   avatar: text("avatar"), // URL to avatar image
   role: text("role").notNull().default("user"), // admin, manager, user, operational
   isSuperAdmin: boolean("is_super_admin").notNull().default(false), // Flag for Super Admin

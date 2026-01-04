@@ -1,7 +1,7 @@
 import { Express } from "express";
 import { eq } from "drizzle-orm";
 import { db } from "../db";
-import { users, companies, subscriptions } from "../../shared/schema";
+import { users, companies, subscriptions, categories } from "../../shared/schema";
 import { 
   findUserByUsername, 
   findUserByEmail, 
@@ -100,21 +100,21 @@ export function registerAuthRoutes(app: Express) {
         await recordLoginAttempt(ip, username, false);
         return res.status(401).json({ error: "Invalid credentials" });
       }
-      const company = await findCompanyById(user.companyId);
+      const company = await findCompanyById(user.companyId as string);
       if (!company) return res.status(404).json({ error: "Company not found" });
       await recordLoginAttempt(ip, username, true);
       if (company.paymentStatus !== "approved") {
         return res.json({
-          user: { id: user.id, username: user.username, email: user.email, name: user.name, phone: user.phone, avatar: user.avatar, role: user.role, isSuperAdmin: user.isSuperAdmin, companyId: user.companyId, permissions: user.permissions ? JSON.parse(user.permissions) : {} },
+          user: { id: user.id, username: user.username, email: user.email, name: user.name, phone: user.phone, avatar: user.avatar, role: user.role, isSuperAdmin: user.isSuperAdmin, companyId: user.companyId, permissions: user.permissions ? JSON.parse(user.permissions as string) : {} },
           company: { id: company.id, name: company.name, paymentStatus: company.paymentStatus },
           token: null, paymentPending: true, message: "Pagamento pendente."
         });
       }
-      const token = generateToken({ userId: user.id, companyId: user.companyId, role: user.role, isSuperAdmin: user.isSuperAdmin });
-      await createSession(user.id, user.companyId, token);
-      await createAuditLog(user.id, user.companyId, "LOGIN", "user", user.id, undefined, ip, req.headers['user-agent'] || 'unknown');
+      const token = generateToken({ userId: user.id, companyId: user.companyId as string, role: user.role, isSuperAdmin: user.isSuperAdmin });
+      await createSession(user.id, user.companyId as string, token);
+      await createAuditLog(user.id, user.companyId as string, "LOGIN", "user", user.id, undefined, ip, req.headers['user-agent'] || 'unknown');
       res.json({
-        user: { id: user.id, username: user.username, email: user.email, name: user.name, phone: user.phone, avatar: user.avatar, role: user.role, isSuperAdmin: user.isSuperAdmin, companyId: user.companyId, permissions: user.permissions ? JSON.parse(user.permissions) : {} },
+        user: { id: user.id, username: user.username, email: user.email, name: user.name, phone: user.phone, avatar: user.avatar, role: user.role, isSuperAdmin: user.isSuperAdmin, companyId: user.companyId, permissions: user.permissions ? JSON.parse(user.permissions as string) : {} },
         company: { id: company.id, name: company.name, paymentStatus: company.paymentStatus, subscriptionPlan: company.subscriptionPlan, document: company.document },
         token, paymentPending: false
       });
