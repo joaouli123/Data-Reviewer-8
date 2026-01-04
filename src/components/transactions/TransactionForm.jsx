@@ -160,7 +160,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
 
     if (numValue > 1) {
       const totalAmount = parseFloat(formData.amount) || 0;
-      const defaultAmount = totalAmount > 0 ? totalAmount / numValue : '';
+      const defaultAmount = totalAmount > 0 ? (totalAmount / numValue).toFixed(2) : '';
 
       // Extract local date from formData.date (which might be Date or string)
       let baseDate;
@@ -171,9 +171,15 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
       } else {
         baseDate = new Date(formData.date);
       }
+      
+      // Fix: Ensure we use the correct local day for calculation to avoid timezone shift
+      const dayOfMonth = baseDate.getDate();
+      const monthIdx = baseDate.getMonth();
+      const yearVal = baseDate.getFullYear();
 
       const newCustomInstallments = Array.from({ length: numValue }, (_, i) => {
-        const installmentDate = addMonths(baseDate, i);
+        // Use local date constructor to avoid UTC shift
+        const installmentDate = new Date(yearVal, monthIdx + i, dayOfMonth);
         const year = installmentDate.getFullYear();
         const month = String(installmentDate.getMonth() + 1).padStart(2, '0');
         const day = String(installmentDate.getDate()).padStart(2, '0');
@@ -268,12 +274,12 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
         } else if (customInstallments.length > i) {
           // If customInstallments exist but due_date is missing, calculate it
           const baseDate = new Date(formData.date);
-          const dueDate = addMonths(new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate()), i);
+          const dueDate = new Date(baseDate.getFullYear(), baseDate.getMonth() + i, baseDate.getDate());
           dueDateISO = formatDateOnly(dueDate);
         } else {
           // Fallback: calculate from transaction date
           const baseDate = new Date(formData.date);
-          const dueDate = addMonths(new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate()), i);
+          const dueDate = new Date(baseDate.getFullYear(), baseDate.getMonth() + i, baseDate.getDate());
           dueDateISO = formatDateOnly(dueDate);
         }
 
