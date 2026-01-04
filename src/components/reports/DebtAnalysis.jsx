@@ -16,9 +16,11 @@ export default function DebtAnalysis({ transactions, purchases, purchaseInstallm
   const calculateDebtMetrics = () => {
     // Create a map of categoryId to category name
     const categoryMap = {};
-    categories.forEach(cat => {
-      categoryMap[cat.id] = cat.name || 'Sem Categoria';
-    });
+    if (Array.isArray(categories)) {
+      categories.forEach(cat => {
+        categoryMap[cat.id] = cat.name || 'Sem Categoria';
+      });
+    }
 
     // Use ONLY filtered transactions
     const compras = Array.isArray(transactions) 
@@ -45,9 +47,11 @@ export default function DebtAnalysis({ transactions, purchases, purchaseInstallm
     let shortTermDebt = 0;
     let longTermDebt = 0;
 
-    if (Array.isArray(purchaseInstallments)) {
+    if (Array.isArray(purchaseInstallments) && purchaseInstallments.length > 0) {
       purchaseInstallments.forEach(inst => {
-        const dueDate = parseISO(inst.dueDate);
+        const dueDate = inst.dueDate ? (typeof inst.dueDate === 'string' ? parseISO(inst.dueDate) : new Date(inst.dueDate)) : null;
+        if (!dueDate || isNaN(dueDate.getTime())) return;
+
         const amount = parseFloat(inst.amount || 0);
         if (dueDate <= threeMonthsFromNow) {
           shortTermDebt += amount;
@@ -129,7 +133,25 @@ Forneça uma análise detalhada e recomendações para gestão de endividamento.
         }
       });
 
-      setAnalysis(response);
+      // Mapear campos se vierem em português
+      const validated = {
+        overall_assessment: response.overall_assessment || response.avaliacao_geral || 'Análise concluída',
+        health_score: response.health_score || response.pontuacao_saude || 'good',
+        key_concerns: Array.isArray(response.key_concerns) ? response.key_concerns : 
+                      Array.isArray(response.preocupacoes) ? response.preocupacoes : [],
+        recommendations: Array.isArray(response.recommendations) ? response.recommendations :
+                         Array.isArray(response.recomendacoes) ? response.recomendacoes : []
+      };
+
+      if (validated.recommendations.length > 0) {
+        validated.recommendations = validated.recommendations.map(rec => ({
+          strategy: rec.strategy || rec.estrategia || rec.acao || 'Estratégia sugerida',
+          timeline: rec.timeline || rec.prazo || 'Curto prazo',
+          expected_impact: rec.expected_impact || rec.impacto_esperado || 'Melhoria na liquidez'
+        }));
+      }
+
+      setAnalysis(validated);
       toast.success('Análise concluída!');
     } catch (error) {
       toast.error('Erro ao analisar endividamento');
@@ -330,7 +352,7 @@ Forneça uma análise detalhada e recomendações para gestão de endividamento.
                 </div>
               </div>
 
-              {analysis.key_concerns?.length > 0 && (
+              {Array.isArray(analysis.key_concerns) && analysis.key_concerns.length > 0 && (
                 <div className="p-4 bg-pink-50 rounded-lg border border-pink-200">
                   <h4 className="font-semibold text-red-700 mb-2 flex items-center gap-2">
                     <AlertCircle className="w-4 h-4" />

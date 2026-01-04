@@ -184,10 +184,10 @@ export default function RevenueGrowthReport({ strategies, transactions, customer
           <div className="space-y-4">
             {strategies.map((strategy, idx) => (
               <div key={idx} className="p-4 rounded-lg bg-emerald-50 border border-emerald-100">
-                <h5 className="font-semibold text-emerald-900 mb-2">{strategy.strategy}</h5>
-                <p className="text-sm text-emerald-800 mb-3 leading-relaxed">{strategy.rationale}</p>
+                <h5 className="font-semibold text-emerald-900 mb-2">{strategy.strategy || strategy.acao}</h5>
+                <p className="text-sm text-emerald-800 mb-3 leading-relaxed">{strategy.rationale || strategy.justificativa || strategy.impacto}</p>
                 <Badge variant="outline" className="bg-white text-emerald-700 border-emerald-200">
-                  Alvo: {strategy.target_customer_segment}
+                  Alvo: {strategy.target_customer_segment || strategy.segmento_alvo || 'Geral'}
                 </Badge>
               </div>
             ))}

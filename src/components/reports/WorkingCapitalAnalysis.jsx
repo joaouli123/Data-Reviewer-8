@@ -123,10 +123,20 @@ FORNEÇA:
 
       // Garantir estrutura mínima - ser mais flexível
       const validatedAnalysis = {
-        assessment: response.assessment || 'Análise de capital de giro concluída',
-        recommendations: Array.isArray(response.recommendations) ? response.recommendations : [],
-        risk_level: response.risk_level || 'medium'
+        assessment: response.assessment || response.avaliacao || 'Análise de capital de giro concluída',
+        recommendations: Array.isArray(response.recommendations) ? response.recommendations : 
+                         Array.isArray(response.recomendacoes) ? response.recomendacoes : [],
+        risk_level: response.risk_level || response.nivel_risco || 'medium'
       };
+
+      // Mapear campos internos se a IA responder em português
+      if (validatedAnalysis.recommendations.length > 0) {
+        validatedAnalysis.recommendations = validatedAnalysis.recommendations.map(rec => ({
+          action: rec.action || rec.acao || 'Ação sugerida',
+          impact: rec.impact || rec.impacto || 'Impacto positivo',
+          priority: rec.priority || rec.prioridade || 'medium'
+        }));
+      }
 
       // Validar que temos pelo menos ALGUNS dados
       const hasAssessment = validatedAnalysis.assessment && validatedAnalysis.assessment.length > 0;
