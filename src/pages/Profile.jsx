@@ -258,6 +258,13 @@ export default function ProfilePage() {
     updateProfileMutation.mutate({ ...formData, avatar: previewUrl || user?.avatar });
   };
 
+  const handlePasswordReset = (e) => {
+    e.preventDefault();
+    if (passwords.new !== passwords.confirm) return toast.error('As senhas não coincidem');
+    if (passwords.new.length < 6) return toast.error('A senha deve ter no mínimo 6 caracteres');
+    updatePasswordMutation.mutate({ newPassword: passwords.new });
+  };
+
   const { data: invoices = [], isLoading: isLoadingInvoices } = useQuery({
     queryKey: ['/api/auth/invoices'],
     queryFn: () => apiRequest('GET', '/api/auth/invoices'),
