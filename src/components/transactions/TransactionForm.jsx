@@ -54,12 +54,14 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
   const { data: customers } = useQuery({
     queryKey: ['/api/customers', company?.id],
     queryFn: () => Customer.list(),
+    enabled: !!company?.id,
     initialData: []
   });
 
   const { data: suppliers } = useQuery({
     queryKey: ['/api/suppliers', company?.id],
     queryFn: () => Supplier.list(),
+    enabled: !!company?.id,
     initialData: []
   });
 
@@ -407,7 +409,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
           <div className="space-y-2">
             <Label>Cliente ou Fornecedor</Label>
             <Select 
-              value={formData.entityType} 
+              value={formData.entityType || 'none'} 
               onValueChange={(v) => setFormData({...formData, entityType: v, customerId: '', supplierId: '', type: v === 'customer' ? 'venda' : 'compra'})}
             >
               <SelectTrigger className="w-full">
@@ -425,18 +427,22 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
             <div className="space-y-2">
               <Label>Cliente</Label>
               <Select 
-                value={formData.customerId} 
+                value={formData.customerId || ''} 
                 onValueChange={(v) => setFormData({...formData, customerId: v})}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecione um cliente..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {customers.map((cust) => (
-                    <SelectItem key={cust.id} value={cust.id}>
-                      {cust.name}
-                    </SelectItem>
-                  ))}
+                  {customers && customers.length > 0 ? (
+                    customers.map((cust) => (
+                      <SelectItem key={cust.id} value={cust.id}>
+                        {cust.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <div className="p-2 text-sm text-muted-foreground text-center">Nenhum cliente cadastrado</div>
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -446,18 +452,22 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
             <div className="space-y-2">
               <Label>Fornecedor</Label>
               <Select 
-                value={formData.supplierId} 
+                value={formData.supplierId || ''} 
                 onValueChange={(v) => setFormData({...formData, supplierId: v})}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecione um fornecedor..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {suppliers.map((supp) => (
-                    <SelectItem key={supp.id} value={supp.id}>
-                      {supp.name}
-                    </SelectItem>
-                  ))}
+                  {suppliers && suppliers.length > 0 ? (
+                    suppliers.map((supp) => (
+                      <SelectItem key={supp.id} value={supp.id}>
+                        {supp.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <div className="p-2 text-sm text-muted-foreground text-center">Nenhum fornecedor cadastrado</div>
+                  )}
                 </SelectContent>
               </Select>
             </div>
