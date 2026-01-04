@@ -589,6 +589,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getBankStatementItems(companyId: string): Promise<BankStatementItem[]> { 
+    console.log(`[Storage Debug] Buscando itens para empresa: ${companyId}`);
     const result = await db.select().from(bankStatementItems).where(eq(bankStatementItems.companyId, companyId)).orderBy(desc(bankStatementItems.date));
     console.log(`[Storage Debug] getBankStatementItems para ${companyId} retornou ${result.length} itens`);
     return result;

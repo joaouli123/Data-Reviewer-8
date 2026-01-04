@@ -36,9 +36,9 @@ export default function BankReconciliation({ open, onOpenChange }) {
   });
 
   const { data: bankItemsRaw = [], isLoading: isLoadingItems, refetch: refetchBankItems } = useQuery({
-    queryKey: ['/api/bank/items'],
+    queryKey: ['/api/bank/items', company?.id],
     queryFn: () => apiRequest('GET', '/api/bank/items'),
-    enabled: true,
+    enabled: !!company?.id,
     staleTime: 0,
     gcTime: 0
   });

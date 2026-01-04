@@ -14,9 +14,7 @@ export function registerBankRoutes(app: Express) {
       console.log(`[Bank API Debug] Encontrados ${items.length} itens no storage para ${companyId}`);
       
       // Log detalhado dos status para garantir que não há erros de filtragem
-      items.forEach((item, idx) => {
-        console.log(`[Bank API Debug] Item ${idx}: ID=${item.id}, Status=${item.status}, Desc=${item.description}`);
-      });
+      console.log(`[Bank API Debug] Retornando ${items.length} itens para ${companyId}`);
       
       res.header('Cache-Control', 'no-store'); // Prevenir cache no nível da rede
       res.json(items);
@@ -129,7 +127,9 @@ export function registerBankRoutes(app: Express) {
       
       const newItems: any[] = [];
       let duplicateCount = 0;
-      const existing = await storage.getBankStatementItems(req.user.companyId);
+      const companyId = req.user.companyId;
+      console.log("[OFX Debug] Usando CompanyID:", companyId);
+      const existing = await storage.getBankStatementItems(companyId);
       
       for (const trn of transactions) {
         const amount = parseFloat(trn.TRNAMT);
@@ -149,7 +149,8 @@ export function registerBankRoutes(app: Express) {
         );
         
         if (!isDuplicate) {
-          const newItem = await storage.createBankStatementItem(req.user.companyId, {
+          console.log(`[OFX Debug] Criando item para empresa ${companyId}: ${description}`);
+          const newItem = await storage.createBankStatementItem(companyId, {
             date,
             amount: amount.toString(),
             description: description,
