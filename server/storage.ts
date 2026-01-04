@@ -115,7 +115,8 @@ export class DatabaseStorage {
 
   async getSuppliers(companyId: any) {
     const allSuppliers = await db.select().from(suppliers).where(eq(suppliers.companyId, companyId));
-    const allTransactions = await db.select().from(transactions).where(and(eq(transactions.companyId, companyId), eq(transactions.type, 'compra')));
+    // CORREÇÃO: No routes/sales-purchases.ts, o tipo usado é 'expense' para compras
+    const allTransactions = await db.select().from(transactions).where(and(eq(transactions.companyId, companyId), eq(transactions.type, 'expense')));
 
     return allSuppliers.map(supplier => {
       const totalPurchases = allTransactions
