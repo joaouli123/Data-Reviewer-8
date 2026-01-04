@@ -176,12 +176,16 @@ export function AuthProvider({ children }) {
   };
 
   const updateUser = (newUserData) => {
-    setUser(newUserData);
+    setUser(prev => {
+      const updated = prev ? { ...prev, ...newUserData } : newUserData;
+      return updated;
+    });
+    
     const authData = localStorage.getItem("auth");
     if (authData) {
       try {
         const current = JSON.parse(authData);
-        // Garante que o token e outras informações críticas sejam preservados
+        // Preserve token and other critical info
         localStorage.setItem("auth", JSON.stringify({ 
           ...current, 
           user: {
