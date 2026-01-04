@@ -386,8 +386,8 @@ RESPOSTA OBRIGATÓRIA EM JSON E EM PORTUGUÊS DO BRASIL.`;
             <ReportExporter 
               reportData={{
                 summary: analysisResult ? {
-                  receita_total: filteredTransactions.filter(t => t.type === 'venda').reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0),
-                  despesas_total: filteredTransactions.filter(t => t.type === 'compra').reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0),
+                  receita_total: filteredTransactions.filter(t => ['venda', 'venda_prazo', 'receita', 'income'].includes(t.type)).reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0),
+                  despesas_total: filteredTransactions.filter(t => ['compra', 'compra_prazo', 'despesa', 'expense'].includes(t.type)).reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0),
                   periodo: dateRange.label
                 } : null,
                 transactions: transactionsWithCategories,
@@ -527,11 +527,15 @@ RESPOSTA OBRIGATÓRIA EM JSON E EM PORTUGUÊS DO BRASIL.`;
             </TabsList>
 
             <TabsContent value="dre" className="space-y-6 mt-6">
-              <DREAnalysis transactions={filteredTransactions} categories={categories} />
+              <div id="report-dre">
+                <DREAnalysis transactions={filteredTransactions} categories={categories} />
+              </div>
             </TabsContent>
 
             <TabsContent value="cashflow" className="space-y-6 mt-6">
-              <CashFlowForecastChart forecast={analysisResult.cash_flow_forecast} />
+              <div id="report-chart-cashflow">
+                <CashFlowForecastChart forecast={analysisResult.cash_flow_forecast} />
+              </div>
               <WhatIfAnalysis 
                 transactions={filteredTransactions}
                 saleInstallments={saleInstallments}
@@ -540,11 +544,13 @@ RESPOSTA OBRIGATÓRIA EM JSON E EM PORTUGUÊS DO BRASIL.`;
             </TabsContent>
 
             <TabsContent value="revenue" className="space-y-6 mt-6">
-              <RevenueGrowthReport 
-                strategies={analysisResult.revenue_growth_suggestions}
-                transactions={filteredTransactions}
-                customers={customers}
-              />
+              <div id="report-chart-revenue">
+                <RevenueGrowthReport 
+                  strategies={analysisResult.revenue_growth_suggestions}
+                  transactions={filteredTransactions}
+                  customers={customers}
+                />
+              </div>
             </TabsContent>
 
             <TabsContent value="expenses" className="space-y-6 mt-6">
