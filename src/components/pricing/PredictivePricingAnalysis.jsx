@@ -20,20 +20,42 @@ export default function PredictivePricingAnalysis({ productData, results }) {
 
     setIsAnalyzing(true);
     try {
-      const prompt = `Como especialista em precificação preditiva, analise:
+      const prompt = `Você é um consultor sênior de precificação e estratégia de mercado. Analise detalhadamente os dados abaixo e forneça insights profundos.
 
-Produto: ${productData.productName}
-Custo Total: R$ ${results.totalCost.toFixed(2)}
-Preço Sugerido: R$ ${results.suggestedPrice.toFixed(2)}
-Margem Desejada: ${productData.desiredMargin}%
-${productData.marketComparison ? `Comparação de Mercado: ${productData.marketComparison}` : ''}
+DADOS DO PRODUTO:
+- Nome: ${productData.productName}
+- Custo Total: R$ ${results.totalCost.toFixed(2)}
+- Preço Sugerido (Markup Base): R$ ${results.suggestedPrice.toFixed(2)}
+- Margem Alvo: ${productData.desiredMargin}%
+${productData.marketComparison ? `- Contexto de Mercado: ${productData.marketComparison}` : ''}
 
-Crie uma análise preditiva incluindo:
-1. Previsão de demanda em diferentes faixas de preço
-2. Elasticidade de preço estimada
-3. Cenários de volume x margem
-4. Ponto ótimo de precificação
-5. Risco de cada estratégia`;
+REQUISITOS DA RESPOSTA (JSON):
+1. optimal_price_point: O preço exato para maximizar lucro. Deve incluir:
+   - price (número)
+   - expected_volume (ex: "150 unidades/mês")
+   - expected_revenue (número: preço * volume)
+   - reasoning (justificativa técnica detalhada de pelo menos 2 frases)
+
+2. demand_forecast: Array com 4 faixas de preço (abaixo, no alvo, e acima do sugerido). Cada item deve ter:
+   - price_point (número)
+   - estimated_demand (texto explicativo do volume)
+   - total_revenue (número)
+   - profit_margin (número percentual)
+
+3. price_elasticity: 
+   - classification ("elastic", "inelastic", "unitary")
+   - sensitivity (análise detalhada da sensibilidade do cliente)
+   - recommendations (ações baseadas na elasticidade)
+
+4. pricing_strategies: Array com 3 estratégias (ex: Penetração, Skimming, Premium).
+   - strategy (nome)
+   - price (número)
+   - expected_outcome (descrição detalhada do resultado esperado)
+   - risk_level ("low", "medium", "high")
+
+5. market_positioning: Análise estratégica final de como o produto deve se posicionar.
+
+RESPOSTA OBRIGATÓRIA EM JSON.`;
 
       const response = await InvokeLLM(prompt, {
         properties: {
@@ -140,9 +162,9 @@ Crie uma análise preditiva incluindo:
       // Mapear pricing_strategies
       if (Array.isArray(validated.pricing_strategies)) {
         validated.pricing_strategies = validated.pricing_strategies.map(item => ({
-          strategy: item.strategy || item.estrategia || item.acao || '',
-          price: item.price || item.preco || 0,
-          expected_outcome: item.expected_outcome || item.resultado_esperado || '',
+          strategy: item.strategy || item.estrategia || item.acao || item.nome || 'Estratégia sugerida',
+          price: parseFloat(String(item.price || item.preco || 0).replace(/[^\d.-]/g, '')),
+          expected_outcome: item.expected_outcome || item.resultado_esperado || item.impacto || item.observacao || 'Resultado esperado não detalhado',
           risk_level: item.risk_level || item.nivel_risco || 'medium'
         }));
       }
