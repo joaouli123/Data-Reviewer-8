@@ -144,9 +144,16 @@ export default function BankReconciliation({ open, onOpenChange }) {
     }
   }, [open, bankItems.length]);
 
-  // Filtros
-  const pendingItems = bankItems.filter(item => !item.status || item.status === 'PENDING' || item.status === 'PENDENTE');
-  const reconciledItems = bankItems.filter(item => item.status === 'RECONCILED' || item.status === 'MATCHED' || item.status === 'CONCILIADO' || item.status === 'COMPLETED');
+  // Filtros mais abrangentes para garantir que itens apareçam
+  const pendingItems = bankItems.filter(item => {
+    const status = (item.status || 'PENDING').toUpperCase();
+    return status === 'PENDING' || status === 'PENDENTE';
+  });
+  
+  const reconciledItems = bankItems.filter(item => {
+    const status = (item.status || '').toUpperCase();
+    return status === 'RECONCILED' || status === 'MATCHED' || status === 'CONCILIADO' || status === 'COMPLETED';
+  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

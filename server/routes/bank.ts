@@ -96,6 +96,7 @@ export function registerBankRoutes(app: Express) {
           processedItems.push(existingItem);
           duplicateCount++;
         } else {
+          console.log(`[Bank API] Criando novo item: ${description} - ${amount}`);
           const newItem = await storage.createBankStatementItem(companyId, {
             date,
             amount: amount.toString(),
