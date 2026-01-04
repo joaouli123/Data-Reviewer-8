@@ -108,13 +108,15 @@ export class DatabaseStorage {
 
   async getCustomers(companyId: any) {
     const allCustomers = await db.select().from(customers).where(eq(customers.companyId, companyId));
-    const allTransactions = await db.select().from(transactions).where(and(eq(transactions.companyId, companyId), eq(transactions.type, 'venda')));
+    
+    // CORREÇÃO: Busca por 'income' em vez de 'venda' para alinhar com o tipo de transação gerado no routes
+    const allTransactions = await db.select().from(transactions).where(and(eq(transactions.companyId, companyId), eq(transactions.type, 'income')));
 
     return allCustomers.map(customer => {
       const totalSales = allTransactions
         .filter(t => t.customerId === customer.id)
         .reduce((sum, t) => sum + parseFloat(t.amount || "0"), 0);
-      return { ...customer, totalSales: totalSales.toString() };
+      return { ...customer, totalSales: totalSales.toFixed(2) };
     });
   }
 

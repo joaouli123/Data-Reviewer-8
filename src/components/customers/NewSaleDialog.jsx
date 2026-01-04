@@ -118,6 +118,9 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
       queryClient.invalidateQueries({ queryKey: ['/api/customers'] });
       queryClient.invalidateQueries({ queryKey: ['/api/sales'] });
       queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      
+      // Força o refetch imediato
+      queryClient.refetchQueries({ queryKey: ['/api/customers', company?.id] });
 
       setFormData({
         description: '',

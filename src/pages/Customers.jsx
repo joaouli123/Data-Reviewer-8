@@ -37,6 +37,7 @@ export default function CustomersPage() {
     queryKey: ['/api/customers', company?.id],
     queryFn: () => Customer.list(),
     enabled: !!company?.id,
+    staleTime: 0, // Garante que sempre pegue dados frescos
   });
 
   const customers = Array.isArray(customersData) ? customersData : (customersData?.data || []);
