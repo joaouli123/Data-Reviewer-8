@@ -127,6 +127,8 @@ export default function WhatIfAnalysis({ transactions, saleInstallments, purchas
       // Use AI to analyze scenarios
       const prompt = `Você é um analista financeiro sênior especializado em simulações de cenários. Analise os seguintes dados de fluxo de caixa para os próximos 6 meses e forneça uma visão estratégica profunda em JSON.
 
+IMPORTANTE: Toda a sua resposta deve estar em PORTUGUÊS (BR), incluindo os campos de texto dentro do JSON.
+
 DADOS DA SIMULAÇÃO:
 - Cenário Base: ${JSON.stringify(baseline)}
 - Cenário com Alterações (${scenarioInputs.revenueIncrease}% receita, ${scenarioInputs.expenseIncrease}% despesa): ${JSON.stringify(withChanges)}
@@ -136,17 +138,17 @@ DADOS DA SIMULAÇÃO:
 - Atraso Médio Pagamentos: ${payableDelay} dias
 
 REQUISITOS DA RESPOSTA (JSON):
-1. scenario_analysis: Objeto com análises textuais detalhadas (mínimo 2 frases cada):
+1. scenario_analysis: Objeto com análises textuais detalhadas em PORTUGUÊS (BR) (mínimo 2 frases cada):
    - base_case: Análise da tendência atual sem mudanças.
    - with_changes: Impacto das alterações manuais sugeridas pelo usuário.
    - optimistic: O que acontece se tudo der certo (aumento de receita e corte de custos).
    - pessimistic: Riscos caso a receita caia e custos subam.
 
-2. key_risks: Array de objetos com {risk, probability ("high", "medium", "low"), impact}.
-3. recommendations: Array de objetos com {action, scenario, priority ("critical", "high", "medium", "low")}.
-4. cash_flow_impact: Resumo executivo do impacto final na liquidez.
+2. key_risks: Array de objetos com {risk, probability ("high", "medium", "low"), impact}. O campo 'risk' e 'impact' devem estar em PORTUGUÊS (BR).
+3. recommendations: Array de objetos com {action, scenario, priority ("critical", "high", "medium", "low")}. O campo 'action' e 'scenario' devem estar em PORTUGUÊS (BR).
+4. cash_flow_impact: Resumo executivo do impacto final na liquidez em PORTUGUÊS (BR).
 
-RESPOSTA OBRIGATÓRIA EM JSON.`;
+RESPOSTA OBRIGATÓRIA EM JSON E EM PORTUGUÊS DO BRASIL.`;
 
       const response = await InvokeLLM(prompt, {
         properties: {
