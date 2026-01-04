@@ -318,7 +318,24 @@ export function registerAuthRoutes(app: Express) {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const { email, role, permissions, name, username, password } = req.body;
 
-      // For direct creation in this simplified version as seen in the UI's onInvite
+      // Define default permissions for operational users if none provided
+      let finalPermissions = permissions;
+      if (!finalPermissions && role === 'operational') {
+        const { PERMISSIONS } = await import("../../shared/schema");
+        finalPermissions = {
+          [PERMISSIONS.VIEW_TRANSACTIONS]: true,
+          [PERMISSIONS.CREATE_TRANSACTIONS]: true,
+          [PERMISSIONS.EDIT_TRANSACTIONS]: true,
+          [PERMISSIONS.DELETE_TRANSACTIONS]: true,
+          [PERMISSIONS.IMPORT_BANK]: true,
+          [PERMISSIONS.VIEW_CUSTOMERS]: true,
+          [PERMISSIONS.MANAGE_CUSTOMERS]: true,
+          [PERMISSIONS.VIEW_SUPPLIERS]: true,
+          [PERMISSIONS.MANAGE_SUPPLIERS]: true,
+          [PERMISSIONS.PRICE_CALC]: true
+        };
+      }
+
       const hashedPassword = await hashPassword(password || "mudar123");
       const [newUser] = await db.insert(users).values({
         companyId: req.user.companyId,
@@ -326,8 +343,8 @@ export function registerAuthRoutes(app: Express) {
         email,
         name,
         password: hashedPassword,
-        role: role || "user",
-        permissions: permissions ? JSON.stringify(permissions) : "{}",
+        role: role || "operational", // Default to operational as requested
+        permissions: finalPermissions ? JSON.stringify(finalPermissions) : "{}",
         status: "active"
       }).returning();
 
