@@ -383,7 +383,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
                    ? 'text-emerald-600' 
                    : 'text-rose-600'
                 }`}>
-                  R$ {customInstallments.reduce((sum, i) => sum + parseCurrency(i.amount), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  R$ {formatCurrency(customInstallments.reduce((sum, i) => sum + parseCurrency(i.amount), 0))}
                 </span>
               </div>
             </div>

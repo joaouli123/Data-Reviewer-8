@@ -656,7 +656,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
                             ? 'text-emerald-600'
                             : 'text-rose-600'
                         }`}>
-                          R$ {customInstallments.reduce((sum, inst) => sum + parseFloat(inst.amount || 0), 0).toFixed(2)}
+                          R$ {formatCurrency(customInstallments.reduce((sum, inst) => sum + parseFloat(inst.amount || 0), 0))}
                         </span>
                       </div>
                     </div>

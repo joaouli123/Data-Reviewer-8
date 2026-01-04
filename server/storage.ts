@@ -73,6 +73,20 @@ export class DatabaseStorage {
     return await db.select().from(transactions).where(eq(transactions.companyId, companyId)).orderBy(desc(transactions.date));
   }
 
+  async createTransaction(companyId: any, data: any) {
+    const [transaction] = await db.insert(transactions).values({ ...data, companyId }).returning();
+    return transaction;
+  }
+
+  async updateTransaction(companyId: any, id: any, data: any) {
+    const [updated] = await db.update(transactions).set(data).where(and(eq(transactions.companyId, companyId), eq(transactions.id, id))).returning();
+    return updated;
+  }
+
+  async deleteTransaction(companyId: any, id: any) {
+    await db.delete(transactions).where(and(eq(transactions.companyId, companyId), eq(transactions.id, id)));
+  }
+
   async getCustomers(companyId: any) {
     return await db.select().from(customers).where(eq(customers.companyId, companyId));
   }
