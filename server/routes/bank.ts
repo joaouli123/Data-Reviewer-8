@@ -125,17 +125,18 @@ export function registerBankRoutes(app: Express) {
         );
 
         if (existingItem) {
-          // SE JÁ EXISTE: Devolve para a tela (NÃO DESCARTA)
+          console.log(`[DEBUG] Item duplicado encontrado: ${description}. ID: ${existingItem.id}`);
           processedItems.push(existingItem);
           duplicateCount++; 
         } else {
-          // SE É NOVO: Cria no banco
+          console.log(`[DEBUG] Criando NOVO item: ${description} para empresa ${companyId}`);
           const newItem = await storage.createBankStatementItem(companyId, {
             date,
             amount: amount.toString(),
             description: description,
             status: 'PENDING'
           });
+          console.log(`[DEBUG] Item criado com sucesso. ID: ${newItem.id}`);
           processedItems.push(newItem);
         }
       }
