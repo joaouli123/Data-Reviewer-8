@@ -265,11 +265,13 @@ export default function ProfilePage() {
     updatePasswordMutation.mutate({ newPassword: passwords.new });
   };
 
-  const { data: invoices = [], isLoading: isLoadingInvoices } = useQuery({
+  const { data: invoicesResult = [], isLoading: isLoadingInvoices } = useQuery({
     queryKey: ['/api/auth/invoices'],
     queryFn: () => apiRequest('GET', '/api/auth/invoices'),
     enabled: !!company?.id
   });
+
+  const invoices = Array.isArray(invoicesResult) ? invoicesResult : [];
 
   const getInitials = (name) => name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'US';
 
