@@ -164,15 +164,62 @@ export default function ReportExporter({ reportData, reportType = 'general', ana
         yPos += 75;
       }
 
-      // Section 4: DRE Table
-      if (yPos > 180) {
-        pdf.addPage();
-        yPos = 20;
-      }
-
+      // Section 5: Detailed Data Tables
+      pdf.addPage();
+      yPos = 20;
       pdf.setFontSize(14);
       pdf.setTextColor(44, 62, 80);
-      pdf.text('5. DRE (Demonstrativo de Resultados)', margin, yPos);
+      pdf.text('5. Detalhamento de Dados', margin, yPos);
+
+      // Revenue Breakdown
+      yPos += 10;
+      pdf.setFontSize(12);
+      pdf.text('5.1. Maiores Receitas por Categoria', margin, yPos);
+      const revenueByCat = {};
+      reportData?.transactions?.filter(t => ['venda', 'receita', 'income'].includes(t.type)).forEach(t => {
+        const cat = t.category || 'Outros';
+        revenueByCat[cat] = (revenueByCat[cat] || 0) + parseFloat(t.amount || 0);
+      });
+      const revenueTable = Object.entries(revenueByCat)
+        .sort((a, b) => b[1] - a[1])
+        .map(([cat, val]) => [cat, formatCurrency(val)]);
+
+      autoTable(pdf, {
+        startY: yPos + 5,
+        head: [['Categoria', 'Total']],
+        body: revenueTable,
+        theme: 'striped',
+        headStyles: { fillColor: [46, 204, 113] }
+      });
+
+      // Expense Breakdown
+      yPos = pdf.lastAutoTable.finalY + 10;
+      if (yPos > 230) { pdf.addPage(); yPos = 20; }
+      pdf.setFontSize(12);
+      pdf.text('5.2. Maiores Despesas por Categoria', margin, yPos);
+      const expenseByCat = {};
+      reportData?.transactions?.filter(t => ['compra', 'despesa', 'expense'].includes(t.type)).forEach(t => {
+        const cat = t.category || 'Outros';
+        expenseByCat[cat] = (expenseByCat[cat] || 0) + parseFloat(t.amount || 0);
+      });
+      const expenseTable = Object.entries(expenseByCat)
+        .sort((a, b) => b[1] - a[1])
+        .map(([cat, val]) => [cat, formatCurrency(val)]);
+
+      autoTable(pdf, {
+        startY: yPos + 5,
+        head: [['Categoria', 'Total']],
+        body: expenseTable,
+        theme: 'striped',
+        headStyles: { fillColor: [231, 76, 60] }
+      });
+
+      // DRE
+      pdf.addPage();
+      yPos = 20;
+      pdf.setFontSize(14);
+      pdf.setTextColor(44, 62, 80);
+      pdf.text('6. DRE (Demonstrativo de Resultados)', margin, yPos);
 
       const dreData = [
         ['Receita Bruta', formatCurrency(reportData?.summary?.receita_total || 0), '100%'],
@@ -202,18 +249,26 @@ export default function ReportExporter({ reportData, reportType = 'general', ana
 
       yPos = pdf.lastAutoTable.finalY + 15;
 
-      // Section 6: AI Insights
-      if (yPos > 220) {
-        pdf.addPage();
-        yPos = 20;
-      }
+      // Section 7: AI Insights
+      if (yPos > 200) { pdf.addPage(); yPos = 20; }
       pdf.setFontSize(14);
       pdf.setTextColor(44, 62, 80);
-      pdf.text('6. Insights e Recomendações de IA', margin, yPos);
+      pdf.text('7. Insights e Recomendações de IA', margin, yPos);
       
       yPos += 8;
       pdf.setFontSize(11);
       pdf.setFont('helvetica', 'bold');
+      pdf.text('Sumário:', margin, yPos);
+      yPos += 6;
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(9);
+      const splitExecSummary = pdf.splitTextToSize(analysisResult.executive_summary || '', contentWidth);
+      pdf.text(splitExecSummary, margin, yPos);
+      yPos += splitExecSummary.length * 5;
+
+      yPos += 5;
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(11);
       pdf.text('Redução de Despesas:', margin, yPos);
       yPos += 6;
       pdf.setFont('helvetica', 'normal');
@@ -239,12 +294,12 @@ export default function ReportExporter({ reportData, reportType = 'general', ana
         yPos += splitText.length * 5;
       });
 
-      // Section 7: Detailed Transactions
+      // Section 8: Detailed Transactions
       pdf.addPage();
       yPos = 20;
       pdf.setFontSize(14);
       pdf.setTextColor(44, 62, 80);
-      pdf.text('7. Transações Detalhadas', margin, yPos);
+      pdf.text('8. Histórico Analítico de Transações', margin, yPos);
 
       const txnData = (reportData?.transactions || []).map(t => [
         t.date ? new Date(t.date).toLocaleDateString('pt-BR') : '-',
