@@ -170,6 +170,33 @@ export default function ReportExporter({ reportData, reportType = 'general', ana
         }
       });
 
+      // Section 6: Detailed Transactions
+      pdf.addPage();
+      yPos = 20;
+      pdf.setFontSize(14);
+      pdf.setTextColor(44, 62, 80);
+      pdf.text('6. Transações Detalhadas', margin, yPos);
+
+      const txnData = (reportData?.transactions || []).map(t => [
+        t.date ? new Date(t.date).toLocaleDateString('pt-BR') : '-',
+        t.description || '-',
+        t.category || 'Outros',
+        ['venda', 'receita', 'income'].includes(t.type) ? 'Receita' : 'Despesa',
+        formatCurrency(t.amount || 0)
+      ]);
+
+      autoTable(pdf, {
+        startY: yPos + 5,
+        head: [['Data', 'Descrição', 'Categoria', 'Tipo', 'Valor']],
+        body: txnData,
+        theme: 'grid',
+        headStyles: { fillColor: [44, 62, 80] },
+        styles: { fontSize: 8 },
+        columnStyles: {
+          4: { halign: 'right' }
+        }
+      });
+
       pdf.save(`relatorio-analitico-${formatDateUTC3()}.pdf`);
       toast.success('Relatório PDF gerado com sucesso!');
     } catch (error) {
