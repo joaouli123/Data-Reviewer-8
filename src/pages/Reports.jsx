@@ -281,10 +281,17 @@ RESPOSTA OBRIGATÓRIA EM JSON E EM PORTUGUÊS DO BRASIL.`;
               }
             }
           },
-          expense_reduction_opportunities: {
-            type: "array",
-            items: { type: "object", properties: { suggestion: { type: "string" } } }
-          },
+            expense_reduction_opportunities: { 
+              type: "array", 
+              items: { 
+                type: "object", 
+                properties: { 
+                  suggestion: { type: "string" },
+                  category: { type: "string" },
+                  potential_savings: { type: "string" }
+                } 
+              } 
+            },
           revenue_growth_suggestions: {
             type: "array",
             items: { 
