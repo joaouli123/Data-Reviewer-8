@@ -531,7 +531,7 @@ RESPOSTA OBRIGATÓRIA EM JSON E EM PORTUGUÊS DO BRASIL.`;
         <div className="space-y-6 animate-in fade-in duration-500">
           {/* Executive Summary with KPIs */}
           <ExecutiveSummary 
-            summary={analysisResult.executive_summary}
+            summary={analysisResult?.executive_summary}
             transactions={filteredTransactions}
             saleInstallments={saleInstallments}
             purchaseInstallments={purchaseInstallments}

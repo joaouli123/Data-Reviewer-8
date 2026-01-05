@@ -50,7 +50,7 @@ export default function ExpensesBreakdown({ opportunities = [], transactions, ca
 
   const totalExpenses = chartData.reduce((acc, item) => acc + item.value, 0);
 
-  // DEBUG: console.log("[ExpensesBreakdown] Opportunities:", opportunities);
+  const finalOpportunities = Array.isArray(opportunities) ? opportunities : [];
 
   // Renderize mesmo sem opportunities
   return (
@@ -127,7 +127,7 @@ export default function ExpensesBreakdown({ opportunities = [], transactions, ca
               <h4 className="font-semibold text-slate-900">Onde Cortar Custos</h4>
             </div>
             
-            {opportunities && Array.isArray(opportunities) && opportunities.length > 0 && opportunities.map((opp, idx) => {
+            {finalOpportunities.length > 0 ? finalOpportunities.map((opp, idx) => {
               const categoryId = opp?.categoryId;
               const rawCategory = opp?.category;
               const mappedName = categoryId ? categoryMap[categoryId] : null;
@@ -147,9 +147,7 @@ export default function ExpensesBreakdown({ opportunities = [], transactions, ca
                   <p className="text-sm text-rose-900 leading-relaxed">{opp?.suggestion || ''}</p>
                 </div>
               );
-            })}
-
-            {(!opportunities || opportunities.length === 0) && (
+            }) : (
               <p className="text-slate-500 italic text-sm">
                 Nenhuma oportunidade clara de redução identificada. Suas despesas parecem otimizadas.
               </p>

@@ -13,7 +13,9 @@ export async function analyzeWithAI(prompt: string, responseJsonSchema: any = nu
 
 Você é um CFO Sênior. Você DEVE retornar um JSON válido e estruturado. 
 O campo 'executive_summary' é OBRIGATÓRIO, deve estar em Português (BR) e deve conter pelo menos 3 parágrafos de análise profunda e estratégica sobre os dados fornecidos. 
-Não use placeholders. Se os dados forem escassos, analise a tendência ou a necessidade de mais informações de forma profissional.`;
+O campo 'expense_reduction_opportunities' deve ser um array com pelo menos 3 sugestões reais baseadas nos dados, ou tendências do setor caso os dados sejam poucos.
+O campo 'revenue_growth_suggestions' deve ser um array com pelo menos 3 estratégias de crescimento.
+Não use placeholders como "Nenhuma oportunidade identificada". Se os dados forem escassos, use sua expertise para sugerir melhorias baseadas em melhores práticas de gestão financeira para PMEs.`;
 
     const response = await ai.models.generateContent({
       model: "gemini-2.0-flash-exp", 
