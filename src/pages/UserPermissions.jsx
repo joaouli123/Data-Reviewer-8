@@ -27,6 +27,7 @@ const PERMISSIONS_LIST = [
   { id: 'invite_users', label: 'Convidar Usuários', category: 'Usuários' },
   { id: 'view_settings', label: 'Ver Configurações', category: 'Configurações' },
   { id: 'manage_settings', label: 'Gerenciar Configurações', category: 'Configurações' },
+  { id: 'view_financial', label: 'Ver Aba Financeiro (Menu)', category: 'Navegação' },
 ];
 
 const DEFAULT_PERMISSIONS = {
@@ -47,6 +48,7 @@ const DEFAULT_PERMISSIONS = {
     invite_users: true,
     view_settings: true,
     manage_settings: true,
+    view_financial: true,
   },
   operational: {
     view_transactions: true,
@@ -55,6 +57,7 @@ const DEFAULT_PERMISSIONS = {
     import_bank: true,
     view_customers: true,
     view_suppliers: true,
+    view_financial: false,
   },
 };
 
