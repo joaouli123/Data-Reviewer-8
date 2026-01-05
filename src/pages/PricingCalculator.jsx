@@ -10,6 +10,7 @@ import { Calculator, TrendingUp, DollarSign, Percent, Sparkles, Loader2 } from '
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { toast } from 'sonner';
 import PredictivePricingAnalysis from '../components/pricing/PredictivePricingAnalysis';
+import { formatCurrency } from '@/utils/formatters';
 
 export default function PricingCalculatorPage() {
   const { user } = useAuth();
@@ -57,7 +58,7 @@ export default function PricingCalculatorPage() {
       suggestedPrice,
       markupMultiplier,
       profitAmount: suggestedPrice - totalCost,
-      breakEvenUnits: operationalCost > 0 ? Math.ceil(operationalCost / (suggestedPrice - directCost)) : 0,
+      breakEvenUnits: operationalCost > 0 ? (suggestedPrice - directCost > 0 ? Math.ceil(operationalCost / (suggestedPrice - directCost)) : 0) : 0,
       alternatives: {
         costPlus,
         premiumPrice,
@@ -76,8 +77,8 @@ export default function PricingCalculatorPage() {
     try {
       const prompt = `Como especialista em precificação, analise:
 Produto: ${formData.productName}
-Custo Total: R$ ${results.totalCost.toFixed(2)}
-Preço Sugerido: R$ ${results.suggestedPrice.toFixed(2)}
+Custo Total: ${formatCurrency(results.totalCost)}
+Preço Sugerido: ${formatCurrency(results.suggestedPrice)}
 Margem Desejada: ${formData.desiredMargin}%
 ${formData.marketComparison ? `Preços de Mercado: ${formData.marketComparison}` : ''}
 
@@ -209,15 +210,15 @@ Forneça recomendações estratégicas de precificação.`;
                 <CardContent>
                   <div className="text-center">
                     <p className="text-3xl sm:text-5xl font-bold text-primary mb-2 break-words">
-                      R$ {results.suggestedPrice.toFixed(2)}
+                      {formatCurrency(results.suggestedPrice)}
                     </p>
                     <p className="text-xs sm:text-sm text-slate-600 mb-4">
-                      Lucro: R$ {results.profitAmount.toFixed(2)} ({formData.desiredMargin}%)
+                      Lucro: {formatCurrency(results.profitAmount)} ({formData.desiredMargin}%)
                     </p>
                     <div className="grid grid-cols-2 gap-2 text-xs sm:text-sm">
                       <div className="p-2 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
                         <p className="text-slate-500">Custo Total</p>
-                        <p className="font-semibold">R$ {results.totalCost.toFixed(2)}</p>
+                        <p className="font-semibold">{formatCurrency(results.totalCost)}</p>
                       </div>
                       <div className="p-2 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
                         <p className="text-slate-500">Markup</p>
@@ -239,7 +240,7 @@ Forneça recomendações estratégicas de precificação.`;
                       <p className="text-xs text-slate-500">Margem de 30%</p>
                     </div>
                     <p className="text-lg font-bold text-emerald-600">
-                      R$ {results.alternatives.competitivePrice.toFixed(2)}
+                      {formatCurrency(results.alternatives.competitivePrice)}
                     </p>
                   </div>
 
@@ -249,7 +250,7 @@ Forneça recomendações estratégicas de precificação.`;
                       <p className="text-xs text-slate-500">Margem de 50%</p>
                     </div>
                     <p className="text-lg font-bold text-primary">
-                      R$ {results.alternatives.costPlus.toFixed(2)}
+                      {formatCurrency(results.alternatives.costPlus)}
                     </p>
                   </div>
 
@@ -259,7 +260,7 @@ Forneça recomendações estratégicas de precificação.`;
                       <p className="text-xs text-slate-500">Margem de 100%</p>
                     </div>
                     <p className="text-lg font-bold text-primary">
-                      R$ {results.alternatives.premiumPrice.toFixed(2)}
+                      {formatCurrency(results.alternatives.premiumPrice)}
                     </p>
                   </div>
                 </CardContent>
@@ -329,14 +330,14 @@ Forneça recomendações estratégicas de precificação.`;
                   <div>
                     <p className="text-xs text-slate-500">Mínimo</p>
                     <p className="text-xl font-bold text-slate-900">
-                      R$ {aiSuggestion.optimal_price_range.min.toFixed(2)}
+                      {formatCurrency(aiSuggestion.optimal_price_range.min)}
                     </p>
                   </div>
                   <div className="flex-1 h-2 bg-gradient-to-r from-emerald-300 to-primary rounded-full" />
                   <div>
                     <p className="text-xs text-slate-500">Máximo</p>
                     <p className="text-xl font-bold text-slate-900">
-                      R$ {aiSuggestion.optimal_price_range.max.toFixed(2)}
+                      {formatCurrency(aiSuggestion.optimal_price_range.max)}
                     </p>
                   </div>
                 </div>
