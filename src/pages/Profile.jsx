@@ -108,8 +108,24 @@ export default function ProfilePage() {
   const getInitials = (name) => name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'US';
 
   // Handlers
+  const formatPhone = (value) => {
+    if (!value) return "";
+    const numbers = value.replace(/\D/g, "");
+    if (numbers.length <= 10) {
+      return numbers.replace(/(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3").replace(/-$/, "");
+    }
+    return numbers.replace(/(\d{2})(\d{5})(\d{0,4})/, "($1) $2-$3").replace(/-$/, "");
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    if (name === "phone") {
+      const formatted = formatPhone(value);
+      if (formatted.length <= 15) {
+        setFormData(prev => ({ ...prev, [name]: formatted }));
+      }
+      return;
+    }
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
