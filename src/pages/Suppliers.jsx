@@ -14,7 +14,7 @@ import SupplierPurchasesDialog from '../components/suppliers/SupplierPurchasesDi
 import SupplierFormDialog from '../components/suppliers/SupplierFormDialog';
 import Pagination from '../components/Pagination';
 import { formatPhoneNumber, formatCNPJ } from '@/utils/masks'; // Importante usar estes
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function SuppliersPage() {
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);

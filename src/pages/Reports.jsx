@@ -24,7 +24,7 @@ import DebtImpactSimulator from '../components/reports/DebtImpactSimulator';
 import DREAnalysis from '../components/reports/DREAnalysis';
 import ReportExporter from '../components/reports/ReportExporter';
 import AnalysisLoading from '../components/reports/AnalysisLoading';
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from '@/contexts/AuthContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 export default function ReportsPage() {
