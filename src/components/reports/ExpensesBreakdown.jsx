@@ -50,6 +50,8 @@ export default function ExpensesBreakdown({ opportunities = [], transactions, ca
 
   const totalExpenses = chartData.reduce((acc, item) => acc + item.value, 0);
 
+  // DEBUG: console.log("[ExpensesBreakdown] Opportunities:", opportunities);
+
   // Renderize mesmo sem opportunities
   return (
     <Card className="border-slate-200 shadow-sm">
