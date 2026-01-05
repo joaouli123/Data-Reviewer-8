@@ -19,6 +19,7 @@ import NewSaleDialog from '../components/customers/NewSaleDialog';
 import CustomerFormDialog from '../components/customers/CustomerFormDialog';
 import Pagination from '../components/Pagination';
 import { formatPhoneNumber } from '@/utils/masks';
+import { useAuth } from "@/hooks/use-auth";
 
 export default function CustomersPage() {
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);

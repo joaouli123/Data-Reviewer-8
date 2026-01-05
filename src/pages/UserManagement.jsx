@@ -48,6 +48,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import InviteUserModal from "@/components/users/InviteUserModal";
 import { PERMISSIONS } from "../../shared/schema";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function UserManagement() {
   const { user: currentUser } = useAuth();
