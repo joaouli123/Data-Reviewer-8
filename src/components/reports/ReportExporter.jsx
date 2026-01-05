@@ -134,6 +134,36 @@ export default function ReportExporter({ reportData, reportType = 'general', ana
         yPos += 75;
       }
 
+      const expensesChart = await captureChart('report-chart-expenses');
+      if (expensesChart) {
+        if (yPos > 220) { pdf.addPage(); yPos = 20; }
+        pdf.setFontSize(14);
+        pdf.setTextColor(44, 62, 80);
+        pdf.text('4.1. Distribuição de Despesas', margin, yPos);
+        pdf.addImage(expensesChart, 'PNG', margin, yPos + 5, contentWidth, 60);
+        yPos += 75;
+      }
+
+      const capitalChart = await captureChart('report-chart-working-capital');
+      if (capitalChart) {
+        if (yPos > 220) { pdf.addPage(); yPos = 20; }
+        pdf.setFontSize(14);
+        pdf.setTextColor(44, 62, 80);
+        pdf.text('4.2. Capital de Giro', margin, yPos);
+        pdf.addImage(capitalChart, 'PNG', margin, yPos + 5, contentWidth, 60);
+        yPos += 75;
+      }
+
+      const debtChart = await captureChart('report-chart-debt');
+      if (debtChart) {
+        if (yPos > 220) { pdf.addPage(); yPos = 20; }
+        pdf.setFontSize(14);
+        pdf.setTextColor(44, 62, 80);
+        pdf.text('4.3. Análise de Dívidas', margin, yPos);
+        pdf.addImage(debtChart, 'PNG', margin, yPos + 5, contentWidth, 60);
+        yPos += 75;
+      }
+
       // Section 4: DRE Table
       if (yPos > 180) {
         pdf.addPage();
@@ -170,12 +200,51 @@ export default function ReportExporter({ reportData, reportType = 'general', ana
         }
       });
 
-      // Section 6: Detailed Transactions
+      yPos = pdf.lastAutoTable.finalY + 15;
+
+      // Section 6: AI Insights
+      if (yPos > 220) {
+        pdf.addPage();
+        yPos = 20;
+      }
+      pdf.setFontSize(14);
+      pdf.setTextColor(44, 62, 80);
+      pdf.text('6. Insights e Recomendações de IA', margin, yPos);
+      
+      yPos += 8;
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Redução de Despesas:', margin, yPos);
+      yPos += 6;
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(9);
+      (analysisResult.expense_reduction_opportunities || []).forEach(opt => {
+        const text = `• ${opt.suggestion}`;
+        const splitText = pdf.splitTextToSize(text, contentWidth);
+        pdf.text(splitText, margin, yPos);
+        yPos += splitText.length * 5;
+      });
+
+      yPos += 5;
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Estratégias de Crescimento:', margin, yPos);
+      yPos += 6;
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(9);
+      (analysisResult.revenue_growth_suggestions || []).forEach(strat => {
+        const text = `• ${strat.strategy}: ${strat.rationale}`;
+        const splitText = pdf.splitTextToSize(text, contentWidth);
+        pdf.text(splitText, margin, yPos);
+        yPos += splitText.length * 5;
+      });
+
+      // Section 7: Detailed Transactions
       pdf.addPage();
       yPos = 20;
       pdf.setFontSize(14);
       pdf.setTextColor(44, 62, 80);
-      pdf.text('6. Transações Detalhadas', margin, yPos);
+      pdf.text('7. Transações Detalhadas', margin, yPos);
 
       const txnData = (reportData?.transactions || []).map(t => [
         t.date ? new Date(t.date).toLocaleDateString('pt-BR') : '-',
