@@ -65,7 +65,7 @@ export function registerAuthRoutes(app: Express) {
       const subscriptionPlan = plan || "pro";
       try {
         // Check if subscription already exists to prevent duplication on retries/errors
-        const existingSubs = await db.select().from(subscriptions).where(eq(subscriptions.companyId, company.id));
+        const existingSubs = await db.select().from(subscriptions).where(eq(subscriptions.companyId, company.id)).limit(1);
         if (existingSubs.length === 0) {
           const amount = subscriptionPlan === "pro" ? "997.00" : (subscriptionPlan === "monthly" ? "97.00" : "0.00");
           await db.insert(subscriptions).values({ 
