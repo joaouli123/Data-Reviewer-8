@@ -1,12 +1,29 @@
 import { Express } from "express";
 import { storage } from "../storage";
-import { insertTransactionSchema } from "../../shared/schema";
+import { insertTransactionSchema, PERMISSIONS } from "../../shared/schema";
 import { authMiddleware, AuthenticatedRequest } from "../middleware";
+
+// Helper to check permissions
+const checkPermission = (req: AuthenticatedRequest, permission: string) => {
+  if (req.user?.role === 'admin' || req.user?.isSuperAdmin) return true;
+  if (!req.user?.permissions) return false;
+  try {
+    const perms = JSON.parse(req.user.permissions as string);
+    return !!perms[permission];
+  } catch (e) {
+    return false;
+  }
+};
 
 export function registerTransactionRoutes(app: Express) {
   app.get("/api/transactions", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      
+      if (!checkPermission(req, PERMISSIONS.VIEW_TRANSACTIONS)) {
+        return res.status(403).json({ error: "Você não tem permissão para visualizar transações" });
+      }
+
       const { customerId, supplierId, type } = req.query;
       
       let transactions = await storage.getTransactions(req.user.companyId);
@@ -38,6 +55,10 @@ export function registerTransactionRoutes(app: Express) {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       
+      if (!checkPermission(req, PERMISSIONS.CREATE_TRANSACTIONS)) {
+        return res.status(403).json({ error: "Você não tem permissão para criar transações" });
+      }
+      
       const body = { ...req.body };
       if (body.date && typeof body.date === 'string') {
         body.date = new Date(body.date);
@@ -62,6 +83,11 @@ export function registerTransactionRoutes(app: Express) {
   app.delete("/api/transactions/:id", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+
+      if (!checkPermission(req, PERMISSIONS.DELETE_TRANSACTIONS)) {
+        return res.status(403).json({ error: "Você não tem permissão para excluir transações" });
+      }
+
       await storage.deleteTransaction(req.user.companyId, req.params.id);
       res.sendStatus(204);
     } catch (error) {
@@ -73,6 +99,10 @@ export function registerTransactionRoutes(app: Express) {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       
+      if (!checkPermission(req, PERMISSIONS.EDIT_TRANSACTIONS)) {
+        return res.status(403).json({ error: "Você não tem permissão para editar transações" });
+      }
+
       const body = { ...req.body };
       if (body.date && typeof body.date === 'string') {
         body.date = new Date(body.date);

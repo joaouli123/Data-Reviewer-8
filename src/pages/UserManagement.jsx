@@ -139,7 +139,7 @@ export default function UserManagement() {
     // Força permissões completas para admin na interface
     if (user.role === 'admin') {
       Object.values(PERMISSIONS).forEach(p => perms[p] = true);
-    } else if (user.role === 'user' && (!user.permissions || Object.keys(user.permissions).length === 0)) {
+    } else if ((user.role === 'operational' || user.role === 'user') && (!user.permissions || Object.keys(user.permissions).length === 0)) {
       // Permissões padrão para Operacional se não tiver nenhuma
       perms = {
         [PERMISSIONS.VIEW_TRANSACTIONS]: true,
@@ -163,7 +163,8 @@ export default function UserManagement() {
   };
 
   const togglePermission = (permId) => {
-    if (selectedUser?.role === 'admin') return; // Admin sempre tem tudo
+    // Admin sempre tem tudo, mas vamos permitir que 'operational' e 'user' sejam editados
+    if (selectedUser?.role === 'admin') return; 
     
     setSelectedUser(prev => ({
       ...prev,
