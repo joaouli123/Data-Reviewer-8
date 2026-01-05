@@ -10,7 +10,7 @@ export async function analyzeWithAI(prompt: string, responseJsonSchema: any = nu
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-1.5-flash", 
+      model: "gemini-2.0-flash-exp", 
       config: {
         responseMimeType: responseJsonSchema ? "application/json" : "text/plain",
         temperature: 0.1,
