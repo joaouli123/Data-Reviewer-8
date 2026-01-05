@@ -10,23 +10,25 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format, addMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarIcon, Plus } from "lucide-react";
+import { CalendarIcon, Plus, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CurrencyInput, formatCurrency, parseCurrency } from "@/components/ui/currency-input";
 import { Switch } from "@/components/ui/switch";
 import CreateCategoryModal from './CreateCategoryModal';
 import { useAuth } from '@/contexts/AuthContext';
-import { Customer, Supplier } from '@/api/entities';
+import { Customer, Supplier, ROLES } from '@/api/entities';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 export default function TransactionForm({ open, onOpenChange, onSubmit, initialData = null }) {
-  const { company } = useAuth();
+  const { company, user } = useAuth();
   const queryClient = useQueryClient();
   const [isCreateCategoryModalOpen, setIsCreateCategoryModalOpen] = useState(false);
   const [isSuggestingCategory, setIsSuggestingCategory] = useState(false);
   const [customInstallments, setCustomInstallments] = useState([]);
+
+  const canEdit = user?.role === ROLES.ADMIN || user?.isSuperAdmin || (initialData ? user?.permissions?.edit_transactions : user?.permissions?.create_transactions);
 
   const [formData, setFormData] = React.useState({
     description: '',
@@ -402,7 +404,21 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
         <DialogHeader>
           <DialogTitle>{initialData ? 'Editar Transação' : 'Nova Transação'}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+
+        {!canEdit ? (
+          <div className="py-12 flex flex-col items-center justify-center text-center space-y-4">
+            <div className="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center">
+              <CalendarIcon className="w-8 h-8 text-rose-600" />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold text-slate-900">Acesso Negado</h3>
+              <p className="text-sm text-slate-500 max-w-[250px]">
+                Você não tem permissão para {initialData ? 'editar' : 'criar'} transações no sistema.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4 mt-4">
 
           <div className="space-y-2">
             <Label>Cliente ou Fornecedor</Label>

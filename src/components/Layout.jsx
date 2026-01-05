@@ -32,8 +32,8 @@ export default function Layout({ children }) {
     { name: 'Clientes', icon: Users, path: '/customers', roles: ['admin', 'operational', 'user', 'manager'], permission: 'view_customers' },
     { name: 'Fornecedores', icon: Building2, path: '/suppliers', roles: ['admin', 'operational', 'user', 'manager'], permission: 'view_suppliers' },
     { name: 'Categorias', icon: Tag, path: '/categories', roles: ['admin'], permission: null },
-    { name: 'Fluxo de Caixa', icon: TrendingUp, path: '/forecast', roles: ['admin'], permission: 'view_reports' },
-    { name: 'IA Analista', icon: Brain, path: '/reports', roles: ['admin'], permission: 'view_reports' },
+    { name: 'Fluxo de Caixa', icon: TrendingUp, path: '/forecast', roles: ['admin', 'manager', 'operational', 'user'], permission: 'view_reports' },
+    { name: 'IA Analista', icon: Brain, path: '/reports', roles: ['admin', 'manager', 'operational', 'user'], permission: 'view_reports' },
     { name: 'Calc. Preços', icon: Settings, path: '/pricing', roles: ['admin', 'operational', 'user', 'manager'], permission: 'price_calc' },
     { name: 'Gestão de Usuários', icon: Users, path: '/users', roles: ['admin'], permission: 'manage_users' },
   ];
