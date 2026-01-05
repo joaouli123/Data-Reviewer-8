@@ -538,6 +538,29 @@ RESPOSTA OBRIGATÓRIA EM JSON E EM PORTUGUÊS DO BRASIL.`;
             dateRange={dateRange}
           />
 
+          {/* Container de Impressão Invisível para Captura de Gráficos */}
+          <div 
+            id="print-container" 
+            className="fixed -left-[9999px] top-0 w-[1000px] bg-white pointer-events-none opacity-0"
+            aria-hidden="true"
+          >
+            <div id="report-chart-cashflow-print">
+              <CashFlowForecastChart transactions={transactions} analysisResult={analysisResult} />
+            </div>
+            <div id="report-chart-revenue-print">
+              <RevenueGrowthReport transactions={transactions} analysisResult={analysisResult} customers={customers} />
+            </div>
+            <div id="report-chart-expenses-print">
+              <ExpensesBreakdown transactions={transactions} analysisResult={analysisResult} categories={categories} />
+            </div>
+            <div id="report-chart-working-capital-print">
+              <WorkingCapitalAnalysis transactions={transactions} saleInstallments={saleInstallments} purchaseInstallments={purchaseInstallments} />
+            </div>
+            <div id="report-chart-debt-print">
+              <DebtAnalysis transactions={transactions} analysisResult={analysisResult} />
+            </div>
+          </div>
+
           <ReportSuggestions 
             transactions={filteredTransactions}
             saleInstallments={saleInstallments}

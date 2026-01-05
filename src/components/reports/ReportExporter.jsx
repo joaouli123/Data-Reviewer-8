@@ -17,8 +17,15 @@ export default function ReportExporter({ reportData, reportType = 'general', ana
   };
 
   const captureChart = async (id) => {
-    const element = document.getElementById(id);
-    if (!element) return null;
+    // Tentar capturar primeiro a versão de impressão (invisível mas renderizada)
+    const printId = `${id}-print`;
+    const element = document.getElementById(printId) || document.getElementById(id);
+    
+    if (!element) {
+      console.warn(`Element ${id} or ${printId} not found`);
+      return null;
+    }
+
     try {
       const canvas = await html2canvas(element, {
         scale: 2,
@@ -27,11 +34,13 @@ export default function ReportExporter({ reportData, reportType = 'general', ana
         backgroundColor: '#ffffff',
         windowWidth: 1200,
         onclone: (clonedDoc) => {
-          const el = clonedDoc.getElementById(id);
+          const el = clonedDoc.getElementById(printId) || clonedDoc.getElementById(id);
           if (el) {
             el.style.height = 'auto';
             el.style.width = '1000px';
             el.style.padding = '20px';
+            el.style.visibility = 'visible';
+            el.style.display = 'block';
           }
         }
       });
@@ -98,7 +107,7 @@ export default function ReportExporter({ reportData, reportType = 'general', ana
 
       // Section 1: Executive Summary
       addSectionTitle('1. Sumário Executivo');
-      const summaryText = analysisResult.executive_summary || 'Resumo analítico gerado pela IA com base nas transações do período. A saúde financeira apresenta pontos de atenção e oportunidades de otimização identificadas nas seções seguintes.';
+      const summaryText = analysisResult?.executive_summary || 'Análise em processamento ou dados insuficientes para sumário executivo...';
       pdf.setFont('helvetica', 'normal');
       pdf.setFontSize(10);
       pdf.setTextColor(52, 73, 94);

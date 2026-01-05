@@ -9,6 +9,12 @@ export async function analyzeWithAI(prompt: string, responseJsonSchema: any = nu
   if (!ai) throw new Error('API_KEY_NOT_CONFIGURED');
 
   try {
+    const promptWithInstruction = `${prompt}
+
+Você é um CFO Sênior. Você DEVE retornar um JSON válido e estruturado. 
+O campo 'executive_summary' é OBRIGATÓRIO, deve estar em Português (BR) e deve conter pelo menos 3 parágrafos de análise profunda e estratégica sobre os dados fornecidos. 
+Não use placeholders. Se os dados forem escassos, analise a tendência ou a necessidade de mais informações de forma profissional.`;
+
     const response = await ai.models.generateContent({
       model: "gemini-2.0-flash-exp", 
       config: {
@@ -19,7 +25,7 @@ export async function analyzeWithAI(prompt: string, responseJsonSchema: any = nu
       contents: [
         {
           role: "user",
-          parts: [{ text: prompt }]
+          parts: [{ text: promptWithInstruction }]
         }
       ]
     });
