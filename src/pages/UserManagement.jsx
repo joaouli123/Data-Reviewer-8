@@ -195,7 +195,7 @@ export default function UserManagement() {
       {
         group: "TRANSAÇÕES",
         perms: [
-          { id: PERMISSIONS.VIEW_TRANSACTIONS, label: "Ver Transações" },
+          { id: PERMISSIONS.VIEW_TRANSACTIONS, label: "Ver Transações (Acesso à página)" },
           { id: PERMISSIONS.CREATE_TRANSACTIONS, label: "Criar Transações" },
           { id: PERMISSIONS.EDIT_TRANSACTIONS, label: "Editar Transações" },
           { id: PERMISSIONS.DELETE_TRANSACTIONS, label: "Excluir Transações" },

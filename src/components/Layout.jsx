@@ -28,9 +28,9 @@ export default function Layout({ children }) {
   // Regular user navigation
   const baseNavigation = [
     { name: 'Visão Geral', icon: LayoutDashboard, path: '/dashboard', roles: ['admin', 'operational'], permission: null },
-    { name: 'Transações', icon: Receipt, path: '/transactions', roles: ['admin', 'operational'], permission: 'view_transactions' },
-    { name: 'Clientes', icon: Users, path: '/customers', roles: ['admin', 'operational'], permission: 'view_customers' },
-    { name: 'Fornecedores', icon: Building2, path: '/suppliers', roles: ['admin', 'operational'], permission: 'view_suppliers' },
+    { name: 'Transações', icon: Receipt, path: '/transactions', roles: ['admin', 'operational', 'user', 'manager'], permission: 'view_transactions' },
+    { name: 'Clientes', icon: Users, path: '/customers', roles: ['admin', 'operational', 'user', 'manager'], permission: 'view_customers' },
+    { name: 'Fornecedores', icon: Building2, path: '/suppliers', roles: ['admin', 'operational', 'user', 'manager'], permission: 'view_suppliers' },
     { name: 'Categorias', icon: Tag, path: '/categories', roles: ['admin'], permission: null },
     { name: 'Fluxo de Caixa', icon: TrendingUp, path: '/forecast', roles: ['admin'], permission: 'view_reports' },
     { name: 'IA Analista', icon: Brain, path: '/reports', roles: ['admin'], permission: 'view_reports' },
