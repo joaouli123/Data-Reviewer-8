@@ -2,7 +2,6 @@ import { InvokeLLM, UploadFile, ExtractDataFromUploadedFile } from '@/api/integr
 import React, { useState } from 'react';
 import { Transaction, Customer, Category, Installment, PurchaseInstallment, Purchase } from '@/api/entities';
 import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Brain, Sparkles, TrendingUp, AlertTriangle, Lightbulb, FileText, Loader2, ArrowRight, Filter, BarChart3 } from 'lucide-react';

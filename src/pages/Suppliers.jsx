@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Supplier, Category } from '@/api/entities'; // Removi Transaction e Purchase não usados diretamente
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
