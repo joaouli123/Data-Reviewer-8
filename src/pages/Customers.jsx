@@ -30,8 +30,27 @@ export default function CustomersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   
-  const { company } = useAuth();
+  const { company, user } = useAuth();
   const queryClient = useQueryClient();
+
+  const hasPermission = (permission) => {
+    if (user?.role === 'admin' || user?.isSuperAdmin) return true;
+    return !!user?.permissions?.[permission];
+  };
+
+  if (!hasPermission('view_customers')) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-4">
+        <div className="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mb-4">
+          <User className="w-8 h-8 text-rose-600" />
+        </div>
+        <h2 className="text-2xl font-bold text-slate-900 mb-2">Acesso Negado</h2>
+        <p className="text-slate-500 max-w-md">
+          Você não tem permissão para visualizar clientes. Entre em contato com o administrador da sua empresa.
+        </p>
+      </div>
+    );
+  }
 
   const { data: customersData, isLoading, refetch } = useQuery({
     queryKey: ['/api/customers', company?.id],
@@ -142,12 +161,14 @@ export default function CustomersPage() {
         </div>
         
         <div className="flex gap-2 w-full sm:w-auto flex-col sm:flex-row">
-          <Button 
-            className="bg-primary hover:bg-primary"
-            onClick={() => openFormDialog()}
-          >
-            <Plus className="w-4 h-4 mr-2" /> Novo Cliente
-          </Button>
+          {hasPermission('manage_customers') && (
+            <Button 
+              className="bg-primary hover:bg-primary"
+              onClick={() => openFormDialog()}
+            >
+              <Plus className="w-4 h-4 mr-2" /> Novo Cliente
+            </Button>
+          )}
         </div>
       </div>
 
@@ -211,30 +232,36 @@ export default function CustomersPage() {
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end" className="w-48">
-                                                <DropdownMenuItem 
-                                                    className="cursor-pointer"
-                                                    onClick={() => openFormDialog(c)}
-                                                >
-                                                    <Edit className="w-4 h-4 mr-2" /> Editar Cliente
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem 
-                                                    className="text-primary focus:text-primary focus:bg-primary/5 cursor-pointer"
-                                                    onClick={() => openNewSaleDialog(c)}
-                                                >
-                                                    <TrendingUp className="w-4 h-4 mr-2" /> Nova Venda
-                                                </DropdownMenuItem>
+                                                {hasPermission('manage_customers') && (
+                                                  <DropdownMenuItem 
+                                                      className="cursor-pointer"
+                                                      onClick={() => openFormDialog(c)}
+                                                  >
+                                                      <Edit className="w-4 h-4 mr-2" /> Editar Cliente
+                                                  </DropdownMenuItem>
+                                                )}
+                                                {hasPermission('create_transactions') && (
+                                                  <DropdownMenuItem 
+                                                      className="text-primary focus:text-primary focus:bg-primary/5 cursor-pointer"
+                                                      onClick={() => openNewSaleDialog(c)}
+                                                  >
+                                                      <TrendingUp className="w-4 h-4 mr-2" /> Nova Venda
+                                                  </DropdownMenuItem>
+                                                )}
                                                 <DropdownMenuItem 
                                                     className="cursor-pointer"
                                                     onClick={() => openSalesViewDialog(c)}
                                                 >
                                                     <Eye className="w-4 h-4 mr-2" /> Ver Histórico
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem 
-                                                    className="text-rose-600 focus:text-rose-700 focus:bg-rose-50 cursor-pointer"
-                                                    onClick={() => setCustomerToDelete(c)}
-                                                >
-                                                    <Trash2 className="w-4 h-4 mr-2" /> Remover
-                                                </DropdownMenuItem>
+                                                {hasPermission('manage_customers') && (
+                                                  <DropdownMenuItem 
+                                                      className="text-rose-600 focus:text-rose-700 focus:bg-rose-50 cursor-pointer"
+                                                      onClick={() => setCustomerToDelete(c)}
+                                                  >
+                                                      <Trash2 className="w-4 h-4 mr-2" /> Remover
+                                                  </DropdownMenuItem>
+                                                )}
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     </div>

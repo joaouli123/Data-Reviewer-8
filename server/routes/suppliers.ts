@@ -1,12 +1,25 @@
 import { Express } from "express";
 import { storage } from "../storage";
-import { insertSupplierSchema } from "../../shared/schema";
+import { insertSupplierSchema, users } from "../../shared/schema";
 import { authMiddleware, AuthenticatedRequest } from "../middleware";
+import { db } from "../db";
+import { eq } from "drizzle-orm";
+
+const checkPermission = async (req: AuthenticatedRequest, permission: string) => {
+  if (req.user?.role === 'admin' || req.user?.isSuperAdmin) return true;
+  const [dbUser] = await db.select().from(users).where(eq(users.id, req.user!.id)).limit(1);
+  if (!dbUser || !dbUser.permissions) return false;
+  try {
+    const perms = typeof dbUser.permissions === 'string' ? JSON.parse(dbUser.permissions) : dbUser.permissions;
+    return !!perms[permission];
+  } catch (e) { return false; }
+};
 
 export function registerSupplierRoutes(app: Express) {
   app.get("/api/suppliers", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      if (!await checkPermission(req, 'view_suppliers')) return res.status(403).json({ error: "Acesso negado" });
       const suppliers = await storage.getSuppliers(req.user.companyId);
       res.json(suppliers.map((s: any) => ({ ...s, totalPurchases: Number(s.totalPurchases || 0) })));
     } catch (error) {
@@ -17,6 +30,7 @@ export function registerSupplierRoutes(app: Express) {
   app.post("/api/suppliers", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      if (!await checkPermission(req, 'manage_suppliers')) return res.status(403).json({ error: "Acesso negado" });
       const cleanData: any = {};
       for (const [key, value] of Object.entries(req.body)) {
         cleanData[key] = (value === '' || value === undefined) ? null : value;

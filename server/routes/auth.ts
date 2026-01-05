@@ -293,6 +293,11 @@ export function registerAuthRoutes(app: Express) {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       
+      // Permitir apenas admin ou super_admin de ver usuários
+      if (req.user.role !== 'admin' && !req.user.isSuperAdmin) {
+        return res.status(403).json({ error: "Acesso negado" });
+      }
+
       const companyUsers = await db.select()
         .from(users)
         .where(eq(users.companyId, req.user.companyId))
@@ -316,6 +321,14 @@ export function registerAuthRoutes(app: Express) {
   app.post("/api/invitations", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      
+      const [dbUser] = await db.select().from(users).where(eq(users.id, req.user.id)).limit(1);
+      const perms = dbUser?.permissions ? (typeof dbUser.permissions === 'string' ? JSON.parse(dbUser.permissions) : dbUser.permissions) : {};
+      
+      if (req.user.role !== 'admin' && !req.user.isSuperAdmin && !perms.invite_users) {
+        return res.status(403).json({ error: "Acesso negado" });
+      }
+
       const { email, role, permissions, name, username, password } = req.body;
 
       // Define default permissions for operational users if none provided

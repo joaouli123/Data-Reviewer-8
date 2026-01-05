@@ -43,7 +43,12 @@ export default function Layout({ children }) {
 
   const navigation = navigationList.filter(item => {
     const hasRole = item.roles.includes(user?.role || 'operational') || (user?.isSuperAdmin && item.roles.includes('super_admin'));
-    // Mostrar item se tem role certo. Permissão é verificada na página.
+    
+    // Verificar permissão se o item exigir uma
+    if (item.permission && !user?.isSuperAdmin && user?.role !== 'admin') {
+      return !!user?.permissions?.[item.permission];
+    }
+    
     return hasRole;
   });
 

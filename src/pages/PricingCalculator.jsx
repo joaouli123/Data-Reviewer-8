@@ -11,6 +11,12 @@ import { toast } from 'sonner';
 import PredictivePricingAnalysis from '../components/pricing/PredictivePricingAnalysis';
 
 export default function PricingCalculatorPage() {
+  const { user } = useAuth();
+  const hasPermission = (permission) => {
+    if (user?.role === 'admin' || user?.isSuperAdmin) return true;
+    return !!user?.permissions?.[permission];
+  };
+
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [formData, setFormData] = useState({
     productName: '',

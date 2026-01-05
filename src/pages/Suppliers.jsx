@@ -26,8 +26,27 @@ export default function SuppliersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const { company } = useAuth();
+  const { company, user } = useAuth();
   const queryClient = useQueryClient();
+
+  const hasPermission = (permission) => {
+    if (user?.role === 'admin' || user?.isSuperAdmin) return true;
+    return !!user?.permissions?.[permission];
+  };
+
+  if (!hasPermission('view_suppliers')) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-4">
+        <div className="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mb-4">
+          <Building2 className="w-8 h-8 text-rose-600" />
+        </div>
+        <h2 className="text-2xl font-bold text-slate-900 mb-2">Acesso Negado</h2>
+        <p className="text-slate-500 max-w-md">
+          Você não tem permissão para visualizar fornecedores. Entre em contato com o administrador da sua empresa.
+        </p>
+      </div>
+    );
+  }
 
   // Log para depuração
   console.log("[Suppliers Page] Empresa logada:", company);
@@ -155,12 +174,14 @@ export default function SuppliersPage() {
             <RefreshCw className={`w-4 h-4 ${isRefetching ? 'animate-spin' : ''}`} />
             {isRefetching ? 'Atualizando...' : 'Atualizar'}
           </Button>
-          <Button 
-            className="bg-primary hover:bg-primary gap-2"
-            onClick={() => openFormDialog()}
-          >
-            <Plus className="w-4 h-4" /> Novo Fornecedor
-          </Button>
+          {hasPermission('manage_suppliers') && (
+            <Button 
+              className="bg-primary hover:bg-primary gap-2"
+              onClick={() => openFormDialog()}
+            >
+              <Plus className="w-4 h-4" /> Novo Fornecedor
+            </Button>
+          )}
         </div>
       </div>
 

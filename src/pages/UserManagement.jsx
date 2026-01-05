@@ -51,6 +51,12 @@ import { PERMISSIONS } from "../../shared/schema";
 
 export default function UserManagement() {
   const { user: currentUser } = useAuth();
+  
+  const hasPermission = (permission) => {
+    if (currentUser?.role === 'admin' || currentUser?.isSuperAdmin) return true;
+    return !!currentUser?.permissions?.[permission];
+  };
+
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [isPermissionsOpen, setIsPermissionsOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -300,10 +306,12 @@ export default function UserManagement() {
           <h1 className="text-4xl font-bold tracking-tight">Gestão de Usuários</h1>
           <p className="text-sm text-slate-500 mt-2">Administre os membros da sua equipe e suas permissões de acesso.</p>
         </div>
-        <Button onClick={() => setIsInviteOpen(true)} className="bg-[#E7AA1C] hover:bg-[#d49918] text-black font-semibold shadow-sm" data-testid="button-invite-user">
-          <Plus className="w-4 h-4 mr-2" />
-          Convidar Usuário
-        </Button>
+        {hasPermission('invite_users') && (
+          <Button onClick={() => setIsInviteOpen(true)} className="bg-[#E7AA1C] hover:bg-[#d49918] text-black font-semibold shadow-sm" data-testid="button-invite-user">
+            <Plus className="w-4 h-4 mr-2" />
+            Convidar Usuário
+          </Button>
+        )}
       </div>
 
       <Card className="border-border/40 shadow-sm overflow-hidden">

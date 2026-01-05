@@ -29,7 +29,27 @@ import AnalysisLoading from '../components/reports/AnalysisLoading';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 export default function ReportsPage() {
-  const { company } = useAuth();
+  const { company, user } = useAuth();
+  
+  const hasPermission = (permission) => {
+    if (user?.role === 'admin' || user?.isSuperAdmin) return true;
+    return !!user?.permissions?.[permission];
+  };
+
+  if (!hasPermission('view_reports')) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-4">
+        <div className="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mb-4">
+          <AlertTriangle className="w-8 h-8 text-rose-600" />
+        </div>
+        <h2 className="text-2xl font-bold text-slate-900 mb-2">Acesso Negado</h2>
+        <p className="text-slate-500 max-w-md">
+          Você não tem permissão para visualizar relatórios financeiros. Entre em contato com o administrador da sua empresa.
+        </p>
+      </div>
+    );
+  }
+
   const [modalOpen, setModalOpen] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
@@ -383,23 +403,25 @@ RESPOSTA OBRIGATÓRIA EM JSON E EM PORTUGUÊS DO BRASIL.`;
 
           {/* Action Buttons */}
           <div className="flex gap-2 flex-wrap sm:flex-nowrap">
-            <ReportExporter 
-              reportData={{
-                summary: analysisResult ? {
-                  receita_total: filteredTransactions.filter(t => ['venda', 'venda_prazo', 'receita', 'income'].includes(t.type)).reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0),
-                  despesas_total: filteredTransactions.filter(t => ['compra', 'compra_prazo', 'despesa', 'expense'].includes(t.type)).reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0),
-                  periodo: dateRange.label
-                } : null,
-                transactions: transactionsWithCategories,
-                forecast: analysisResult?.cash_flow_forecast,
-                expenses: analysisResult?.expense_reduction_opportunities,
-                revenue: analysisResult?.revenue_growth_suggestions,
-                debt: analysisResult?.debt_metrics,
-                working_capital: analysisResult?.working_capital_metrics
-              }}
-              analysisResult={analysisResult}
-              reportType="general"
-            />
+            {hasPermission('export_reports') && (
+              <ReportExporter 
+                reportData={{
+                  summary: analysisResult ? {
+                    receita_total: filteredTransactions.filter(t => ['venda', 'venda_prazo', 'receita', 'income'].includes(t.type)).reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0),
+                    despesas_total: filteredTransactions.filter(t => ['compra', 'compra_prazo', 'despesa', 'expense'].includes(t.type)).reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0),
+                    periodo: dateRange.label
+                  } : null,
+                  transactions: transactionsWithCategories,
+                  forecast: analysisResult?.cash_flow_forecast,
+                  expenses: analysisResult?.expense_reduction_opportunities,
+                  revenue: analysisResult?.revenue_growth_suggestions,
+                  debt: analysisResult?.debt_metrics,
+                  working_capital: analysisResult?.working_capital_metrics
+                }}
+                analysisResult={analysisResult}
+                reportType="general"
+              />
+            )}
             <Button 
               onClick={handleStartAnalysis} 
               disabled={isAnalyzing}
