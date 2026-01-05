@@ -43,6 +43,9 @@ export const PERMISSIONS = {
   // Configurações
   VIEW_SETTINGS: "view_settings",
   MANAGE_SETTINGS: "manage_settings",
+  
+  // Abas de Navegação
+  VIEW_FINANCIAL: "view_financial",
 } as const;
 
 export const DEFAULT_PERMISSIONS = {
@@ -63,6 +66,7 @@ export const DEFAULT_PERMISSIONS = {
     [PERMISSIONS.INVITE_USERS]: true,
     [PERMISSIONS.VIEW_SETTINGS]: true,
     [PERMISSIONS.MANAGE_SETTINGS]: true,
+    [PERMISSIONS.VIEW_FINANCIAL]: true,
   },
   manager: {
     [PERMISSIONS.VIEW_TRANSACTIONS]: true,
@@ -80,6 +84,7 @@ export const DEFAULT_PERMISSIONS = {
     [PERMISSIONS.MANAGE_SETTINGS]: false,
     [PERMISSIONS.MANAGE_USERS]: false,
     [PERMISSIONS.INVITE_USERS]: false,
+    [PERMISSIONS.VIEW_FINANCIAL]: true,
   },
   user: {
     [PERMISSIONS.VIEW_TRANSACTIONS]: true,
@@ -88,6 +93,7 @@ export const DEFAULT_PERMISSIONS = {
     [PERMISSIONS.EXPORT_REPORTS]: true,
     [PERMISSIONS.VIEW_CUSTOMERS]: true,
     [PERMISSIONS.VIEW_SUPPLIERS]: true,
+    [PERMISSIONS.VIEW_FINANCIAL]: true,
   },
   operational: {
     [PERMISSIONS.VIEW_TRANSACTIONS]: true,
@@ -107,6 +113,7 @@ export const DEFAULT_PERMISSIONS = {
     [PERMISSIONS.INVITE_USERS]: false,
     [PERMISSIONS.VIEW_SETTINGS]: false,
     [PERMISSIONS.MANAGE_SETTINGS]: false,
+    [PERMISSIONS.VIEW_FINANCIAL]: false,
   },
 } as const;
 
