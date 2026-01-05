@@ -20,7 +20,12 @@ export default function RevenueGrowthReport({ strategies, transactions, customer
     const monthLabel = format(date, 'MMM', { locale: ptBR }).toUpperCase();
     
     const monthRevenue = revenueTransactions
-      .filter(t => typeof t.date === 'string' && t.date.startsWith(monthKey))
+      .filter(t => {
+        if (!t.date) return false;
+        const txnDate = new Date(t.date);
+        const txnMonthKey = format(txnDate, 'yyyy-MM');
+        return txnMonthKey === monthKey;
+      })
       .reduce((acc, t) => acc + Math.abs(parseFloat(t.amount || 0)), 0);
     
     revenueByMonth.push({ name: monthLabel, receita: monthRevenue });

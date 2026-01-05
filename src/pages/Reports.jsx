@@ -243,7 +243,7 @@ export default function ReportsPage() {
       // Improved prompt with complete history context
       const prompt = `Você é um consultor financeiro sênior especializado em PME. Analise o histórico COMPLETO de transações e forneça insights estratégicos em JSON.
 
-IMPORTANTE: Toda a sua resposta deve estar em PORTUGUÊS (BR), incluindo os campos de texto dentro do JSON.
+IMPORTANTE: Toda a sua resposta deve estar em PORTUGUÊS (BR), incluindo os campos de texto dentro do JSON. Certifique-se de preencher todos os campos do JSON, especialmente expense_reduction_opportunities e revenue_growth_suggestions.
 
 HISTÓRICO COMPLETO:
 - Receita Total: R$ ${allRevenue.toFixed(0)}
@@ -260,13 +260,14 @@ PERÍODO SELECIONADO (${dateRange.label}):
 REQUISITOS DA RESPOSTA (JSON EM PORTUGUÊS):
 1. executive_summary: Resumo executivo da saúde financeira atual e projeção (mínimo 3 frases).
 2. cash_flow_forecast: Array com 3 meses de previsão (month, predicted_revenue, predicted_expense). Use meses reais ou nomes relativos.
-3. expense_reduction_opportunities: Array de { suggestion: 'sugestão em PT-BR' } com pelo menos 2 oportunidades de corte.
+3. expense_reduction_opportunities: Array de { suggestion: 'sugestão em PT-BR' } com pelo menos 3 oportunidades de corte baseadas nas despesas.
 4. revenue_growth_suggestions: Array de { strategy: 'estratégia em PT-BR', rationale: 'por que fazer em PT-BR', target_customer_segment: 'quem focar em PT-BR' } com pelo menos 3 estratégias.
 5. anomalies: Array de { title, description } com riscos identificados.
 
 RESPOSTA OBRIGATÓRIA EM JSON E EM PORTUGUÊS DO BRASIL.`;
 
       const response = await InvokeLLM(prompt, {
+        type: "object",
         properties: {
           executive_summary: { type: "string" },
           cash_flow_forecast: {
@@ -299,7 +300,8 @@ RESPOSTA OBRIGATÓRIA EM JSON E EM PORTUGUÊS DO BRASIL.`;
             type: "array",
             items: { type: "object", properties: { title: { type: "string" }, description: { type: "string" } } }
           }
-        }
+        },
+        required: ["executive_summary", "cash_flow_forecast", "expense_reduction_opportunities", "revenue_growth_suggestions", "anomalies"]
       });
 
       // Ensure forecast has valid data

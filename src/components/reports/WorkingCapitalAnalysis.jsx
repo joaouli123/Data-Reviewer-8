@@ -40,12 +40,17 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
     const currentCash = Array.isArray(transactions)
       ? transactions.reduce((sum, t) => {
           const amount = parseFloat(t.amount || 0);
-          return sum + (t.type === 'venda' || t.type === 'income' ? amount : -amount);
+          // If transaction is in the past, it counts towards current cash
+          const txnDate = new Date(t.date);
+          if (txnDate <= today) {
+            return sum + (t.type === 'venda' || t.type === 'income' ? amount : -amount);
+          }
+          return sum;
         }, 0)
       : 0;
 
     // Current Assets (Circulante) = Cash + Receivables (30d)
-    const currentAssets = Math.max(0, currentCash) + next30DaysReceivables;
+    const currentAssets = currentCash + next30DaysReceivables;
     
     // Current Liabilities (Circulante) = Payables (30d)
     const currentLiabilities = next30DaysPayables;
