@@ -1,14 +1,20 @@
 import { Express } from "express";
 import { storage } from "../storage";
-import { insertTransactionSchema, PERMISSIONS } from "../../shared/schema";
+import { insertTransactionSchema, PERMISSIONS, users } from "../../shared/schema";
 import { authMiddleware, AuthenticatedRequest } from "../middleware";
+import { db } from "../db";
+import { eq } from "drizzle-orm";
 
 // Helper to check permissions
-const checkPermission = (req: AuthenticatedRequest, permission: string) => {
+const checkPermission = async (req: AuthenticatedRequest, permission: string) => {
   if (req.user?.role === 'admin' || req.user?.isSuperAdmin) return true;
-  if (!req.user?.permissions) return false;
+  
+  // Buscar usuário no banco para garantir que temos as permissões atualizadas
+  const [dbUser] = await db.select().from(users).where(eq(users.id, req.user!.id)).limit(1);
+  if (!dbUser || !dbUser.permissions) return false;
+  
   try {
-    const perms = JSON.parse(req.user.permissions as string);
+    const perms = JSON.parse(dbUser.permissions as string);
     return !!perms[permission];
   } catch (e) {
     return false;
@@ -20,7 +26,7 @@ export function registerTransactionRoutes(app: Express) {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       
-      if (!checkPermission(req, PERMISSIONS.VIEW_TRANSACTIONS)) {
+      if (!await checkPermission(req, PERMISSIONS.VIEW_TRANSACTIONS)) {
         return res.status(403).json({ error: "Você não tem permissão para visualizar transações" });
       }
 
@@ -55,7 +61,7 @@ export function registerTransactionRoutes(app: Express) {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       
-      if (!checkPermission(req, PERMISSIONS.CREATE_TRANSACTIONS)) {
+      if (!await checkPermission(req, PERMISSIONS.CREATE_TRANSACTIONS)) {
         return res.status(403).json({ error: "Você não tem permissão para criar transações" });
       }
       
@@ -84,7 +90,7 @@ export function registerTransactionRoutes(app: Express) {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
 
-      if (!checkPermission(req, PERMISSIONS.DELETE_TRANSACTIONS)) {
+      if (!await checkPermission(req, PERMISSIONS.DELETE_TRANSACTIONS)) {
         return res.status(403).json({ error: "Você não tem permissão para excluir transações" });
       }
 
@@ -99,7 +105,7 @@ export function registerTransactionRoutes(app: Express) {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       
-      if (!checkPermission(req, PERMISSIONS.EDIT_TRANSACTIONS)) {
+      if (!await checkPermission(req, PERMISSIONS.EDIT_TRANSACTIONS)) {
         return res.status(403).json({ error: "Você não tem permissão para editar transações" });
       }
 

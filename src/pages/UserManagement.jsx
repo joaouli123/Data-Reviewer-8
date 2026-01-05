@@ -241,28 +241,24 @@ export default function UserManagement() {
                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-1">{groupData.group}</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-4">
                   {groupData.perms.map(perm => (
-                    <div 
-                      key={perm.id} 
-                      className="flex items-center space-x-3 cursor-pointer group"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        togglePermission(perm.id);
-                      }}
-                    >
-                      <Checkbox 
-                        id={perm.id} 
-                        checked={!!selectedUser?.permissions?.[perm.id]} 
-                        onCheckedChange={() => togglePermission(perm.id)}
-                        disabled={selectedUser?.role === 'admin'}
-                        className="w-5 h-5 border-slate-300 rounded data-[state=checked]:bg-[#E7AA1C] data-[state=checked]:border-[#E7AA1C] transition-all"
-                      />
-                      <label 
-                        htmlFor={perm.id} 
-                        className="text-sm font-medium leading-none cursor-pointer select-none text-slate-600 group-hover:text-slate-900 transition-colors"
+                      <div 
+                        key={perm.id} 
+                        className="flex items-center space-x-3 group"
                       >
-                        {perm.label}
-                      </label>
-                    </div>
+                        <Checkbox 
+                          id={perm.id} 
+                          checked={!!selectedUser?.permissions?.[perm.id]} 
+                          onCheckedChange={() => togglePermission(perm.id)}
+                          disabled={selectedUser?.role === 'admin'}
+                          className="w-5 h-5 border-slate-300 rounded data-[state=checked]:bg-[#E7AA1C] data-[state=checked]:border-[#E7AA1C] transition-all cursor-pointer disabled:cursor-not-allowed"
+                        />
+                        <label 
+                          htmlFor={perm.id} 
+                          className="text-sm font-medium leading-none select-none text-slate-600 group-hover:text-slate-900 transition-colors cursor-pointer"
+                        >
+                          {perm.label}
+                        </label>
+                      </div>
                   ))}
                 </div>
               </div>
