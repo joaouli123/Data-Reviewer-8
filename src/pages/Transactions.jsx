@@ -57,10 +57,20 @@ export default function TransactionsPage() {
 
   const queryClient = useQueryClient();
 
-  const hasPermission = (permission) => {
-    if (user?.role === 'admin' || user?.isSuperAdmin) return true;
-    return !!user?.permissions?.[permission];
-  };
+    const hasPermission = (permission) => {
+        if (user?.role === 'admin' || user?.isSuperAdmin) return true;
+        // Map from old names or use PERMISSIONS object keys
+        const permKey = permission?.toLowerCase?.() || permission;
+        return !!user?.permissions?.[permKey] || !!user?.permissions?.[permission];
+    };
+
+    const PERMISSIONS = {
+        VIEW_TRANSACTIONS: 'view_transactions',
+        CREATE_TRANSACTIONS: 'create_transactions',
+        EDIT_TRANSACTIONS: 'edit_transactions',
+        DELETE_TRANSACTIONS: 'delete_transactions',
+        VIEW_FINANCIAL: 'view_financial'
+    };
 
   const { data: categories } = useQuery({
     queryKey: ['/api/categories', company?.id],
