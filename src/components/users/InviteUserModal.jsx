@@ -104,7 +104,7 @@ export default function InviteUserModal({ open, onOpenChange, onInvite }) {
 
   const resetModal = () => {
     setStep('methods');
-    setInviteData({ email: '', role: 'user', name: '', password: '', confirmPassword: '' });
+    setInviteData({ email: '', role: 'operational', name: '', password: '', confirmPassword: '' });
     setInviteLink('');
     onOpenChange(false);
   };
