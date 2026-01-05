@@ -598,163 +598,88 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
                   setCustomInstallments([]);
                 }
               }}
-              disabled={['Pix', 'Dinheiro', 'Cartão de Débito'].includes(formData.paymentMethod)}
             />
           </div>
 
           {formData.status !== 'pago' && (
-            <>
-              <div className="space-y-2">
-                <Label>Número de Parcelas</Label>
-                <Input
-                  type="number"
-                  min="1"
-                  value={formData.installments}
-                  onChange={(e) => handleInstallmentsChange(e.target.value)}
-                />
-              </div>
-
-              {Number(formData.installments) > 1 && customInstallments.length === 0 && (
-                <div className="p-3 bg-slate-50 rounded-lg text-sm text-slate-600">
-                  <p>
-                    {formData.installment_amount && !isNaN(parseFloat(formData.installment_amount))
-                      ? `${formData.installments}x de R$ ${formatCurrency(formData.installment_amount)}`
-                      : `${formData.installments}x de R$ ${formatCurrency((parseFloat(formData.amount || 0) / Number(formData.installments || 1)))}`
-                    }
-                  </p>
-                </div>
-              )}
-
-              {customInstallments.length > 1 && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm font-medium">Detalhamento das Parcelas</Label>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setCustomInstallments([])}
-                      className="text-xs"
-                    >
-                      Usar valor padrão
-                    </Button>
-                  </div>
-                  <div className="max-h-60 overflow-y-auto space-y-2 border rounded-lg p-3 bg-slate-50 pr-2">
-                    {customInstallments.map((inst, idx) => (
-                      <div key={idx} className="bg-white p-2 rounded border space-y-2">
-                        <div className="text-sm font-medium text-slate-600">
-                          Parcela {idx + 1}
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="flex items-center gap-1">
-                            <span className="text-slate-600 text-sm">R$</span>
-                            <CurrencyInput
-                              placeholder="Valor"
-                              value={parseFloat(inst.amount) || 0}
-                              onChange={(e) => updateCustomInstallment(idx, 'amount', e.target.value.toString())}
-                              className="text-sm flex-1"
-                            />
-                          </div>
-                          <Input
-                            type="date"
-                            value={inst.due_date}
-                            onChange={(e) => updateCustomInstallment(idx, 'due_date', e.target.value)}
-                            className="text-sm"
-                          />
-                        </div>
-                      </div>
-                    ))}
-                    <div className="pt-2 border-t mt-2">
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="font-medium">Total das Parcelas:</span>
-                        <span className={`font-bold ${
-                          Math.abs(customInstallments.reduce((sum, inst) => sum + parseFloat(inst.amount || 0), 0) - parseFloat(formData.amount || 0)) < 0.01
-                            ? 'text-emerald-600'
-                            : 'text-rose-600'
-                        }`}>
-                          R$ {formatCurrency(customInstallments.reduce((sum, inst) => sum + parseFloat(inst.amount || 0), 0))}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </>
+            <div className="space-y-2">
+              <Label>Número de Parcelas</Label>
+              <Input 
+                type="number" 
+                min="1" 
+                max="60"
+                value={formData.installments}
+                onChange={(e) => handleInstallmentsChange(e.target.value)}
+              />
+            </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>{formData.status === 'pago' ? 'Data da Transação' : (parseInt(formData.installments) === 1 ? 'Data de Vencimento' : 'Data da Transação')}</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !formData.date && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.date ? format(formData.date, "PPP", { locale: ptBR }) : <span>Selecione uma data</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={formData.date instanceof Date ? formData.date : new Date(formData.date)}
-                    onSelect={(date) => setFormData({ ...formData, date })}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            {formData.status === 'pago' && (
-              <div className="space-y-2">
-                <Label>Data do Pagamento</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !formData.paymentDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.paymentDate ? format(formData.paymentDate, "PPP", { locale: ptBR }) : <span>Selecione uma data</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={formData.paymentDate instanceof Date ? formData.paymentDate : (formData.paymentDate ? new Date(formData.paymentDate) : new Date())}
-                      onSelect={(date) => setFormData({ ...formData, paymentDate: date })}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+          {customInstallments.length > 0 && (
+            <div className="space-y-3 pt-2">
+              <Label className="text-xs uppercase text-slate-500 font-bold">Detalhamento das Parcelas</Label>
+              <div className="max-h-40 overflow-y-auto space-y-2 pr-2">
+                {customInstallments.map((inst, idx) => (
+                  <div key={idx} className="flex gap-2 items-center bg-slate-50 p-2 rounded border border-slate-200">
+                    <span className="text-xs font-bold text-slate-400 w-6">{idx + 1}ª</span>
+                    <div className="flex-1">
+                      <CurrencyInput 
+                        value={inst.amount}
+                        onChange={(e) => updateCustomInstallment(idx, 'amount', e.target.value)}
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <Input 
+                        type="date"
+                        value={inst.due_date}
+                        onChange={(e) => updateCustomInstallment(idx, 'due_date', e.target.value)}
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
-            )}
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <Label>{formData.status === 'pago' ? 'Data do Pagamento' : 'Data de Vencimento'}</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !formData.date && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {formData.date ? format(formData.date, "PPP", { locale: ptBR }) : <span>Selecione uma data</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={formData.date}
+                  onSelect={(date) => setFormData({...formData, date: date || new Date()})}
+                  initialFocus
+                  locale={ptBR}
+                />
+              </PopoverContent>
+            </Popover>
           </div>
 
-          <div className="pt-4 flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancelar
-            </Button>
-            <Button type="submit" className="bg-primary hover:bg-primary">
-              {initialData ? 'Atualizar' : 'Salvar'}
-            </Button>
-          </div>
-        </form>
-
-        <CreateCategoryModal 
-          open={isCreateCategoryModalOpen}
-          onOpenChange={setIsCreateCategoryModalOpen}
-          onSubmit={(data) => createCategoryMutation.mutate(data)}
-          isLoading={createCategoryMutation.isPending}
-        />
+          <Button type="submit" className="w-full bg-primary hover:bg-primary/90">
+            {initialData ? 'Atualizar Transação' : 'Criar Transação'}
+          </Button>
+          </form>
+        )}
       </DialogContent>
+      <CreateCategoryModal 
+        open={isCreateCategoryModalOpen}
+        onOpenChange={setIsCreateCategoryModalOpen}
+        onSubmit={(data) => createCategoryMutation.mutate(data)}
+      />
     </Dialog>
   );
 }
