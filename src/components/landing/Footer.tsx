@@ -34,7 +34,7 @@ const Footer: React.FC = () => {
           <div className="sm:col-span-2 lg:col-span-1">
             <div className="flex items-center gap-3 mb-6 md:mb-8">
               <Link href="/" className="text-xl md:text-2xl font-bold tracking-tighter">
-                Hua<span className="text-blue-400">Consultoria</span>
+                <span className="text-blue-400">HUA</span><span className="text-[#D4AF37]">CONTROL</span>
               </Link>
             </div>
             <p className="text-blue-100/70 mb-8 leading-relaxed text-sm md:text-base font-normal">
@@ -94,7 +94,7 @@ const Footer: React.FC = () => {
         </div>
         
         <div className="pt-10 border-t border-blue-800 flex flex-col md:flex-row justify-between items-center gap-6 text-blue-300 text-[10px] md:text-xs font-medium text-center md:text-left">
-          <p>© {currentYear} HuaConsultoria e Análise. Tecnologia Enterprise para PMEs.</p>
+          <p>© {currentYear} HUACONTROL e Análise. Tecnologia Enterprise para PMEs.</p>
           <div className="flex gap-6 md:gap-8 font-normal">
             <Link href="/terms" className="hover:text-white transition-colors">Termos de Uso</Link>
             <Link href="/privacy" className="hover:text-white transition-colors">Política de Privacidade</Link>

@@ -65,8 +65,10 @@ export default function Layout({ children }) {
 
   const NavContent = ({ onNavigate }) => (
     <div className="flex flex-col h-full py-3 px-4 text-white" style={{ backgroundColor: '#040303' }}>
-      <div className="flex items-center pt-3 pb-2 mb-2">
-        <img src={LogoHUA} alt="HUA Logo" className="w-36 h-22 object-contain flex-shrink-0" title="HUA - Consultoria e Análise" />
+      <div className="flex items-center pt-3 pb-4 mb-2">
+        <span className="text-2xl font-black tracking-tighter text-white">
+          <span className="text-blue-500">HUA</span><span className="text-[#D4AF37]">CONTROL</span>
+        </span>
       </div>
       <nav className="space-y-1 flex-1">
         {navigation.map((item) => {
@@ -114,7 +116,9 @@ export default function Layout({ children }) {
         <NavContent onNavigate={() => {}} />
       </div>
       <div className="md:hidden flex items-center justify-between p-3 text-white sticky top-0 z-20" style={{ backgroundColor: '#040303' }}>
-        <img src={LogoHUA} alt="HUA Logo" className="w-16 h-16 object-contain" title="HUA - Consultoria e Análise" />
+        <span className="text-xl font-black tracking-tighter text-white">
+          <span className="text-blue-500">HUA</span><span className="text-[#D4AF37]">CONTROL</span>
+        </span>
         <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" className="text-white hover:bg-white/10">
