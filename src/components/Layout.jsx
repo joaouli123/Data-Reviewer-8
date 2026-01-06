@@ -6,7 +6,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermission } from '@/hooks/usePermission';
-import LogoHUA from '@assets/Logo_HUA_1766187037233.png';
+import LogoHUACONTROL from '@assets/ChatGPT_Image_6_de_jan._de_2026__17_13_28-removebg-preview_1767731092064.png';
 
 export default function Layout({ children }) {
   const [pathname] = useLocation();
@@ -65,10 +65,8 @@ export default function Layout({ children }) {
 
   const NavContent = ({ onNavigate }) => (
     <div className="flex flex-col h-full py-3 px-4 text-white" style={{ backgroundColor: '#040303' }}>
-      <div className="flex items-center pt-3 pb-4 mb-2 px-1">
-        <span className="text-xl font-bold tracking-tighter text-white">
-          <span className="text-blue-500">HUA</span><span className="text-[#D4AF37]">CONTROL</span>
-        </span>
+      <div className="flex items-center pt-3 pb-4 mb-2">
+        <img src={LogoHUACONTROL} alt="HUACONTROL Logo" className="h-12 w-auto object-contain" />
       </div>
       <nav className="space-y-1 flex-1">
         {navigation.map((item) => {
@@ -116,9 +114,7 @@ export default function Layout({ children }) {
         <NavContent onNavigate={() => {}} />
       </div>
       <div className="md:hidden flex items-center justify-between p-3 text-white sticky top-0 z-20" style={{ backgroundColor: '#040303' }}>
-        <span className="text-lg font-bold tracking-tighter text-white">
-          <span className="text-blue-500">HUA</span><span className="text-[#D4AF37]">CONTROL</span>
-        </span>
+        <img src={LogoHUACONTROL} alt="HUACONTROL Logo" className="h-10 w-auto object-contain" />
         <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" className="text-white hover:bg-white/10">
