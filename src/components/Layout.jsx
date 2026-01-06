@@ -65,8 +65,8 @@ export default function Layout({ children }) {
 
   const NavContent = ({ onNavigate }) => (
     <div className="flex flex-col h-full py-3 px-4 text-white" style={{ backgroundColor: '#040303' }}>
-      <div className="flex items-center pt-3 pb-4 mb-2">
-        <span className="text-2xl font-black tracking-tighter text-white">
+      <div className="flex items-center pt-3 pb-4 mb-2 px-1">
+        <span className="text-xl font-bold tracking-tighter text-white">
           <span className="text-blue-500">HUA</span><span className="text-[#D4AF37]">CONTROL</span>
         </span>
       </div>
@@ -116,7 +116,7 @@ export default function Layout({ children }) {
         <NavContent onNavigate={() => {}} />
       </div>
       <div className="md:hidden flex items-center justify-between p-3 text-white sticky top-0 z-20" style={{ backgroundColor: '#040303' }}>
-        <span className="text-xl font-black tracking-tighter text-white">
+        <span className="text-lg font-bold tracking-tighter text-white">
           <span className="text-blue-500">HUA</span><span className="text-[#D4AF37]">CONTROL</span>
         </span>
         <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>

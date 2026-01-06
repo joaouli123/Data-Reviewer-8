@@ -20,7 +20,7 @@ const Header: React.FC = () => {
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/50 transition-all duration-300">
       <div className="container mx-auto px-4 md:px-6 h-20 flex items-center justify-between">
         <a href="/" className="flex items-center gap-2.5 shrink-0 group transition-transform">
-          <span className="text-lg md:text-xl font-black tracking-tighter text-slate-900">
+          <span className="text-lg md:text-xl font-bold tracking-tighter text-slate-900">
             <span className="text-blue-600">HUA</span><span className="text-[#D4AF37]">CONTROL</span>
           </span>
         </a>
