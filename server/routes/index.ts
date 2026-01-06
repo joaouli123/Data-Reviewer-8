@@ -8,6 +8,7 @@ import { registerSalesPurchasesRoutes } from "./sales-purchases";
 import { registerAIRoutes } from "./ai";
 import { registerBankRoutes } from "./bank";
 import { registerCashFlowRoutes } from "./cash-flow";
+import { registerAdminRoutes } from "./admin";
 
 export function registerAllRoutes(app: Express) {
   registerAuthRoutes(app);
@@ -19,6 +20,7 @@ export function registerAllRoutes(app: Express) {
   registerAIRoutes(app);
   registerBankRoutes(app);
   registerCashFlowRoutes(app);
+  registerAdminRoutes(app);
   
   // Health check
   app.get("/api/health", (req, res) => {

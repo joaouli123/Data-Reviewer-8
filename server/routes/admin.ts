@@ -14,6 +14,15 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
+  app.get("/api/admin/users", authMiddleware, requireSuperAdmin, async (req, res) => {
+    try {
+      const allUsers = await db.select().from(users);
+      res.json(allUsers);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch users" });
+    }
+  });
+
   app.get("/api/admin/subscriptions", authMiddleware, requireSuperAdmin, async (req, res) => {
     try {
       const allSubscriptions = await db.select().from(subscriptions);
