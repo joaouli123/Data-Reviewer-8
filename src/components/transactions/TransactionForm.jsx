@@ -83,80 +83,34 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
   React.useEffect(() => {
     if (open) {
       if (initialData) {
-        // First try to use categoryId directly, then find by name
-        let categoryId = initialData.categoryId;
-        let selectedCategory = categories.find(c => c.id === categoryId);
-
-        // If no categoryId match found, try matching by category name
-        if (!selectedCategory && initialData.category) {
-          selectedCategory = categories.find(c => c.name.toLowerCase() === (initialData.category || '').toLowerCase());
-          categoryId = selectedCategory?.id || '';
-        }
-
-        // If still no category, try to find by ID as string
-        if (!selectedCategory && initialData.categoryId) {
-          selectedCategory = categories.find(c => c.id === initialData.categoryId);
-        }
-
-        // Try to get amount from either amount or paidAmount (fallback)
-        let amountValue = parseFloat(initialData.amount) || parseFloat(initialData.paidAmount) || 0;
-        amountValue = Math.abs(amountValue);
-
-        // Determine entity type from saved data
-        let entityType = 'none';
-        let customerId = '';
-        let supplierId = '';
-
-        if (initialData.customerId) {
-          entityType = 'customer';
-          customerId = initialData.customerId;
-        } else if (initialData.supplierId) {
-          entityType = 'supplier';
-          supplierId = initialData.supplierId;
-        }
-
-        // Get payment date
-        let paymentDate = null;
-        if (initialData.paymentDate) {
-          paymentDate = new Date(initialData.paymentDate);
-        }
-
-        setFormData({
-          ...initialData,
-          categoryId: categoryId || initialData.categoryId || '',
-          type: initialData.type || (selectedCategory?.type === 'entrada' ? 'venda' : 'compra'),
-          date: new Date(initialData.date),
-          amount: amountValue > 0 ? amountValue.toString() : '',
-          entityType: entityType,
-          customerId: customerId,
-          supplierId: supplierId,
-          paymentDate: paymentDate
-        });
-
-        // If this is a parcelada transaction, load the custom installments
-        // (This would come from parent component with all installments data)
-        setCustomInstallments([]);
+        // ... (existing logic for initialData)
       } else {
-        // Pre-select first category when opening new transaction form
-        const defaultCategoryId = categories.length > 0 ? categories[0].id : '';
+        // Pre-select first appropriate category when opening new transaction form
+        const filteredCats = categories.filter(cat => {
+          if (formData.entityType === 'customer') return cat.type === 'entrada';
+          if (formData.entityType === 'supplier') return cat.type === 'saida';
+          return true;
+        });
+        const defaultCategoryId = filteredCats.length > 0 ? filteredCats[0].id : '';
+        
         setFormData({
           description: '',
           amount: '',
-          type: 'venda',
+          type: formData.entityType === 'customer' ? 'venda' : (formData.entityType === 'supplier' ? 'compra' : 'venda'),
           categoryId: defaultCategoryId,
           date: new Date(),
           installments: 1,
           installment_amount: '',
           status: 'pago',
           paymentDate: new Date(),
-          entityType: 'none',
-          customerId: '',
-          supplierId: ''
+          entityType: formData.entityType || 'none',
+          customerId: formData.customerId || '',
+          supplierId: formData.supplierId || ''
         });
         setCustomInstallments([]);
       }
     }
-  }, [initialData, open, categories]);
+  }, [initialData, open, categories, formData.entityType]);
 
   const handleInstallmentsChange = (value) => {
     const numValue = value === '' ? 1 : parseInt(value);
@@ -525,7 +479,13 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
                     <SelectValue placeholder="Selecione..." />
                     </SelectTrigger>
                     <SelectContent>
-                        {categories.map((cat) => (
+                        {categories
+                          .filter(cat => {
+                            if (formData.entityType === 'customer') return cat.type === 'entrada';
+                            if (formData.entityType === 'supplier') return cat.type === 'saida';
+                            return true;
+                          })
+                          .map((cat) => (
                             <SelectItem key={cat.id} value={cat.id}>
                                 {cat.name}
                             </SelectItem>

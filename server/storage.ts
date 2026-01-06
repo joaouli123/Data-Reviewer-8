@@ -108,13 +108,18 @@ export class DatabaseStorage {
   async getCustomers(companyId: any) {
     const allCustomers = await db.select().from(customers).where(eq(customers.companyId, companyId));
     
-    // CORREÇÃO: Busca por 'income' em vez de 'venda' para alinhar com o tipo de transação gerado no routes
-    const allTransactions = await db.select().from(transactions).where(and(eq(transactions.companyId, companyId), eq(transactions.type, 'income')));
+    // Busca todas as transações de entrada (receita)
+    const allTransactions = await db.select().from(transactions).where(
+      and(
+        eq(transactions.companyId, companyId), 
+        sql`${transactions.type} IN ('venda', 'venda_prazo', 'receita', 'income')`
+      )
+    );
 
     return allCustomers.map(customer => {
       const totalSales = allTransactions
         .filter(t => t.customerId === customer.id)
-        .reduce((sum, t) => sum + parseFloat(t.amount || "0"), 0);
+        .reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || "0") + parseFloat(t.interest || "0")), 0);
       return { ...customer, totalSales: totalSales.toFixed(2) };
     });
   }
@@ -135,14 +140,20 @@ export class DatabaseStorage {
 
   async getSuppliers(companyId: any) {
     const allSuppliers = await db.select().from(suppliers).where(eq(suppliers.companyId, companyId));
-    // CORREÇÃO: No routes/sales-purchases.ts, o tipo usado é 'expense' para compras
-    const allTransactions = await db.select().from(transactions).where(and(eq(transactions.companyId, companyId), eq(transactions.type, 'expense')));
+    
+    // Busca todas as transações de saída (despesa)
+    const allTransactions = await db.select().from(transactions).where(
+      and(
+        eq(transactions.companyId, companyId),
+        sql`${transactions.type} IN ('compra', 'compra_prazo', 'despesa', 'expense')`
+      )
+    );
 
     return allSuppliers.map(supplier => {
       const totalPurchases = allTransactions
         .filter(t => t.supplierId === supplier.id)
-        .reduce((sum, t) => sum + parseFloat(t.amount || "0"), 0);
-      return { ...supplier, totalPurchases: totalPurchases.toString() };
+        .reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || "0") + parseFloat(t.interest || "0")), 0);
+      return { ...supplier, totalPurchases: totalPurchases.toFixed(2) };
     });
   }
 
