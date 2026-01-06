@@ -40,7 +40,6 @@ const LandingPage = () => {
         <FAQ />
       </main>
       <Footer />
-      {showFloatingCTA && <FloatingCTA />}
     </div>
   );
 };
