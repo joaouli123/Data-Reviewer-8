@@ -422,7 +422,8 @@ export default function Checkout() {
 
                           {/* Submit Button for Card */}
                           <Button
-                            type="submit"
+                            type="button"
+                            onClick={handlePayment}
                             disabled={isProcessing}
                             className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 text-base font-semibold rounded transition-all disabled:opacity-50 flex items-center justify-center gap-2 mt-6"
                             data-testid="button-complete-payment"
@@ -444,7 +445,8 @@ export default function Checkout() {
 
                           {/* Submit Button for PIX */}
                           <Button
-                            type="submit"
+                            type="button"
+                            onClick={handlePayment}
                             disabled={isProcessing}
                             className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 text-base font-semibold rounded transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                             data-testid="button-complete-payment"
@@ -466,7 +468,8 @@ export default function Checkout() {
 
                           {/* Submit Button for Boleto */}
                           <Button
-                            type="submit"
+                            type="button"
+                            onClick={handlePayment}
                             disabled={isProcessing}
                             className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 text-base font-semibold rounded transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                             data-testid="button-complete-payment"
