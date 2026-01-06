@@ -419,9 +419,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Quick Actions FAB */}
-      <QuickActionsFAB />
-
       {/* Transaction Form */}
       <TransactionForm 
         open={isFormOpen} 
