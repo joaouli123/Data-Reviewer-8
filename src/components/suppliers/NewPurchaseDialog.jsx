@@ -334,10 +334,12 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
                     <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.name}>
-                        {cat.name}
-                      </SelectItem>
+                    {categories
+                      .filter(cat => cat.type === 'saida')
+                      .map((cat) => (
+                        <SelectItem key={cat.id} value={cat.name}>
+                          {cat.name}
+                        </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

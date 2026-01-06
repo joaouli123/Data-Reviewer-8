@@ -411,10 +411,12 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
                     <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.name}>
-                        {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
-                      </SelectItem>
+                    {categories
+                      .filter(cat => cat.type === 'entrada')
+                      .map((cat) => (
+                        <SelectItem key={cat.id} value={cat.name}>
+                          {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
+                        </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
