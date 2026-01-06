@@ -93,20 +93,21 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
         });
         const defaultCategoryId = filteredCats.length > 0 ? filteredCats[0].id : '';
         
-        setFormData({
+        setFormData(prev => ({
+          ...prev,
           description: '',
           amount: '',
-          type: formData.entityType === 'customer' ? 'venda' : (formData.entityType === 'supplier' ? 'compra' : 'venda'),
+          type: prev.entityType === 'customer' ? 'venda' : (prev.entityType === 'supplier' ? 'compra' : 'venda'),
           categoryId: defaultCategoryId,
           date: new Date(),
           installments: 1,
           installment_amount: '',
           status: 'pago',
           paymentDate: new Date(),
-          entityType: formData.entityType || 'none',
-          customerId: formData.customerId || '',
-          supplierId: formData.supplierId || ''
-        });
+          entityType: prev.entityType || 'none',
+          customerId: prev.customerId || '',
+          supplierId: prev.supplierId || ''
+        }));
         setCustomInstallments([]);
       }
     }
