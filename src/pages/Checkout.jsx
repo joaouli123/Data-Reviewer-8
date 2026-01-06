@@ -333,7 +333,11 @@ export default function Checkout() {
                           onChange={() => setPaymentMethod(id)}
                           className="w-5 h-5 mt-1 cursor-pointer"
                         />
-                        <Icon className={`w-6 h-6 flex-shrink-0 mt-0.5 ${paymentMethod === id ? 'text-blue-600' : 'text-slate-400'}`} />
+                        {id === 'pix' ? (
+                          <img width="24" height="24" src="https://img.icons8.com/fluency/48/pix.png" alt="pix" className="flex-shrink-0 mt-0.5" />
+                        ) : (
+                          <Icon className={`w-6 h-6 flex-shrink-0 mt-0.5 ${paymentMethod === id ? 'text-blue-600' : 'text-slate-400'}`} />
+                        )}
                         <div className="flex-1 text-left">
                           <p className={`font-medium ${paymentMethod === id ? 'text-blue-900' : 'text-slate-900'}`}>{label}</p>
                           <p className="text-xs text-slate-500">{desc}</p>
@@ -438,7 +442,7 @@ export default function Checkout() {
                       {paymentMethod === id && id === 'pix' && (
                         <div className="border-t border-slate-200 p-6 bg-white space-y-5">
                           <div className="p-8 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border-2 border-blue-200 text-center">
-                            <Wallet2 className="w-16 h-16 text-blue-600 mx-auto mb-4" />
+                            <img width="64" height="64" src="https://img.icons8.com/fluency/48/pix.png" alt="pix" className="mx-auto mb-4" />
                             <p className="text-lg font-semibold text-slate-900">PIX Instantâneo</p>
                             <p className="text-slate-600 mt-2">Você receberá um QR Code para confirmar o pagamento</p>
                           </div>
