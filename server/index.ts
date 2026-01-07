@@ -62,10 +62,9 @@ const httpServer = http.createServer(app);
     
     // Todas as outras rotas que não começam com /api devem servir o frontend
     app.get("*", (req, res, next) => {
-      // Se a rota começa com /api e não foi capturada por nenhum handler anterior,
-      // retorna 404 em vez de servir o index.html. Isso evita o erro de JSON inesperado.
+      // Evita capturar rotas de API no wildcard do frontend
       if (req.path.startsWith("/api")) {
-        return res.status(404).json({ error: "API route not found" });
+        return next();
       }
       res.sendFile(path.join(staticPath, "index.html"), (err) => {
         if (err) {

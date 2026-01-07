@@ -26,4 +26,9 @@ export function registerAllRoutes(app: Express) {
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
+
+  // Fallback para rotas de API não encontradas para evitar retornar HTML
+  app.all("/api/*", (req, res) => {
+    res.status(404).json({ error: "API route not found" });
+  });
 }
