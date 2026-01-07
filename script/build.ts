@@ -14,11 +14,6 @@ async function runBuild() {
     fs.rmSync(distDir, { recursive: true });
   }
 
-  // 1. Build frontend
-  console.log("Building frontend...");
-  // Note: We'll assume 'vite build' is run separately or we could spawn it
-  
-  // 2. Build backend
   console.log("Building backend...");
   await build({
     entryPoints: [path.resolve(rootDir, "server/index.ts")],
@@ -41,10 +36,24 @@ async function runBuild() {
       "path",
       "fs",
       "url",
-      "http"
+      "http",
+      "https",
+      "zod",
+      "drizzle-zod",
+      "cookie-parser",
+      "bcryptjs",
+      "jsonwebtoken",
+      "nodemailer",
+      "node-ofx-parser",
+      "xlsx",
+      "jspdf",
+      "jspdf-autotable",
+      "html2canvas",
+      "canvas-confetti",
+      "mercadopago"
     ],
     outExtension: { ".js": ".js" },
-    loaders: {
+    loader: {
       ".ts": "ts",
     },
   });
