@@ -375,13 +375,13 @@ export const insertSubscriptionSchema = createInsertSchema(subscriptions).omit({
   updatedAt: true,
 });
 
-export const insertUserSchema = createInsertSchema(users, {
-  password: z.string().min(6, "Password must be at least 6 characters").optional(),
-  username: z.string().min(3, "Username must be at least 3 characters").optional(),
-  email: z.string().email("Invalid email").optional(),
+export const insertUserSchema = z.object({
+  password: z.string().optional(),
+  username: z.string().optional(),
+  email: z.string().optional(),
 });
 
-export const insertInvitationSchema = createInsertSchema(invitations, {
+export const insertInvitationSchema = z.object({
   email: z.string().email("Invalid email"),
   expiresAt: z.coerce.date(),
 });
@@ -406,33 +406,15 @@ export const insertPurchaseInstallmentSchema = createInsertSchema(purchaseInstal
 // ========== TYPES ==========
 
 export type Company = typeof companies.$inferSelect;
-export type InsertCompany = z.infer<typeof companies.$inferInsert>;
-
-export type Subscription = typeof subscriptions.$inferSelect;
-export type InsertSubscription = z.infer<typeof subscriptions.$inferInsert>;
-
-export type Session = typeof sessions.$inferSelect;
-
-export type Customer = typeof customers.$inferSelect;
-export type InsertCustomer = z.infer<typeof customers.$inferInsert>;
-
-export type Supplier = typeof suppliers.$inferSelect;
-export type InsertSupplier = z.infer<typeof suppliers.$inferInsert>;
-
-export type Category = typeof categories.$inferSelect;
-export type InsertCategory = z.infer<typeof categories.$inferInsert>;
-
-export type Transaction = typeof transactions.$inferSelect;
-export type InsertTransaction = z.infer<typeof transactions.$inferInsert>;
-
-export type BankStatementItem = typeof bankStatementItems.$inferSelect;
-export type InsertBankStatementItem = z.infer<typeof bankStatementItems.$inferInsert>;
-
-export type CashFlow = typeof cashFlow.$inferSelect;
-export type InsertCashFlow = z.infer<typeof cashFlow.$inferInsert>;
-
-export type AuditLog = typeof auditLogs.$inferSelect;
-export type InsertAuditLog = z.infer<typeof auditLogs.$inferInsert>;
+export type InsertCompany = typeof companies.$inferInsert;
+export type InsertSubscription = typeof subscriptions.$inferInsert;
+export type InsertCustomer = typeof customers.$inferInsert;
+export type InsertSupplier = typeof suppliers.$inferInsert;
+export type InsertCategory = typeof categories.$inferInsert;
+export type InsertTransaction = typeof transactions.$inferInsert;
+export type InsertBankStatementItem = typeof bankStatementItems.$inferInsert;
+export type InsertCashFlow = typeof cashFlow.$inferInsert;
+export type InsertAuditLog = typeof auditLogs.$inferInsert;
 
 export type LoginAttempt = typeof loginAttempts.$inferSelect;
 
