@@ -40,7 +40,7 @@ const Footer: React.FC = () => {
               </Link>
             </div>
             <p className="text-blue-100/70 mb-8 leading-relaxed text-sm md:text-base font-normal">
-              O software definitivo para gestão financeira de pequenas e médias empresas que buscam o próximo nível de lucratividade e organization.
+              O HUACONTROL é um ERP financeiro completo com inteligência artificial, desenvolvido para empresas que precisam de controle absoluto, visão estratégica e decisões seguras.
             </p>
             <div className="flex gap-4">
               {[Instagram, Facebook, WhatsApp].map((Icon, idx) => (
@@ -72,7 +72,7 @@ const Footer: React.FC = () => {
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-blue-400 shrink-0" />
-                <span>54 996231432</span>
+                <span>(54) 99623-1432</span>
               </li>
               <li className="flex items-center gap-3">
                 <MapPin className="w-5 h-5 text-blue-400 shrink-0" />
@@ -99,7 +99,7 @@ const Footer: React.FC = () => {
         </div>
         
         <div className="pt-10 border-t border-blue-800 flex flex-col md:flex-row justify-between items-center gap-6 text-blue-300 text-[10px] md:text-xs font-medium text-center md:text-left">
-          <p>© {currentYear} HUACONTROL e Análise. Tecnologia Enterprise para PMEs.</p>
+          <p>© {currentYear} HUACONTROL. Todos os direitos reservados. Tecnologia Enterprise para PMEs.</p>
           <div className="flex gap-6 md:gap-8 font-normal">
             <Link href="/terms" className="hover:text-white transition-colors">Termos de Uso</Link>
             <Link href="/privacy" className="hover:text-white transition-colors">Política de Privacidade</Link>
