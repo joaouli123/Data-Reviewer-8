@@ -19,11 +19,11 @@ const Hero: React.FC = () => {
         </div>
         
         <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-black text-slate-900 leading-[1.1] tracking-tight mb-8 text-balance">
-          O fim das planilhas quebradas e das <span className="text-blue-600">mensalidades eternas.</span>
+          Controle absoluto. <span className="text-blue-600">Decisões inteligentes.</span>
         </h1>
         
         <p className="text-base md:text-lg text-slate-600 mb-10 max-w-3xl mx-auto leading-relaxed px-4 font-normal">
-          Assuma o controle financeiro de nível bancário com gestão de equipe avançada. <span className="text-blue-700 font-semibold">Pague uma única vez e use para sempre.</span>
+          ERP financeiro com <span className="text-blue-700 font-semibold">inteligência artificial</span> para empresas que exigem controle, previsibilidade e decisões seguras.
         </p>
 
         {/* Video Player Section */}

@@ -10,10 +10,10 @@ const Pricing: React.FC = () => {
         <div className="max-w-4xl mx-auto text-center mb-12 md:mb-20">
           <h2 className="text-blue-600 font-bold text-[10px] md:text-xs uppercase tracking-[0.3em] mb-3 text-center">Tabela de Investimento</h2>
           <h3 className="text-2xl md:text-4xl font-extrabold text-slate-900 mb-6 leading-tight tracking-tight">
-            Escolha seu Plano de <span className="text-blue-600">Liberdade Financeira.</span>
+            Assuma o <span className="text-blue-600">Controle</span> do seu Financeiro.
           </h3>
           <p className="text-base md:text-lg text-slate-600 max-w-xl mx-auto font-normal">
-            Pague mensalmente ou livre-se de taxas para sempre com o plano <span className="font-semibold text-blue-600">Vitalício.</span>
+            Escolha o plano ideal para governar sua empresa com precisão e <span className="font-semibold text-blue-600">previsibilidade.</span>
           </p>
         </div>
 

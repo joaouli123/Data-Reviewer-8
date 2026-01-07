@@ -13,34 +13,34 @@ import {
 const Benefits: React.FC = () => {
   const benefits = [
     {
-      icon: <ShieldCheck className="w-6 h-6" />,
-      title: "Segurança Bancária",
-      desc: "Criptografia de ponta com isolamento total. Seus dados financeiros protegidos por blindagem enterprise."
-    },
-    {
-      icon: <Users className="w-6 h-6" />,
-      title: "Gestão de Equipe",
-      desc: "Permissões granulares. Delegue o operacional sem expor seus lucros ou dados estratégicos."
-    },
-    {
       icon: <LineChart className="w-6 h-6" />,
-      title: "Previsão de Fluxo",
-      desc: "Antecipe o futuro. Saiba hoje se vai faltar dinheiro daqui a 3 meses com inteligência preditiva."
+      title: "Fluxo de Caixa",
+      desc: "Visão clara do realizado e projetado para antecipar cenários e garantir a saúde financeira do negócio."
     },
     {
       icon: <Calculator className="w-6 h-6" />,
-      title: "Precificação Real",
-      desc: "Margem real automática. Pare de chutar preços e comece a faturar com lucro real em cada serviço."
+      title: "DRE Gerencial",
+      desc: "Interpretação automática dos resultados para entender a lucratividade real da operação em tempo real."
+    },
+    {
+      icon: <Users className="w-6 h-6" />,
+      title: "Capital de Giro",
+      desc: "Análise inteligente das necessidades de caixa para suportar o crescimento sustentável da empresa."
+    },
+    {
+      icon: <ShieldCheck className="w-6 h-6" />,
+      title: "Endividamento",
+      desc: "Identificação proativa de riscos de crédito e gestão de obrigações para evitar surpresas no orçamento."
     },
     {
       icon: <FileBarChart className="w-6 h-6" />,
-      title: "DRE Automático",
-      desc: "Informação limpa em um clique. Gere relatórios de saúde financeira instantaneamente para decisões rápidas."
+      title: "Indicadores",
+      desc: "Painéis de controle com as métricas que realmente importam para quem decide o futuro do negócio."
     },
     {
       icon: <Fingerprint className="w-6 h-6" />,
-      title: "Registro de Auditoria",
-      desc: "Audit logs completos. Rastreie cada alteração feita no sistema com registro de autoria e horário."
+      title: "Inteligência IA",
+      desc: "Camada de IA que interpreta dados, identifica riscos e apoia gestores com recomendações estratégicas."
     }
   ];
 
@@ -50,10 +50,10 @@ const Benefits: React.FC = () => {
         <div className="max-w-4xl mx-auto text-center mb-12 md:mb-20">
           <h2 className="text-blue-600 font-bold text-[10px] md:text-xs uppercase tracking-[0.3em] mb-3">Poder de Gestão</h2>
           <h3 className="text-2xl md:text-4xl font-extrabold text-slate-900 mb-6 leading-tight tracking-tight">
-            Tecnologia <span className="text-blue-600">Enterprise</span> Blindada para o seu Negócio.
+            Gestão Financeira em um <span className="text-blue-600">Único Ambiente.</span>
           </h3>
           <p className="text-base md:text-lg text-slate-600 max-w-xl mx-auto font-normal">
-            Conheça os recursos que vão revolucionar sua gestão e trazer a paz financeira definitiva.
+            O HUACONTROL entrega governança e precisão, transformando informações em análises claras para decisões seguras.
           </p>
         </div>
 

@@ -4,19 +4,19 @@ import React from 'react';
 const PainPoints: React.FC = () => {
   const pains = [
     {
-      icon: "❌",
-      title: "Cegueira Financeira",
-      desc: "Você vende, mas não vê a cor do dinheiro? O lucro parece sumir no meio de taxas ocultas e má gestão de custos."
+      icon: "📉",
+      title: "Informações Descentralizadas",
+      desc: "Dados espalhados dificultam a visão real do negócio e atrasam relatórios essenciais para o crescimento."
     },
     {
-      icon: "❌",
-      title: "Medo de Delegar",
-      desc: "Você centraliza tudo porque tem medo que funcionários vejam o lucro real ou dados estratégicos da sua empresa?"
+      icon: "⏳",
+      title: "Relatórios Demorados",
+      desc: "Perda de tempo precioso consolidando planilhas manuais que já nascem desatualizadas e sujeitas a erros."
     },
     {
-      icon: "❌",
-      title: "Dados Vulneráveis",
-      desc: "O que acontece se seu computador queimar hoje? Suas planilhas locais são bombas-relógio para o seu histórico."
+      icon: "❓",
+      title: "Falta de Visão do Futuro",
+      desc: "Dificuldade em antecipar riscos e projetar o caixa, gerando insegurança na hora de tomar decisões importantes."
     }
   ];
 
@@ -25,10 +25,10 @@ const PainPoints: React.FC = () => {
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto text-center mb-12 md:mb-20">
           <h2 className="text-2xl md:text-4xl font-extrabold text-slate-900 mb-6 leading-tight px-4 tracking-tight">
-            Sua empresa cresceu, mas seu <span className="text-blue-600 underline underline-offset-8">controle financeiro</span> parou no tempo?
+            O Desafio das Empresas em <span className="text-blue-600 underline underline-offset-8">Crescimento</span>
           </h2>
           <p className="text-base md:text-lg text-slate-600 max-w-2xl mx-auto font-normal">
-            Se você ainda depende de planilhas que travam ou sistemas que cobram por usuário, <span className="text-red-600 font-bold">você está sangrando dinheiro.</span>
+            À medida que o negócio cresce, o financeiro se torna mais complexo. O impacto é direto na estratégia e na segurança da empresa.
           </p>
         </div>
 
