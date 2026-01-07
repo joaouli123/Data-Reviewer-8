@@ -26,6 +26,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --only=production
 
+# Copy server bundle
 COPY --from=builder /app/dist ./dist
 
 ENV NODE_ENV=production
