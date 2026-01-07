@@ -100,18 +100,14 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
       const res = await apiRequest('POST', '/api/sales', payload);
       return res;
     },
-    onSuccess: async () => {
-      onOpenChange(false);
-      toast.success('Venda registrada com sucesso!');
-
-      // Invalida e recarrega os dados para garantir que o total na tabela atualize
+    onSuccess: () => {
+      // Invalida caches - React Query refaz automaticamente quando necessário
       queryClient.invalidateQueries({ queryKey: ['/api/customers'] });
       queryClient.invalidateQueries({ queryKey: ['/api/sales'] });
       queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
-      
-      // Força o refetch imediato
-      queryClient.refetchQueries({ queryKey: ['/api/customers', company?.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/cash-flow'] });
 
+      // Reset form
       setFormData({
         description: '',
         total_amount: '',
@@ -125,24 +121,8 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
       });
       setCustomInstallments([]);
 
-      setTimeout(async () => {
-        await queryClient.refetchQueries({ queryKey: ['/api/transactions'] });
-        await queryClient.refetchQueries({ queryKey: ['/api/cash-flow'] });
-
-        if (company?.id) {
-          await queryClient.refetchQueries({ queryKey: ['/api/transactions', company.id] });
-          await queryClient.refetchQueries({ queryKey: ['/api/customers', company.id] });
-        }
-
-        if (customer?.id) {
-          await queryClient.refetchQueries({ 
-            queryKey: ['/api/transactions', { customerId: customer.id }] 
-          });
-          await queryClient.refetchQueries({ 
-            queryKey: [`/api/customers/${customer.id}/sales`] 
-          });
-        }
-      }, 500);
+      toast.success('Venda registrada com sucesso!');
+      onOpenChange(false);
     },
     onError: (error) => {
       toast.error(error.message || 'Erro ao registrar venda', { duration: 5000 });

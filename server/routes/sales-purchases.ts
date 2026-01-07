@@ -55,7 +55,7 @@ export function registerSalesPurchasesRoutes(app: Express) {
       const sale = await storage.createSale(req.user.companyId, saleData as any);
       const installmentGroupId = `sale-${sale.id}-${Date.now()}`;
 
-      // Lógica de Parcelas
+      // Lógica de Parcelas - Otimizado com Promise.all
       const count = (customInstallments && customInstallments.length > 0) 
         ? customInstallments.length 
         : (parseInt(installmentCount) || 1);
@@ -63,7 +63,7 @@ export function registerSalesPurchasesRoutes(app: Express) {
       const amountPerInstallment = Math.floor((cleanTotal / count) * 100) / 100;
       const lastInstallmentAmount = (cleanTotal - (amountPerInstallment * (count - 1))).toFixed(2);
 
-      for (let i = 0; i < count; i++) {
+      const transactionPromises = Array.from({ length: count }, (_, i) => {
         const isLast = i === count - 1;
         const currentAmount = isLast ? lastInstallmentAmount : amountPerInstallment.toFixed(2);
 
@@ -74,7 +74,7 @@ export function registerSalesPurchasesRoutes(app: Express) {
           dueDate.setMonth(dueDate.getMonth() + i);
         }
 
-        await storage.createTransaction(req.user.companyId, {
+        return storage.createTransaction(req.user.companyId, {
           companyId: req.user.companyId,
           type: 'income',
           description: count > 1 ? `${description || 'Venda'} (${i + 1}/${count})` : (description || 'Venda'),
@@ -89,7 +89,9 @@ export function registerSalesPurchasesRoutes(app: Express) {
           installmentGroup: installmentGroupId,
           shift: 'default'
         } as any);
-      }
+      });
+
+      await Promise.all(transactionPromises);
 
       res.status(201).json(sale);
     } catch (error: any) {
@@ -121,6 +123,7 @@ export function registerSalesPurchasesRoutes(app: Express) {
       const purchase = await storage.createPurchase(req.user.companyId, purchaseData as any);
       const installmentGroupId = `purchase-${purchase.id}-${Date.now()}`;
 
+      // Lógica de Parcelas - Otimizado com Promise.all
       const count = (customInstallments && customInstallments.length > 0) 
         ? customInstallments.length 
         : (parseInt(installmentCount) || 1);
@@ -128,7 +131,7 @@ export function registerSalesPurchasesRoutes(app: Express) {
       const amountPerInstallment = Math.floor((cleanTotal / count) * 100) / 100;
       const lastInstallmentAmount = (cleanTotal - (amountPerInstallment * (count - 1))).toFixed(2);
 
-      for (let i = 0; i < count; i++) {
+      const transactionPromises = Array.from({ length: count }, (_, i) => {
         const isLast = i === count - 1;
         const currentAmount = isLast ? lastInstallmentAmount : amountPerInstallment.toFixed(2);
 
@@ -139,7 +142,7 @@ export function registerSalesPurchasesRoutes(app: Express) {
           dueDate.setMonth(dueDate.getMonth() + i);
         }
 
-        await storage.createTransaction(req.user.companyId, {
+        return storage.createTransaction(req.user.companyId, {
           companyId: req.user.companyId,
           type: 'expense',
           description: count > 1 ? `${description || 'Compra'} (${i + 1}/${count})` : (description || 'Compra'),
@@ -154,7 +157,9 @@ export function registerSalesPurchasesRoutes(app: Express) {
           installmentGroup: installmentGroupId,
           shift: 'Normal'
         } as any);
-      }
+      });
+
+      await Promise.all(transactionPromises);
 
       res.status(201).json(purchase);
     } catch (error: any) {
