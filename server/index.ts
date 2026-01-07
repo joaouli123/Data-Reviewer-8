@@ -59,17 +59,19 @@ const httpServer = http.createServer(app);
   } else {
     const staticPath = path.join(__dirname, "..", "dist", "public");
     app.use(express.static(staticPath));
-    app.get("*", (req, res, next) => {
-      // Se a rota começa com /api e não foi capturada por nenhum handler anterior,
-      // retorna 404 em vez de servir o index.html. Isso evita o erro de JSON inesperado.
-      if (req.path.startsWith("/api")) {
-        return res.status(404).json({ error: "API route not found" });
-      }
+    
+    // Todas as outras rotas que não começam com /api devem servir o frontend
+    app.get(/^((?!\/api).)*$/, (req, res) => {
       res.sendFile(path.join(staticPath, "index.html"), (err) => {
         if (err) {
           res.status(500).send(err);
         }
       });
+    });
+
+    // Rota curinga final para capturar APIs não encontradas e retornar JSON em vez de HTML
+    app.use("/api/*", (req, res) => {
+      res.status(404).json({ error: "API route not found" });
     });
   }
 
