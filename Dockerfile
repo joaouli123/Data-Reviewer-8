@@ -5,9 +5,21 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
-COPY . .
+# Copy all source files
+COPY index.html ./
+COPY src ./src
+COPY shared ./shared
+COPY server ./server
+COPY vite.config.js ./
+COPY tailwind.config.js ./
+COPY postcss.config.js ./
+COPY tsconfig.json ./
+COPY components.json ./
 
+# Build frontend
 RUN npx vite build
+
+# Build server
 RUN npx esbuild server/index.ts \
   --bundle \
   --platform=node \
@@ -26,7 +38,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --only=production
 
-# Copy server bundle
+# Copy built files
 COPY --from=builder /app/dist ./dist
 
 ENV NODE_ENV=production

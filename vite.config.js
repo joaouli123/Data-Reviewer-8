@@ -2,7 +2,6 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 
-// Use process.cwd() instead of import.meta to avoid CommonJS bundling issues
 const __dirname = process.cwd();
 
 export default defineConfig({
@@ -17,8 +16,8 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./client/src"),
-      "@assets": path.resolve(__dirname, "./client/src/assets"),
+      "@": path.resolve(__dirname, "./src"),
+      "@assets": path.resolve(__dirname, "./src/assets"),
       "@shared": path.resolve(__dirname, "./shared"),
     },
     extensions: [".mjs", ".js", ".jsx", ".ts", ".tsx", ".json"],
