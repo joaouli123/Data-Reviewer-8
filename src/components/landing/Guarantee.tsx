@@ -6,19 +6,23 @@ const Guarantee: React.FC = () => {
   return (
     <section className="py-24 px-4 bg-slate-50" id="garantia">
       <div className="container mx-auto max-w-4xl mb-16">
-        <div className="bg-white border border-blue-100 p-8 md:p-12 rounded-[2.5rem] shadow-xl text-center flex flex-col items-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-4 uppercase tracking-tight">Assuma o controle do seu financeiro agora</h2>
-          <p className="text-slate-600 mb-10 max-w-2xl text-sm md:text-base font-normal leading-relaxed">
-            Fale com um de nossos consultores e descubra como o HUACONTROL pode transformar a gestão da sua empresa com inteligência e previsibilidade.
-          </p>
-          <a 
-            href="https://wa.me/5554996231432?text=Olá,%20gostaria%20de%20saber%20o%20valor!"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white px-10 py-5 rounded-xl font-bold text-lg transition-all shadow-xl shadow-blue-500/30 active:scale-95 uppercase gap-3"
-          >
-            Consultar preços no whatsapp
-          </a>
+        <div className="bg-blue-600 p-8 md:p-16 rounded-[2.5rem] text-center flex flex-col items-center relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-1/2 h-full bg-blue-500/30 blur-[100px]"></div>
+          <div className="absolute bottom-0 right-0 w-1/3 h-full bg-blue-400/20 blur-[80px]"></div>
+          <div className="relative z-10">
+            <h2 className="text-2xl md:text-4xl font-extrabold text-white mb-4 uppercase tracking-tight">Assuma o controle do seu financeiro agora</h2>
+            <p className="text-blue-100 mb-10 max-w-2xl text-sm md:text-lg font-normal leading-relaxed">
+              Fale com um de nossos consultores e descubra como o HUACONTROL pode transformar a gestão da sua empresa com inteligência e previsibilidade.
+            </p>
+            <a 
+              href="https://wa.me/5554996231432?text=Olá,%20gostaria%20de%20saber%20o%20valor!"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center bg-white hover:bg-blue-50 text-blue-600 px-10 py-5 rounded-xl font-bold text-lg transition-all shadow-xl active:scale-95 uppercase gap-3"
+            >
+              Consultar preços no whatsapp
+            </a>
+          </div>
         </div>
       </div>
 
