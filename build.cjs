@@ -34,8 +34,8 @@ const destPath = path.join(__dirname, 'dist', 'index.cjs');
 
 try {
   if (fs.existsSync(sourcePath)) {
-    fs.renameSync(sourcePath, destPath);
-    console.log('[OK] Moved server/index.js to index.cjs');
+    fs.copyFileSync(sourcePath, destPath);
+    console.log('[OK] Copied server/index.js to index.cjs');
   } else {
     console.error('[ERROR] dist/server/index.js not found');
     process.exit(1);

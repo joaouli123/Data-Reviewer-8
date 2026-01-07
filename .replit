@@ -11,4 +11,3 @@ MERCADOPAGO_WEBHOOK_SECRET = "8be0f574ef57591ed15c4e4828803b33e76e1fbcfd97579b92
 
 [[ports]]
 localPort = 5000
-externalPort = 80
