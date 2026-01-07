@@ -69,13 +69,15 @@ const Footer: React.FC = () => {
             <ul className="space-y-4 text-blue-100/80 text-sm md:text-base font-normal">
               <li className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-blue-400 shrink-0" />
-                <span className="truncate">suporte@huaconsultoria.com.br</span>
+                <span className="truncate">huaconsultoriaeanalise@gmail.com</span>
               </li>
               <li className="flex items-center gap-3">
-                <Link href="/terms" className="hover:text-white transition-colors">Termos de Uso</Link>
+                <Phone className="w-5 h-5 text-blue-400 shrink-0" />
+                <span>54 996231432</span>
               </li>
               <li className="flex items-center gap-3">
-                <Link href="/privacy" className="hover:text-white transition-colors">Política de Privacidade</Link>
+                <MapPin className="w-5 h-5 text-blue-400 shrink-0" />
+                <span>Nova Prata/RS</span>
               </li>
             </ul>
           </div>
