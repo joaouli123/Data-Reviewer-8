@@ -1,6 +1,56 @@
-node_modules
-dist
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+.cache/
+
+# IDE and OS
 .DS_Store
-server/public
-vite.config.ts.*
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files (keep .env.example if exists)
+.env
+.env.local
+.env.*.local
+
+# Temporary files
 *.tar.gz
+*.tmp
+*.temp
+/tmp/
+
+# Vite temp
+vite.config.ts.*
+
+# Server public (generated)
+server/public/
+
+# Test and debug files
+*.test.ts
+check_*.ts
+create_*.ts
+test_*.ts
+fix_*.ts
+reset_*.ts
+detailed_*.ts
+final_*.ts
+
+# Backup files
+*.backup
+*.bak
+
+# Replit specific
+.replit
+replit.nix
+.upm/
+.config/
