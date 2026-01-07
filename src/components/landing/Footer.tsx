@@ -19,7 +19,7 @@ const WhatsApp = ({ className }: { className?: string }) => (
   </svg>
 );
 
-import LogoHUACONTROL from '@assets/unnamed-removebg-preview_1767731241199.png';
+import LogoSidebar from '@/assets/logo-sidebar.png';
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
@@ -36,7 +36,7 @@ const Footer: React.FC = () => {
           <div className="sm:col-span-2 lg:col-span-1">
             <div className="flex items-center gap-3 mb-6 md:mb-8">
               <Link href="/" className="flex items-center">
-                <img src={LogoHUACONTROL} alt="HUACONTROL Logo" className="h-12 w-auto object-contain" />
+                <img src={LogoSidebar} alt="HUACONTROL" className="h-12 w-auto object-contain" />
               </Link>
             </div>
             <p className="text-blue-100/70 mb-8 leading-relaxed text-sm md:text-base font-normal">

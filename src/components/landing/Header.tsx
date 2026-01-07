@@ -1,10 +1,8 @@
 
 import React, { useState } from 'react';
-import { LogoIcon } from './constants';
 import { Menu, X } from 'lucide-react';
 import { Link } from "wouter";
-
-import LogoHUACONTROL from '@assets/unnamed-removebg-preview_1767731241199.png';
+import LogoNavbar from '@/assets/logo-navbar.png';
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -21,7 +19,7 @@ const Header: React.FC = () => {
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/50 transition-all duration-300">
       <div className="container mx-auto px-4 md:px-6 h-20 flex items-center justify-between">
         <a href="/" className="flex items-center gap-2.5 shrink-0 group transition-transform">
-          <img src={LogoHUACONTROL} alt="HUACONTROL Logo" className="h-10 md:h-12 w-auto object-contain" />
+          <img src={LogoNavbar} alt="HUACONTROL" className="h-10 md:h-12 w-auto object-contain" />
         </a>
         
         {/* Desktop Navigation */}
