@@ -19,7 +19,7 @@ const WhatsApp = ({ className }: { className?: string }) => (
   </svg>
 );
 
-import LogoHUACONTROL from '@assets/ChatGPT_Image_6_de_jan._de_2026__17_13_28-removebg-preview_1767731092064.png';
+import LogoHUACONTROL from '@assets/unnamed-removebg-preview_1767731241199.png';
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();

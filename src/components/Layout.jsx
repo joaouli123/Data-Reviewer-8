@@ -6,7 +6,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermission } from '@/hooks/usePermission';
-import LogoHUACONTROL from '@assets/ChatGPT_Image_6_de_jan._de_2026__17_13_28-removebg-preview_1767731092064.png';
+import LogoHUACONTROL from '@assets/unnamed-removebg-preview_1767731241199.png';
 
 export default function Layout({ children }) {
   const [pathname] = useLocation();
