@@ -47,7 +47,8 @@ export function registerCategoryRoutes(app: Express) {
         return res.status(400).json({ error: parseResult.error });
       }
 
-      const { name, type } = parseResult.data;
+      const data = parseResult.data as any;
+      const { name, type } = data;
 
       // 2. Verifica se já existe uma categoria com esse nome E tipo para esta empresa
       const existingCategories = await storage.getCategories(req.user.companyId);

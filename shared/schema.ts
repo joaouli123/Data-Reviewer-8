@@ -379,20 +379,11 @@ export const insertUserSchema = createInsertSchema(users, {
   password: z.string().min(6, "Password must be at least 6 characters").optional(),
   username: z.string().min(3, "Username must be at least 3 characters").optional(),
   email: z.string().email("Invalid email").optional(),
-}).extend({
-  id: z.string().optional(),
-  createdAt: z.date().optional(),
-  updatedAt: z.date().optional(),
 });
 
 export const insertInvitationSchema = createInsertSchema(invitations, {
   email: z.string().email("Invalid email"),
   expiresAt: z.coerce.date(),
-}).extend({
-  id: z.string().optional(),
-  createdAt: z.date().optional(),
-  acceptedAt: z.date().optional(),
-  acceptedBy: z.string().optional(),
 });
 
 export type User = typeof users.$inferSelect;
@@ -400,60 +391,17 @@ export type InsertUser = typeof users.$inferInsert;
 export type Invitation = typeof invitations.$inferSelect;
 export type InsertInvitation = typeof invitations.$inferInsert;
 
-export const insertCustomerSchema = createInsertSchema(customers).extend({
-  id: z.string().optional(),
-  createdAt: z.date().optional(),
-});
-
-export const insertSupplierSchema = createInsertSchema(suppliers).extend({
-  id: z.string().optional(),
-  createdAt: z.date().optional(),
-});
-
-export const insertCategorySchema = createInsertSchema(categories).extend({
-  id: z.string().optional(),
-  createdAt: z.date().optional(),
-});
-
-export const insertTransactionSchema = createInsertSchema(transactions).extend({
-  id: z.string().optional(),
-  createdAt: z.date().optional(),
-  updatedAt: z.date().optional(),
-});
-
-export const insertBankStatementItemSchema = createInsertSchema(bankStatementItems).extend({
-  id: z.string().optional(),
-  createdAt: z.date().optional(),
-});
-
-export const insertCashFlowSchema = createInsertSchema(cashFlow).extend({
-  id: z.string().optional(),
-});
-
-export const insertAuditLogSchema = createInsertSchema(auditLogs).extend({
-  id: z.string().optional(),
-  createdAt: z.date().optional(),
-});
-
-export const insertSaleSchema = createInsertSchema(sales).extend({
-  id: z.string().optional(),
-  createdAt: z.date().optional(),
-  updatedAt: z.date().optional(),
-});
-
-export const insertPurchaseSchema = createInsertSchema(purchases).extend({
-  id: z.string().optional(),
-  createdAt: z.date().optional(),
-  updatedAt: z.date().optional(),
-});
-
-export const insertInstallmentSchema = createInsertSchema(installments).extend({
-  id: z.string().optional(),
-});
-
-export const insertPurchaseInstallmentSchema = createInsertSchema(purchaseInstallments).extend({
-  id: z.string().optional(),
-});
+export const insertCustomerSchema = createInsertSchema(customers);
+export const insertSupplierSchema = createInsertSchema(suppliers);
+export const insertCategorySchema = createInsertSchema(categories);
+export const insertTransactionSchema = createInsertSchema(transactions);
+export const insertBankStatementItemSchema = createInsertSchema(bankStatementItems);
+export const insertCashFlowSchema = createInsertSchema(cashFlow);
+export const insertAuditLogSchema = createInsertSchema(auditLogs);
+export const insertSaleSchema = createInsertSchema(sales);
+export const insertPurchaseSchema = createInsertSchema(purchases);
+export const insertInstallmentSchema = createInsertSchema(installments);
+export const insertPurchaseInstallmentSchema = createInsertSchema(purchaseInstallments);
 
 // ========== TYPES ==========
 

@@ -2,7 +2,7 @@ import { db } from "./db";
 import { eq, and, desc, sql } from "drizzle-orm";
 import {
   bankStatementItems, transactions, users, customers, suppliers, categories,
-  companies, sales, purchases
+  companies, sales, purchases, cashFlow
 } from "../shared/schema";
 
 // Função para formatar dinheiro corretamente
