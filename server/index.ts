@@ -63,7 +63,11 @@ const httpServer = http.createServer(app);
       if (req.path.startsWith("/api")) {
         return next();
       }
-      res.sendFile(path.join(staticPath, "index.html"));
+      res.sendFile(path.join(staticPath, "index.html"), (err) => {
+        if (err) {
+          res.status(500).send(err);
+        }
+      });
     });
   }
 
