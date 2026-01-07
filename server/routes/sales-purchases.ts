@@ -1,6 +1,11 @@
 import { Express } from "express";
+<<<<<<< HEAD
 import { storage } from "../storage";
 import { authMiddleware, AuthenticatedRequest } from "../middleware";
+=======
+import { storage } from "../storage.js";
+import { authMiddleware, AuthenticatedRequest } from "../middleware.js";
+>>>>>>> 421df1f960deb88f8be303df4d1aba395442d6c0
 
 // Função auxiliar para garantir que o valor seja um número limpo (decimal US)
 function parseMoney(value: any): number {

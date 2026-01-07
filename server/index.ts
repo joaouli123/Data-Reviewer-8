@@ -4,7 +4,11 @@ import http from "http";
 import { fileURLToPath } from "url";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
+<<<<<<< HEAD
 import { registerAllRoutes } from "./routes/index";
+=======
+import { registerAllRoutes } from "./routes/index.js";
+>>>>>>> 421df1f960deb88f8be303df4d1aba395442d6c0
 
 const app = express();
 const PORT = parseInt(process.env.PORT || "5000", 10);
@@ -39,7 +43,11 @@ app.use((req, res, next) => {
 // Middleware
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+<<<<<<< HEAD
 app.use(cookieParser());
+=======
+app.use(cookieParser() as any);
+>>>>>>> 421df1f960deb88f8be303df4d1aba395442d6c0
 
 // Get __dirname from import.meta.url
 const __filename = fileURLToPath(import.meta.url);
@@ -53,14 +61,33 @@ const httpServer = http.createServer(app);
 
 (async () => {
   if (isDev) {
+<<<<<<< HEAD
     const { setupVite } = await import("./vite");
+=======
+    const { setupVite } = await import("./vite.js");
+>>>>>>> 421df1f960deb88f8be303df4d1aba395442d6c0
     // setupVite in this environment expects (server, app)
     await setupVite(httpServer, app);
   } else {
     const staticPath = path.join(__dirname, "..", "dist", "public");
     app.use(express.static(staticPath));
+<<<<<<< HEAD
     app.get("*", (_req, res) => {
       res.sendFile(path.join(staticPath, "index.html"));
+=======
+    
+    // Todas as outras rotas que não começam com /api devem servir o frontend
+    app.get("*", (req: express.Request, res: express.Response, next: express.NextFunction) => {
+      // Evita capturar rotas de API no wildcard do frontend
+      if (req.path.startsWith("/api")) {
+        return next();
+      }
+      res.sendFile(path.join(staticPath, "index.html"), (err) => {
+        if (err) {
+          res.status(500).send(err);
+        }
+      });
+>>>>>>> 421df1f960deb88f8be303df4d1aba395442d6c0
     });
   }
 

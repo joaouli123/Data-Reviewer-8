@@ -375,6 +375,7 @@ export const insertSubscriptionSchema = createInsertSchema(subscriptions).omit({
   updatedAt: true,
 });
 
+<<<<<<< HEAD
 export const insertUserSchema = createInsertSchema(users, {
   password: z.string().min(6, "Password must be at least 6 characters").optional(),
   username: z.string().min(3, "Username must be at least 3 characters").optional(),
@@ -470,10 +471,40 @@ export const insertPurchaseInstallmentSchema = createInsertSchema(purchaseInstal
   id: true,
   companyId: true,
 }) as any;
+=======
+export const insertUserSchema = z.object({
+  password: z.string().optional(),
+  username: z.string().optional(),
+  email: z.string().optional(),
+});
+
+export const insertInvitationSchema = z.object({
+  email: z.string().email("Invalid email"),
+  expiresAt: z.coerce.date(),
+});
+
+export type User = typeof users.$inferSelect;
+export type InsertUser = typeof users.$inferInsert;
+export type Invitation = typeof invitations.$inferSelect;
+export type InsertInvitation = typeof invitations.$inferInsert;
+
+export const insertCustomerSchema = createInsertSchema(customers) as any;
+export const insertSupplierSchema = createInsertSchema(suppliers) as any;
+export const insertCategorySchema = createInsertSchema(categories) as any;
+export const insertTransactionSchema = createInsertSchema(transactions) as any;
+export const insertBankStatementItemSchema = createInsertSchema(bankStatementItems) as any;
+export const insertCashFlowSchema = createInsertSchema(cashFlow) as any;
+export const insertAuditLogSchema = createInsertSchema(auditLogs) as any;
+export const insertSaleSchema = createInsertSchema(sales) as any;
+export const insertPurchaseSchema = createInsertSchema(purchases) as any;
+export const insertInstallmentSchema = createInsertSchema(installments) as any;
+export const insertPurchaseInstallmentSchema = createInsertSchema(purchaseInstallments) as any;
+>>>>>>> 421df1f960deb88f8be303df4d1aba395442d6c0
 
 // ========== TYPES ==========
 
 export type Company = typeof companies.$inferSelect;
+<<<<<<< HEAD
 export type InsertCompany = z.infer<typeof companies.$inferInsert>;
 
 export type Subscription = typeof subscriptions.$inferSelect;
@@ -501,6 +532,17 @@ export type InsertCashFlow = z.infer<typeof cashFlow.$inferInsert>;
 
 export type AuditLog = typeof auditLogs.$inferSelect;
 export type InsertAuditLog = z.infer<typeof auditLogs.$inferInsert>;
+=======
+export type InsertCompany = typeof companies.$inferInsert;
+export type InsertSubscription = typeof subscriptions.$inferInsert;
+export type InsertCustomer = typeof customers.$inferInsert;
+export type InsertSupplier = typeof suppliers.$inferInsert;
+export type InsertCategory = typeof categories.$inferInsert;
+export type InsertTransaction = typeof transactions.$inferInsert;
+export type InsertBankStatementItem = typeof bankStatementItems.$inferInsert;
+export type InsertCashFlow = typeof cashFlow.$inferInsert;
+export type InsertAuditLog = typeof auditLogs.$inferInsert;
+>>>>>>> 421df1f960deb88f8be303df4d1aba395442d6c0
 
 export type LoginAttempt = typeof loginAttempts.$inferSelect;
 

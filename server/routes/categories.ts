@@ -1,7 +1,13 @@
 import { Express } from "express";
+<<<<<<< HEAD
 import { storage } from "../storage";
 import { insertCategorySchema, DEFAULT_CATEGORIES } from "../../shared/schema";
 import { authMiddleware, AuthenticatedRequest } from "../middleware";
+=======
+import { storage } from "../storage.js";
+import { insertCategorySchema, DEFAULT_CATEGORIES } from "../../shared/schema.js";
+import { authMiddleware, AuthenticatedRequest } from "../middleware.js";
+>>>>>>> 421df1f960deb88f8be303df4d1aba395442d6c0
 import { z } from "zod";
 
 export function registerCategoryRoutes(app: Express) {
@@ -47,7 +53,13 @@ export function registerCategoryRoutes(app: Express) {
         return res.status(400).json({ error: parseResult.error });
       }
 
+<<<<<<< HEAD
       const { name, type } = parseResult.data;
+=======
+      const data = parseResult.data as any;
+      const name = String(data.name);
+      const type = String(data.type);
+>>>>>>> 421df1f960deb88f8be303df4d1aba395442d6c0
 
       // 2. Verifica se já existe uma categoria com esse nome E tipo para esta empresa
       const existingCategories = await storage.getCategories(req.user.companyId);

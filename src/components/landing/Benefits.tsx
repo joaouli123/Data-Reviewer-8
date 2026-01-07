@@ -13,6 +13,7 @@ import {
 const Benefits: React.FC = () => {
   const benefits = [
     {
+<<<<<<< HEAD
       icon: <LineChart className="w-6 h-6" />,
       title: "Analisar fluxo de caixa e projeções",
       desc: "Visão clara do realizado e projetado para antecipar cenários e garantir a saúde financeira do negócio."
@@ -41,6 +42,36 @@ const Benefits: React.FC = () => {
       icon: <Fingerprint className="w-6 h-6" />,
       title: "Apoiar decisões estratégicas",
       desc: "Camada de IA que interpreta dados, identifica riscos e apoia gestores com recomendações estratégicas."
+=======
+      icon: <ShieldCheck className="w-6 h-6" />,
+      title: "Segurança Bancária",
+      desc: "Criptografia de ponta com isolamento total. Seus dados financeiros protegidos por blindagem enterprise."
+    },
+    {
+      icon: <Users className="w-6 h-6" />,
+      title: "Gestão de Equipe",
+      desc: "Permissões granulares. Delegue o operacional sem expor seus lucros ou dados estratégicos."
+    },
+    {
+      icon: <LineChart className="w-6 h-6" />,
+      title: "Previsão de Fluxo",
+      desc: "Antecipe o futuro. Saiba hoje se vai faltar dinheiro daqui a 3 meses com inteligência preditiva."
+    },
+    {
+      icon: <Calculator className="w-6 h-6" />,
+      title: "Precificação Real",
+      desc: "Margem real automática. Pare de chutar preços e comece a faturar com lucro real em cada serviço."
+    },
+    {
+      icon: <FileBarChart className="w-6 h-6" />,
+      title: "DRE Automático",
+      desc: "Informação limpa em um clique. Gere relatórios de saúde financeira instantaneamente para decisões rápidas."
+    },
+    {
+      icon: <Fingerprint className="w-6 h-6" />,
+      title: "Registro de Auditoria",
+      desc: "Audit logs completos. Rastreie cada alteração feita no sistema com registro de autoria e horário."
+>>>>>>> 421df1f960deb88f8be303df4d1aba395442d6c0
     }
   ];
 
@@ -48,12 +79,21 @@ const Benefits: React.FC = () => {
     <section className="py-16 md:py-24 px-4 bg-white" id="beneficios">
       <div className="container mx-auto">
         <div className="max-w-4xl mx-auto text-center mb-12 md:mb-20">
+<<<<<<< HEAD
           <h2 className="text-blue-600 font-bold text-[10px] md:text-xs uppercase tracking-[0.3em] mb-3">INTELIGÊNCIA ARTIFICIAL A SERVIÇO DA GESTÃO</h2>
           <h3 className="text-2xl md:text-4xl font-extrabold text-slate-900 mb-6 leading-tight tracking-tight">
             CONTROLE FINANCEIRO EM UM <span className="text-blue-600">ÚNICO AMBIENTE.</span>
           </h3>
           <p className="text-base md:text-lg text-slate-600 max-w-xl mx-auto font-normal">
             O HUACONTROL entrega uma gestão financeira estruturada, com visão clara do presente e do futuro da empresa.
+=======
+          <h2 className="text-blue-600 font-bold text-[10px] md:text-xs uppercase tracking-[0.3em] mb-3">Poder de Gestão</h2>
+          <h3 className="text-2xl md:text-4xl font-extrabold text-slate-900 mb-6 leading-tight tracking-tight">
+            Tecnologia <span className="text-blue-600">Enterprise</span> Blindada para o seu Negócio.
+          </h3>
+          <p className="text-base md:text-lg text-slate-600 max-w-xl mx-auto font-normal">
+            Conheça os recursos que vão revolucionar sua gestão e trazer a paz financeira definitiva.
+>>>>>>> 421df1f960deb88f8be303df4d1aba395442d6c0
           </p>
         </div>
 
@@ -94,12 +134,19 @@ const Benefits: React.FC = () => {
                 ))}
               </div>
               <a 
+<<<<<<< HEAD
                 href="https://wa.me/5554996231432?text=Olá,%20gostaria%20de%20saber%20o%20valor!"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center bg-white text-blue-600 px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-xl hover:bg-blue-50 active:scale-95"
               >
                 SOLICITAR APRESENTAÇÃO
+=======
+                href="#precos" 
+                className="inline-flex items-center justify-center bg-white text-blue-600 px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-xl hover:bg-blue-50 active:scale-95"
+              >
+                VER PLANOS AGORA
+>>>>>>> 421df1f960deb88f8be303df4d1aba395442d6c0
               </a>
             </div>
             <div className="hidden lg:block relative">

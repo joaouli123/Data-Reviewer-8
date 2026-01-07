@@ -1,8 +1,15 @@
 import { Express } from "express";
+<<<<<<< HEAD
 import { storage } from "../storage";
 import { insertSupplierSchema, users } from "../../shared/schema";
 import { authMiddleware, AuthenticatedRequest } from "../middleware";
 import { db } from "../db";
+=======
+import { storage } from "../storage.js";
+import { insertSupplierSchema, users } from "../../shared/schema.js";
+import { authMiddleware, AuthenticatedRequest } from "../middleware.js";
+import { db } from "../db.js";
+>>>>>>> 421df1f960deb88f8be303df4d1aba395442d6c0
 import { eq } from "drizzle-orm";
 
 const checkPermission = async (req: AuthenticatedRequest, permission: string) => {

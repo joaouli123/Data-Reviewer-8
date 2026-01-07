@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 modules = ["nodejs-20", "web", "postgresql-16"]
 # CORREÇÃO 1: Executar o arquivo .mjs
 run = ["node", "./dist/index.mjs"]
@@ -48,6 +49,9 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "npx tsx server/index.ts"
+=======
+modules = ["nodejs-20"]
+>>>>>>> 421df1f960deb88f8be303df4d1aba395442d6c0
 
 [userenv]
 
@@ -58,5 +62,22 @@ MERCADOPAGO_ACCESS_TOKEN = "TEST-480170991685621-122922-242361804774376ec1ad15e2
 VITE_MERCADOPAGO_PUBLIC_KEY = "TEST-b451766f-a43e-498b-9441-38d6ac0ce68e"
 MERCADOPAGO_WEBHOOK_SECRET = "8be0f574ef57591ed15c4e4828803b33e76e1fbcfd97579b92ed1fb93d0caad9"
 
+<<<<<<< HEAD
 [agent]
 integrations = ["javascript_database:1.0.0"]
+=======
+[[ports]]
+localPort = 5000
+
+[workflows]
+runButton = "NEW"
+
+[[workflows.workflow]]
+name = "NEW"
+mode = "sequential"
+author = 52083753
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm start"
+>>>>>>> 421df1f960deb88f8be303df4d1aba395442d6c0

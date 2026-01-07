@@ -5,7 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+<<<<<<< HEAD
     "build": "vite build && tsc --outDir dist --rootDir . --module commonjs --moduleResolution node server/index.ts && mv dist/server/index.js dist/index.cjs",
+=======
+    "build": "vite build && tsc --project tsconfig.server.json --skipLibCheck && mv dist/server/index.js dist/index.cjs",
+>>>>>>> 421df1f960deb88f8be303df4d1aba395442d6c0
     "build:prod": "tsx script/build.ts",
     "start": "node dist/server/index.js",
     "lint": "eslint .",

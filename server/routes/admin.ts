@@ -1,8 +1,15 @@
 import { Express } from "express";
+<<<<<<< HEAD
 import { db } from "../db";
 import { eq, desc } from "drizzle-orm";
 import { authMiddleware, requireSuperAdmin, AuthenticatedRequest } from "../middleware";
 import { companies, users, subscriptions, auditLogs } from "../../shared/schema";
+=======
+import { db } from "../db.js";
+import { eq, desc } from "drizzle-orm";
+import { authMiddleware, requireSuperAdmin, AuthenticatedRequest } from "../middleware.js";
+import { companies, users, subscriptions, auditLogs } from "../../shared/schema.js";
+>>>>>>> 421df1f960deb88f8be303df4d1aba395442d6c0
 
 export function registerAdminRoutes(app: Express) {
   app.get("/api/admin/companies", authMiddleware, requireSuperAdmin, async (req, res) => {

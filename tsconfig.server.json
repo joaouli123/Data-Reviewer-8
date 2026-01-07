@@ -13,8 +13,15 @@
     "noUnusedParameters": false,
     "noImplicitReturns": false,
     "noEmitOnError": false,
+<<<<<<< HEAD
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
+=======
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+>>>>>>> 421df1f960deb88f8be303df4d1aba395442d6c0
     "resolveJsonModule": true,
     "noEmit": false,
     "outDir": "dist",

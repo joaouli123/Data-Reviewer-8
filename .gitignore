@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Dependencies
 node_modules/
 
@@ -54,3 +55,23 @@ final_*.ts
 replit.nix
 .upm/
 .config/
+=======
+node_modules
+dist
+.DS_Store
+server/public
+vite.config.ts.*
+*.tar.gz.replit
+.local
+.cache
+.config
+.pythonlibs
+.upm
+.env
+*.log
+.eslintcache
+.vscode
+.idea
+build/
+temp/
+>>>>>>> 421df1f960deb88f8be303df4d1aba395442d6c0

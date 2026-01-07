@@ -1,0 +1,111 @@
+  requireStack: []
+node:internal/modules/cjs/loader:1386
+}
+  throw err;
+  ^
+Node.js v22.21.1
+Error: Cannot find module '/app/dist/server/index.js'
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1383:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1025:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1030:22)
+    at Function._load (node:internal/modules/cjs/loader:1192:37)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+npm warn config production Use `--omit=dev` instead.
+> base44-app@0.0.0 start
+> node dist/server/index.js
+  ^
+}
+> base44-app@0.0.0 start
+Error: Cannot find module '/app/dist/server/index.js'
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1383:15)
+    at node:internal/main/run_main_module:36:49 {
+> node dist/server/index.js
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1025:19)
+  code: 'MODULE_NOT_FOUND',
+Node.js v22.21.1
+node:internal/modules/cjs/loader:1386
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1030:22)
+  requireStack: []
+npm warn config production Use `--omit=dev` instead.
+  throw err;
+    at Function._load (node:internal/modules/cjs/loader:1192:37)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+npm warn config production Use `--omit=dev` instead.
+  throw err;
+  ^
+> base44-app@0.0.0 start
+Node.js v22.21.1
+> node dist/server/index.js
+Error: Cannot find module '/app/dist/server/index.js'
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1383:15)
+    at Function._load (node:internal/modules/cjs/loader:1192:37)
+node:internal/modules/cjs/loader:1386
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1025:19)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1030:22)
+  code: 'MODULE_NOT_FOUND',
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+  requireStack: []
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+}
+    at node:internal/main/run_main_module:36:49 {
+npm warn config production Use `--omit=dev` instead.
+> base44-app@0.0.0 start
+> node dist/server/index.js
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+node:internal/modules/cjs/loader:1386
+    at node:internal/main/run_main_module:36:49 {
+  throw err;
+  code: 'MODULE_NOT_FOUND',
+  requireStack: []
+  ^
+}
+Node.js v22.21.1
+Error: Cannot find module '/app/dist/server/index.js'
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1383:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1025:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1030:22)
+    at Function._load (node:internal/modules/cjs/loader:1192:37)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+npm warn config production Use `--omit=dev` instead.
+> base44-app@0.0.0 start
+> node dist/server/index.js
+}
+node:internal/modules/cjs/loader:1386
+  throw err;
+Node.js v22.21.1
+  ^
+Error: Cannot find module '/app/dist/server/index.js'
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1383:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1025:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1030:22)
+    at Function._load (node:internal/modules/cjs/loader:1192:37)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+    at node:internal/main/run_main_module:36:49 {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: []
+npm warn config production Use `--omit=dev` instead.
+> base44-app@0.0.0 start
+> node dist/server/index.js
+}
+node:internal/modules/cjs/loader:1386
+  throw err;
+Node.js v22.21.1
+  ^
+Error: Cannot find module '/app/dist/server/index.js'
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1383:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1025:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1030:22)
+    at Function._load (node:internal/modules/cjs/loader:1192:37)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+    at node:internal/main/run_main_module:36:49 {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: []

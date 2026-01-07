@@ -40,7 +40,11 @@ const Footer: React.FC = () => {
               </Link>
             </div>
             <p className="text-blue-100/70 mb-8 leading-relaxed text-sm md:text-base font-normal">
+<<<<<<< HEAD
               O HUACONTROL é um ERP financeiro completo com inteligência artificial, desenvolvido para empresas que precisam de controle absoluto, visão estratégica e decisões seguras.
+=======
+              O software definitivo para gestão financeira de pequenas e médias empresas que buscam o próximo nível de lucratividade e organization.
+>>>>>>> 421df1f960deb88f8be303df4d1aba395442d6c0
             </p>
             <div className="flex gap-4">
               {[Instagram, Facebook, WhatsApp].map((Icon, idx) => (
@@ -58,6 +62,10 @@ const Footer: React.FC = () => {
               <li><a href="#solucao" className="hover:text-white transition-colors">A Solução</a></li>
               <li><a href="#beneficios" className="hover:text-white transition-colors">Benefícios</a></li>
               <li><a href="#recursos" className="hover:text-white transition-colors">Recursos</a></li>
+<<<<<<< HEAD
+=======
+              <li><a href="#precos" className="hover:text-white transition-colors">Planos e Preços</a></li>
+>>>>>>> 421df1f960deb88f8be303df4d1aba395442d6c0
               <li><a href="#faq" className="hover:text-white transition-colors">Dúvidas Frequentes</a></li>
             </ul>
           </div>
@@ -68,6 +76,7 @@ const Footer: React.FC = () => {
             <ul className="space-y-4 text-blue-100/80 text-sm md:text-base font-normal">
               <li className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-blue-400 shrink-0" />
+<<<<<<< HEAD
                 <span className="truncate">huaconsultoriaeanalise@gmail.com</span>
               </li>
               <li className="flex items-center gap-3">
@@ -77,6 +86,15 @@ const Footer: React.FC = () => {
               <li className="flex items-center gap-3">
                 <MapPin className="w-5 h-5 text-blue-400 shrink-0" />
                 <span>Nova Prata/RS</span>
+=======
+                <span className="truncate">suporte@huaconsultoria.com.br</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <Link href="/terms" className="hover:text-white transition-colors">Termos de Uso</Link>
+              </li>
+              <li className="flex items-center gap-3">
+                <Link href="/privacy" className="hover:text-white transition-colors">Política de Privacidade</Link>
+>>>>>>> 421df1f960deb88f8be303df4d1aba395442d6c0
               </li>
             </ul>
           </div>
@@ -85,6 +103,7 @@ const Footer: React.FC = () => {
           <div className="bg-blue-800/50 p-6 md:p-8 rounded-3xl border border-blue-700 backdrop-blur-sm sm:col-span-2 lg:col-span-1">
             <h4 className="text-lg md:text-xl font-bold mb-4">Pronto para começar?</h4>
             <p className="text-xs md:text-sm text-blue-100/70 mb-6 font-normal">
+<<<<<<< HEAD
               Assuma o controle do seu financeiro. Conheça como a inteligência artificial pode apoiar sua gestão financeira.
             </p>
             <a 
@@ -95,11 +114,25 @@ const Footer: React.FC = () => {
             >
               Solicitar apresentação
             </a>
+=======
+              Garanta seu acesso vitalício agora mesmo e mude o patamar da sua empresa.
+            </p>
+            <Link 
+              href="/signup?plan=pro" 
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-3 transition-all shadow-lg active:scale-95"
+            >
+              GARANTIR VITALÍCIO
+            </Link>
+>>>>>>> 421df1f960deb88f8be303df4d1aba395442d6c0
           </div>
         </div>
         
         <div className="pt-10 border-t border-blue-800 flex flex-col md:flex-row justify-between items-center gap-6 text-blue-300 text-[10px] md:text-xs font-medium text-center md:text-left">
+<<<<<<< HEAD
           <p>© {currentYear} HUACONTROL. Todos os direitos reservados. Tecnologia Enterprise para PMEs.</p>
+=======
+          <p>© {currentYear} HUACONTROL e Análise. Tecnologia Enterprise para PMEs.</p>
+>>>>>>> 421df1f960deb88f8be303df4d1aba395442d6c0
           <div className="flex gap-6 md:gap-8 font-normal">
             <Link href="/terms" className="hover:text-white transition-colors">Termos de Uso</Link>
             <Link href="/privacy" className="hover:text-white transition-colors">Política de Privacidade</Link>

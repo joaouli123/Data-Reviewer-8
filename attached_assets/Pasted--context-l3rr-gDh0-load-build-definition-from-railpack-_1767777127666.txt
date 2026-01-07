@@ -1,0 +1,105 @@
+ 
+context: l3rr-gDh0
+
+load build definition from railpack-plan.json
+0ms
+
+install mise packages: node
+2s
+mise node@22.21.1 ✓ installed
+
+install apt packages: libatomic1
+2s
+Processing triggers for libc-bin (2.36-9+deb12u13) ...
+
+mkdir -p /app/node_modules/.cache
+113ms
+
+copy package-lock.json, package.json
+24ms
+
+npm ci
+7s
+Run `npm audit` for details.
+
+copy /usr/local/bin/mise, /mise/installs, /mise/shims, /root/.local/state/mise, /etc/mise/config.toml cached
+0ms
+
+copy / /app, .
+769ms
+
+npm run build
+12s
+npm warn config production Use `--omit=dev` instead.
+> base44-app@0.0.0 build
+> vite build && tsc --project tsconfig.server.json --skipLibCheck && mv dist/server/index.js dist/index.cjs
+vite v6.4.1 building for production...
+transforming...
+✓ 3750 modules transformed.
+rendering chunks...
+[plugin vite:reporter] 
+(!) /app/src/lib/queryClient.ts is dynamically imported by /app/src/contexts/AuthContext.jsx, /app/src/contexts/AuthContext.jsx but also statically imported by /app/src/App.jsx, /app/src/api/database.js, /app/src/api/openaiClient.js, /app/src/components/customers/CustomerSalesDialog.jsx, /app/src/components/customers/NewSaleDialog.jsx, /app/src/components/suppliers/NewPurchaseDialog.jsx, /app/src/components/suppliers/SupplierPurchasesDialog.jsx, /app/src/components/transactions/BankReconciliation.jsx, /app/src/pages/Dashboard.jsx, /app/src/pages/Profile.jsx, /app/src/pages/Transactions.jsx, /app/src/pages/UserManagement.jsx, /app/src/pages/UserPermissions.jsx, /app/src/pages/admin/customers.jsx, /app/src/pages/admin/subscriptions.jsx, /app/src/pages/admin/users.jsx, /app/src/pages/settings/Team.jsx, dynamic import will not move module into another chunk.
+computing gzip size...
+dist/public/index.html                                                                                        2.79 kB │ gzip:   1.12 kB
+dist/public/assets/unnamed-removebg-preview_1767731241199-D6A6xNHR.png                                      141.36 kB
+dist/public/assets/ChatGPT_Image_6_de_jan._de_2026__17_13_28-removebg-preview_1767731092064-BAOKtUsl.png    141.93 kB
+dist/public/assets/index-BAkP-Vqk.css                                                                        96.89 kB │ gzip:  15.58 kB
+dist/public/assets/purify.es-B9ZVCkUG.js                                                                     22.64 kB │ gzip:   8.75 kB
+dist/public/assets/index.es-D7r-KlV6.js                                                                     159.35 kB │ gzip:  53.40 kB
+dist/public/assets/index-DGXH7YK9.js                                                                      2,648.75 kB │ gzip: 741.71 kB
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 9.11s
+server/routes/cash-flow.ts(9,38): error TS2339: Property 'getCashFlow' does not exist on type 'DatabaseStorage'.
+
+shared/schema.ts(379,3): error TS2322: Type 'ZodOptional<ZodString>' is not assignable to type 'ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>> | ((schema: ZodCoercedString<unknown>) => ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>)'.
+
+  Type 'ZodOptional<ZodString>' is missing the following properties from type 'ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>': def, type, check, clone, and 6 more.
+shared/schema.ts(380,3): error TS2322: Type 'ZodOptional<ZodString>' is not assignable to type 'ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>> | ((schema: ZodCoercedString<unknown>) => ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>)'.
+
+  Type 'ZodOptional<ZodString>' is missing the following properties from type 'ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>': def, type, check, clone, and 6 more.
+shared/schema.ts(381,3): error TS2322: Type 'ZodOptional<ZodString>' is not assignable to type 'ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>> | ((schema: ZodCoercedString<unknown>) => ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>)'.
+
+  Type 'ZodOptional<ZodString>' is missing the following properties from type 'ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>': def, type, check, clone, and 6 more.
+shared/schema.ts(389,3): error TS2322: Type 'ZodString' is not assignable to type 'ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>> | ((schema: ZodCoercedString<unknown>) => ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>)'.
+
+  Type 'ZodString' is missing the following properties from type 'ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>': def, type, check, clone, and 6 more.
+shared/schema.ts(390,3): error TS2322: Type 'ZodDate' is not assignable to type 'ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>> | ((schema: ZodCoercedDate<unknown>) => ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>)'.
+
+  Type 'ZodDate' is missing the following properties from type 'ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>': def, type, check, clone, and 6 more.
+shared/schema.ts(399,34): error TS2344: Type '{ username: string; password: string; id?: string; name?: string; createdAt?: Date; updatedAt?: Date; companyId?: string; status?: string; email?: string; phone?: string; cep?: string; rua?: string; ... 7 more ...; permissions?: string; }' does not satisfy the constraint 'ZodType<any, any, any>'.
+
+  Type '{ username: string; password: string; id?: string; name?: string; createdAt?: Date; updatedAt?: Date; companyId?: string; status?: string; email?: string; phone?: string; cep?: string; rua?: string; ... 7 more ...; permissions?: string; }' is missing the following properties from type 'ZodType<any, any, any>': _type, _output, _input, _def, and 34 more.
+shared/schema.ts(401,40): error TS2344: Type '{ companyId: string; expiresAt: Date; email: string; token: string; createdBy: string; id?: string; createdAt?: Date; role?: string; permissions?: string; acceptedAt?: Date; acceptedBy?: string; }' does not satisfy the constraint 'ZodType<any, any, any>'.
+
+  Type '{ companyId: string; expiresAt: Date; email: string; token: string; createdBy: string; id?: string; createdAt?: Date; role?: string; permissions?: string; acceptedAt?: Date; acceptedBy?: string; }' is missing the following properties from type 'ZodType<any, any, any>': _type, _output, _input, _def, and 34 more.
+shared/schema.ts(477,37): error TS2344: Type '{ name: string; document: string; id?: string; subscriptionStatus?: string; paymentStatus?: string; subscriptionPlan?: string; createdAt?: Date; updatedAt?: Date; }' does not satisfy the constraint 'ZodType<any, any, any>'.
+
+  Type '{ name: string; document: string; id?: string; subscriptionStatus?: string; paymentStatus?: string; subscriptionPlan?: string; createdAt?: Date; updatedAt?: Date; }' is missing the following properties from type 'ZodType<any, any, any>': _type, _output, _input, _def, and 34 more.
+shared/schema.ts(480,42): error TS2344: Type '{ companyId: string; id?: string; createdAt?: Date; updatedAt?: Date; plan?: string; status?: string; subscriberName?: string; paymentMethod?: string; amount?: string; isLifetime?: boolean; expiresAt?: Date; }' does not satisfy the constraint 'ZodType<any, any, any>'.
+
+  Type '{ companyId: string; id?: string; createdAt?: Date; updatedAt?: Date; plan?: string; status?: string; subscriberName?: string; paymentMethod?: string; amount?: string; isLifetime?: boolean; expiresAt?: Date; }' is missing the following properties from type 'ZodType<any, any, any>': _type, _output, _input, _def, and 34 more.
+shared/schema.ts(485,38): error TS2344: Type '{ name: string; companyId: string; id?: string; createdAt?: Date; status?: string; email?: string; phone?: string; cnpj?: string; contact?: string; category?: string; }' does not satisfy the constraint 'ZodType<any, any, any>'.
+
+  Type '{ name: string; companyId: string; id?: string; createdAt?: Date; status?: string; email?: string; phone?: string; cnpj?: string; contact?: string; category?: string; }' is missing the following properties from type 'ZodType<any, any, any>': _type, _output, _input, _def, and 34 more.
+shared/schema.ts(488,38): error TS2344: Type '{ name: string; companyId: string; id?: string; createdAt?: Date; status?: string; email?: string; phone?: string; cnpj?: string; contact?: string; category?: string; paymentTerms?: string; }' does not satisfy the constraint 'ZodType<any, any, any>'.
+
+  Type '{ name: string; companyId: string; id?: string; createdAt?: Date; status?: string; email?: string; phone?: string; cnpj?: string; contact?: string; category?: string; paymentTerms?: string; }' is missing the following properties from type 'ZodType<any, any, any>': _type, _output, _input, _def, and 34 more.
+shared/schema.ts(491,38): error TS2344: Type '{ name: string; companyId: string; type: string; id?: string; createdAt?: Date; }' does not satisfy the constraint 'ZodType<any, any, any>'.
+
+  Type '{ name: string; companyId: string; type: string; id?: string; createdAt?: Date; }' is missing the following properties from type 'ZodType<any, any, any>': _type, _output, _input, _def, and 34 more.
+shared/schema.ts(494,41): error TS2344: Type '{ date: Date; companyId: string; amount: string; type: string; shift: string; id?: string; createdAt?: Date; updatedAt?: Date; status?: string; paymentMethod?: string; customerId?: string; ... 9 more ...; isReconciled?: boolean; }' does not satisfy the constraint 'ZodType<any, any, any>'.
+
+  Type '{ date: Date; companyId: string; amount: string; type: string; shift: string; id?: string; createdAt?: Date; updatedAt?: Date; status?: string; paymentMethod?: string; customerId?: string; ... 9 more ...; isReconciled?: boolean; }' is missing the following properties from type 'ZodType<any, any, any>': _type, _output, _input, _def, and 33 more.
+shared/schema.ts(497,47): error TS2344: Type '{ date: Date; companyId: string; amount: string; description: string; id?: string; createdAt?: Date; status?: string; transactionId?: string; }' does not satisfy the constraint 'ZodType<any, any, any>'.
+
+  Type '{ date: Date; companyId: string; amount: string; description: string; id?: string; createdAt?: Date; status?: string; transactionId?: string; }' is missing the following properties from type 'ZodType<any, any, any>': _type, _output, _input, _def, and 33 more.
+shared/schema.ts(500,38): error TS2344: Type '{ date: Date; companyId: string; shift: string; balance: string; id?: string; description?: string; inflow?: string; outflow?: string; }' does not satisfy the constraint 'ZodType<any, any, any>'.
+
+  Type '{ date: Date; companyId: string; shift: string; balance: string; id?: string; description?: string; inflow?: string; outflow?: string; }' is missing the following properties from type 'ZodType<any, any, any>': _type, _output, _input, _def, and 33 more.
+shared/schema.ts(503,38): error TS2344: Type '{ companyId: string; userId: string; action: string; resourceType: string; id?: string; createdAt?: Date; status?: string; resourceId?: string; details?: string; ipAddress?: string; userAgent?: string; }' does not satisfy the constraint 'ZodType<any, any, any>'.
+
+  Type '{ companyId: string; userId: string; action: string; resourceType: string; id?: string; createdAt?: Date; status?: string; resourceId?: string; details?: string; ipAddress?: string; userAgent?: string; }' is missing the following properties from type 'ZodType<any, any, any>': _type, _output, _input, _def, and 34 more.
+ERROR: failed to build: failed to solve: process "sh -c npm run build" did not complete successfully: exit code: 2

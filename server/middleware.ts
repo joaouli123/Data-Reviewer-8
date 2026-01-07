@@ -1,8 +1,15 @@
 import type { Request, Response, NextFunction } from "express";
+<<<<<<< HEAD
 import { verifyToken } from "./auth";
 import { findUserById, findCompanyById, checkSubscriptionStatus, createAuditLog } from "./auth";
 import { db } from "./db";
 import { loginAttempts } from "../shared/schema";
+=======
+import { verifyToken } from "./auth.js";
+import { findUserById, findCompanyById, checkSubscriptionStatus, createAuditLog } from "./auth.js";
+import { db } from "./db.js";
+import { loginAttempts } from "../shared/schema.js";
+>>>>>>> 421df1f960deb88f8be303df4d1aba395442d6c0
 import { eq, and, gte, desc } from "drizzle-orm";
 
 export interface AuthenticatedRequest extends Request {

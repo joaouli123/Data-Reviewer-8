@@ -2,16 +2,22 @@
 import { useState, useEffect } from 'react';
 import Header from './Header';
 import Hero from './Hero';
+<<<<<<< HEAD
 import VisionSection from './VisionSection';
 import PainPoints from './PainPoints';
 import Benefits from './Benefits';
 import TargetAudience from './TargetAudience';
 import SecuritySection from './SecuritySection';
+=======
+import PainPoints from './PainPoints';
+import Benefits from './Benefits';
+>>>>>>> 421df1f960deb88f8be303df4d1aba395442d6c0
 import Modules from './Modules';
 import Pricing from './Pricing';
 import Guarantee from './Guarantee';
 import FAQ from './FAQ';
 import Footer from './Footer';
+<<<<<<< HEAD
 
 import LogoWhatsapp from '@assets/image_1767816007481.png';
 
@@ -30,6 +36,9 @@ const WhatsAppFAB = () => (
     />
   </a>
 );
+=======
+import FloatingCTA from './FloatingCTA';
+>>>>>>> 421df1f960deb88f8be303df4d1aba395442d6c0
 
 const LandingPage = () => {
   const [showFloatingCTA, setShowFloatingCTA] = useState(false);
@@ -52,17 +61,27 @@ const LandingPage = () => {
       <Header />
       <main>
         <Hero />
+<<<<<<< HEAD
         <VisionSection />
         <PainPoints />
         <Benefits />
         <TargetAudience />
         <SecuritySection />
         <Modules />
+=======
+        <PainPoints />
+        <Benefits />
+        <Modules />
+        <Pricing />
+>>>>>>> 421df1f960deb88f8be303df4d1aba395442d6c0
         <Guarantee />
         <FAQ />
       </main>
       <Footer />
+<<<<<<< HEAD
       <WhatsAppFAB />
+=======
+>>>>>>> 421df1f960deb88f8be303df4d1aba395442d6c0
     </div>
   );
 };

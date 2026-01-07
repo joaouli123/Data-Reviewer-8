@@ -1,7 +1,12 @@
 import { Express } from "express";
 import { eq, desc, and } from "drizzle-orm";
+<<<<<<< HEAD
 import { db } from "../db";
 import { users, companies, subscriptions, categories } from "../../shared/schema";
+=======
+import { db } from "../db.js";
+import { users, companies, subscriptions, categories } from "../../shared/schema.js";
+>>>>>>> 421df1f960deb88f8be303df4d1aba395442d6c0
 import { 
   findUserByUsername, 
   findUserByEmail, 
@@ -15,8 +20,13 @@ import {
   createUser,
   findUserById,
   hashPassword
+<<<<<<< HEAD
 } from "../auth";
 import { authMiddleware, checkRateLimit, recordLoginAttempt, AuthenticatedRequest } from "../middleware";
+=======
+} from "../auth.js";
+import { authMiddleware, checkRateLimit, recordLoginAttempt, AuthenticatedRequest } from "../middleware.js";
+>>>>>>> 421df1f960deb88f8be303df4d1aba395442d6c0
 
 export function registerAuthRoutes(app: Express) {
   // Sign up

@@ -1,9 +1,18 @@
+<<<<<<< HEAD
 import { db } from "./db";
 import { eq, and, desc, sql } from "drizzle-orm";
 import {
   bankStatementItems, transactions, users, customers, suppliers, categories,
   companies, sales, purchases
 } from "../shared/schema";
+=======
+import { db } from "./db.js";
+import { eq, and, desc, sql } from "drizzle-orm";
+import {
+  bankStatementItems, transactions, users, customers, suppliers, categories,
+  companies, sales, purchases, cashFlow
+} from "../shared/schema.js";
+>>>>>>> 421df1f960deb88f8be303df4d1aba395442d6c0
 
 // Função para formatar dinheiro corretamente
 function sanitizeMoney(value: any): string {
@@ -170,6 +179,15 @@ export class DatabaseStorage {
   async deleteSupplier(companyId: any, id: any) {
     await db.delete(suppliers).where(and(eq(suppliers.companyId, companyId), eq(suppliers.id, id)));
   }
+<<<<<<< HEAD
+=======
+
+  // --- MÉTODOS DE FLUXO DE CAIXA ---
+  async getCashFlow(companyId: any) {
+    const { cashFlow: cfTable } = await import("../shared/schema");
+    return await db.select().from(cfTable).where(eq(cfTable.companyId, companyId)).orderBy(desc(cfTable.date));
+  }
+>>>>>>> 421df1f960deb88f8be303df4d1aba395442d6c0
 }
 
 export const storage = new DatabaseStorage();

@@ -4,6 +4,7 @@ import { ShieldCheck } from './constants';
 
 const Guarantee: React.FC = () => {
   return (
+<<<<<<< HEAD
     <section className="py-24 px-4 bg-slate-50" id="garantia">
       <div className="container mx-auto max-w-4xl mb-16">
         <div className="bg-blue-600 p-8 md:p-16 rounded-[2.5rem] text-center flex flex-col items-center relative overflow-hidden">
@@ -26,6 +27,9 @@ const Guarantee: React.FC = () => {
         </div>
       </div>
 
+=======
+    <section className="py-24 px-4 bg-slate-50">
+>>>>>>> 421df1f960deb88f8be303df4d1aba395442d6c0
       <div className="container mx-auto max-w-4xl bg-white border border-blue-100 p-8 md:p-16 rounded-[3rem] shadow-xl flex flex-col md:flex-row items-center gap-12 relative overflow-hidden">
         <div className="absolute -top-10 -left-10 w-40 h-40 bg-blue-100/50 blur-[60px] rounded-full"></div>
         
