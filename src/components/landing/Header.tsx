@@ -14,7 +14,6 @@ const Header: React.FC = () => {
     { name: 'A Solução', href: '#solucao' },
     { name: 'Benefícios', href: '#beneficios' },
     { name: 'Recursos', href: '#recursos' },
-    { name: 'Planos', href: '#precos' },
     { name: 'FAQ', href: '#faq' },
   ];
 
@@ -56,10 +55,12 @@ const Header: React.FC = () => {
             Entrar
           </Link>
           <a 
-            href="#precos" 
+            href="https://wa.me/5554996231432"
+            target="_blank"
+            rel="noopener noreferrer"
             className="hidden sm:inline-flex bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl text-sm font-bold transition-all shadow-lg hover:shadow-xl active:scale-95"
           >
-            Começar Agora
+            Falar com Consultor
           </a>
           
           {/* Mobile Menu Toggle */}
@@ -104,13 +105,15 @@ const Header: React.FC = () => {
             >
               Entrar
             </Link>
-            <Link 
-              href="/signup?plan=pro" 
+            <a 
+              href="https://wa.me/5554996231432"
+              target="_blank"
+              rel="noopener noreferrer"
               onClick={() => setIsMenuOpen(false)}
               className="w-full bg-blue-600 text-white text-center py-4 rounded-xl font-bold shadow-lg"
             >
-              Garantir Acesso Vitalício
-            </Link>
+              Falar com Consultor
+            </a>
           </div>
         </nav>
       </div>
