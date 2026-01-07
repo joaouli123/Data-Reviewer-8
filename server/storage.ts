@@ -53,10 +53,19 @@ export class DatabaseStorage {
 
   async matchBankStatementItem(companyId: any, bankItemId: any, transactionId: any) {
     return await db.transaction(async (tx) => {
+      // 1. Atualiza o item bancário
       const [updated] = await tx.update(bankStatementItems)
                              .set({ status: "RECONCILED", transactionId })
                              .where(and(eq(bankStatementItems.companyId, companyId), eq(bankStatementItems.id, bankItemId)))
                              .returning();
+      
+      // 2. Marca a transação como conciliada
+      if (transactionId) {
+        await tx.update(transactions)
+                .set({ isReconciled: true })
+                .where(and(eq(transactions.companyId, companyId), eq(transactions.id, transactionId)));
+      }
+      
       return updated;
     });
   }

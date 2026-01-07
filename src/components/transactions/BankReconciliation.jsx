@@ -105,7 +105,7 @@ export default function BankReconciliation({ open, onOpenChange }) {
     onError: () => toast.error('Erro ao limpar dados')
   });
 
-  // --- LÓGICA DE AUTO-CONCILIAÇÃO ---
+  // --- LÓGICA DE AUTO-CONCILIAÇÃO INTELIGENTE ---
   const performAutoReconciliation = async () => {
     if (!bankItems.length || isAutoReconciling) return;
     setIsAutoReconciling(true);
@@ -117,23 +117,27 @@ export default function BankReconciliation({ open, onOpenChange }) {
         const suggs = await apiRequest('GET', `/api/bank/suggest/${item.id}`);
         if (!suggs.length) continue;
 
-        const match = suggs.find(t => 
-          Math.abs(Math.abs(parseFloat(t.amount)) - Math.abs(parseFloat(item.amount))) < 0.01 &&
-          (t.description || '').toLowerCase().trim() === item.description.toLowerCase().trim()
-        );
-
-        if (match) {
-          await apiRequest('POST', '/api/bank/match', { bankItemId: item.id, transactionId: match.id });
+        // Usa o sistema de score: aceita match automático se score >= 70 (alta confiança)
+        // Score 70+ significa: valor exato (50) + data próxima (20+) ou valor próximo + descrição similar
+        const bestMatch = suggs[0]; // Já vem ordenado por score do backend
+        
+        if (bestMatch && bestMatch.score >= 70) {
+          await apiRequest('POST', '/api/bank/match', { bankItemId: item.id, transactionId: bestMatch.id });
           count++;
         }
-      } catch (e) {}
+      } catch (e) {
+        console.error('Auto-reconcile error:', e);
+      }
     }
 
     setIsAutoReconciling(false);
+    queryClient.invalidateQueries({ queryKey: ['/api/bank/items'] });
+    queryClient.invalidateQueries({ exact: false, queryKey: ['/api/transactions'] });
+    
     if (count > 0) {
-      queryClient.invalidateQueries({ queryKey: ['/api/bank/items'] });
-      queryClient.invalidateQueries({ exact: false, queryKey: ['/api/transactions'] });
       toast.success(`${count} itens conciliados automaticamente!`);
+    } else {
+      toast.info('Nenhum match automático encontrado. Use "Buscar Match" para conciliar manualmente.');
     }
   };
 

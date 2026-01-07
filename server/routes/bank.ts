@@ -139,7 +139,81 @@ export function registerBankRoutes(app: Express) {
 
   // --- ROTAS DE SUPORTE ---
   app.get("/api/bank/suggest/:id", authMiddleware, async (req: AuthenticatedRequest, res) => {
-      res.json([]); 
+    try {
+      const bankItemId = req.params.id;
+      const companyId = req.user!.companyId;
+      
+      // 1. Buscar o item bancário
+      const bankItem = await storage.getBankStatementItemById(companyId, bankItemId);
+      if (!bankItem) return res.json([]);
+      
+      const bankAmount = Math.abs(parseFloat(bankItem.amount));
+      const bankDate = new Date(bankItem.date);
+      const bankDesc = (bankItem.description || '').toLowerCase().trim();
+      
+      // 2. Buscar todas transações não-conciliadas
+      const allTransactions = await storage.getTransactions(companyId);
+      
+      // 3. Filtrar e pontuar transações candidatas
+      const candidates = allTransactions
+        .filter((t: any) => !t.isReconciled) // Apenas não conciliadas
+        .map((t: any) => {
+          const txAmount = Math.abs(parseFloat(t.amount || '0'));
+          const txDate = new Date(t.date);
+          const txDesc = (t.description || '').toLowerCase().trim();
+          
+          // Calcular scores
+          let score = 0;
+          
+          // Score por valor (0-50 pontos)
+          const amountDiff = Math.abs(bankAmount - txAmount);
+          const amountTolerance = bankAmount * 0.02; // 2% tolerância
+          if (amountDiff < 0.01) {
+            score += 50; // Match exato
+          } else if (amountDiff <= amountTolerance) {
+            score += 40; // Muito próximo
+          } else if (amountDiff <= bankAmount * 0.05) {
+            score += 20; // Próximo (5%)
+          }
+          
+          // Score por data (0-30 pontos)
+          const daysDiff = Math.abs((bankDate.getTime() - txDate.getTime()) / (1000 * 60 * 60 * 24));
+          if (daysDiff === 0) {
+            score += 30; // Mesmo dia
+          } else if (daysDiff <= 1) {
+            score += 25; // 1 dia de diferença
+          } else if (daysDiff <= 3) {
+            score += 15; // Até 3 dias
+          } else if (daysDiff <= 7) {
+            score += 5; // Até 7 dias
+          }
+          
+          // Score por descrição (0-20 pontos)
+          if (bankDesc === txDesc) {
+            score += 20; // Match exato
+          } else if (bankDesc.includes(txDesc) || txDesc.includes(bankDesc)) {
+            score += 15; // Um contém o outro
+          } else {
+            // Busca por palavras em comum
+            const bankWords = bankDesc.split(/\s+/).filter(w => w.length > 2);
+            const txWords = txDesc.split(/\s+/).filter(w => w.length > 2);
+            const commonWords = bankWords.filter(w => txWords.some(tw => tw.includes(w) || w.includes(tw)));
+            if (commonWords.length > 0) {
+              score += Math.min(10, commonWords.length * 3);
+            }
+          }
+          
+          return { ...t, score, amountDiff, daysDiff };
+        })
+        .filter((t: any) => t.score >= 15) // Mínimo de relevância
+        .sort((a: any, b: any) => b.score - a.score) // Melhor score primeiro
+        .slice(0, 10); // Top 10 sugestões
+      
+      res.json(candidates);
+    } catch (error) {
+      console.error('[Suggest Error]', error);
+      res.json([]);
+    }
   });
 
   app.post("/api/bank/match", authMiddleware, async (req: AuthenticatedRequest, res) => {
