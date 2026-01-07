@@ -1,0 +1,254 @@
+2026-01-07T09:51:01.000000000Z [inf]  Starting Container
+2026-01-07T09:51:02.415777053Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-01-07T09:51:02.415784295Z [inf]  
+2026-01-07T09:51:02.415790955Z [inf]  > base44-app@0.0.0 start
+2026-01-07T09:51:02.415799278Z [inf]  > node dist/server/index.js
+2026-01-07T09:51:02.415805066Z [inf]  
+2026-01-07T09:51:02.415811202Z [err]  node:internal/modules/cjs/loader:1386
+2026-01-07T09:51:02.415817902Z [err]    throw err;
+2026-01-07T09:51:02.415823877Z [err]    ^
+2026-01-07T09:51:02.415829861Z [err]  
+2026-01-07T09:51:02.415835782Z [err]  Error: Cannot find module '/app/dist/server/index.js'
+2026-01-07T09:51:02.415851473Z [err]      at Function._resolveFilename (node:internal/modules/cjs/loader:1383:15)
+2026-01-07T09:51:02.415857654Z [err]      at defaultResolveImpl (node:internal/modules/cjs/loader:1025:19)
+2026-01-07T09:51:02.415864319Z [err]      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1030:22)
+2026-01-07T09:51:02.415871074Z [err]      at Function._load (node:internal/modules/cjs/loader:1192:37)
+2026-01-07T09:51:02.415876912Z [err]      at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+2026-01-07T09:51:02.415883406Z [err]      at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+2026-01-07T09:51:02.415890232Z [err]      at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+2026-01-07T09:51:02.415900910Z [err]      at node:internal/main/run_main_module:36:49 {
+2026-01-07T09:51:02.415907328Z [err]    code: 'MODULE_NOT_FOUND',
+2026-01-07T09:51:02.415913318Z [err]    requireStack: []
+2026-01-07T09:51:02.415990283Z [err]  }
+2026-01-07T09:51:02.415997975Z [err]  
+2026-01-07T09:51:02.416005093Z [err]  Node.js v22.21.1
+2026-01-07T09:51:03.445100014Z [err]    requireStack: []
+2026-01-07T09:51:03.445108659Z [err]  }
+2026-01-07T09:51:03.445115160Z [err]  
+2026-01-07T09:51:03.445115394Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-01-07T09:51:03.445121382Z [err]  Node.js v22.21.1
+2026-01-07T09:51:03.445128503Z [err]    ^
+2026-01-07T09:51:03.445135107Z [err]  
+2026-01-07T09:51:03.445137771Z [err]      at Function._load (node:internal/modules/cjs/loader:1192:37)
+2026-01-07T09:51:03.445141338Z [inf]  
+2026-01-07T09:51:03.445145054Z [err]  Error: Cannot find module '/app/dist/server/index.js'
+2026-01-07T09:51:03.445148425Z [err]      at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+2026-01-07T09:51:03.445150721Z [inf]  > base44-app@0.0.0 start
+2026-01-07T09:51:03.445154462Z [err]      at Function._resolveFilename (node:internal/modules/cjs/loader:1383:15)
+2026-01-07T09:51:03.445158024Z [err]      at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+2026-01-07T09:51:03.445160112Z [inf]  > node dist/server/index.js
+2026-01-07T09:51:03.445162729Z [err]      at defaultResolveImpl (node:internal/modules/cjs/loader:1025:19)
+2026-01-07T09:51:03.445168199Z [err]      at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+2026-01-07T09:51:03.445170184Z [inf]  
+2026-01-07T09:51:03.445171169Z [err]      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1030:22)
+2026-01-07T09:51:03.445178175Z [err]      at node:internal/main/run_main_module:36:49 {
+2026-01-07T09:51:03.445179042Z [err]  node:internal/modules/cjs/loader:1386
+2026-01-07T09:51:03.445185800Z [err]    throw err;
+2026-01-07T09:51:03.445187363Z [err]    code: 'MODULE_NOT_FOUND',
+2026-01-07T09:51:04.403788599Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-01-07T09:51:04.403796675Z [inf]  
+2026-01-07T09:51:04.403802763Z [inf]  > base44-app@0.0.0 start
+2026-01-07T09:51:04.403808850Z [inf]  > node dist/server/index.js
+2026-01-07T09:51:04.403814515Z [inf]  
+2026-01-07T09:51:04.403821445Z [err]  node:internal/modules/cjs/loader:1386
+2026-01-07T09:51:04.403827319Z [err]    throw err;
+2026-01-07T09:51:04.403833035Z [err]    ^
+2026-01-07T09:51:04.403839125Z [err]  
+2026-01-07T09:51:04.403844149Z [err]  Error: Cannot find module '/app/dist/server/index.js'
+2026-01-07T09:51:04.403849007Z [err]      at Function._resolveFilename (node:internal/modules/cjs/loader:1383:15)
+2026-01-07T09:51:04.403854895Z [err]      at defaultResolveImpl (node:internal/modules/cjs/loader:1025:19)
+2026-01-07T09:51:04.403859604Z [err]      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1030:22)
+2026-01-07T09:51:04.403864287Z [err]      at Function._load (node:internal/modules/cjs/loader:1192:37)
+2026-01-07T09:51:04.403869366Z [err]      at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+2026-01-07T09:51:04.403875160Z [err]      at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+2026-01-07T09:51:04.403880117Z [err]      at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+2026-01-07T09:51:04.403886637Z [err]      at node:internal/main/run_main_module:36:49 {
+2026-01-07T09:51:04.403892058Z [err]    code: 'MODULE_NOT_FOUND',
+2026-01-07T09:51:04.403896721Z [err]    requireStack: []
+2026-01-07T09:51:04.403901546Z [err]  }
+2026-01-07T09:51:04.403906099Z [err]  
+2026-01-07T09:51:04.403911049Z [err]  Node.js v22.21.1
+2026-01-07T09:51:05.352751349Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-01-07T09:51:05.352759369Z [inf]  
+2026-01-07T09:51:05.352768737Z [inf]  > base44-app@0.0.0 start
+2026-01-07T09:51:05.352776334Z [inf]  > node dist/server/index.js
+2026-01-07T09:51:05.352783433Z [inf]  
+2026-01-07T09:51:05.371393550Z [err]      at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+2026-01-07T09:51:05.371404058Z [err]      at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+2026-01-07T09:51:05.371410402Z [err]      at node:internal/main/run_main_module:36:49 {
+2026-01-07T09:51:05.371416394Z [err]    code: 'MODULE_NOT_FOUND',
+2026-01-07T09:51:05.371421389Z [err]    requireStack: []
+2026-01-07T09:51:05.371427773Z [err]  }
+2026-01-07T09:51:05.371433903Z [err]  node:internal/modules/cjs/loader:1386
+2026-01-07T09:51:05.371435760Z [err]  
+2026-01-07T09:51:05.371442580Z [err]  Node.js v22.21.1
+2026-01-07T09:51:05.371443142Z [err]    throw err;
+2026-01-07T09:51:05.371451427Z [err]    ^
+2026-01-07T09:51:05.371458002Z [err]  
+2026-01-07T09:51:05.371465015Z [err]  Error: Cannot find module '/app/dist/server/index.js'
+2026-01-07T09:51:05.371470528Z [err]      at Function._resolveFilename (node:internal/modules/cjs/loader:1383:15)
+2026-01-07T09:51:05.371475649Z [err]      at defaultResolveImpl (node:internal/modules/cjs/loader:1025:19)
+2026-01-07T09:51:05.371481226Z [err]      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1030:22)
+2026-01-07T09:51:05.371489716Z [err]      at Function._load (node:internal/modules/cjs/loader:1192:37)
+2026-01-07T09:51:05.371495431Z [err]      at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+2026-01-07T09:51:07.602283792Z [err]      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1030:22)
+2026-01-07T09:51:07.602300738Z [err]      at Function._load (node:internal/modules/cjs/loader:1192:37)
+2026-01-07T09:51:07.602311494Z [err]      at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+2026-01-07T09:51:07.602320010Z [err]      at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+2026-01-07T09:51:07.602328233Z [err]      at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+2026-01-07T09:51:07.602337714Z [err]      at node:internal/main/run_main_module:36:49 {
+2026-01-07T09:51:07.602347352Z [err]    code: 'MODULE_NOT_FOUND',
+2026-01-07T09:51:07.602354051Z [err]    requireStack: []
+2026-01-07T09:51:07.602360660Z [err]  }
+2026-01-07T09:51:07.602373955Z [err]  
+2026-01-07T09:51:07.602384699Z [err]  Node.js v22.21.1
+2026-01-07T09:51:07.602899620Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-01-07T09:51:07.602906649Z [inf]  
+2026-01-07T09:51:07.602912842Z [inf]  > base44-app@0.0.0 start
+2026-01-07T09:51:07.602918384Z [inf]  > node dist/server/index.js
+2026-01-07T09:51:07.602924761Z [inf]  
+2026-01-07T09:51:07.602930487Z [err]  node:internal/modules/cjs/loader:1386
+2026-01-07T09:51:07.602936662Z [err]    throw err;
+2026-01-07T09:51:07.602943065Z [err]    ^
+2026-01-07T09:51:07.602949223Z [err]  
+2026-01-07T09:51:07.602955092Z [err]  Error: Cannot find module '/app/dist/server/index.js'
+2026-01-07T09:51:07.602962454Z [err]      at Function._resolveFilename (node:internal/modules/cjs/loader:1383:15)
+2026-01-07T09:51:07.602968512Z [err]      at defaultResolveImpl (node:internal/modules/cjs/loader:1025:19)
+2026-01-07T09:51:08.352265845Z [err]  node:internal/modules/cjs/loader:1386
+2026-01-07T09:51:08.352273294Z [err]    throw err;
+2026-01-07T09:51:08.352278977Z [err]    ^
+2026-01-07T09:51:08.352284299Z [err]  
+2026-01-07T09:51:08.352289447Z [err]  Error: Cannot find module '/app/dist/server/index.js'
+2026-01-07T09:51:08.352294400Z [err]      at Function._resolveFilename (node:internal/modules/cjs/loader:1383:15)
+2026-01-07T09:51:08.352299936Z [err]      at defaultResolveImpl (node:internal/modules/cjs/loader:1025:19)
+2026-01-07T09:51:08.352305064Z [err]      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1030:22)
+2026-01-07T09:51:08.352310298Z [err]      at Function._load (node:internal/modules/cjs/loader:1192:37)
+2026-01-07T09:51:08.352315296Z [err]      at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+2026-01-07T09:51:08.352320240Z [err]      at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+2026-01-07T09:51:08.352325428Z [err]      at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+2026-01-07T09:51:08.352330386Z [err]      at node:internal/main/run_main_module:36:49 {
+2026-01-07T09:51:08.352338812Z [err]    code: 'MODULE_NOT_FOUND',
+2026-01-07T09:51:08.352343259Z [err]    requireStack: []
+2026-01-07T09:51:08.352349796Z [err]  }
+2026-01-07T09:51:08.352356889Z [err]  
+2026-01-07T09:51:08.352363497Z [err]  Node.js v22.21.1
+2026-01-07T09:51:08.352471045Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-01-07T09:51:08.352479865Z [inf]  
+2026-01-07T09:51:08.352487472Z [inf]  > base44-app@0.0.0 start
+2026-01-07T09:51:08.352495863Z [inf]  > node dist/server/index.js
+2026-01-07T09:51:08.352503411Z [inf]  
+2026-01-07T09:51:09.537436385Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-01-07T09:51:09.569044816Z [inf]  
+2026-01-07T09:51:09.569051193Z [inf]  > base44-app@0.0.0 start
+2026-01-07T09:51:09.569055874Z [inf]  > node dist/server/index.js
+2026-01-07T09:51:09.569060300Z [inf]  
+2026-01-07T09:51:09.606903422Z [err]      at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+2026-01-07T09:51:09.606911341Z [err]  node:internal/modules/cjs/loader:1386
+2026-01-07T09:51:09.606923126Z [err]    throw err;
+2026-01-07T09:51:09.606924724Z [err]      at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+2026-01-07T09:51:09.606937546Z [err]    ^
+2026-01-07T09:51:09.606938935Z [err]      at node:internal/main/run_main_module:36:49 {
+2026-01-07T09:51:09.606950885Z [err]    code: 'MODULE_NOT_FOUND',
+2026-01-07T09:51:09.606952636Z [err]  
+2026-01-07T09:51:09.606965237Z [err]  Error: Cannot find module '/app/dist/server/index.js'
+2026-01-07T09:51:09.606965842Z [err]    requireStack: []
+2026-01-07T09:51:09.606975801Z [err]      at Function._resolveFilename (node:internal/modules/cjs/loader:1383:15)
+2026-01-07T09:51:09.606981462Z [err]  }
+2026-01-07T09:51:09.606988488Z [err]      at defaultResolveImpl (node:internal/modules/cjs/loader:1025:19)
+2026-01-07T09:51:09.606998310Z [err]  
+2026-01-07T09:51:09.607002451Z [err]      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1030:22)
+2026-01-07T09:51:09.607013659Z [err]  Node.js v22.21.1
+2026-01-07T09:51:09.607014040Z [err]      at Function._load (node:internal/modules/cjs/loader:1192:37)
+2026-01-07T09:51:09.607082954Z [err]      at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+2026-01-07T09:51:11.306402741Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-01-07T09:51:11.306407227Z [inf]  
+2026-01-07T09:51:11.306411958Z [inf]  > base44-app@0.0.0 start
+2026-01-07T09:51:11.306416591Z [inf]  > node dist/server/index.js
+2026-01-07T09:51:11.306421117Z [inf]  
+2026-01-07T09:51:11.306426260Z [err]  node:internal/modules/cjs/loader:1386
+2026-01-07T09:51:11.306430633Z [err]    throw err;
+2026-01-07T09:51:11.306435195Z [err]    ^
+2026-01-07T09:51:11.306439350Z [err]  
+2026-01-07T09:51:11.306444017Z [err]  Error: Cannot find module '/app/dist/server/index.js'
+2026-01-07T09:51:11.306447647Z [err]      at Function._resolveFilename (node:internal/modules/cjs/loader:1383:15)
+2026-01-07T09:51:11.306452425Z [err]      at defaultResolveImpl (node:internal/modules/cjs/loader:1025:19)
+2026-01-07T09:51:11.306456415Z [err]      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1030:22)
+2026-01-07T09:51:11.306460528Z [err]      at Function._load (node:internal/modules/cjs/loader:1192:37)
+2026-01-07T09:51:11.306464316Z [err]      at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+2026-01-07T09:51:11.306468096Z [err]      at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+2026-01-07T09:51:11.306473057Z [err]      at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+2026-01-07T09:51:11.306476933Z [err]      at node:internal/main/run_main_module:36:49 {
+2026-01-07T09:51:11.306481925Z [err]    code: 'MODULE_NOT_FOUND',
+2026-01-07T09:51:11.306485938Z [err]    requireStack: []
+2026-01-07T09:51:11.306490304Z [err]  }
+2026-01-07T09:51:11.306494914Z [err]  
+2026-01-07T09:51:11.306500819Z [err]  Node.js v22.21.1
+2026-01-07T09:51:12.288353026Z [err]  }
+2026-01-07T09:51:12.288369898Z [err]  
+2026-01-07T09:51:12.288378818Z [err]  Node.js v22.21.1
+2026-01-07T09:51:12.288728562Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-01-07T09:51:12.288735237Z [inf]  
+2026-01-07T09:51:12.288741245Z [inf]  > base44-app@0.0.0 start
+2026-01-07T09:51:12.288747640Z [inf]  > node dist/server/index.js
+2026-01-07T09:51:12.288754164Z [inf]  
+2026-01-07T09:51:12.288764762Z [err]  node:internal/modules/cjs/loader:1386
+2026-01-07T09:51:12.288771641Z [err]    throw err;
+2026-01-07T09:51:12.288779779Z [err]    ^
+2026-01-07T09:51:12.288790856Z [err]  
+2026-01-07T09:51:12.288797320Z [err]  Error: Cannot find module '/app/dist/server/index.js'
+2026-01-07T09:51:12.288804168Z [err]      at Function._resolveFilename (node:internal/modules/cjs/loader:1383:15)
+2026-01-07T09:51:12.288812046Z [err]      at defaultResolveImpl (node:internal/modules/cjs/loader:1025:19)
+2026-01-07T09:51:12.288822891Z [err]      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1030:22)
+2026-01-07T09:51:12.288830520Z [err]      at Function._load (node:internal/modules/cjs/loader:1192:37)
+2026-01-07T09:51:12.288838903Z [err]      at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+2026-01-07T09:51:12.288847552Z [err]      at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+2026-01-07T09:51:12.288858764Z [err]      at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+2026-01-07T09:51:12.288866085Z [err]      at node:internal/main/run_main_module:36:49 {
+2026-01-07T09:51:12.288872958Z [err]    code: 'MODULE_NOT_FOUND',
+2026-01-07T09:51:12.288881092Z [err]    requireStack: []
+2026-01-07T09:51:13.477340128Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-01-07T09:51:13.498603919Z [inf]  
+2026-01-07T09:51:13.498612592Z [inf]  > base44-app@0.0.0 start
+2026-01-07T09:51:13.498618365Z [inf]  > node dist/server/index.js
+2026-01-07T09:51:13.498626951Z [inf]  
+2026-01-07T09:51:13.540605122Z [err]  Node.js v22.21.1
+2026-01-07T09:51:13.540708196Z [err]  node:internal/modules/cjs/loader:1386
+2026-01-07T09:51:13.540714125Z [err]    throw err;
+2026-01-07T09:51:13.540719930Z [err]    ^
+2026-01-07T09:51:13.540726746Z [err]  
+2026-01-07T09:51:13.540732825Z [err]  Error: Cannot find module '/app/dist/server/index.js'
+2026-01-07T09:51:13.540738581Z [err]      at Function._resolveFilename (node:internal/modules/cjs/loader:1383:15)
+2026-01-07T09:51:13.540744764Z [err]      at defaultResolveImpl (node:internal/modules/cjs/loader:1025:19)
+2026-01-07T09:51:13.540751004Z [err]      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1030:22)
+2026-01-07T09:51:13.540759829Z [err]      at Function._load (node:internal/modules/cjs/loader:1192:37)
+2026-01-07T09:51:13.540765895Z [err]      at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+2026-01-07T09:51:13.540773433Z [err]      at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+2026-01-07T09:51:13.540778944Z [err]      at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+2026-01-07T09:51:13.540786142Z [err]      at node:internal/main/run_main_module:36:49 {
+2026-01-07T09:51:13.540790570Z [err]    code: 'MODULE_NOT_FOUND',
+2026-01-07T09:51:13.540796039Z [err]    requireStack: []
+2026-01-07T09:51:13.540802085Z [err]  }
+2026-01-07T09:51:13.540807479Z [err]  
+2026-01-07T09:51:14.677749348Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-01-07T09:51:14.705785909Z [inf]  
+2026-01-07T09:51:14.705790495Z [inf]  > base44-app@0.0.0 start
+2026-01-07T09:51:14.705798179Z [inf]  > node dist/server/index.js
+2026-01-07T09:51:14.705802945Z [inf]  
+2026-01-07T09:51:15.367866818Z [err]  node:internal/modules/cjs/loader:1386
+2026-01-07T09:51:15.367871755Z [err]    throw err;
+2026-01-07T09:51:15.367876771Z [err]    ^
+2026-01-07T09:51:15.367882948Z [err]  
+2026-01-07T09:51:15.367887797Z [err]  Error: Cannot find module '/app/dist/server/index.js'
+2026-01-07T09:51:15.367894189Z [err]      at Function._resolveFilename (node:internal/modules/cjs/loader:1383:15)
+2026-01-07T09:51:15.367901641Z [err]      at defaultResolveImpl (node:internal/modules/cjs/loader:1025:19)
+2026-01-07T09:51:15.367907821Z [err]      at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1030:22)
+2026-01-07T09:51:15.367915143Z [err]      at Function._load (node:internal/modules/cjs/loader:1192:37)
+2026-01-07T09:51:15.367920045Z [err]      at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+2026-01-07T09:51:15.367926222Z [err]      at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+2026-01-07T09:51:15.367932916Z [err]      at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+2026-01-07T09:51:15.367938880Z [err]      at node:internal/main/run_main_module:36:49 {
+2026-01-07T09:51:15.367946059Z [err]    code: 'MODULE_NOT_FOUND',
+2026-01-07T09:51:15.367953824Z [err]    requireStack: []
+2026-01-07T09:51:15.367960318Z [err]  }
+2026-01-07T09:51:15.367968198Z [err]  
+2026-01-07T09:51:15.367974658Z [err]  Node.js v22.21.1
