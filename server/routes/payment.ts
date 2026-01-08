@@ -259,6 +259,39 @@ export function registerPaymentRoutes(app: Express) {
     }
   });
 
+  // Simulate approval (for test mode confirmation)
+  app.post("/api/payment/simulate-approval", async (req: Request, res: Response) => {
+    try {
+      const { companyId } = req.body;
+
+      if (!companyId) {
+        return res.status(400).json({ error: "Company ID is required" });
+      }
+
+      console.log("[Payment] Simulate approval for company:", companyId);
+
+      // Get updated company data
+      const [updatedCompany] = await db.select()
+        .from(companies)
+        .where(eq(companies.id, companyId));
+
+      if (!updatedCompany) {
+        return res.status(404).json({ error: "Company not found" });
+      }
+
+      // Return success with updated company info (no new token needed in this flow)
+      res.json({
+        success: true,
+        company: updatedCompany,
+        message: 'Subscription confirmed',
+      });
+
+    } catch (error) {
+      console.error("[Payment] Error in simulate-approval:", error);
+      res.status(500).json({ error: "Failed to confirm subscription" });
+    }
+  });
+
   // Get payment status
   app.get("/api/payment/status/:paymentId", async (req: Request, res: Response) => {
     try {
