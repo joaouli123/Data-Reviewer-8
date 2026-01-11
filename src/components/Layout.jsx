@@ -71,7 +71,7 @@ export default function Layout({ children }) {
       </div>
       <nav className="space-y-1 flex-1">
         {navigation.map((item) => {
-            const isActive = pathname === item.path || (item.path !== '/' && pathname.startsWith(item.path));
+            const isActive = pathname === item.path;
             return (
                 <Link key={item.name} href={item.path} onClick={onNavigate}>
                 <div className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${isActive ? 'text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
