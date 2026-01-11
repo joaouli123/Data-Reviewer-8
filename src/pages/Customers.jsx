@@ -135,8 +135,8 @@ export default function CustomersPage() {
       return (
         (c.name?.toLowerCase() || '').includes(search) || 
         (c.email?.toLowerCase() || '').includes(search) ||
-        (c.cpf?.toLowerCase() || '').includes(search) ||
-        (c.cnpj?.toLowerCase() || '').includes(search)
+        (c.cpf?.replace(/\D/g, '') || '').includes(search.replace(/\D/g, '')) ||
+        (c.cnpj?.replace(/\D/g, '') || '').includes(search.replace(/\D/g, ''))
       );
     })
     // Sort by ID descending to show newest first

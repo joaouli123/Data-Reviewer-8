@@ -134,12 +134,13 @@ export default function SuppliersPage() {
   const filteredSuppliers = (suppliers || [])
     .filter(s => {
       const search = searchTerm.toLowerCase();
+      const cleanSearch = search.replace(/\D/g, '');
       // Adicionado verificação segura de null/undefined
       return (
         (s.name?.toLowerCase() || '').includes(search) || 
         (s.email?.toLowerCase() || '').includes(search) ||
-        (s.cpf?.replace(/\D/g, '') || '').includes(search) || // Busca ignorando pontuação
-        (s.cnpj?.replace(/\D/g, '') || '').includes(search) // Busca ignorando pontuação
+        (s.cpf?.replace(/\D/g, '') || '').includes(cleanSearch) || // Busca ignorando pontuação
+        (s.cnpj?.replace(/\D/g, '') || '').includes(cleanSearch) // Busca ignorando pontuação
       );
     })
     .sort((a, b) => Number(b.id) - Number(a.id)); // Ordenação simplificada assumindo ID numérico ou string numérica

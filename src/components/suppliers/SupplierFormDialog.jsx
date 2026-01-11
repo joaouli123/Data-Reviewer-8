@@ -52,8 +52,9 @@ export default function SupplierFormDialog({ open, onOpenChange, supplier = null
     
     const payload = {
       name: formData.name.trim(),
-      cpf: (documentType === 'cpf' && cleanCPF && cleanCPF.length > 0) ? cleanCPF : null,
-      cnpj: (documentType === 'cnpj' && cleanCNPJ && cleanCNPJ.length > 0) ? cleanCNPJ : null,
+      // Always set the unused document type to null to prevent data inconsistencies
+      cpf: documentType === 'cpf' && cleanCPF && cleanCPF.length > 0 ? cleanCPF : null,
+      cnpj: documentType === 'cnpj' && cleanCNPJ && cleanCNPJ.length > 0 ? cleanCNPJ : null,
       email: formData.email?.trim() || null,
       phone: formData.phone?.trim() || null,
       status: 'ativo'
