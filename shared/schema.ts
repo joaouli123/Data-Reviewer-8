@@ -232,6 +232,7 @@ export const customers = pgTable("customers", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   companyId: varchar("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
+  cpf: text("cpf"),
   cnpj: text("cnpj"),
   contact: text("contact"),
   email: text("email"),
@@ -248,6 +249,7 @@ export const suppliers = pgTable("suppliers", {
   contact: text("contact"),
   email: text("email"),
   phone: text("phone"),
+  cpf: text("cpf"),
   cnpj: text("cnpj"),
   category: text("category"),
   paymentTerms: text("payment_terms"),
@@ -402,6 +404,7 @@ export type InsertInvitation = z.infer<typeof invitations.$inferInsert>;
 
 export const insertCustomerSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
+  cpf: z.string().nullable().optional(),
   cnpj: z.string().nullable().optional(),
   email: z.string().nullable().optional(),
   phone: z.string().nullable().optional(),

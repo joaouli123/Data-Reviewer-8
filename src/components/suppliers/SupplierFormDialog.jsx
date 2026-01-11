@@ -7,23 +7,39 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus } from 'lucide-react';
 import CreateCategoryModal from '../transactions/CreateCategoryModal';
 import { useQueryClient } from '@tanstack/react-query';
-import { formatPhoneNumber, formatCNPJ } from '@/utils/masks';
+import { formatPhoneNumber, formatCNPJ, formatCPF } from '@/utils/masks';
 
 export default function SupplierFormDialog({ open, onOpenChange, supplier = null, onSubmit, isLoading = false, categories = [] }) {
-  const [formData, setFormData] = useState({ name: '', email: '', phone: '', cnpj: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', phone: '', cpf: '', cnpj: '' });
+  const [documentType, setDocumentType] = useState('cnpj'); // 'cpf' or 'cnpj'
   const [isCreateCategoryModalOpen, setIsCreateCategoryModalOpen] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
     if (open && supplier) {
+      // Determine document type based on which field has value
+      const hasCPF = supplier.cpf && supplier.cpf.trim().length > 0;
+      const hasCNPJ = supplier.cnpj && supplier.cnpj.trim().length > 0;
+      
       setFormData({
         name: supplier.name || '',
         email: supplier.email || '',
         phone: supplier.phone || '',
+        cpf: supplier.cpf || '',
         cnpj: supplier.cnpj || ''
       });
+      
+      // Set document type based on existing data
+      if (hasCPF) {
+        setDocumentType('cpf');
+      } else if (hasCNPJ) {
+        setDocumentType('cnpj');
+      } else {
+        setDocumentType('cnpj'); // Default to CNPJ for suppliers
+      }
     } else if (open && !supplier) {
-      setFormData({ name: '', email: '', phone: '', cnpj: '' });
+      setFormData({ name: '', email: '', phone: '', cpf: '', cnpj: '' });
+      setDocumentType('cnpj'); // Default to CNPJ for new suppliers
     }
   }, [open, supplier]);
 
@@ -31,10 +47,13 @@ export default function SupplierFormDialog({ open, onOpenChange, supplier = null
     e.preventDefault();
     
     // Garantir que campos vazios sejam enviados como null para o backend
+    const cleanCPF = formData.cpf?.trim();
     const cleanCNPJ = formData.cnpj?.trim();
+    
     const payload = {
       name: formData.name.trim(),
-      cnpj: cleanCNPJ && cleanCNPJ.length > 0 ? cleanCNPJ : null,
+      cpf: (documentType === 'cpf' && cleanCPF && cleanCPF.length > 0) ? cleanCPF : null,
+      cnpj: (documentType === 'cnpj' && cleanCNPJ && cleanCNPJ.length > 0) ? cleanCNPJ : null,
       email: formData.email?.trim() || null,
       phone: formData.phone?.trim() || null,
       status: 'ativo'
@@ -61,15 +80,42 @@ export default function SupplierFormDialog({ open, onOpenChange, supplier = null
                 required 
               />
             </div>
+            
             <div className="space-y-2">
-              <Label>CNPJ</Label>
-              <Input 
-                value={formData.cnpj} 
-                onChange={e => setFormData({...formData, cnpj: formatCNPJ(e.target.value)})}
-                maxLength="18"
-                placeholder="XX.XXX.XXX/XXXX-XX"
-              />
+              <Label>Tipo de Documento</Label>
+              <Select value={documentType} onValueChange={setDocumentType}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cpf">CPF</SelectItem>
+                  <SelectItem value="cnpj">CNPJ</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+
+            {documentType === 'cpf' ? (
+              <div className="space-y-2">
+                <Label>CPF</Label>
+                <Input 
+                  value={formData.cpf} 
+                  onChange={e => setFormData({...formData, cpf: formatCPF(e.target.value)})}
+                  placeholder="000.000.000-00"
+                  maxLength="14"
+                />
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Label>CNPJ</Label>
+                <Input 
+                  value={formData.cnpj} 
+                  onChange={e => setFormData({...formData, cnpj: formatCNPJ(e.target.value)})}
+                  maxLength="18"
+                  placeholder="XX.XXX.XXX/XXXX-XX"
+                />
+              </div>
+            )}
+            
             <div className="space-y-2">
               <Label>Email</Label>
               <Input 

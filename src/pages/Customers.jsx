@@ -17,7 +17,7 @@ import CustomerSalesDialog from '../components/customers/CustomerSalesDialog';
 import NewSaleDialog from '../components/customers/NewSaleDialog';
 import CustomerFormDialog from '../components/customers/CustomerFormDialog';
 import Pagination from '../components/Pagination';
-import { formatPhoneNumber } from '@/utils/masks';
+import { formatPhoneNumber, formatCPF, formatCNPJ } from '@/utils/masks';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function CustomersPage() {
@@ -135,6 +135,7 @@ export default function CustomersPage() {
       return (
         (c.name?.toLowerCase() || '').includes(search) || 
         (c.email?.toLowerCase() || '').includes(search) ||
+        (c.cpf?.toLowerCase() || '').includes(search) ||
         (c.cnpj?.toLowerCase() || '').includes(search)
       );
     })
@@ -190,7 +191,7 @@ export default function CustomersPage() {
                 <TableHeader className="bg-slate-50">
                     <TableRow>
                         <TableHead className="pl-6 text-left">Nome</TableHead>
-                        <TableHead className="text-left">CNPJ</TableHead>
+                        <TableHead className="text-left">CPF/CNPJ</TableHead>
                         <TableHead className="text-left">Email</TableHead>
                         <TableHead className="text-left">Telefone</TableHead>
                         <TableHead className="text-right">Total em Vendas</TableHead>
@@ -210,7 +211,13 @@ export default function CustomersPage() {
                                     </div>
                                 </TableCell>
                                 <TableCell className="text-left">
-                                    {c.cnpj ? <span className="font-medium text-slate-700">{c.cnpj}</span> : <span className="text-slate-400">-</span>}
+                                    {c.cpf ? (
+                                      <span className="font-medium text-slate-700">{formatCPF(c.cpf)}</span>
+                                    ) : c.cnpj ? (
+                                      <span className="font-medium text-slate-700">{formatCNPJ(c.cnpj)}</span>
+                                    ) : (
+                                      <span className="text-slate-400">-</span>
+                                    )}
                                 </TableCell>
                                 <TableCell className="text-left">
                                     {c.email ? <div className="flex items-center gap-2 text-sm text-slate-700"><Mail className="w-3 h-3" /> {c.email}</div> : <span className="text-slate-400">-</span>}
