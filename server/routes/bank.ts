@@ -232,16 +232,4 @@ export function registerBankRoutes(app: Express) {
     }
   });
 
-  // --- ROTA DE EMERGÊNCIA (RAIO-X) ---
-  app.get("/api/bank/debug-dump", async (req, res) => {
-    try {
-      const allItems = await db.select().from(bankStatementItems).limit(20);
-      res.json({
-        total: allItems.length,
-        data: allItems
-      });
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
-    }
-  });
 }
