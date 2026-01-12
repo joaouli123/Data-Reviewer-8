@@ -4,7 +4,12 @@ import { db } from "./db";
 import { users, companies, sessions, subscriptions, auditLogs } from "../shared/schema";
 import { eq, and } from "drizzle-orm";
 
-const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-key-change-in-production";
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  throw new Error("JWT_SECRET environment variable is required");
+}
+
 const JWT_EXPIRY = "7d";
 const BCRYPT_ROUNDS = 12;
 

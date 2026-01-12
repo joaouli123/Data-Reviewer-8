@@ -8,9 +8,7 @@ import helmet from "helmet";
 const app = express();
 const PORT = parseInt(process.env.PORT || "5000", 10);
 
-console.log(`[Server] Starting in production mode`);
-console.log(`[Server] PORT: ${PORT}`);
-console.log(`[Server] DATABASE_URL: ${process.env.DATABASE_URL ? 'SET' : 'NOT SET'}`);
+console.log(`[Server] Starting in production mode on port ${PORT}`);
 
 // Health check - FIRST (before any db-dependent routes)
 app.get("/api/health", (req, res) => {
