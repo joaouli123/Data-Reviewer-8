@@ -110,7 +110,7 @@ Após este comando, o PR #8 apontará para o mesmo commit que `main`, eliminando
 
 ### Vulnerabilidades Corrigidas
 | Severidade | Vulnerabilidade | Status |
-|-----------|----------------|--------|
+|------------|-----------------|--------|
 | **CRÍTICA** | Acesso não autenticado a dados bancários | ✅ Corrigido |
 | **CRÍTICA** | JWT secret com fallback inseguro | ✅ Corrigido |
 | **ALTA** | Senha padrão hardcoded "mudar123" | ✅ Corrigido |
@@ -123,7 +123,7 @@ Após este comando, o PR #8 apontará para o mesmo commit que `main`, eliminando
    Fechando como duplicado. Todas as correções de segurança deste PR foram
    aplicadas através do PR #9, que foi mergeado com sucesso em main.
    
-   Referência: PR #9 - https://github.com/joaouli123/Data-Reviewer-8/pull/9
+   Referência: PR #9
    ```
 
 2. **Verificar deployment** em produção com as correções ativas
