@@ -155,8 +155,6 @@ export function registerAuthRoutes(app: Express) {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const { name, phone, email, cep, rua, numero, complemento, estado, cidade, avatar } = req.body;
-      
-      console.log(`[Auth] Updating profile for user ${req.user.id}:`, { name, phone, email, cep, rua, numero, complemento, estado, cidade });
 
       const updateData: any = { 
         name, 
@@ -179,8 +177,6 @@ export function registerAuthRoutes(app: Express) {
         .returning();
 
       if (!updatedUser) return res.status(404).json({ error: "User not found" });
-
-      console.log(`[Auth] Profile updated successfully for user ${req.user.id}`);
 
       res.json({
         user: { 
@@ -350,7 +346,11 @@ export function registerAuthRoutes(app: Express) {
         };
       }
 
-      const hashedPassword = await hashPassword(password || "mudar123");
+      if (!password || password.length < 6) {
+        return res.status(400).json({ error: "Password is required and must be at least 6 characters" });
+      }
+
+      const hashedPassword = await hashPassword(password);
       const [newUser] = await db.insert(users).values({
         companyId: req.user.companyId,
         username: username || email,
