@@ -138,7 +138,7 @@ export function registerAuthRoutes(app: Express) {
         return res.status(403).json({
           error: "PAGAMENTO_PENDENTE",
           message: "Seu acesso está bloqueado pois o pagamento da assinatura está pendente. Por favor, realize o pagamento do boleto ou entre em contato com o suporte.",
-          supportNumber: "41 99999-9999"
+          supportNumber: "5554996231432"
         });
       }
       const token = generateToken({ userId: user.id, companyId: user.companyId as string, role: user.role, isSuperAdmin: user.isSuperAdmin });
