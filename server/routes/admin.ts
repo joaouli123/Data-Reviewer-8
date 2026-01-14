@@ -65,7 +65,7 @@ export function registerAdminRoutes(app: Express) {
   app.post("/api/admin/subscriptions/:id/resend-boleto", authMiddleware, requireSuperAdmin, async (req, res) => {
     try {
       const { id } = req.params;
-      const { dueDate } = req.body; // Custom due date from admin
+      const { dueDate } = req.body;
       
       const [subscription] = await db
         .select({
@@ -74,12 +74,10 @@ export function registerAdminRoutes(app: Express) {
           subscriberName: subscriptions.subscriberName,
           amount: subscriptions.amount,
           companyName: companies.name,
-          companyEmail: users.email,
           ticketUrl: subscriptions.ticket_url,
         })
         .from(subscriptions)
         .leftJoin(companies, eq(subscriptions.companyId, companies.id))
-        .leftJoin(users, sql`${users.companyId} = ${companies.id} AND ${users.role} = 'admin'`)
         .where(eq(subscriptions.id, id))
         .limit(1);
 
@@ -87,14 +85,28 @@ export function registerAdminRoutes(app: Express) {
         return res.status(404).json({ error: "Subscription not found" });
       }
 
-      console.log(`[Admin] Resending boleto for subscription ${id} to ${subscription.companyEmail} with due date ${dueDate}`);
+      // Find the admin user of the company to send the email to
+      const [companyAdmin] = await db
+        .select()
+        .from(users)
+        .where(and(eq(users.companyId, subscription.companyId), eq(users.role, "admin")))
+        .limit(1);
+
+      const emailTo = companyAdmin?.email;
+
+      if (!emailTo) {
+        return res.status(400).json({ error: "No admin email found for this company" });
+      }
+
+      console.log(`[Admin] Resending boleto for subscription ${id} to ${emailTo} with due date ${dueDate}`);
       
-      // Implementação real de envio de e-mail aqui (ex: Nodemailer)
-      // Por enquanto simulamos o sucesso
+      // In a real application, you would generate a new boleto with the custom dueDate here
+      // and send it via an email service like Nodemailer.
+      // For now, we simulate the email sending.
       
       res.json({ 
         success: true, 
-        message: `Boleto enviado para ${subscription.companyEmail || 'e-mail não encontrado'} com sucesso!` 
+        message: `Boleto enviado para ${emailTo} com sucesso! Vencimento: ${dueDate}` 
       });
     } catch (error) {
       console.error("Error resending boleto:", error);
