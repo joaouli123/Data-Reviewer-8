@@ -25,6 +25,7 @@ export default function Signup() {
     cep: "",
     rua: "",
     numero: "",
+    bairro: "",
     cidade: "",
     estado: "",
   });
@@ -48,6 +49,25 @@ export default function Signup() {
     if (name === "companyDocument") {
       const formatted = formatCNPJ(value);
       setFormData((prev) => ({ ...prev, [name]: formatted }));
+    } else if (name === "cep") {
+      const cep = value.replace(/\D/g, "");
+      setFormData((prev) => ({ ...prev, [name]: value }));
+      if (cep.length === 8) {
+        fetch(`https://viacep.com.br/ws/${cep}/json/`)
+          .then(res => res.json())
+          .then(data => {
+            if (!data.erro) {
+              setFormData(prev => ({
+                ...prev,
+                rua: data.logradouro,
+                bairro: data.bairro,
+                cidade: data.localidade,
+                estado: data.uf
+              }));
+            }
+          })
+          .catch(() => {});
+      }
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
@@ -59,7 +79,7 @@ export default function Signup() {
     const requiredFields = [
       'companyName', 'companyDocument', 'username', 'email', 
       'password', 'confirmPassword', 'name', 'cep', 
-      'rua', 'numero', 'cidade', 'estado'
+      'rua', 'numero', 'bairro', 'cidade', 'estado'
     ];
 
     console.log("Validação - Dados atuais:", formData);
@@ -101,6 +121,7 @@ export default function Signup() {
           cep: formData.cep,
           rua: formData.rua,
           numero: formData.numero,
+          bairro: formData.bairro,
           cidade: formData.cidade,
           estado: formData.estado
         }
@@ -255,6 +276,21 @@ export default function Signup() {
               />
             </div>
             <div className="space-y-2">
+              <label className="block text-sm font-medium">Estado (UF)</label>
+              <Input
+                type="text"
+                name="estado"
+                value={formData.estado}
+                onChange={handleChange}
+                placeholder="SP"
+                disabled={loading}
+                maxLength="2"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
               <label className="block text-sm font-medium">Cidade</label>
               <Input
                 type="text"
@@ -262,6 +298,17 @@ export default function Signup() {
                 value={formData.cidade}
                 onChange={handleChange}
                 placeholder="Sua cidade"
+                disabled={loading}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">Bairro</label>
+              <Input
+                type="text"
+                name="bairro"
+                value={formData.bairro}
+                onChange={handleChange}
+                placeholder="Seu bairro"
                 disabled={loading}
               />
             </div>
