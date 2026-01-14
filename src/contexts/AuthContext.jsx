@@ -49,7 +49,7 @@ export function AuthProvider({ children }) {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, [token]);
 
-  const signup = async (companyName, companyDocument, username, email, password, name, plan) => {
+  const signup = async (companyName, companyDocument, username, email, password, name, plan, addressData = {}) => {
     try {
       setError(null);
       const res = await fetch("/api/auth/signup", {
@@ -63,6 +63,7 @@ export function AuthProvider({ children }) {
           password,
           name,
           plan,
+          ...addressData
         }),
       });
 

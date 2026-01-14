@@ -22,6 +22,11 @@ export default function Signup() {
     confirmPassword: "",
     name: "",
     plan: "monthly",
+    cep: "",
+    rua: "",
+    numero: "",
+    cidade: "",
+    estado: "",
   });
   const [loading, setLoading] = useState(false);
   const { signup } = useAuth();
@@ -82,7 +87,14 @@ export default function Signup() {
         formData.email,
         formData.password,
         formData.name,
-        formData.plan
+        formData.plan,
+        {
+          cep: formData.cep,
+          rua: formData.rua,
+          numero: formData.numero,
+          cidade: formData.cidade,
+          estado: formData.estado
+        }
       );
       
       // Check if this was a successful new signup
@@ -216,6 +228,57 @@ export default function Signup() {
                 disabled={loading}
                 data-testid="input-name"
                 className="pl-10"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">CEP</label>
+              <Input
+                type="text"
+                name="cep"
+                value={formData.cep}
+                onChange={handleChange}
+                placeholder="00000-000"
+                disabled={loading}
+                maxLength="9"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">Cidade</label>
+              <Input
+                type="text"
+                name="cidade"
+                value={formData.cidade}
+                onChange={handleChange}
+                placeholder="Sua cidade"
+                disabled={loading}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4">
+            <div className="col-span-2 space-y-2">
+              <label className="block text-sm font-medium">Rua</label>
+              <Input
+                type="text"
+                name="rua"
+                value={formData.rua}
+                onChange={handleChange}
+                placeholder="Endereço"
+                disabled={loading}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">Nº</label>
+              <Input
+                type="text"
+                name="numero"
+                value={formData.numero}
+                onChange={handleChange}
+                placeholder="123"
+                disabled={loading}
               />
             </div>
           </div>
