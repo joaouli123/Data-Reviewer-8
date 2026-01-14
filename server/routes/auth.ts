@@ -22,7 +22,21 @@ export function registerAuthRoutes(app: Express) {
   // Sign up
   app.post("/api/auth/signup", async (req, res) => {
     try {
-      const { companyName, companyDocument, username, email, password, name, plan } = req.body;
+      const { 
+        companyName, 
+        companyDocument, 
+        username, 
+        email, 
+        password, 
+        name, 
+        plan,
+        cep,
+        rua,
+        numero,
+        cidade,
+        estado
+      } = req.body;
+      
       if (!companyName || !companyDocument || !username || !password || !email) {
         return res.status(400).json({ error: "Missing required fields" });
       }
@@ -40,6 +54,11 @@ export function registerAuthRoutes(app: Express) {
       }
       const company = await createCompany(companyName, companyDocument);
       const user = await createUser(company.id, username, email, password, name, "admin");
+      
+      // Update user with address fields
+      await db.update(users)
+        .set({ cep, rua, numero, cidade, estado })
+        .where(eq(users.id, user.id));
       
       // Create default categories for the new company
       const defaultCategories = [
