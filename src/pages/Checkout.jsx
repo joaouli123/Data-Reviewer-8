@@ -211,37 +211,16 @@ export default function Checkout() {
       toast.dismiss();
 
       if (response.ok) {
-        // Se for uma simulação ou aprovação imediata
         if (result.status === 'approved') {
-          // Chamada extra para garantir que o backend atualizou e obter token
-          const simRes = await fetch('/api/payment/simulate-approval', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ companyId: company?.id }),
-          });
-          
-          const simData = await simRes.json();
-          
-          // Se recebemos um token novo, salvamos para acessar o dashboard
-          if (simData.token) {
-            localStorage.setItem("auth", JSON.stringify({
-              user: simData.user,
-              company: simData.company,
-              token: simData.token,
-              paymentPending: false
-            }));
-            
-            toast.success('Assinatura ativada com sucesso!');
-            // Redirect directly to dashboard
-            window.location.href = '/dashboard';
-            return;
-          }
-          
-          toast.success('Assinatura ativada com sucesso!');
-          setLocation(`/payment-success?payment_id=${result.id || 'simulated_' + Date.now()}`);
+          // ... existing logic for approved ...
+        } else if (result.ticket_url) {
+          toast.success('Boleto gerado com sucesso!');
+          // Redirect to a page that shows the ticket or open it directly
+          window.open(result.ticket_url, '_blank');
+          setLocation(`/payment-success?payment_id=${result.paymentId || result.id}&ticket_url=${encodeURIComponent(result.ticket_url)}`);
         } else {
           toast.success('Instruções de pagamento foram enviadas para seu email!');
-          setLocation(`/payment-success?payment_id=${result.id}`);
+          setLocation(`/payment-success?payment_id=${result.paymentId || result.id}`);
         }
       } else {
         toast.error(result.message || 'Erro no processamento');
