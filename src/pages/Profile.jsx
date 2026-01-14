@@ -341,6 +341,20 @@ export default function ProfilePage() {
                 </div>
               </div>
 
+              {invoices.some(inv => inv.status === 'pending' && inv.ticket_url) && (
+                <div className="mb-6 p-4 border border-blue-100 bg-blue-50 rounded-lg flex items-center justify-between">
+                  <div>
+                    <div className="font-semibold text-blue-900">Boleto Pendente</div>
+                    <div className="text-sm text-blue-700">Existe um pagamento aguardando compensação.</div>
+                  </div>
+                  <Button asChild variant="outline" className="border-blue-200 hover:bg-blue-100">
+                    <a href={invoices.find(inv => inv.status === 'pending' && inv.ticket_url).ticket_url} target="_blank" rel="noopener noreferrer">
+                      <CreditCard className="w-4 h-4 mr-2" /> Baixar Boleto
+                    </a>
+                  </Button>
+                </div>
+              )}
+
               <div className="border rounded-md">
                  <table className="w-full text-sm">
                     <thead className="bg-muted border-b">

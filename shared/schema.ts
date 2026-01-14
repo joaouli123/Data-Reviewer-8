@@ -148,6 +148,7 @@ export const subscriptions = pgTable("subscriptions", {
   subscriberName: text("subscriber_name"), // Name of the person who purchased
   paymentMethod: text("payment_method"), // credit_card, debit_card, bank_transfer, pix, etc
   amount: decimal("amount", { precision: 15, scale: 2 }), // Subscription value
+  ticket_url: text("ticket_url"), // Link para o boleto
   isLifetime: boolean("is_lifetime").default(false), // If true, no expiration
   expiresAt: timestamp("expires_at"),
   createdAt: timestamp("created_at").notNull().default(sql`now()`),

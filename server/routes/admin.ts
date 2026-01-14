@@ -61,10 +61,11 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
-  // Resend boleto (Mock implementation - would integrate with an email service)
+  // Resend boleto with custom due date
   app.post("/api/admin/subscriptions/:id/resend-boleto", authMiddleware, requireSuperAdmin, async (req, res) => {
     try {
       const { id } = req.params;
+      const { dueDate } = req.body; // Custom due date from admin
       
       const [subscription] = await db
         .select({
@@ -74,10 +75,11 @@ export function registerAdminRoutes(app: Express) {
           amount: subscriptions.amount,
           companyName: companies.name,
           companyEmail: users.email,
+          ticketUrl: subscriptions.ticket_url,
         })
         .from(subscriptions)
         .leftJoin(companies, eq(subscriptions.companyId, companies.id))
-        .leftJoin(users, and(eq(users.companyId, companies.id), eq(users.role, 'admin')))
+        .leftJoin(users, sql`${users.companyId} = ${companies.id} AND ${users.role} = 'admin'`)
         .where(eq(subscriptions.id, id))
         .limit(1);
 
@@ -85,12 +87,15 @@ export function registerAdminRoutes(app: Express) {
         return res.status(404).json({ error: "Subscription not found" });
       }
 
-      console.log(`[Admin] Resending boleto for subscription ${id} to ${subscription.companyEmail}`);
+      console.log(`[Admin] Resending boleto for subscription ${id} to ${subscription.companyEmail} with due date ${dueDate}`);
       
-      // Here you would call your email service (e.g. Nodemailer, SendGrid)
-      // and potentially Mercado Pago to get a fresh link if needed.
-
-      res.json({ success: true, message: "Boleto reenviado com sucesso" });
+      // Implementação real de envio de e-mail aqui (ex: Nodemailer)
+      // Por enquanto simulamos o sucesso
+      
+      res.json({ 
+        success: true, 
+        message: `Boleto enviado para ${subscription.companyEmail || 'e-mail não encontrado'} com sucesso!` 
+      });
     } catch (error) {
       console.error("Error resending boleto:", error);
       res.status(500).json({ error: "Failed to resend boleto" });

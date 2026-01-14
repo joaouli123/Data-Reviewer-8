@@ -5,11 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
-import { Download, MoreVertical, Trash2, Eye, Lock, Unlock, Mail, Power, CheckCircle, XCircle } from 'lucide-react';
+import { Download, MoreVertical, Trash2, Eye, Mail, CheckCircle, XCircle, Send, Loader2 } from 'lucide-react';
 import { SubscriptionEditModal } from '@/components/admin/SubscriptionEditModal';
 import { formatDateWithTimezone } from '@/utils/dateFormatter';
 import { formatCurrency } from '@/utils/formatters';
@@ -64,6 +66,8 @@ function SubscriptionListContent() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSubscription, setSelectedSubscription] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [mailSub, setMailSub] = useState(null);
+  const [dueDate, setDueDate] = useState('');
 
   const { data: subscriptions = [], isLoading } = useQuery({
     queryKey: ['/api/admin/subscriptions'],
@@ -94,17 +98,6 @@ function SubscriptionListContent() {
     },
   });
 
-  const toggleStatusMutation = useMutation({
-    mutationFn: (subscription) => apiRequest('PATCH', `/api/admin/subscriptions/${subscription.id}`, { status: subscription.status === 'active' ? 'blocked' : 'active' }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/subscriptions'] });
-      toast.success('Sucesso: Status da assinatura atualizado');
-    },
-    onError: (error) => {
-      toast.error('Erro: ' + error.message);
-    },
-  });
-
   const toggleCompanyStatus = useMutation({
     mutationFn: ({ companyId, status }) => 
       apiRequest('PATCH', `/api/admin/companies/${companyId}`, { 
@@ -119,8 +112,12 @@ function SubscriptionListContent() {
   });
 
   const resendBoleto = useMutation({
-    mutationFn: (subId) => apiRequest('POST', `/api/admin/subscriptions/${subId}/resend-boleto`),
-    onSuccess: () => toast.success('Boleto reenviado com sucesso'),
+    mutationFn: ({ id, dueDate }) => apiRequest('POST', `/api/admin/subscriptions/${id}/resend-boleto`, { dueDate }),
+    onSuccess: (data) => {
+      toast.success(data.message || 'Boleto enviado com sucesso');
+      setMailSub(null);
+      setDueDate('');
+    },
     onError: (err) => toast.error(err.message),
   });
 
@@ -232,7 +229,7 @@ function SubscriptionListContent() {
                         <SubscriptionActionsMenu
                           subscription={s}
                           onView={() => setSelectedSubscription(s)}
-                          onResendBoleto={() => resendBoleto.mutate(s.id)}
+                          onResendBoleto={() => setMailSub(s)}
                           onToggleCompanyStatus={(newStatus) => toggleCompanyStatus.mutate({ companyId: s.companyId, status: newStatus })}
                           onDelete={() => setDeleteConfirm(s)}
                           isPending={toggleCompanyStatus.isPending || resendBoleto.isPending}
@@ -246,6 +243,40 @@ function SubscriptionListContent() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Send Email Dialog */}
+      <Dialog open={!!mailSub} onOpenChange={() => setMailSub(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Enviar Boleto por E-mail</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Data de Vencimento do Boleto</Label>
+              <Input 
+                type="date" 
+                value={dueDate} 
+                onChange={(e) => setDueDate(e.target.value)} 
+              />
+            </div>
+            {mailSub && (
+              <div className="text-sm text-muted-foreground bg-muted p-3 rounded-md">
+                Enviando boleto de <strong>R$ {parseFloat(mailSub.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> para a empresa <strong>{mailSub.companyName}</strong>.
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setMailSub(null)}>Cancelar</Button>
+            <Button 
+              onClick={() => resendBoleto.mutate({ id: mailSub.id, dueDate })}
+              disabled={!dueDate || resendBoleto.isPending}
+            >
+              {resendBoleto.isPending ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Send className="w-4 h-4 mr-2" />}
+              Confirmar e Enviar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Subscription Edit Modal */}
       {selectedSubscription && (
@@ -309,7 +340,7 @@ function SubscriptionActionsMenu({ subscription, onView, onResendBoleto, onToggl
         </DropdownMenuItem>
         <DropdownMenuItem onClick={onResendBoleto} data-testid={`action-resend-${subscription.id}`}>
           <Mail className="h-4 w-4 mr-2" />
-          Reenviar Boleto
+          Enviar E-mail
         </DropdownMenuItem>
         <DropdownMenuItem 
           onClick={() => onToggleCompanyStatus(subscription.status === 'active' ? 'suspended' : 'active')}

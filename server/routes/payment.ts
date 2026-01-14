@@ -208,38 +208,39 @@ export function registerPaymentRoutes(app: Express) {
       console.log("[Payment] Payment response:", { status: paymentStatus, id: mpPaymentId });
 
       // If payment is approved, update company and create subscription
-      if (paymentStatus === 'approved') {
+      if (paymentStatus === 'approved' || paymentStatus === 'pending' || paymentStatus === 'in_process') {
+        // For pending/in_process, we still want a record in the subscription table
+        // to track the ticket_url and status
+        
         // Update company status
-        await db.update(companies)
-          .set({
-            subscriptionStatus: 'active',
-            paymentStatus: 'approved',
-            subscriptionPlan: plan,
-            updatedAt: new Date(),
-          })
-          .where(eq(companies.id, companyId));
+        if (paymentStatus === 'approved') {
+          await db.update(companies)
+            .set({
+              subscriptionStatus: 'active',
+              paymentStatus: 'approved',
+              subscriptionPlan: plan,
+              updatedAt: new Date(),
+            })
+            .where(eq(companies.id, companyId));
+        }
 
         // Create subscription record
         await db.insert(subscriptions).values({
           companyId,
           plan,
-          status: 'active',
+          status: paymentStatus === 'approved' ? 'active' : 'pending',
           subscriberName: `${payer?.first_name || ''} ${payer?.last_name || ''}`.trim() || email,
           paymentMethod: payment_method_id,
           amount: total_amount,
           isLifetime,
           expiresAt,
+          ticket_url: paymentResponse?.transaction_details?.external_resource_url,
         });
 
-        console.log("[Payment] Subscription created successfully");
+        console.log("[Payment] Subscription record created");
+      }
 
-        return res.json({
-          success: true,
-          status: 'approved',
-          message: 'Pagamento aprovado com sucesso!',
-          paymentId: mpPaymentId,
-        });
-      } else if (paymentStatus === 'pending' || paymentStatus === 'in_process') {
+      if (paymentStatus === 'approved') {
         return res.json({
           success: true,
           status: paymentStatus,
