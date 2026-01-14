@@ -168,16 +168,16 @@ export default function Checkout() {
           first_name: user?.name?.split(' ')[0] || '',
           last_name: user?.name?.split(' ').slice(1).join(' ') || 'Admin',
           identification: {
-            type: 'CPF',
-            number: '12345678909' // Placeholder for testing, should be collected in a real app
+            type: company?.document?.length > 11 ? 'CNPJ' : 'CPF',
+            number: company?.document?.replace(/\D/g, '') || '12345678909'
           },
           address: {
-            zip_code: '01001000',
-            street_name: 'Av. Paulista',
-            street_number: '1000',
-            neighborhood: 'Bela Vista',
-            city: 'São Paulo',
-            federal_unit: 'SP'
+            zip_code: user?.cep?.replace(/\D/g, '') || '01001000',
+            street_name: user?.rua || 'Av. Paulista',
+            street_number: user?.numero || '1000',
+            neighborhood: user?.complemento || 'Bela Vista',
+            city: user?.cidade || 'São Paulo',
+            federal_unit: user?.estado || 'SP'
           }
         }
       };
