@@ -62,8 +62,11 @@ export default function Signup() {
       'rua', 'numero', 'cidade', 'estado'
     ];
 
-    if (requiredFields.some(field => !formData[field])) {
-      toast.error("Por favor, preencha todos os campos");
+    console.log("Validação - Dados atuais:", formData);
+    const missingFields = requiredFields.filter(field => !formData[field]);
+    if (missingFields.length > 0) {
+      console.log("Campos faltando:", missingFields);
+      toast.error("Por favor, preencha todos os campos obrigatórios");
       return;
     }
 
