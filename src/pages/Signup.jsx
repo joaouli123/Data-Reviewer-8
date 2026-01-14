@@ -177,12 +177,12 @@ export default function Signup() {
       <Card className="w-full max-w-2xl p-8 shadow-lg">
         <div className="mb-8">
           <button 
-            onClick={() => setLocation('/')}
+            onClick={() => setLocation('/login')}
             className="flex items-center gap-2 text-primary hover:underline mb-4"
-            data-testid="button-back-plans"
+            data-testid="button-back-login"
           >
             <ArrowLeft className="w-4 h-4" />
-            Voltar aos Planos
+            Voltar ao Login
           </button>
           <h1 className="text-3xl font-bold">Criar Conta</h1>
           <p className="text-sm text-muted-foreground mt-2">Registre-se para começar a usar</p>
