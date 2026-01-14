@@ -117,6 +117,7 @@ export function registerAdminRoutes(app: Express) {
           isLifetime: subscriptions.isLifetime,
           expiresAt: subscriptions.expiresAt,
           createdAt: subscriptions.createdAt,
+          ticket_url: subscriptions.ticket_url,
           companyName: companies.name,
           companyDocument: companies.document,
         })
