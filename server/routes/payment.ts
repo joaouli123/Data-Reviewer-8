@@ -317,6 +317,12 @@ export function registerPaymentRoutes(app: Express) {
           }
 
           const payment = await response.json();
+          
+          if (!response.ok) {
+            console.error("[Webhook] Mercado Pago API Error Detail:", payment);
+            return res.status(200).send("Processed with errors");
+          }
+
           const status = payment.status;
           const externalReference = payment.external_reference; // Usually companyId if passed during creation
           
