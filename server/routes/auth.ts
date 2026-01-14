@@ -134,11 +134,11 @@ export function registerAuthRoutes(app: Express) {
       const company = await findCompanyById(user.companyId as string);
       if (!company) return res.status(404).json({ error: "Company not found" });
       await recordLoginAttempt(ip, username, true);
-      if (company.paymentStatus !== "approved") {
-        return res.json({
-          user: { id: user.id, username: user.username, email: user.email, name: user.name, phone: user.phone, avatar: user.avatar, role: user.role, isSuperAdmin: user.isSuperAdmin, companyId: user.companyId, cep: user.cep, rua: user.rua, numero: user.numero, complemento: user.complemento, estado: user.estado, cidade: user.cidade, permissions: user.permissions ? JSON.parse(user.permissions as string) : {} },
-          company: { id: company.id, name: company.name, paymentStatus: company.paymentStatus },
-          token: null, paymentPending: true, message: "Pagamento pendente."
+      if (company.paymentStatus !== "approved" && !user.isSuperAdmin) {
+        return res.status(403).json({
+          error: "PAGAMENTO_PENDENTE",
+          message: "Seu acesso está bloqueado pois o pagamento da assinatura está pendente. Por favor, realize o pagamento do boleto ou entre em contato com o suporte.",
+          supportNumber: "41 99999-9999"
         });
       }
       const token = generateToken({ userId: user.id, companyId: user.companyId as string, role: user.role, isSuperAdmin: user.isSuperAdmin });
