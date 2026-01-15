@@ -4,6 +4,10 @@ import { eq, desc, sql } from "drizzle-orm";
 import { authMiddleware, requireSuperAdmin, AuthenticatedRequest } from "../middleware";
 import { companies, users, subscriptions, auditLogs } from "../../shared/schema";
 
+import { Resend } from 'resend';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
 export function registerAdminRoutes(app: Express) {
   
   // Get all companies with subscription info
@@ -100,9 +104,22 @@ export function registerAdminRoutes(app: Express) {
 
       console.log(`[Admin] Resending boleto for subscription ${id} to ${emailTo} with due date ${dueDate}`);
       
-      // In a real application, you would generate a new boleto with the custom dueDate here
-      // and send it via an email service like Nodemailer.
-      // For now, we simulate the email sending.
+      try {
+        await resend.emails.send({
+          from: 'Financeiro <onboarding@resend.dev>',
+          to: emailTo,
+          subject: `Novo Boleto Gerado - ${subscription.companyName}`,
+          html: `
+            <h1>Olá, ${companyAdmin?.name || 'Administrador'}</h1>
+            <p>Um novo boleto foi gerado para sua assinatura com vencimento em ${new Date(dueDate).toLocaleDateString('pt-BR')}.</p>
+            <p>Valor: R$ ${parseFloat(subscription.amount || "0").toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+            ${subscription.ticketUrl ? `<p>Acesse seu boleto aqui: <a href="${subscription.ticketUrl}">${subscription.ticketUrl}</a></p>` : ''}
+          `
+        });
+      } catch (emailError) {
+        console.error(`[Admin] Failed to send email to ${emailTo}:`, emailError);
+        return res.status(500).json({ error: "Failed to send email via Resend" });
+      }
       
       res.json({ 
         success: true, 
