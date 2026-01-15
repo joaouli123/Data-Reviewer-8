@@ -53,11 +53,15 @@ export async function checkAndSendSubscriptionEmails() {
             to: admin.email,
             subject: `Lembrete de Vencimento - ${sub.companyName}`,
             html: `
-              <p>Olá, ${admin.name || 'Administrador'}</p>
-              <p>Sua assinatura vence em 5 dias (${new Date(sub.expiresAt!).toLocaleDateString('pt-BR')}).</p>
-              <p>Valor: R$ ${parseFloat(sub.amount || "0").toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-              ${sub.ticketUrl ? `<p>Você pode acessar seu boleto no link abaixo:</p><p><a href="${sub.ticketUrl}">${sub.ticketUrl}</a></p>` : ''}
-              <p>Evite o bloqueio do sistema mantendo seu pagamento em dia.</p>
+              <div style="font-family: sans-serif; color: #333;">
+                <h2>Olá, ${admin.name || 'Administrador'}</h2>
+                <p>Sua assinatura vence em 5 dias (${new Date(sub.expiresAt!).toLocaleDateString('pt-BR')}).</p>
+                <p>Valor: <strong>R$ ${parseFloat(sub.amount || "0").toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></p>
+                ${sub.ticketUrl ? `<p>Você pode acessar seu boleto no link abaixo:</p><p><a href="${sub.ticketUrl}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Acessar Boleto</a></p>` : ''}
+                <p>Evite o bloqueio do sistema mantendo seu pagamento em dia.</p>
+                <br/>
+                <p>Atenciosamente,<br/>Equipe Hua Control</p>
+              </div>
             `
           });
         } catch (emailError) {
@@ -112,17 +116,76 @@ export async function checkAndSendSubscriptionEmails() {
             to: admin.email,
             subject: `Acesso Suspenso - ${sub.companyName}`,
             html: `
-              <p>Olá, ${admin.name || 'Administrador'}</p>
-              <p>Seu acesso ao sistema foi suspenso devido ao não pagamento da assinatura vencida em ${new Date(sub.expiresAt!).toLocaleDateString('pt-BR')}.</p>
-              <p>Para reativar sua conta, realize o pagamento do boleto abaixo.</p>
-              <p>Novo Vencimento: ${dueDateStr}</p>
-              <p>Valor: R$ ${parseFloat(sub.amount || "0").toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-              ${sub.ticketUrl ? `<p>Boleto atualizado: <a href="${sub.ticketUrl}">${sub.ticketUrl}</a></p>` : ''}
-              <p>Após a confirmação do pagamento, seu acesso será liberado automaticamente.</p>
+              <div style="font-family: sans-serif; color: #333;">
+                <h2 style="color: #d9534f;">Acesso Suspenso - ${sub.companyName}</h2>
+                <p>Olá, ${admin.name || 'Administrador'}</p>
+                <p>Seu acesso ao sistema foi suspenso devido ao não pagamento da assinatura vencida em ${new Date(sub.expiresAt!).toLocaleDateString('pt-BR')}.</p>
+                <p>Para reativar sua conta, realize o pagamento do boleto abaixo.</p>
+                <p>Novo Vencimento: <strong>${dueDateStr}</strong></p>
+                <p>Valor: <strong>R$ ${parseFloat(sub.amount || "0").toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></p>
+                ${sub.ticketUrl ? `<p><a href="${sub.ticketUrl}" style="background-color: #d9534f; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Boleto Atualizado</a></p>` : ''}
+                <p>Após a confirmação do pagamento, seu acesso será liberado automaticamente.</p>
+                <br/>
+                <p>Atenciosamente,<br/>Equipe Hua Control</p>
+              </div>
             `
           });
         } catch (emailError) {
           console.error(`[Cron] Failed to send suspension email to ${admin.email}:`, emailError);
+        }
+      }
+    }
+    // 3. E-mail de Boas-vindas (Criação de Conta)
+    // Isso deve ser chamado no signup, mas podemos adicionar um check aqui para empresas recém-criadas sem e-mail enviado
+    const newCompanies = await db
+      .select({
+        id: companies.id,
+        name: companies.name,
+        paymentStatus: companies.paymentStatus,
+        createdAt: companies.createdAt,
+      })
+      .from(companies)
+      .where(
+        and(
+          eq(companies.paymentStatus, 'pending'),
+          sql`${companies.createdAt} > now() - interval '1 hour'`
+        )
+      );
+
+    for (const company of newCompanies) {
+      const [admin] = await db
+        .select({ email: users.email, name: users.name })
+        .from(users)
+        .where(and(eq(users.companyId, company.id), eq(users.role, 'admin')))
+        .limit(1);
+
+      const [sub] = await db
+        .select()
+        .from(subscriptions)
+        .where(eq(subscriptions.companyId, company.id))
+        .limit(1);
+
+      if (admin?.email) {
+        console.log(`[Cron] Sending welcome email to ${admin.email} for company ${company.name}`);
+        try {
+          await resend.emails.send({
+            from: 'Boas-vindas <contato@huacontrol.com.br>',
+            to: admin.email,
+            subject: `Bem-vindo à Hua Control - ${company.name}`,
+            html: `
+              <div style="font-family: sans-serif; color: #333;">
+                <h2>Bem-vindo, ${admin.name || 'Administrador'}!</h2>
+                <p>É um prazer ter a <strong>${company.name}</strong> conosco.</p>
+                <p>Para liberar seu acesso total ao sistema, realize o pagamento do primeiro boleto.</p>
+                ${sub?.ticket_url ? `<p><a href="${sub.ticket_url}" style="background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Acessar Primeiro Boleto</a></p>` : ''}
+                <p>Seu acesso será liberado automaticamente após a confirmação do pagamento.</p>
+                <br/>
+                <p>Atenciosamente,<br/>Equipe Hua Control</p>
+              </div>
+            `
+          });
+        } catch (emailError) {
+          console.error(`[Cron] Failed to send welcome email to ${admin.email}:`, emailError);
         }
       }
     }

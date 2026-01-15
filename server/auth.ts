@@ -160,6 +160,9 @@ export async function checkSubscriptionStatus(companyId: string): Promise<boolea
   
   // Bloqueia se o status de pagamento não for aprovado
   if (company[0].paymentStatus !== "approved") {
+    // Se for o primeiro acesso (status pending e sem assinatura ativa ou criada agora)
+    // o sistema deve permitir o login mas redirecionar para pagamento se necessário.
+    // No entanto, a regra diz: "O acesso total só é liberado após a confirmação desse pagamento inicial."
     return false;
   }
 
