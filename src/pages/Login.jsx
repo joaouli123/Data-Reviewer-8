@@ -104,10 +104,8 @@ export default function Login() {
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Não tem conta?{" "}
-          <Link href="/signup">
-            <a className="text-primary font-medium hover:underline">
-              Criar conta
-            </a>
+          <Link href="/signup" className="text-primary font-medium hover:underline">
+            Criar conta
           </Link>
         </p>
       </Card>

@@ -157,9 +157,13 @@ export function registerAuthRoutes(app: Express) {
         return res.status(401).json({ error: "Invalid credentials" });
       }
       const company = await findCompanyById(user.companyId as string);
-      if (!company) return res.status(404).json({ error: "Company not found" });
+      
+      // Super admin can always bypass company check
+      if (!company && !user.isSuperAdmin) return res.status(404).json({ error: "Company not found" });
+      
       await recordLoginAttempt(ip, username, true);
-      if (company.paymentStatus !== "approved" && !user.isSuperAdmin) {
+      
+      if (company && company.paymentStatus !== "approved" && !user.isSuperAdmin) {
         return res.status(403).json({
           error: "PAGAMENTO_PENDENTE",
           message: "Seu acesso está bloqueado pois o pagamento da assinatura está pendente. Por favor, realize o pagamento do boleto ou entre em contato com o suporte.",
@@ -170,8 +174,8 @@ export function registerAuthRoutes(app: Express) {
       await createSession(user.id, user.companyId as string, token);
       await createAuditLog(user.id, user.companyId as string, "LOGIN", "user", user.id, undefined, ip, req.headers['user-agent'] || 'unknown');
       res.json({
-        user: { id: user.id, username: user.username, email: user.email, name: user.name, phone: user.phone, avatar: user.avatar, role: user.role, isSuperAdmin: user.isSuperAdmin, companyId: user.companyId, cep: user.cep, rua: user.rua, numero: user.numero, complemento: user.complemento, estado: user.estado, cidade: user.cidade, permissions: user.permissions ? JSON.parse(user.permissions as string) : {} },
-        company: { id: company.id, name: company.name, paymentStatus: company.paymentStatus, subscriptionPlan: company.subscriptionPlan, document: company.document },
+        user: { id: user.id, username: user.username, email: user.email, name: user.name, phone: user.phone, avatar: user.avatar, role: user.role, isSuperAdmin: user.isSuperAdmin, companyId: user.companyId, cep: user.cep, rua: user.rua, numero: user.numero, complemento: user.complemento, estado: user.estado, cidade: user.cidade, permissions: user.permissions ? (typeof user.permissions === 'string' ? JSON.parse(user.permissions) : user.permissions) : {} },
+        company: company ? { id: company.id, name: company.name, paymentStatus: company.paymentStatus, subscriptionPlan: company.subscriptionPlan, document: company.document } : null,
         token, paymentPending: false
       });
     } catch (error) {
