@@ -60,14 +60,14 @@ export function registerAuthRoutes(app: Express) {
         .set({ cep, rua, numero, cidade, estado } as any)
         .where(eq(users.id, user.id));
       
-      const subscriptionPlan = plan || "pro";
-      const amount = subscriptionPlan === "pro" ? "997.00" : (subscriptionPlan === "monthly" ? "97.00" : "0.00");
+      const newSubscriptionPlan = plan || "pro";
+      const amount = newSubscriptionPlan === "pro" ? "997.00" : (newSubscriptionPlan === "monthly" ? "97.00" : "0.00");
       const ticketUrl = `https://boletos.huacontrol.com.br/gerar?id=${company.id}`; // Exemplo de URL de boleto
 
       // Enviar e-mail de boas-vindas com o boleto
       try {
-        const { Resend } = await import('resend');
-        const resend = new Resend(process.env.RESEND_API_KEY);
+        const { Resend: ResendClient } = await import('resend');
+        const resend = new ResendClient(process.env.RESEND_API_KEY);
         await resend.emails.send({
           from: 'Financeiro <contato@huacontrol.com.br>',
           to: email,
@@ -75,7 +75,7 @@ export function registerAuthRoutes(app: Express) {
           html: `
             <h1>Bem-vindo à HuaControl, ${name || username}</h1>
             <p>Sua conta foi criada com sucesso, mas para começar a usar todos os recursos, é necessário realizar o pagamento da sua assinatura.</p>
-            <p>Plano Escolhido: ${subscriptionPlan.toUpperCase()}</p>
+            <p>Plano Escolhido: ${newSubscriptionPlan.toUpperCase()}</p>
             <p>Valor: R$ ${parseFloat(amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
             <p>Acesse seu boleto no link abaixo:</p>
             <p><a href="${ticketUrl}">${ticketUrl}</a></p>
@@ -107,21 +107,19 @@ export function registerAuthRoutes(app: Express) {
         console.error('Error creating default categories:', catError);
       }
 
-      const subscriptionPlan = plan || "pro";
       try {
         // Check if subscription already exists to prevent duplication on retries/errors
         const existingSubs = await db.select().from(subscriptions).where(eq(subscriptions.companyId, company.id)).limit(1);
         if (existingSubs.length === 0) {
-          const amount = subscriptionPlan === "pro" ? "997.00" : (subscriptionPlan === "monthly" ? "97.00" : "0.00");
           await db.insert(subscriptions).values({ 
             companyId: company.id, 
-            plan: subscriptionPlan, 
+            plan: newSubscriptionPlan, 
             status: "active",
             amount: amount,
             subscriberName: name || username,
             createdAt: new Date()
           } as any);
-          await db.update(companies).set({ subscriptionPlan: subscriptionPlan, paymentStatus: "approved" } as any).where(eq(companies.id, company.id));
+          await db.update(companies).set({ subscriptionPlan: newSubscriptionPlan, paymentStatus: "approved" } as any).where(eq(companies.id, company.id));
         }
       } catch (err) {
         console.error("Error setting up company subscription:", err);
