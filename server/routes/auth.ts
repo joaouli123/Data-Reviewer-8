@@ -160,8 +160,12 @@ export function registerAuthRoutes(app: Express) {
         await recordLoginAttempt(ip, username, false);
         return res.status(401).json({ error: "Invalid credentials" });
       }
-      const company = await findCompanyById(user.companyId as string);
-      console.log("Company found:", company?.name || "None", "PaymentStatus:", company?.paymentStatus || "N/A");
+      
+      let company = null;
+      if (user.companyId) {
+        company = await findCompanyById(user.companyId as string);
+        console.log("Company found:", company?.name || "None", "PaymentStatus:", company?.paymentStatus || "N/A");
+      }
       
       // Super admin can always bypass company check
       if (!company && !user.isSuperAdmin) return res.status(404).json({ error: "Company not found" });
