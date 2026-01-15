@@ -1,6 +1,6 @@
 import { Express } from "express";
 import { db } from "../db";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, and } from "drizzle-orm";
 import { authMiddleware, requireSuperAdmin, AuthenticatedRequest } from "../middleware";
 import { companies, users, subscriptions, auditLogs } from "../../shared/schema";
 
