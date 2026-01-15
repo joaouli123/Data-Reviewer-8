@@ -141,7 +141,12 @@ export async function createSession(userId: string, companyId: string, token: st
   
   const result = await db
     .insert(sessions)
-    .values({ userId, companyId, token, expiresAt })
+    .values({ 
+      userId, 
+      companyId: companyId || null, 
+      token, 
+      expiresAt 
+    } as any)
     .returning();
   return result[0];
 }
@@ -191,7 +196,7 @@ export async function createAuditLog(
   try {
     await db.insert(auditLogs).values({
       userId,
-      companyId,
+      companyId: companyId || null,
       action,
       resourceType,
       resourceId,
@@ -199,7 +204,7 @@ export async function createAuditLog(
       ipAddress,
       userAgent,
       status,
-    });
+    } as any);
   } catch (error) {
     console.error("Failed to create audit log:", error);
   }

@@ -170,13 +170,37 @@ export function registerAuthRoutes(app: Express) {
           supportNumber: "5554996231432"
         });
       }
-      const token = generateToken({ userId: user.id, companyId: user.companyId as string, role: user.role, isSuperAdmin: user.isSuperAdmin });
-      await createSession(user.id, user.companyId as string, token);
-      await createAuditLog(user.id, user.companyId as string, "LOGIN", "user", user.id, undefined, ip, req.headers['user-agent'] || 'unknown');
+      const token = generateToken({ userId: user.id, companyId: (user.companyId || "") as string, role: user.role, isSuperAdmin: user.isSuperAdmin });
+      await createSession(user.id, (user.companyId || "") as string, token);
+      await createAuditLog(user.id, (user.companyId || "") as string, "LOGIN", "user", user.id, undefined, ip, req.headers['user-agent'] || 'unknown');
       res.json({
-        user: { id: user.id, username: user.username, email: user.email, name: user.name, phone: user.phone, avatar: user.avatar, role: user.role, isSuperAdmin: user.isSuperAdmin, companyId: user.companyId, cep: user.cep, rua: user.rua, numero: user.numero, complemento: user.complemento, estado: user.estado, cidade: user.cidade, permissions: user.permissions ? (typeof user.permissions === 'string' ? JSON.parse(user.permissions) : user.permissions) : {} },
-        company: company ? { id: company.id, name: company.name, paymentStatus: company.paymentStatus, subscriptionPlan: company.subscriptionPlan, document: company.document } : null,
-        token, paymentPending: false
+        user: { 
+          id: user.id, 
+          username: user.username, 
+          email: user.email, 
+          name: user.name, 
+          phone: user.phone, 
+          avatar: user.avatar, 
+          role: user.role, 
+          isSuperAdmin: user.isSuperAdmin, 
+          companyId: user.companyId, 
+          cep: user.cep, 
+          rua: user.rua, 
+          numero: user.numero, 
+          complemento: user.complemento, 
+          estado: user.estado, 
+          cidade: user.cidade, 
+          permissions: user.permissions ? (typeof user.permissions === 'string' ? JSON.parse(user.permissions) : user.permissions) : {} 
+        },
+        company: company ? { 
+          id: company.id, 
+          name: company.name, 
+          paymentStatus: company.paymentStatus, 
+          subscriptionPlan: company.subscriptionPlan, 
+          document: company.document 
+        } : null,
+        token, 
+        paymentPending: false
       });
     } catch (error) {
       res.status(500).json({ error: "Login failed" });
