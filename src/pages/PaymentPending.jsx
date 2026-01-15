@@ -6,11 +6,9 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useToast } from "@/components/ui/use-toast";
 
 export default function PaymentPending() {
   const { logout, company, user } = useAuth();
-  const { toast } = useToast();
 
   const { data: subscription, isLoading } = useQuery({
     queryKey: ["/api/subscriptions/active"],
@@ -30,19 +28,11 @@ export default function PaymentPending() {
     onSuccess: (data) => {
       if (data.ticket_url) {
         window.open(data.ticket_url, '_blank');
-        toast({
-          title: "Boleto Gerado",
-          description: "O novo boleto foi gerado com sucesso e aberto em uma nova aba.",
-        });
         queryClient.invalidateQueries({ queryKey: ["/api/subscriptions/active"] });
       }
     },
     onError: (error) => {
-      toast({
-        variant: "destructive",
-        title: "Erro ao gerar boleto",
-        description: error.message || "Tente novamente mais tarde ou contate o suporte.",
-      });
+      console.error("Erro ao gerar boleto:", error);
     }
   });
 
