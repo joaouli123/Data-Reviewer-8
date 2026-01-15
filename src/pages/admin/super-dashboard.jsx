@@ -1,10 +1,16 @@
-import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { apiRequest as queryApiRequest } from '@/lib/queryClient';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Mail, Send, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
   Building2, Users, CreditCard, TrendingUp, 
   DollarSign, AlertTriangle, CheckCircle, XCircle,
-  Crown, UserCheck, UserX, Loader2
+  Crown, UserCheck, UserX
 } from 'lucide-react';
 
 const apiRequest = async (url) => {
@@ -89,6 +95,17 @@ function StatusCard({ title, items }) {
 }
 
 export default function SuperAdminDashboard() {
+  const [testEmail, setTestEmail] = useState('');
+  
+  const testEmailMutation = useMutation({
+    mutationFn: (email) => queryApiRequest('POST', '/api/admin/test-email', { email }),
+    onSuccess: () => {
+      toast.success('E-mail de teste enviado com sucesso!');
+      setTestEmail('');
+    },
+    onError: (err) => toast.error('Erro ao enviar e-mail: ' + err.message),
+  });
+
   const { data: metrics, isLoading, error } = useQuery({
     queryKey: ['/api/admin/metrics'],
     queryFn: () => apiRequest('/api/admin/metrics'),
@@ -123,14 +140,42 @@ export default function SuperAdminDashboard() {
   return (
     <div className="space-y-8 p-4 md:p-8">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl md:text-4xl font-bold text-foreground flex items-center gap-3">
-          <Crown className="h-8 w-8 text-yellow-500" />
-          Dashboard Super Admin
-        </h1>
-        <p className="text-sm text-muted-foreground mt-2">
-          Visao geral completa do SaaS HUACONTROL
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <div>
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground flex items-center gap-3">
+            <Crown className="h-8 w-8 text-yellow-500" />
+            Dashboard Super Admin
+          </h1>
+          <p className="text-sm text-muted-foreground mt-2">
+            Visao geral completa do SaaS HUACONTROL
+          </p>
+        </div>
+
+        <Card className="w-full md:w-96 shadow-sm border-primary/20">
+          <CardHeader className="pb-2 py-3 px-4">
+            <CardTitle className="text-xs font-semibold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
+              <Mail className="w-3.5 h-3.5" /> Testar E-mail de Boas-vindas
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-3">
+            <div className="flex gap-2">
+              <Input 
+                placeholder="seu@email.com" 
+                value={testEmail} 
+                onChange={(e) => setTestEmail(e.target.value)}
+                className="h-9 text-sm"
+              />
+              <Button 
+                size="sm" 
+                onClick={() => testEmailMutation.mutate(testEmail)}
+                disabled={!testEmail || testEmailMutation.isPending}
+                className="shrink-0 h-9"
+              >
+                {testEmailMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Main KPIs */}

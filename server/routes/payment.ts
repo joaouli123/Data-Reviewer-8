@@ -1,6 +1,6 @@
 import { Express, Request, Response } from "express";
 import { db } from "../db";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and } from "drizzle-orm";
 import { companies, subscriptions, users, User } from "../../shared/schema";
 import crypto from "crypto";
 

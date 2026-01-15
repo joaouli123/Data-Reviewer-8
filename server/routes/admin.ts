@@ -137,14 +137,19 @@ export function registerAdminRoutes(app: Express) {
       const { email } = req.body;
       if (!email) return res.status(400).json({ error: "Email is required" });
 
+      // Enviar e-mail de teste de criação de conta (boas-vindas)
       await resend.emails.send({
         from: 'Financeiro <contato@huacontrol.com.br>',
         to: email,
-        subject: 'E-mail de Teste - HuaControl',
+        subject: 'Conta Criada com Sucesso - Pagamento Pendente',
         html: `
-          <h1>Teste de Envio</h1>
-          <p>Este é um e-mail de teste enviado para validar a integração com o Resend.</p>
-          <p>Se você recebeu este e-mail, a configuração está correta!</p>
+          <h1>Bem-vindo à HuaControl</h1>
+          <p>Sua conta foi criada com sucesso, mas para começar a usar todos os recursos, é necessário realizar o pagamento da sua assinatura.</p>
+          <p>Plano Escolhido: PRO (Exemplo)</p>
+          <p>Valor: R$ 997,00 (Exemplo)</p>
+          <p>Acesse seu boleto no link abaixo:</p>
+          <p><a href="https://boletos.huacontrol.com.br/exemplo">https://boletos.huacontrol.com.br/exemplo</a></p>
+          <p>Após o pagamento, sua conta será liberada automaticamente.</p>
         `
       });
 
