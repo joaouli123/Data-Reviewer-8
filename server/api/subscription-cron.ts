@@ -45,7 +45,7 @@ export async function checkAndSendSubscriptionEmails() {
         
         try {
           await resend.emails.send({
-            from: 'Financeiro <onboarding@resend.dev>',
+            from: 'Financeiro <contato@huacontrol.com.br>',
             to: admin.email,
             subject: `Lembrete de Vencimento - ${sub.companyName}`,
             html: `

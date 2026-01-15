@@ -106,7 +106,7 @@ export function registerAdminRoutes(app: Express) {
       
       try {
         await resend.emails.send({
-          from: 'Financeiro <onboarding@resend.dev>',
+          from: 'Financeiro <contato@huacontrol.com.br>',
           to: emailTo,
           subject: `Novo Boleto Gerado - ${subscription.companyName}`,
           html: `
