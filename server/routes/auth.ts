@@ -57,7 +57,7 @@ export function registerAuthRoutes(app: Express) {
       
       // Update user with address fields
       await db.update(users)
-        .set({ cep, rua, numero, cidade, estado })
+        .set({ cep, rua, numero, cidade, estado } as any)
         .where(eq(users.id, user.id));
       
       const subscriptionPlan = plan || "pro";
