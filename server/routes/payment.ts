@@ -527,4 +527,78 @@ export function registerPaymentRoutes(app: Express) {
       res.status(500).json({ error: "Failed to fetch payment status" });
     }
   });
+
+  // Regenerate boleto with next day expiration
+  app.post("/api/payment/regenerate-boleto", async (req: Request, res: Response) => {
+    try {
+      const { companyId, email, amount, plan } = req.body;
+
+      if (!companyId || !email || !amount) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      console.log("[Payment] Regenerating boleto for company:", companyId);
+
+      const isTestMode = MERCADOPAGO_ACCESS_TOKEN?.startsWith('TEST-');
+      let paymentResponse;
+
+      if (isTestMode) {
+        paymentResponse = {
+          id: `BOLETO_REGEN_TEST_${Date.now()}`,
+          status: 'pending',
+          transaction_details: {
+            external_resource_url: 'https://www.mercadopago.com.br/payments/ticket/helper?payment_id=REGEN123'
+          }
+        };
+      } else {
+        // Set date_of_expiration to tomorrow
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(23, 59, 59, 999);
+
+        const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${MERCADOPAGO_ACCESS_TOKEN}`,
+            'Content-Type': 'application/json',
+            'X-Idempotency-Key': `regen-${companyId}-${Date.now()}`,
+          },
+          body: JSON.stringify({
+            transaction_amount: Number(parseFloat(amount).toFixed(2)),
+            payment_method_id: 'bolbradesco',
+            date_of_expiration: tomorrow.toISOString(),
+            payer: {
+              email: email,
+              first_name: 'Admin',
+              last_name: 'User',
+            },
+            description: `Renovação Assinatura - HUACONTROL`,
+            external_reference: companyId,
+          }),
+        });
+        paymentResponse = await mpResponse.json();
+      }
+
+      if (paymentResponse.id) {
+        // Update subscription with new ticket url
+        await db.update(subscriptions)
+          .set({
+            ticket_url: paymentResponse.transaction_details?.external_resource_url,
+            status: 'pending',
+            updatedAt: new Date()
+          })
+          .where(eq(subscriptions.companyId, companyId));
+
+        res.json({
+          success: true,
+          ticket_url: paymentResponse.transaction_details?.external_resource_url
+        });
+      } else {
+        res.status(400).json({ error: "Failed to generate new boleto", details: paymentResponse });
+      }
+    } catch (error) {
+      console.error("[Payment] Error regenerating boleto:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
 }
