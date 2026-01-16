@@ -85,7 +85,7 @@ function AppContent() {
       <Route path="/" component={LandingPage} />
       <Route>
         {auth.user ? (
-          auth.user.company?.paymentStatus === 'approved' ? (
+          (auth.user.isSuperAdmin || auth.user.company?.paymentStatus === 'approved') ? (
             <MainApp />
           ) : (
             <PaymentPending />
