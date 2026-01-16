@@ -137,8 +137,10 @@ export function registerAdminRoutes(app: Express) {
       const { email } = req.body;
       if (!email) return res.status(400).json({ error: "Email is required" });
 
+      console.log(`[Admin] Sending test email to ${email}`);
+
       // Enviar e-mail de teste de criação de conta (boas-vindas)
-      await resend.emails.send({
+      const emailResult = await resend.emails.send({
         from: 'Financeiro <contato@huacontrol.com.br>',
         to: email,
         subject: 'Conta Criada com Sucesso - Pagamento Pendente',
@@ -153,10 +155,17 @@ export function registerAdminRoutes(app: Express) {
         `
       });
 
-      res.json({ success: true, message: `E-mail de teste enviado para ${email}` });
+      console.log(`[Admin] Email send result:`, emailResult);
+
+      if (emailResult.error) {
+        console.error(`[Admin] Resend error:`, emailResult.error);
+        return res.status(500).json({ error: "Resend API error", details: emailResult.error });
+      }
+
+      res.json({ success: true, message: `E-mail de teste enviado para ${email}`, id: emailResult.data?.id });
     } catch (error) {
       console.error("Error sending test email:", error);
-      res.status(500).json({ error: "Failed to send test email" });
+      res.status(500).json({ error: "Failed to send test email", message: error.message });
     }
   });
 
