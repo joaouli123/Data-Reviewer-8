@@ -49,7 +49,40 @@ export function registerAuthRoutes(app: Express) {
         if (existingCompany.paymentStatus === "approved") {
           return res.status(409).json({ error: "Essa empresa já possui um cadastro ativo", type: "DUPLICATE_PAID" });
         } else {
-          return res.status(409).json({ error: "Cadastro encontrado com pagamento pendente", type: "DUPLICATE_PENDING", companyId: existingCompany.id, plan: "pro" });
+          const existingPlan = existingCompany.subscriptionPlan || plan || "monthly";
+          const existingAdmins = await db
+            .select()
+            .from(users)
+            .where(and(eq(users.companyId, existingCompany.id), eq(users.role, "admin")))
+            .limit(1);
+
+          const existingAdmin = existingAdmins[0];
+
+          return res.status(200).json({
+            existingPending: true,
+            message: "Cadastro encontrado com pagamento pendente",
+            company: {
+              id: existingCompany.id,
+              name: existingCompany.name,
+              document: existingCompany.document,
+              subscriptionPlan: existingPlan,
+              paymentStatus: existingCompany.paymentStatus,
+            },
+            user: existingAdmin
+              ? {
+                  id: existingAdmin.id,
+                  username: existingAdmin.username,
+                  email: existingAdmin.email,
+                  name: existingAdmin.name,
+                }
+              : {
+                  id: null,
+                  username,
+                  email,
+                  name,
+                },
+            plan: existingPlan,
+          });
         }
       }
       const company = await createCompany(companyName, companyDocument);

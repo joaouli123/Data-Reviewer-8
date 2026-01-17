@@ -127,6 +127,18 @@ export default function Signup() {
         }
       );
       
+      // Check if this was an existing pending signup
+      if (result?.existingPending) {
+        toast.success("Cadastro encontrado! Complete o pagamento para ativar sua conta.", {
+          duration: 4000
+        });
+        setTimeout(() => {
+          setLoading(false);
+          window.location.href = `/checkout?plan=${result.plan || formData.plan}`;
+        }, 1500);
+        return;
+      }
+
       // Check if this was a successful new signup
       if (result.user) {
         // O signup já salva no localStorage e seta paymentPending
