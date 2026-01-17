@@ -77,6 +77,7 @@ export function AuthProvider({ children }) {
         } else if (data.type === "DUPLICATE_PENDING") {
           const error = new Error("DUPLICATE_PENDING: " + (data.error || "Company exists with pending payment"));
           error.companyId = data.companyId;
+          error.plan = data.plan;
           throw error;
         }
         throw new Error(data.error || "Signup failed");

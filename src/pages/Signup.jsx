@@ -153,31 +153,39 @@ export default function Signup() {
         }, 2000);
         return; // Important: prevent finally block from clearing loading
       } else if (errorMsg.includes("DUPLICATE_PENDING")) {
-        console.log("Detected DUPLICATE_PENDING");
-        // SALVAR NO LOCALSTORAGE ANTES DE REDIRECIONAR
-        const auth = localStorage.getItem("auth");
-        if (auth) {
-          try {
-            const parsed = JSON.parse(auth);
-            localStorage.setItem("auth", JSON.stringify({
-              ...parsed,
-              company: { ...parsed.company },
-              user: { ...parsed.user },
-              plan: formData.plan,
-              token: null,
-              paymentPending: true
-            }));
-          } catch (e) {
-            console.error("Error updating localStorage:", e);
-          }
-        }
+        console.log("Detected DUPLICATE_PENDING", error);
+        
+        // Salvar sessão temporária com os dados disponíveis
+        const pendingSession = {
+          company: { id: error.companyId },
+          user: { 
+            username: formData.username,
+            email: formData.email,
+            name: formData.name,
+            cep: formData.cep,
+            rua: formData.rua,
+            numero: formData.numero,
+            bairro: formData.bairro,
+            cidade: formData.cidade,
+            estado: formData.estado
+          },
+          plan: error.plan || formData.plan,
+          token: null,
+          paymentPending: true
+        };
+        
+        console.log("Saving pending session:", pendingSession);
+        localStorage.setItem("auth", JSON.stringify(pendingSession));
+        
         // Redirect to checkout for existing company
         toast.success("Cadastro encontrado! Complete o pagamento para ativar sua conta.", {
           duration: 4000
         });
         setTimeout(() => {
+          console.log("Redirecting to checkout...");
           setLoading(false);
-          setLocation("/checkout?plan=" + formData.plan);
+          window.location.href = `/checkout?plan=${pendingSession.plan}`;
+        }, 1500);
         }, 1500);
         return; // Important: prevent finally block from clearing loading
       } else if (errorMsg.includes("já existe") || errorMsg.includes("already exists")) {
