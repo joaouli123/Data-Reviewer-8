@@ -137,35 +137,44 @@ export default function Signup() {
     } catch (error) {
       // Handle duplicate company scenarios
       const errorMsg = error.message || "";
-      if (errorMsg.includes("409") || errorMsg.includes("DUPLICATE")) {
-        if (errorMsg.includes("DUPLICATE_PAID")) {
-          toast.error("Essa empresa já possui um cadastro ativo com pagamento confirmado");
-        } else if (errorMsg.includes("DUPLICATE_PENDING")) {
-          // SALVAR NO LOCALSTORAGE ANTES DE REDIRECIONAR
-          const auth = localStorage.getItem("auth");
-          if (auth) {
-            try {
-              const parsed = JSON.parse(auth);
-              localStorage.setItem("auth", JSON.stringify({
-                ...parsed,
-                company: { ...parsed.company },
-                user: { ...parsed.user },
-                plan: formData.plan,
-                token: null,
-                paymentPending: true
-              }));
-            } catch (e) {
-            }
+      
+      if (errorMsg.includes("DUPLICATE_PAID")) {
+        toast.error("Este CNPJ já possui uma conta ativa. Faça login para acessar o sistema.", {
+          duration: 5000
+        });
+        setTimeout(() => setLocation("/login"), 2000);
+      } else if (errorMsg.includes("DUPLICATE_PENDING")) {
+        // SALVAR NO LOCALSTORAGE ANTES DE REDIRECIONAR
+        const auth = localStorage.getItem("auth");
+        if (auth) {
+          try {
+            const parsed = JSON.parse(auth);
+            localStorage.setItem("auth", JSON.stringify({
+              ...parsed,
+              company: { ...parsed.company },
+              user: { ...parsed.user },
+              plan: formData.plan,
+              token: null,
+              paymentPending: true
+            }));
+          } catch (e) {
+            console.error("Error updating localStorage:", e);
           }
-          // Redirect to checkout for existing company
-          toast.success("Cadastro encontrado! Redirecionando para completar pagamento...");
-          setTimeout(() => setLocation("/checkout?plan=" + formData.plan), 1500);
-          return;
-        } else {
-          toast.error(errorMsg || "Essa empresa já existe");
         }
+        // Redirect to checkout for existing company
+        toast.success("Cadastro encontrado! Complete o pagamento para ativar sua conta.", {
+          duration: 4000
+        });
+        setTimeout(() => setLocation("/checkout?plan=" + formData.plan), 1500);
+        return;
+      } else if (errorMsg.includes("já existe") || errorMsg.includes("already exists")) {
+        toast.error("Este CNPJ já está cadastrado. Tente fazer login ou use outro CNPJ.", {
+          duration: 5000
+        });
       } else {
-        toast.error(errorMsg || "Erro ao criar conta");
+        toast.error(errorMsg || "Erro ao criar conta. Tente novamente.", {
+          duration: 4000
+        });
       }
     } finally {
       setLoading(false);
