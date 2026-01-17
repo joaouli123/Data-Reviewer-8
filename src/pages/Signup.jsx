@@ -186,7 +186,6 @@ export default function Signup() {
           setLoading(false);
           window.location.href = `/checkout?plan=${pendingSession.plan}`;
         }, 1500);
-        }, 1500);
         return; // Important: prevent finally block from clearing loading
       } else if (errorMsg.includes("já existe") || errorMsg.includes("already exists")) {
         toast.error("Este CNPJ já está cadastrado. Tente fazer login ou use outro CNPJ.", {
