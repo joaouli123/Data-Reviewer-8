@@ -17,6 +17,17 @@ const parseLocalDate = (dateStr) => {
   return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
 };
 
+// Safe extractor: returns 'YYYY-MM-DD' or null
+const extractDateStr = (d) => {
+  if (!d) return null;
+  try {
+    if (typeof d === 'string') return d.split('T')[0];
+    return d.toISOString().split('T')[0];
+  } catch (e) {
+    return null;
+  }
+};
+
 // Custom Tooltip Component
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -97,11 +108,9 @@ export default function CashFlowForecastPage() {
     if (transactions && transactions.length > 0) {
       let transactionDates = [];
       transactions.forEach(t => {
-        if (t.date) {
-          const dateStr = t.date.split('T')[0];
-          if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-            transactionDates.push(dateStr);
-          }
+        const dateStr = extractDateStr(t?.date ?? t?.date);
+        if (dateStr && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+          transactionDates.push(dateStr);
         }
       });
       
@@ -213,35 +222,43 @@ export default function CashFlowForecastPage() {
         if (isHistorical) {
           // Historical data - only completed transactions
           transactions.forEach(t => {
-            const tDate = parseISO(t.date);
-            if (isWithinInterval(tDate, { start: dStart, end: dEnd })) {
-              const amount = (parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0);
-              if (t.type === 'venda' || t.type === 'income' || t.type === 'entrada') {
-                revenue += amount;
-                revenueDetails.push({ description: t.description, amount, date: t.date, category: t.type });
-              } else if (t.type === 'compra' || t.type === 'expense' || t.type === 'saida') {
-                expense += amount;
-                expenseDetails.push({ description: t.description, amount, date: t.date, category: t.type });
+            const ds = extractDateStr(t?.date ?? t?.date);
+            if (!ds) return;
+            try {
+              const tDate = parseISO(ds);
+              if (isWithinInterval(tDate, { start: dStart, end: dEnd })) {
+                const amount = (parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0);
+                if (t.type === 'venda' || t.type === 'income' || t.type === 'entrada') {
+                  revenue += amount;
+                  revenueDetails.push({ description: t.description, amount, date: t.date, category: t.type });
+                } else if (t.type === 'compra' || t.type === 'expense' || t.type === 'saida') {
+                  expense += amount;
+                  expenseDetails.push({ description: t.description, amount, date: t.date, category: t.type });
+                }
               }
-            }
+            } catch (e) { /* ignore invalid date */ }
           });
         } else {
           // Future data - pending transactions
           transactions.forEach(t => {
-            const tDate = parseISO(t.date);
-            if (isWithinInterval(tDate, { start: dStart, end: dEnd })) {
-              const isPending = t.status === 'pendente' || t.status === 'agendado' || t.status === 'pending';
-              if (isPending) {
-                const amount = (parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0);
-                if (t.type === 'venda' || t.type === 'income' || t.type === 'entrada') {
-                  revenue += amount;
-                  revenueDetails.push({ description: `${t.description} (Agendado)`, amount, date: t.date, category: t.type });
-                } else if (t.type === 'compra' || t.type === 'expense' || t.type === 'saida') {
-                  expense += amount;
-                  expenseDetails.push({ description: `${t.description} (Agendado)`, amount, date: t.date, category: t.type });
+            const ds = extractDateStr(t?.date ?? t?.date);
+            if (!ds) return;
+            try {
+              const tDate = parseISO(ds);
+              if (isWithinInterval(tDate, { start: dStart, end: dEnd })) {
+                const isPending = t.status === 'pendente' || t.status === 'agendado' || t.status === 'pending';
+                if (isPending) {
+                  const amount = (parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0);
+                  if (t.type === 'venda' || t.type === 'income' || t.type === 'entrada') {
+                    revenue += amount;
+                    revenueDetails.push({ description: `${t.description} (Agendado)`, amount, date: t.date, category: t.type });
+                  } else if (t.type === 'compra' || t.type === 'expense' || t.type === 'saida') {
+                    expense += amount;
+                    expenseDetails.push({ description: `${t.description} (Agendado)`, amount, date: t.date, category: t.type });
+                  }
                 }
               }
-            }
+            } catch (e) { /* ignore invalid date */ }
           });
         }
 
@@ -274,41 +291,16 @@ export default function CashFlowForecastPage() {
       if (isHistorical) {
         // Historical data from completed transactions
         transactions.forEach(t => {
-          const tDate = parseISO(t.date);
-          if (isWithinInterval(tDate, { start: monthStart, end: monthEnd })) {
-            const amount = (parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0);
-            if (t.type === 'venda' || t.type === 'income' || t.type === 'entrada') {
-              revenue += amount;
-              revenueDetails.push({
-                description: t.description,
-                amount: amount,
-                date: t.date,
-                category: t.type
-              });
-            } else if (t.type === 'compra' || t.type === 'expense' || t.type === 'saida') {
-              expense += amount;
-              expenseDetails.push({
-                description: t.description,
-                amount: amount,
-                date: t.date,
-                category: t.type
-              });
-            }
-          }
-        });
-      } else {
-        // Future projections from pending transactions and installments
-        // First, add future transactions with pending/agendado status
-        transactions.forEach(t => {
-          const tDate = parseISO(t.date);
-          if (isWithinInterval(tDate, { start: monthStart, end: monthEnd })) {
-            const isPending = t.status === 'pendente' || t.status === 'agendado' || t.status === 'pending';
-            if (isPending) {
+          const ds = extractDateStr(t?.date ?? t?.date);
+          if (!ds) return;
+          try {
+            const tDate = parseISO(ds);
+            if (isWithinInterval(tDate, { start: monthStart, end: monthEnd })) {
               const amount = (parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0);
               if (t.type === 'venda' || t.type === 'income' || t.type === 'entrada') {
                 revenue += amount;
                 revenueDetails.push({
-                  description: `${t.description} (Agendado)`,
+                  description: t.description,
                   amount: amount,
                   date: t.date,
                   category: t.type
@@ -316,14 +308,47 @@ export default function CashFlowForecastPage() {
               } else if (t.type === 'compra' || t.type === 'expense' || t.type === 'saida') {
                 expense += amount;
                 expenseDetails.push({
-                  description: `${t.description} (Agendado)`,
+                  description: t.description,
                   amount: amount,
                   date: t.date,
                   category: t.type
                 });
               }
             }
-          }
+          } catch (e) { /* ignore invalid date */ }
+        });
+      } else {
+        // Future projections from pending transactions and installments
+        // First, add future transactions with pending/agendado status
+        transactions.forEach(t => {
+          const ds = extractDateStr(t?.date ?? t?.date);
+          if (!ds) return;
+          try {
+            const tDate = parseISO(ds);
+            if (isWithinInterval(tDate, { start: monthStart, end: monthEnd })) {
+              const isPending = t.status === 'pendente' || t.status === 'agendado' || t.status === 'pending';
+              if (isPending) {
+                const amount = (parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0);
+                if (t.type === 'venda' || t.type === 'income' || t.type === 'entrada') {
+                  revenue += amount;
+                  revenueDetails.push({
+                    description: `${t.description} (Agendado)`,
+                    amount: amount,
+                    date: t.date,
+                    category: t.type
+                  });
+                } else if (t.type === 'compra' || t.type === 'expense' || t.type === 'saida') {
+                  expense += amount;
+                  expenseDetails.push({
+                    description: `${t.description} (Agendado)`,
+                    amount: amount,
+                    date: t.date,
+                    category: t.type
+                  });
+                }
+              }
+            }
+          } catch (e) { /* ignore invalid date */ }
         });
 
         // Then, add pending installments from sales
@@ -390,8 +415,14 @@ export default function CashFlowForecastPage() {
   // Calculate opening balance (all transactions before start date)
   const openingBalance = transactions
     .filter(t => {
-      const tDate = parseISO(t.date);
-      return tDate < startOfDay(dateRange.startDate);
+      const ds = extractDateStr(t?.date ?? t?.date);
+      if (!ds) return false;
+      try {
+        const tDate = parseISO(ds);
+        return tDate < startOfDay(dateRange.startDate);
+      } catch (e) {
+        return false;
+      }
     })
     .reduce((acc, t) => {
       const amount = (parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0);
