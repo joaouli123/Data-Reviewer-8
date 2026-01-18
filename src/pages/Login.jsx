@@ -4,13 +4,17 @@ import { useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { User, Lock, LogIn } from "lucide-react";
+import { User, Lock, LogIn, Mail } from "lucide-react";
 
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [sendingReset, setSendingReset] = useState(false);
   const { login } = useAuth();
   const [, setLocation] = useLocation();
 
@@ -47,6 +51,38 @@ export default function Login() {
       toast.error(error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRequestReset = async (e) => {
+    e.preventDefault();
+    
+    if (!resetEmail || !resetEmail.includes('@')) {
+      toast.error("Por favor, insira um email válido");
+      return;
+    }
+
+    try {
+      setSendingReset(true);
+      const response = await fetch("/api/auth/request-reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: resetEmail }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success("Email de redefinição enviado! Verifique sua caixa de entrada");
+        setShowResetModal(false);
+        setResetEmail("");
+      } else {
+        toast.error(data.error || "Erro ao enviar email");
+      }
+    } catch (error) {
+      toast.error("Erro ao solicitar redefinição de senha");
+    } finally {
+      setSendingReset(false);
     }
   };
 
@@ -89,6 +125,15 @@ export default function Login() {
                 className="pl-10"
               />
             </div>
+            <div className="text-right">
+              <button
+                type="button"
+                onClick={() => setShowResetModal(true)}
+                className="text-sm text-primary hover:underline"
+              >
+                Esqueceu sua senha?
+              </button>
+            </div>
           </div>
 
           <Button
@@ -109,6 +154,58 @@ export default function Login() {
           </Link>
         </p>
       </Card>
+
+      {/* Reset Password Modal */}
+      <Dialog open={showResetModal} onOpenChange={setShowResetModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Redefinir Senha</DialogTitle>
+          </DialogHeader>
+          
+          <form onSubmit={handleRequestReset} className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">Email</label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                <Input
+                  type="email"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  placeholder="Digite seu email"
+                  disabled={sendingReset}
+                  className="pl-10"
+                  autoFocus
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Enviaremos um link de redefinição para este email
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setShowResetModal(false);
+                  setResetEmail("");
+                }}
+                disabled={sendingReset}
+                className="flex-1"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={sendingReset}
+                className="flex-1"
+              >
+                {sendingReset ? "Enviando..." : "Enviar Link"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

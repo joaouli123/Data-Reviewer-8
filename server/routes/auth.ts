@@ -1,7 +1,7 @@
 import { Express } from "express";
 import { eq, desc, and } from "drizzle-orm";
 import { db } from "../db";
-import { users, companies, subscriptions, categories, invitations } from "../../shared/schema";
+import { users, companies, subscriptions, categories, invitations, passwordResets } from "../../shared/schema";
 import { 
   findUserByUsername, 
   findUserByEmail, 
@@ -771,6 +771,192 @@ export function registerAuthRoutes(app: Express) {
     } catch (error) {
       console.error("Error generating invite link:", error);
       res.status(500).json({ error: "Failed to generate invite link" });
+    }
+  });
+
+  // Request password reset
+  app.post("/api/auth/request-reset", async (req, res) => {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({ error: "Email é obrigatório" });
+      }
+
+      // Find user by email
+      const user = await findUserByEmail(email);
+
+      // Don't reveal if email exists or not for security
+      if (!user) {
+        return res.json({ success: true, message: "Se o email existir, você receberá um link de redefinição" });
+      }
+
+      // Generate unique token
+      const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
+      
+      // Set expiration to 15 minutes
+      const expiresAt = new Date();
+      expiresAt.setMinutes(expiresAt.getMinutes() + 15);
+
+      // Create password reset token
+      await db.insert(passwordResets).values({
+        userId: user.id,
+        token,
+        expiresAt
+      } as any);
+
+      // Send email with reset link
+      const Resend = (await import("resend")).Resend;
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      
+      const resetUrl = `${process.env.APP_URL || 'http://localhost:5000'}/reset-password?token=${token}`;
+
+      await resend.emails.send({
+        from: "HUA Control <noreply@huacontrol.com>",
+        to: email,
+        subject: "Redefinição de Senha - HUA Control",
+        html: `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .button { 
+                  display: inline-block; 
+                  padding: 12px 30px; 
+                  background-color: #2563eb; 
+                  color: white !important; 
+                  text-decoration: none; 
+                  border-radius: 5px; 
+                  margin: 20px 0; 
+                }
+                .footer { margin-top: 30px; font-size: 12px; color: #666; }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <h2>Redefinição de Senha</h2>
+                <p>Olá,</p>
+                <p>Você solicitou a redefinição de senha da sua conta no HUA Control.</p>
+                <p>Clique no botão abaixo para criar uma nova senha:</p>
+                <a href="${resetUrl}" class="button">Redefinir Senha</a>
+                <p>Ou copie e cole este link no seu navegador:</p>
+                <p style="word-break: break-all; color: #2563eb;">${resetUrl}</p>
+                <p><strong>Este link expira em 15 minutos.</strong></p>
+                <p>Se você não solicitou esta redefinição, pode ignorar este email.</p>
+                <div class="footer">
+                  <p>HUA Control - Sistema de Gestão Financeira</p>
+                </div>
+              </div>
+            </body>
+          </html>
+        `
+      });
+
+      res.json({ success: true, message: "Email de redefinição enviado com sucesso" });
+    } catch (error) {
+      console.error("Error requesting password reset:", error);
+      res.status(500).json({ error: "Erro ao solicitar redefinição de senha" });
+    }
+  });
+
+  // Reset password with token
+  app.post("/api/auth/reset-password", async (req, res) => {
+    try {
+      const { token, password } = req.body;
+
+      if (!token || !password) {
+        return res.status(400).json({ error: "Token e senha são obrigatórios" });
+      }
+
+      if (password.length < 6) {
+        return res.status(400).json({ error: "Senha deve ter no mínimo 6 caracteres" });
+      }
+
+      // Find valid token
+      const [resetToken] = await db
+        .select()
+        .from(passwordResets)
+        .where(
+          and(
+            eq(passwordResets.token, token),
+            eq(passwordResets.usedAt, null as any)
+          )
+        )
+        .limit(1);
+
+      if (!resetToken) {
+        return res.status(400).json({ error: "Token inválido ou já utilizado" });
+      }
+
+      // Check if token expired
+      if (new Date() > resetToken.expiresAt) {
+        return res.status(400).json({ error: "Token expirado. Solicite um novo link de redefinição" });
+      }
+
+      // Hash new password
+      const hashedPassword = await hashPassword(password);
+
+      // Update user password
+      await db
+        .update(users)
+        .set({ 
+          password: hashedPassword,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, resetToken.userId));
+
+      // Mark token as used
+      await db
+        .update(passwordResets)
+        .set({ usedAt: new Date() })
+        .where(eq(passwordResets.id, resetToken.id));
+
+      // Get user data for auto-login
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, resetToken.userId))
+        .limit(1);
+
+      if (!user) {
+        return res.status(404).json({ error: "Usuário não encontrado" });
+      }
+
+      // Generate token and create session for auto-login
+      const authToken = generateToken(user.id, user.companyId || '');
+      await createSession(user.id, user.companyId || '', authToken);
+
+      // Create audit log
+      await createAuditLog(
+        user.id,
+        user.companyId || '',
+        "PASSWORD_RESET",
+        "user",
+        user.id,
+        "Password reset successfully",
+        req.ip || '',
+        req.headers['user-agent'] || ''
+      );
+
+      // Return user data and token for auto-login
+      res.json({
+        success: true,
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          name: user.name,
+          companyId: user.companyId,
+          role: user.role,
+          isSuperAdmin: user.isSuperAdmin
+        },
+        token: authToken
+      });
+    } catch (error) {
+      console.error("Error resetting password:", error);
+      res.status(500).json({ error: "Erro ao redefinir senha" });
     }
   });
 }

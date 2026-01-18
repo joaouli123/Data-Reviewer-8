@@ -194,6 +194,16 @@ export const invitations = pgTable("invitations", {
   createdBy: varchar("created_by").notNull().references(() => users.id, { onDelete: "cascade" }),
 });
 
+// Password reset tokens
+export const passwordResets = pgTable("password_resets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+});
+
 // Audit logs for security tracking
 export const auditLogs = pgTable("audit_logs", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
