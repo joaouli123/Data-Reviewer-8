@@ -11,6 +11,12 @@ import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, R
 import CashFlowPeriodFilter from '../components/dashboard/CashFlowPeriodFilter';
 import Pagination from '../components/Pagination';
 
+const parseLocalDate = (dateStr) => {
+  if (!dateStr) return new Date();
+  const [year, month, day] = dateStr.split('T')[0].split('-');
+  return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+};
+
 // Custom Tooltip Component
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -622,7 +628,7 @@ export default function CashFlowForecastPage() {
                                         <div className="flex-1">
                                           <p className="text-sm font-medium text-slate-900">{detail.description}</p>
                                           <p className="text-xs text-slate-500 mt-1">
-                                            {format(parseISO(detail.date), "dd/MM/yyyy")}
+                                            {format(parseLocalDate(detail.date), "dd/MM/yyyy")}
                                             {detail.category && ` • ${detail.category}`}
                                           </p>
                                         </div>
@@ -651,7 +657,7 @@ export default function CashFlowForecastPage() {
                                         <div className="flex-1">
                                           <p className="text-sm font-medium text-slate-900">{detail.description}</p>
                                           <p className="text-xs text-slate-500 mt-1">
-                                            {format(parseISO(detail.date), "dd/MM/yyyy")}
+                                            {format(parseLocalDate(detail.date), "dd/MM/yyyy")}
                                             {detail.category && ` • ${detail.category}`}
                                           </p>
                                         </div>
