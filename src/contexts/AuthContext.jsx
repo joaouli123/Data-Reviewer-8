@@ -224,14 +224,6 @@ export function AuthProvider({ children }) {
       setIsPaymentPending(false);
       safeSetAuth(data);
       
-      // Invalidate queries to refresh data after login
-      try {
-        const { queryClient } = await import("@/lib/queryClient");
-        queryClient.invalidateQueries();
-      } catch (e) {
-        // Ignore
-      }
-      
       return data;
     } catch (err) {
       const message = err.name === 'AbortError' ? 'Tempo esgotado ao conectar ao servidor' : err.message;
