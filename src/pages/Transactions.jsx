@@ -22,6 +22,12 @@ import { toast } from 'sonner';
 import { cn } from "@/lib/utils";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
+const parseLocalDate = (dateStr) => {
+  if (!dateStr) return new Date();
+  const [year, month, day] = dateStr.split('T')[0].split('-');
+  return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+};
+
 export default function TransactionsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
@@ -519,7 +525,7 @@ export default function TransactionsPage() {
                                         
                                         // Ensure dateToDisplay is a string before splitting
                                         const dateStr = typeof dateToDisplay === 'string' ? dateToDisplay : new Date(dateToDisplay).toISOString();
-                                        return format(parseISO(dateStr.split('T')[0] + 'T12:00:00Z'), "dd/MM/yyyy", { locale: ptBR });
+                                        return format(parseLocalDate(dateStr), "dd/MM/yyyy", { locale: ptBR });
                                       } catch (e) {
                                         console.error("Date formatting error:", e, t);
                                         return '-';

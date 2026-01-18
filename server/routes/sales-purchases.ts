@@ -152,7 +152,7 @@ export function registerSalesPurchasesRoutes(app: Express) {
 
         return storage.createTransaction(req.user.companyId, {
           companyId: req.user.companyId,
-          type: 'expense',
+          type: 'compra',
           description: count > 1 ? `${description || 'Compra'} (${i + 1}/${count})` : (description || 'Compra'),
           amount: currentAmount,
           date: dueDate,
