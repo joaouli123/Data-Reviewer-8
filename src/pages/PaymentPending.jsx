@@ -23,7 +23,7 @@ export default function PaymentPending() {
 
   const regenerateBoletoMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/payment/regenerate-boleto", {
+      const data = await apiRequest("POST", "/api/payment/regenerate-boleto", {
         companyId: company?.id,
         email: user?.email,
         amount: subscription?.amount || "215.00",
@@ -46,11 +46,7 @@ export default function PaymentPending() {
           }
         }
       });
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.details || error.error || 'Failed to generate new boleto');
-      }
-      return res.json();
+      return data;
     },
     onSuccess: (data) => {
       if (data.ticket_url) {
