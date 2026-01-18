@@ -95,7 +95,7 @@ export default function PaymentPending() {
               Seu boleto já foi emitido. Vencimento: <strong>{dueDateText}</strong>.
             </p>
             <p className="text-xs text-emerald-700 mt-1">
-              Prazo de compensação: até <strong>3 dias úteis</strong> após o pagamento.
+              Prazo de compensação: até <strong>1 dia útil</strong> após o pagamento.
             </p>
           </div>
           {subscription?.expiresAt && (
