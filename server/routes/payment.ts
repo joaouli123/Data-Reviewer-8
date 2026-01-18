@@ -174,6 +174,14 @@ export function registerPaymentRoutes(app: Express) {
           if (!resolvedPayer?.address?.city) missingFields.push('address.city');
           if (!resolvedPayer?.address?.federal_unit) missingFields.push('address.federal_unit');
 
+          const docDigits = String(resolvedPayer?.identification?.number || '').replace(/\D/g, '');
+          if (docDigits.length !== 11 && docDigits.length !== 14) {
+            return res.status(400).json({
+              message: 'CPF/CNPJ inválido para emissão de boleto',
+              details: 'O documento deve ter 11 (CPF) ou 14 (CNPJ) dígitos.',
+            });
+          }
+
           if (missingFields.length > 0) {
             return res.status(400).json({
               message: 'Dados do pagador incompletos para emissão de boleto',
@@ -182,53 +190,62 @@ export function registerPaymentRoutes(app: Express) {
           }
 
           // Real Boleto payment via Mercado Pago
-          const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${MERCADOPAGO_ACCESS_TOKEN}`,
-              'Content-Type': 'application/json',
-              'X-Idempotency-Key': `${companyId}-${Date.now()}`,
-            },
-            body: JSON.stringify({
-              transaction_amount: Number(parseFloat(total_amount).toFixed(2)),
-              payment_method_id: 'bolbradesco',
-              payer: {
-                email: resolvedPayer?.email || email,
-                first_name: resolvedPayer?.first_name || 'Admin',
-                last_name: resolvedPayer?.last_name || 'User',
-                identification: {
-                  type: resolvedPayer?.identification?.type || 'CPF',
-                  number: String(resolvedPayer?.identification?.number || '').replace(/\D/g, '')
-                },
-                address: {
-                  zip_code: String(resolvedPayer?.address?.zip_code || '').replace(/\D/g, ''),
-                  street_name: String(resolvedPayer?.address?.street_name || ''),
-                  street_number: String(resolvedPayer?.address?.street_number || ''),
-                  neighborhood: String(resolvedPayer?.address?.neighborhood || ''),
-                  city: String(resolvedPayer?.address?.city || ''),
-                  federal_unit: String(resolvedPayer?.address?.federal_unit || '')
-                }
+          const boletoMethods = ['bolbradesco', 'boleto'];
+          let lastErrorData: any = null;
+
+          for (const methodId of boletoMethods) {
+            const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${MERCADOPAGO_ACCESS_TOKEN}`,
+                'Content-Type': 'application/json',
+                'X-Idempotency-Key': `${companyId}-${methodId}-${Date.now()}`,
               },
-              description: `Assinatura Mensal - HUACONTROL`,
-              external_reference: companyId,
-              metadata: {
-                company_id: companyId,
-                plan: 'monthly'
-              }
-            }),
-          });
-          
-          if (!mpResponse.ok) {
-            const errorData = await mpResponse.json();
-            console.error("[Payment] Mercado Pago API error:", errorData);
-            return res.status(400).json({ 
-              error: "Payment processing failed", 
-              details: errorData.message || errorData.cause || 'Unknown error',
-              mp_error: errorData
+              body: JSON.stringify({
+                transaction_amount: Number(parseFloat(total_amount).toFixed(2)),
+                payment_method_id: methodId,
+                payer: {
+                  email: resolvedPayer?.email || email,
+                  first_name: resolvedPayer?.first_name || 'Admin',
+                  last_name: resolvedPayer?.last_name || 'User',
+                  identification: {
+                    type: resolvedPayer?.identification?.type || 'CPF',
+                    number: String(resolvedPayer?.identification?.number || '').replace(/\D/g, '')
+                  },
+                  address: {
+                    zip_code: String(resolvedPayer?.address?.zip_code || '').replace(/\D/g, ''),
+                    street_name: String(resolvedPayer?.address?.street_name || ''),
+                    street_number: String(resolvedPayer?.address?.street_number || ''),
+                    neighborhood: String(resolvedPayer?.address?.neighborhood || ''),
+                    city: String(resolvedPayer?.address?.city || ''),
+                    federal_unit: String(resolvedPayer?.address?.federal_unit || '')
+                  }
+                },
+                description: `Assinatura Mensal - HUACONTROL`,
+                external_reference: companyId,
+                metadata: {
+                  company_id: companyId,
+                  plan: 'monthly'
+                }
+              }),
+            });
+
+            if (mpResponse.ok) {
+              paymentResponse = await mpResponse.json();
+              break;
+            }
+
+            lastErrorData = await mpResponse.json();
+            console.error("[Payment] Mercado Pago API error:", lastErrorData);
+          }
+
+          if (!paymentResponse) {
+            return res.status(400).json({
+              error: "Payment processing failed",
+              details: lastErrorData?.message || lastErrorData?.cause || 'Unknown error',
+              mp_error: lastErrorData
             });
           }
-          
-          paymentResponse = await mpResponse.json();
           paymentStatus = paymentResponse.status;
           mpPaymentId = paymentResponse.id;
           
@@ -709,6 +726,15 @@ export function registerPaymentRoutes(app: Express) {
         if (!resolvedPayer?.address?.city) missingFields.push('address.city');
         if (!resolvedPayer?.address?.federal_unit) missingFields.push('address.federal_unit');
 
+        const docDigits = String(resolvedPayer?.identification?.number || '').replace(/\D/g, '');
+        if (docDigits.length !== 11 && docDigits.length !== 14) {
+          return res.status(400).json({
+            error: "Failed to generate new boleto",
+            message: 'CPF/CNPJ inválido para emissão de boleto',
+            details: 'O documento deve ter 11 (CPF) ou 14 (CNPJ) dígitos.'
+          });
+        }
+
         if (missingFields.length > 0) {
           return res.status(400).json({
             error: "Failed to generate new boleto",
@@ -717,54 +743,64 @@ export function registerPaymentRoutes(app: Express) {
           });
         }
 
-        const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${MERCADOPAGO_ACCESS_TOKEN}`,
-            'Content-Type': 'application/json',
-            'X-Idempotency-Key': `regen-${companyId}-${Date.now()}`,
-          },
-          body: JSON.stringify({
-            transaction_amount: Number(parseFloat(amount).toFixed(2)),
-            payment_method_id: 'bolbradesco',
-            date_of_expiration: tomorrow.toISOString(),
-            payer: {
-              email: resolvedPayer?.email || email,
-              first_name: resolvedPayer?.first_name || 'Admin',
-              last_name: resolvedPayer?.last_name || 'User',
-              identification: {
-                type: resolvedPayer?.identification?.type || 'CPF',
-                number: String(resolvedPayer?.identification?.number || '').replace(/\D/g, '')
-              },
-              address: {
-                zip_code: String(resolvedPayer?.address?.zip_code || '').replace(/\D/g, ''),
-                street_name: String(resolvedPayer?.address?.street_name || ''),
-                street_number: String(resolvedPayer?.address?.street_number || ''),
-                neighborhood: String(resolvedPayer?.address?.neighborhood || ''),
-                city: String(resolvedPayer?.address?.city || ''),
-                federal_unit: String(resolvedPayer?.address?.federal_unit || '')
-              }
+        const boletoMethods = ['bolbradesco', 'boleto'];
+        let lastErrorData: any = null;
+
+        for (const methodId of boletoMethods) {
+          const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${MERCADOPAGO_ACCESS_TOKEN}`,
+              'Content-Type': 'application/json',
+              'X-Idempotency-Key': `regen-${companyId}-${methodId}-${Date.now()}`,
             },
-            description: `Renovação Assinatura - HUACONTROL`,
-            external_reference: companyId,
-            metadata: {
-              company_id: companyId,
-              plan: plan || 'monthly'
-            }
-          }),
-        });
-        
-        if (!mpResponse.ok) {
-          const errorData = await mpResponse.json();
-          console.error("[Payment] Mercado Pago API error on regenerate:", errorData);
+            body: JSON.stringify({
+              transaction_amount: Number(parseFloat(amount).toFixed(2)),
+              payment_method_id: methodId,
+              date_of_expiration: tomorrow.toISOString(),
+              payer: {
+                email: resolvedPayer?.email || email,
+                first_name: resolvedPayer?.first_name || 'Admin',
+                last_name: resolvedPayer?.last_name || 'User',
+                identification: {
+                  type: resolvedPayer?.identification?.type || 'CPF',
+                  number: String(resolvedPayer?.identification?.number || '').replace(/\D/g, '')
+                },
+                address: {
+                  zip_code: String(resolvedPayer?.address?.zip_code || '').replace(/\D/g, ''),
+                  street_name: String(resolvedPayer?.address?.street_name || ''),
+                  street_number: String(resolvedPayer?.address?.street_number || ''),
+                  neighborhood: String(resolvedPayer?.address?.neighborhood || ''),
+                  city: String(resolvedPayer?.address?.city || ''),
+                  federal_unit: String(resolvedPayer?.address?.federal_unit || '')
+                }
+              },
+              description: `Renovação Assinatura - HUACONTROL`,
+              external_reference: companyId,
+              metadata: {
+                company_id: companyId,
+                plan: plan || 'monthly'
+              }
+            }),
+          });
+
+          if (mpResponse.ok) {
+            paymentResponse = await mpResponse.json();
+            break;
+          }
+
+          lastErrorData = await mpResponse.json();
+          console.error("[Payment] Mercado Pago API error on regenerate:", lastErrorData);
+        }
+
+        if (!paymentResponse) {
           return res.status(400).json({ 
             error: "Failed to generate new boleto", 
-            details: errorData.message || errorData.cause || 'Unknown error',
-            mp_error: errorData
+            details: lastErrorData?.message || lastErrorData?.cause || 'Unknown error',
+            mp_error: lastErrorData
           });
         }
-        
-        paymentResponse = await mpResponse.json();
+
         console.log("[Payment] Boleto regenerated:", { id: paymentResponse.id, ticket_url: paymentResponse?.transaction_details?.external_resource_url });
       }
 
