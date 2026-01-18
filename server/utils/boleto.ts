@@ -7,6 +7,18 @@ type GenerateBoletoParams = {
   amount: string | null;
   plan?: string | null;
   expirationDate?: Date;
+  payer?: {
+    email?: string | null;
+    name?: string | null;
+    document?: string | null;
+    cep?: string | null;
+    rua?: string | null;
+    numero?: string | null;
+    bairro?: string | null;
+    complemento?: string | null;
+    cidade?: string | null;
+    estado?: string | null;
+  };
 };
 
 export async function generateBoletoForCompany(params: GenerateBoletoParams) {
@@ -35,12 +47,12 @@ export async function generateBoletoForCompany(params: GenerateBoletoParams) {
     .where(and(eq(users.companyId, params.companyId), eq(users.role, "admin")))
     .limit(1);
 
-  const docNumber = (companyRecord?.document || "").replace(/\D/g, "");
+  const docNumber = (params.payer?.document || companyRecord?.document || "").replace(/\D/g, "");
   if (docNumber.length !== 11 && docNumber.length !== 14) {
     throw new Error("CPF/CNPJ inválido para emissão de boleto");
   }
 
-  const fullName = adminUser?.name || "";
+  const fullName = params.payer?.name || adminUser?.name || "";
   const [firstName, ...lastNameParts] = fullName.split(" ");
 
   const expiration = params.expirationDate || (() => {
@@ -50,8 +62,8 @@ export async function generateBoletoForCompany(params: GenerateBoletoParams) {
     return d;
   })();
 
-  const streetNumber = String(adminUser?.numero || "").trim() || "S/N";
-  const neighborhood = String(adminUser?.complemento || "").trim() || "S/N";
+  const streetNumber = String(params.payer?.numero || adminUser?.numero || "").trim() || "S/N";
+  const neighborhood = String(params.payer?.bairro || params.payer?.complemento || adminUser?.complemento || "").trim() || "S/N";
 
   const boletoMethods = ["bolbradesco", "boleto"];
   let lastError: any = null;
@@ -69,7 +81,7 @@ export async function generateBoletoForCompany(params: GenerateBoletoParams) {
         payment_method_id: methodId,
         date_of_expiration: expiration.toISOString(),
         payer: {
-          email: adminUser?.email || "",
+          email: params.payer?.email || adminUser?.email || "",
           first_name: firstName || "Admin",
           last_name: lastNameParts.join(" ") || "User",
           identification: {
@@ -77,12 +89,12 @@ export async function generateBoletoForCompany(params: GenerateBoletoParams) {
             number: docNumber,
           },
           address: {
-            zip_code: String(adminUser?.cep || "").replace(/\D/g, ""),
-            street_name: String(adminUser?.rua || "").trim(),
+            zip_code: String(params.payer?.cep || adminUser?.cep || "").replace(/\D/g, ""),
+            street_name: String(params.payer?.rua || adminUser?.rua || "").trim(),
             street_number: streetNumber,
             neighborhood,
-            city: String(adminUser?.cidade || "").trim(),
-            federal_unit: String(adminUser?.estado || "").trim(),
+            city: String(params.payer?.cidade || adminUser?.cidade || "").trim(),
+            federal_unit: String(params.payer?.estado || adminUser?.estado || "").trim(),
           },
         },
         description: "Renovação Assinatura - HUACONTROL",

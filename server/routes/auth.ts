@@ -157,6 +157,17 @@ export function registerAuthRoutes(app: Express) {
             companyId: company.id,
             amount,
             plan: newSubscriptionPlan,
+            payer: {
+              email,
+              name: name || username,
+              document: companyDocument,
+              cep,
+              rua,
+              numero,
+              bairro,
+              cidade,
+              estado,
+            },
           });
 
           if (boletoUrl) {
