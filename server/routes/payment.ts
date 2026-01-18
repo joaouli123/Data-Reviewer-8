@@ -943,7 +943,7 @@ export function registerPaymentRoutes(app: Express) {
               external_reference: companyId,
               metadata: {
                 company_id: companyId,
-                plan: plan || 'monthly'
+                plan: resolvedPlan || 'monthly'
               }
             }),
           });
