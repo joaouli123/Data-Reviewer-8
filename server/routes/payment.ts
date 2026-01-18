@@ -246,28 +246,40 @@ export function registerPaymentRoutes(app: Express) {
           // Real Boleto payment via Mercado Pago
           const boletoMethods = ['bolbradesco', 'boleto'];
           let lastErrorData: any = null;
+          const isCNPJ = docDigits.length === 14;
 
           for (const methodId of boletoMethods) {
+            // Build payer object
+            const payerData: any = {
+              email: resolvedPayer?.email || email,
+              identification: {
+                type: resolvedPayer?.identification?.type || (isCNPJ ? 'CNPJ' : 'CPF'),
+                number: docDigits
+              },
+              address: {
+                zip_code: String(resolvedPayer?.address?.zip_code || '').replace(/\D/g, ''),
+                street_name: String(resolvedPayer?.address?.street_name || ''),
+                street_number: String(resolvedPayer?.address?.street_number || 'S/N'),
+                neighborhood: String(resolvedPayer?.address?.neighborhood || 'Centro'),
+                city: String(resolvedPayer?.address?.city || ''),
+                federal_unit: String(resolvedPayer?.address?.federal_unit || '')
+              }
+            };
+
+            // Para CNPJ: não enviar first_name/last_name, apenas entity_type
+            if (isCNPJ) {
+              payerData.entity_type = 'company';
+            } else {
+              // Para CPF: enviar first_name e last_name
+              payerData.first_name = resolvedPayer?.first_name || 'Admin';
+              payerData.last_name = resolvedPayer?.last_name || 'User';
+              payerData.entity_type = 'individual';
+            }
+
             const boletoPayload = {
               transaction_amount: Number(parseFloat(total_amount).toFixed(2)),
               payment_method_id: methodId,
-              payer: {
-                email: resolvedPayer?.email || email,
-                first_name: resolvedPayer?.first_name || 'Admin',
-                last_name: resolvedPayer?.last_name || 'User',
-                identification: {
-                  type: resolvedPayer?.identification?.type || 'CPF',
-                  number: String(resolvedPayer?.identification?.number || '').replace(/\D/g, '')
-                },
-                address: {
-                  zip_code: String(resolvedPayer?.address?.zip_code || '').replace(/\D/g, ''),
-                  street_name: String(resolvedPayer?.address?.street_name || ''),
-                  street_number: String(resolvedPayer?.address?.street_number || 'S/N'),
-                  neighborhood: String(resolvedPayer?.address?.neighborhood || 'Centro'),
-                  city: String(resolvedPayer?.address?.city || ''),
-                  federal_unit: String(resolvedPayer?.address?.federal_unit || '')
-                }
-              },
+              payer: payerData,
               description: `Assinatura Mensal - HUACONTROL`,
               external_reference: companyId,
               date_of_expiration: expirationDate.toISOString(),
