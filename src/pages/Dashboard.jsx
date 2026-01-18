@@ -19,6 +19,12 @@ import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
 
+const INCOME_TYPES = ['venda', 'venda_prazo', 'receita', 'income', 'entrada'];
+const EXPENSE_TYPES = ['compra', 'compra_prazo', 'despesa', 'expense', 'saida'];
+
+const isIncomeType = (type) => INCOME_TYPES.includes(type);
+const isExpenseType = (type) => EXPENSE_TYPES.includes(type);
+
 export default function DashboardPage() {
   // Initialize with UTC-normalized dates for São Paulo timezone
   const getInitialDateRange = () => {
@@ -156,7 +162,7 @@ export default function DashboardPage() {
     });
 
     const totalRevenue = filteredTransactions
-      .filter(t => ['venda', 'venda_prazo', 'receita', 'income'].includes(t.type))
+      .filter(t => isIncomeType(t.type))
       .reduce((acc, curr) => {
         const amount = parseFloat(curr.amount) || 0;
         const interest = parseFloat(curr.interest) || 0;
@@ -164,7 +170,7 @@ export default function DashboardPage() {
       }, 0);
     
     const totalExpenses = filteredTransactions
-      .filter(t => ['compra', 'compra_prazo', 'despesa', 'expense'].includes(t.type))
+      .filter(t => isExpenseType(t.type))
       .reduce((acc, curr) => {
         const amount = parseFloat(curr.amount) || 0;
         const interest = parseFloat(curr.interest) || 0;
@@ -183,7 +189,7 @@ export default function DashboardPage() {
       const tDateStr = extractDateStr(t);
       if (!tDateStr) return false;
       const tDate = parseISO(tDateStr);
-      return ['venda', 'venda_prazo', 'receita', 'income'].includes(t.type) && tDate >= today && tDate <= thirtyDaysFromNow;
+      return isIncomeType(t.type) && tDate >= today && tDate <= thirtyDaysFromNow;
     });
     
     const futureRevenue = futureRevenueTransactions.reduce((sum, t) => sum + Math.abs((parseFloat(t.amount || 0) + parseFloat(t.interest || 0))), 0);
@@ -192,7 +198,7 @@ export default function DashboardPage() {
       const tDateStr = extractDateStr(t);
       if (!tDateStr) return false;
       const tDate = parseISO(tDateStr);
-      return ['compra', 'compra_prazo', 'despesa', 'expense'].includes(t.type) && tDate >= today && tDate <= thirtyDaysFromNow;
+      return isExpenseType(t.type) && tDate >= today && tDate <= thirtyDaysFromNow;
     });
     
     const futureExpenses = futureExpensesTransactions.reduce((sum, t) => sum + Math.abs((parseFloat(t.amount || 0) + parseFloat(t.interest || 0))), 0);
@@ -218,10 +224,10 @@ export default function DashboardPage() {
     const chartData = sortedMonths.map(monthKey => {
       const monthTrans = monthsWithData.get(monthKey);
       const income = monthTrans
-        .filter(t => ['venda', 'venda_prazo', 'receita', 'income'].includes(t.type))
+        .filter(t => isIncomeType(t.type))
         .reduce((acc, t) => acc + Math.abs((parseFloat(t.amount || 0) + parseFloat(t.interest || 0))), 0);
       const expenseRaw = monthTrans
-        .filter(t => ['compra', 'compra_prazo', 'despesa', 'expense'].includes(t.type))
+        .filter(t => isExpenseType(t.type))
         .reduce((acc, t) => acc + ((parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0)), 0);
       
       const [year, month] = monthKey.split('-');
