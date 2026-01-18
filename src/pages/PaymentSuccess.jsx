@@ -28,10 +28,14 @@ export default function PaymentSuccess() {
     const params = new URLSearchParams(window.location.search);
     const id = params.get('payment_id') || params.get('paymentId');
     const status = params.get('status');
-    const ticket = params.get('ticket_url');
+    const rawTicket = params.get('ticket_url') || params.get('ticketUrl') || params.get('ticket');
     const due = params.get('due_date');
+    const decodedTicket = rawTicket ? decodeURIComponent(rawTicket) : null;
 
-    if (ticket) setTicketUrl(ticket);
+    if (decodedTicket) {
+      setTicketUrl(decodedTicket);
+      setLoading(false);
+    }
     if (due) setDueDate(due);
 
 
