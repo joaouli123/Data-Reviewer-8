@@ -163,22 +163,11 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
         paymentMethod: paymentMethod
       });
 
-      // Create corresponding cash flow entry (inflow for sales)
-      await apiRequest('POST', '/api/cash-flow', {
-        date: formattedPaymentDate,
-        inflow: totalPaid.toFixed(2),
-        outflow: '0',
-        balance: totalPaid.toFixed(2),
-        description: `Recebimento: ${transaction.description}`,
-        shift: transaction.shift || 'manhã'
-      });
-
       return transaction;
     },
     onSuccess: () => {
       toast.success('Pagamento confirmado!', { duration: 5000 });
       queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/cash-flow'] });
       queryClient.refetchQueries({ queryKey: ['/api/transactions', { customerId: customer?.id }] });
       setPaymentEditOpen(false);
       setSelectedTransaction(null);
@@ -201,22 +190,10 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
         paymentDate: null
       });
       
-      // Delete corresponding cash flow entry
-      try {
-        const cashFlows = await apiRequest('GET', '/api/cash-flow');
-        const relatedCashFlow = cashFlows.find(cf => cf.description?.includes(transaction.description));
-        if (relatedCashFlow) {
-          await apiRequest('DELETE', `/api/cash-flow/${relatedCashFlow.id}`);
-        }
-      } catch (err) {
-        console.warn('Could not delete related cash flow:', err);
-      }
-      
       return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/cash-flow'] });
       queryClient.invalidateQueries({ queryKey: ['/api/transactions', { customerId: customer?.id }] });
       toast.success('Pagamento cancelado!', { duration: 5000 });
     },

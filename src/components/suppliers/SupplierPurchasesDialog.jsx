@@ -156,23 +156,12 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
           paymentMethod: paymentMethod
         });
 
-      // Then create corresponding cash flow entry (outflow for purchases, using payment date)
-      await apiRequest('POST', '/api/cash-flow', {
-          date: formattedPaymentDate,
-          inflow: '0',
-          outflow: totalPaid.toFixed(2),
-          balance: (-totalPaid).toFixed(2),
-          description: `Pagamento de compra: ${transaction.description}`,
-          shift: transaction.shift || 'manhã'
-        });
-
       return transaction;
     },
     onSuccess: (data) => {
       toast.success('Pagamento confirmado!');
       // Invalidate both general and specific queries
       queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/cash-flow'] });
       queryClient.refetchQueries({ queryKey: ['/api/transactions', { supplierId: supplier?.id }] });
       
       setPaymentEditOpen(false);
@@ -196,21 +185,10 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
           interest: '0'
         });
 
-      // Delete corresponding cash flow entry
-      try {
-        const cashFlows = await apiRequest('GET', '/api/cash-flow');
-        const relatedCashFlow = cashFlows.find(cf => cf.description?.includes(transaction.description));
-        if (relatedCashFlow) {
-          await apiRequest('DELETE', `/api/cash-flow/${relatedCashFlow.id}`);
-        }
-      } catch (err) {
-      }
-
       return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/transactions'], exact: false });
-      queryClient.invalidateQueries({ queryKey: ['/api/cash-flow'] });
       toast.success('Pagamento cancelado!');
     },
     onError: (error) => {
