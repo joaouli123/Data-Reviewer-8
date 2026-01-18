@@ -28,6 +28,12 @@ const parseLocalDate = (dateStr) => {
   return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
 };
 
+const INCOME_TYPES = ['venda', 'income', 'venda_prazo', 'receita', 'entrada'];
+const EXPENSE_TYPES = ['compra', 'expense', 'compra_prazo', 'despesa', 'saida'];
+
+const isIncomeType = (type) => INCOME_TYPES.includes(type);
+const isExpenseType = (type) => EXPENSE_TYPES.includes(type);
+
 // Retorna uma data válida a partir dos campos conhecidos ou null
 const extractTxDate = (t) => {
   if (!t) return null;
@@ -299,11 +305,11 @@ export default function TransactionsPage() {
         const amount = (parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0);
 
         if (tDate < startTime) {
-          if (t.type === 'venda' || t.type === 'income') openingBalance += amount;
-          else openingBalance -= amount;
+          if (isIncomeType(t.type)) openingBalance += amount;
+          else if (isExpenseType(t.type)) openingBalance -= amount;
         } else if (tDate >= startTime && tDate <= endTime) {
-          if (t.type === 'venda' || t.type === 'income') periodIncome += amount;
-          else periodExpense += Math.abs(amount);
+          if (isIncomeType(t.type)) periodIncome += amount;
+          else if (isExpenseType(t.type)) periodExpense += Math.abs(amount);
         }
       });
 
@@ -324,9 +330,10 @@ export default function TransactionsPage() {
           if (!t) return false;
           
           // 1. Filtrar por Tipo
-          const typeMap = { 'income': 'venda', 'expense': 'compra', 'all': 'all' };
-          const mappedType = typeMap[typeFilter] || typeFilter;
-          const matchesType = mappedType === 'all' || t.type === mappedType || (mappedType === 'venda' && t.type === 'income') || (mappedType === 'compra' && t.type === 'expense');
+          if (typeFilter !== 'all') {
+            if (typeFilter === 'income' && !isIncomeType(t.type)) return false;
+            if (typeFilter === 'expense' && !isExpenseType(t.type)) return false;
+          }
           if (!matchesType) return false;
 
           // 2. Filtrar por Status
