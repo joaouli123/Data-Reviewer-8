@@ -132,9 +132,9 @@ export const companies = pgTable("companies", {
   name: text("name").notNull(),
   document: text("document").notNull().unique(),
   cnpj: text("cnpj"), // Novo campo para CNPJ
-  subscriptionStatus: text("subscription_status").notNull().default("active"), // active, suspended, cancelled
-  paymentStatus: text("payment_status").notNull().default("approved"), // pending, approved, rejected, cancelled
-  subscriptionPlan: text("subscription_plan").notNull().default("pro"), // basic, pro, enterprise
+  subscriptionStatus: text("subscription_status").notNull().default("pending"), // active, suspended, cancelled
+  paymentStatus: text("payment_status").notNull().default("pending"), // pending, approved, rejected, cancelled
+  subscriptionPlan: text("subscription_plan").notNull().default("basic"), // basic, pro, enterprise
   createdAt: timestamp("created_at").notNull().default(sql`now()`),
   updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
 });

@@ -120,17 +120,16 @@ export async function findCompanyByDocument(document: string) {
 export async function createCompany(name: string, document: string) {
   const result = await db
     .insert(companies)
-    .values({ name, document })
+    .values({ 
+      name, 
+      document,
+      paymentStatus: "pending",
+      subscriptionStatus: "pending"
+    })
     .returning();
   
-  if (result[0]) {
-    // Create default subscription
-    await db.insert(subscriptions).values({
-      companyId: result[0].id,
-      plan: "basic",
-      status: "active",
-    });
-  }
+  // Subscription will be created when payment is confirmed
+  // Do NOT create active subscription here
   
   return result[0];
 }
