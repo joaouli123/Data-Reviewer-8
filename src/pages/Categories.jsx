@@ -85,8 +85,9 @@ export default function CategoriesPage() {
   };
 
   const handleEdit = (category) => {
+    const normalizedType = category.type === 'income' ? 'entrada' : category.type === 'expense' ? 'saida' : category.type;
     setEditingCategory(category);
-    setFormData({ name: category.name, type: category.type || 'entrada' });
+    setFormData({ name: category.name, type: normalizedType || 'entrada' });
     setIsFormOpen(true);
   };
 
@@ -124,14 +125,16 @@ export default function CategoriesPage() {
             </TableHeader>
             <TableBody>
               {paginatedCategories.length > 0 ? (
-                paginatedCategories.map((cat) => (
+                paginatedCategories.map((cat) => {
+                  const normalizedType = cat.type === 'income' ? 'entrada' : cat.type === 'expense' ? 'saida' : cat.type;
+                  return (
                   <TableRow key={cat.id} className="hover:bg-slate-50/50 group">
                     <TableCell className="font-medium text-slate-900 pl-6 text-left">
                       {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
                     </TableCell>
                     <TableCell className="text-left">
-                      <Badge className={cat.type === 'entrada' ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-red-100 text-red-700 hover:bg-red-200'}>
-                        {cat.type === 'entrada' ? '+ Entrada' : '- Saída'}
+                      <Badge className={normalizedType === 'entrada' ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-red-100 text-red-700 hover:bg-red-200'}>
+                        {normalizedType === 'entrada' ? '+ Entrada' : '- Saída'}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right pr-6">
@@ -155,7 +158,7 @@ export default function CategoriesPage() {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))
+                )})
               ) : (
                 <TableRow>
                   <TableCell colSpan={3} className="text-center py-10 text-slate-500">

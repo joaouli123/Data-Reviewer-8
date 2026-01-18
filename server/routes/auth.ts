@@ -211,15 +211,15 @@ export function registerAuthRoutes(app: Express) {
       
       // Create default categories for the new company
       const defaultCategories = [
-        { name: 'Vendas', type: 'income', color: '#10b981' },
-        { name: 'Serviços', type: 'income', color: '#3b82f6' },
-        { name: 'Outras Receitas', type: 'income', color: '#6366f1' },
-        { name: 'Aluguel', type: 'expense', color: '#ef4444' },
-        { name: 'Salários', type: 'expense', color: '#f59e0b' },
-        { name: 'Fornecedores', type: 'expense', color: '#ec4899' },
-        { name: 'Impostos', type: 'expense', color: '#8b5cf6' },
-        { name: 'Marketing', type: 'expense', color: '#06b6d4' },
-        { name: 'Outras Despesas', type: 'expense', color: '#64748b' }
+        { name: 'Vendas', type: 'entrada', color: '#10b981' },
+        { name: 'Serviços', type: 'entrada', color: '#3b82f6' },
+        { name: 'Outras Receitas', type: 'entrada', color: '#6366f1' },
+        { name: 'Aluguel', type: 'saida', color: '#ef4444' },
+        { name: 'Salários', type: 'saida', color: '#f59e0b' },
+        { name: 'Fornecedores', type: 'saida', color: '#ec4899' },
+        { name: 'Impostos', type: 'saida', color: '#8b5cf6' },
+        { name: 'Marketing', type: 'saida', color: '#06b6d4' },
+        { name: 'Outras Despesas', type: 'saida', color: '#64748b' }
       ];
 
       try {
