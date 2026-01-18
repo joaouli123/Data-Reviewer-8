@@ -131,6 +131,14 @@ export function registerPaymentRoutes(app: Express) {
       };
 
       const resolvedPayer = await resolvePayer();
+      if (resolvedPayer?.address) {
+        if (!resolvedPayer.address.street_number) resolvedPayer.address.street_number = 'S/N';
+        if (!resolvedPayer.address.neighborhood) resolvedPayer.address.neighborhood = 'S/N';
+      }
+      if (resolvedPayer?.address) {
+        if (!resolvedPayer.address.street_number) resolvedPayer.address.street_number = 'S/N';
+        if (!resolvedPayer.address.neighborhood) resolvedPayer.address.neighborhood = 'S/N';
+      }
 
       // For test mode, simulate approved payment
       const isTestMode = MERCADOPAGO_ACCESS_TOKEN?.startsWith('TEST-');
@@ -196,7 +204,6 @@ export function registerPaymentRoutes(app: Express) {
           if (!resolvedPayer?.address?.zip_code) missingFields.push('address.zip_code');
           if (!resolvedPayer?.address?.street_name) missingFields.push('address.street_name');
           if (!resolvedPayer?.address?.street_number) missingFields.push('address.street_number');
-          if (!resolvedPayer?.address?.neighborhood) missingFields.push('address.neighborhood');
           if (!resolvedPayer?.address?.city) missingFields.push('address.city');
           if (!resolvedPayer?.address?.federal_unit) missingFields.push('address.federal_unit');
 
@@ -750,7 +757,6 @@ export function registerPaymentRoutes(app: Express) {
         if (!resolvedPayer?.address?.zip_code) missingFields.push('address.zip_code');
         if (!resolvedPayer?.address?.street_name) missingFields.push('address.street_name');
         if (!resolvedPayer?.address?.street_number) missingFields.push('address.street_number');
-        if (!resolvedPayer?.address?.neighborhood) missingFields.push('address.neighborhood');
         if (!resolvedPayer?.address?.city) missingFields.push('address.city');
         if (!resolvedPayer?.address?.federal_unit) missingFields.push('address.federal_unit');
 
