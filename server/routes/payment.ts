@@ -191,10 +191,12 @@ export function registerPaymentRoutes(app: Express) {
           mpPaymentId = paymentResponse.id;
         } else {
           const missingFields = [] as string[];
+          if (!resolvedPayer?.email) missingFields.push('email');
           if (!resolvedPayer?.identification?.number) missingFields.push('identification.number');
           if (!resolvedPayer?.address?.zip_code) missingFields.push('address.zip_code');
           if (!resolvedPayer?.address?.street_name) missingFields.push('address.street_name');
           if (!resolvedPayer?.address?.street_number) missingFields.push('address.street_number');
+          if (!resolvedPayer?.address?.neighborhood) missingFields.push('address.neighborhood');
           if (!resolvedPayer?.address?.city) missingFields.push('address.city');
           if (!resolvedPayer?.address?.federal_unit) missingFields.push('address.federal_unit');
 
@@ -239,7 +241,7 @@ export function registerPaymentRoutes(app: Express) {
                   address: {
                     zip_code: String(resolvedPayer?.address?.zip_code || '').replace(/\D/g, ''),
                     street_name: String(resolvedPayer?.address?.street_name || ''),
-                    street_number: String(resolvedPayer?.address?.street_number || ''),
+                    street_number: String(resolvedPayer?.address?.street_number || 'S/N'),
                     neighborhood: String(resolvedPayer?.address?.neighborhood || ''),
                     city: String(resolvedPayer?.address?.city || ''),
                     federal_unit: String(resolvedPayer?.address?.federal_unit || '')
@@ -743,10 +745,12 @@ export function registerPaymentRoutes(app: Express) {
         tomorrow.setHours(23, 59, 59, 999);
 
         const missingFields = [] as string[];
+        if (!resolvedPayer?.email) missingFields.push('email');
         if (!resolvedPayer?.identification?.number) missingFields.push('identification.number');
         if (!resolvedPayer?.address?.zip_code) missingFields.push('address.zip_code');
         if (!resolvedPayer?.address?.street_name) missingFields.push('address.street_name');
         if (!resolvedPayer?.address?.street_number) missingFields.push('address.street_number');
+        if (!resolvedPayer?.address?.neighborhood) missingFields.push('address.neighborhood');
         if (!resolvedPayer?.address?.city) missingFields.push('address.city');
         if (!resolvedPayer?.address?.federal_unit) missingFields.push('address.federal_unit');
 
@@ -793,7 +797,7 @@ export function registerPaymentRoutes(app: Express) {
                 address: {
                   zip_code: String(resolvedPayer?.address?.zip_code || '').replace(/\D/g, ''),
                   street_name: String(resolvedPayer?.address?.street_name || ''),
-                  street_number: String(resolvedPayer?.address?.street_number || ''),
+                  street_number: String(resolvedPayer?.address?.street_number || 'S/N'),
                   neighborhood: String(resolvedPayer?.address?.neighborhood || ''),
                   city: String(resolvedPayer?.address?.city || ''),
                   federal_unit: String(resolvedPayer?.address?.federal_unit || '')
