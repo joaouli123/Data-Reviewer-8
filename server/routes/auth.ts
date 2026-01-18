@@ -314,6 +314,13 @@ export function registerAuthRoutes(app: Express) {
           name: user.name, 
           firstName: user.firstName || resolvedFirstName, 
           lastName: user.lastName || resolvedLastName, 
+          phone: user.phone,
+          cep: user.cep,
+          rua: user.rua,
+          numero: user.numero,
+          complemento: user.complemento,
+          estado: user.estado,
+          cidade: user.cidade,
           role: user.role, 
           isSuperAdmin: user.isSuperAdmin, 
           companyId: company.id, 
@@ -322,6 +329,7 @@ export function registerAuthRoutes(app: Express) {
         company: { 
           id: company.id, 
           name: company.name, 
+          document: company.document,
           paymentStatus: company.paymentStatus, 
           subscriptionPlan: newSubscriptionPlan
         },
@@ -396,6 +404,13 @@ export function registerAuthRoutes(app: Express) {
           name: user.name, 
           firstName: user.firstName, 
           lastName: user.lastName, 
+          phone: user.phone,
+          cep: user.cep,
+          rua: user.rua,
+          numero: user.numero,
+          complemento: user.complemento,
+          estado: user.estado,
+          cidade: user.cidade,
           role: user.role, 
           isSuperAdmin: user.isSuperAdmin, 
           companyId: user.companyId, 
@@ -404,6 +419,7 @@ export function registerAuthRoutes(app: Express) {
         company: company ? { 
           id: company.id, 
           name: company.name, 
+          document: company.document,
           paymentStatus: company.paymentStatus, 
           subscriptionPlan: company.subscriptionPlan
         } : null,
@@ -455,6 +471,7 @@ export function registerAuthRoutes(app: Express) {
         company: { 
           id: company.id, 
           name: company.name, 
+          document: company.document,
           paymentStatus: company.paymentStatus, 
           subscriptionPlan: company.subscriptionPlan
         }
