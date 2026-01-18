@@ -10,6 +10,8 @@ type GenerateBoletoParams = {
   payer?: {
     email?: string | null;
     name?: string | null;
+      firstName?: string | null;
+      lastName?: string | null;
     document?: string | null;
     cep?: string | null;
     rua?: string | null;
@@ -36,6 +38,8 @@ export async function generateBoletoForCompany(params: GenerateBoletoParams) {
     .select({
       email: users.email,
       name: users.name,
+      firstName: users.firstName,
+      lastName: users.lastName,
       cep: users.cep,
       rua: users.rua,
       numero: users.numero,
@@ -52,8 +56,12 @@ export async function generateBoletoForCompany(params: GenerateBoletoParams) {
     throw new Error("CPF/CNPJ inválido para emissão de boleto");
   }
 
-  const fullName = params.payer?.name || adminUser?.name || "";
-  const [firstName, ...lastNameParts] = fullName.split(" ");
+  const fullNameFallback =
+    params.payer?.name ||
+    [params.payer?.firstName, params.payer?.lastName].filter(Boolean).join(" ") ||
+    adminUser?.name || "";
+  const payerFirstName = (params.payer?.firstName || adminUser?.firstName || fullNameFallback.split(" ")[0] || "").trim();
+  const payerLastName = (params.payer?.lastName || adminUser?.lastName || fullNameFallback.split(" ").slice(1).join(" ") || "").trim();
 
   const expiration = params.expirationDate || (() => {
     const d = new Date();
@@ -82,8 +90,8 @@ export async function generateBoletoForCompany(params: GenerateBoletoParams) {
         date_of_expiration: expiration.toISOString(),
         payer: {
           email: params.payer?.email || adminUser?.email || "",
-          first_name: firstName || "Admin",
-          last_name: lastNameParts.join(" ") || "User",
+          first_name: payerFirstName || "Admin",
+          last_name: payerLastName || "User",
           identification: {
             type: docNumber.length > 11 ? "CNPJ" : "CPF",
             number: docNumber,

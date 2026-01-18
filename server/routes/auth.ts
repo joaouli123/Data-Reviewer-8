@@ -31,6 +31,8 @@ export function registerAuthRoutes(app: Express) {
         email, 
         password, 
         name, 
+        firstName,
+        lastName,
         plan,
         phone,
         cep,
@@ -40,6 +42,11 @@ export function registerAuthRoutes(app: Express) {
         cidade,
         estado
       } = req.body;
+
+      const resolvedFullName = (name || [firstName, lastName].filter(Boolean).join(" ")).trim();
+      const resolvedFirstName = firstName || resolvedFullName.split(" ")[0] || username;
+      const resolvedLastName = lastName || resolvedFullName.split(" ").slice(1).join(" ").trim();
+      const normalizedFullName = resolvedFullName || `${resolvedFirstName}`.trim();
       
       if (!companyName || !companyDocument || !username || !password || !email) {
         return res.status(400).json({ error: "Missing required fields" });
@@ -63,9 +70,30 @@ export function registerAuthRoutes(app: Express) {
           let existingAdmin = existingAdmins[0];
 
           if (!existingAdmin && username && email && password) {
-            const createdAdmin = await createUser(existingCompany.id, username, email, password, name, "admin");
+            const createdAdmin = await createUser(
+              existingCompany.id,
+              username,
+              email,
+              password,
+              normalizedFullName,
+              "admin",
+              false,
+              resolvedFirstName,
+              resolvedLastName
+            );
             await db.update(users)
-              .set({ phone, cep, rua, numero, complemento: bairro, cidade, estado } as any)
+              .set({ 
+                phone, 
+                cep, 
+                rua, 
+                numero, 
+                complemento: bairro, 
+                cidade, 
+                estado,
+                firstName: resolvedFirstName,
+                lastName: resolvedLastName,
+                name: normalizedFullName,
+              } as any)
               .where(eq(users.id, createdAdmin.id));
 
             existingAdmins = await db
@@ -93,6 +121,8 @@ export function registerAuthRoutes(app: Express) {
                   username: existingAdmin.username,
                   email: existingAdmin.email,
                   name: existingAdmin.name,
+                  firstName: existingAdmin.firstName,
+                  lastName: existingAdmin.lastName,
                   cep: existingAdmin.cep,
                   rua: existingAdmin.rua,
                   numero: existingAdmin.numero,
@@ -104,18 +134,41 @@ export function registerAuthRoutes(app: Express) {
                   id: null,
                   username,
                   email,
-                  name,
+                  name: normalizedFullName,
+                  firstName: resolvedFirstName,
+                  lastName: resolvedLastName,
                 },
             plan: existingPlan,
           });
         }
       }
       const company = await createCompany(companyName, companyDocument);
-      const user = await createUser(company.id, username, email, password, name, "admin");
+      const user = await createUser(
+        company.id,
+        username,
+        email,
+        password,
+        normalizedFullName,
+        "admin",
+        false,
+        resolvedFirstName,
+        resolvedLastName
+      );
       
       // Update user with address fields
       await db.update(users)
-        .set({ phone, cep, rua, numero, complemento: bairro, cidade, estado } as any)
+        .set({ 
+          phone, 
+          cep, 
+          rua, 
+          numero, 
+          complemento: bairro, 
+          cidade, 
+          estado,
+          firstName: resolvedFirstName,
+          lastName: resolvedLastName,
+          name: normalizedFullName,
+        } as any)
         .where(eq(users.id, user.id));
       
       const planLabels: Record<string, string> = {
@@ -161,7 +214,9 @@ export function registerAuthRoutes(app: Express) {
             plan: newSubscriptionPlan,
             payer: {
               email,
-              name: name || username,
+              name: normalizedFullName || username,
+              firstName: resolvedFirstName,
+              lastName: resolvedLastName,
               document: companyDocument,
               cep,
               rua,
@@ -257,6 +312,8 @@ export function registerAuthRoutes(app: Express) {
           username: user.username, 
           email: user.email, 
           name: user.name, 
+          firstName: user.firstName || resolvedFirstName, 
+          lastName: user.lastName || resolvedLastName, 
           role: user.role, 
           isSuperAdmin: user.isSuperAdmin, 
           companyId: company.id, 
@@ -337,6 +394,8 @@ export function registerAuthRoutes(app: Express) {
           username: user.username, 
           email: user.email, 
           name: user.name, 
+          firstName: user.firstName, 
+          lastName: user.lastName, 
           role: user.role, 
           isSuperAdmin: user.isSuperAdmin, 
           companyId: user.companyId, 
@@ -378,6 +437,8 @@ export function registerAuthRoutes(app: Express) {
           username: user.username, 
           email: user.email, 
           name: user.name, 
+          firstName: user.firstName, 
+          lastName: user.lastName, 
           phone: user.phone, 
           avatar: sanitizedAvatar, 
           role: user.role, 
@@ -407,10 +468,13 @@ export function registerAuthRoutes(app: Express) {
   app.patch("/api/auth/profile", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
-      const { name, phone, email, cep, rua, numero, complemento, estado, cidade, avatar } = req.body;
+      const { name, firstName, lastName, phone, email, cep, rua, numero, complemento, estado, cidade, avatar } = req.body;
+
+      const resolvedFullName = (name || [firstName, lastName].filter(Boolean).join(" ")).trim();
+      const resolvedFirst = firstName || resolvedFullName.split(" ")[0];
+      const resolvedLast = lastName || (resolvedFullName ? resolvedFullName.split(" ").slice(1).join(" ").trim() || undefined : undefined);
 
       const updateData: any = { 
-        name, 
         phone,
         cep, 
         rua, 
@@ -420,6 +484,10 @@ export function registerAuthRoutes(app: Express) {
         cidade, 
         updatedAt: new Date() 
       };
+
+      if (resolvedFullName) updateData.name = resolvedFullName;
+      if (resolvedFirst) updateData.firstName = resolvedFirst;
+      if (typeof resolvedLast !== "undefined") updateData.lastName = resolvedLast;
       
       if (email) updateData.email = email;
       if (avatar) updateData.avatar = avatar;
@@ -437,6 +505,8 @@ export function registerAuthRoutes(app: Express) {
           username: updatedUser.username, 
           email: updatedUser.email, 
           name: updatedUser.name, 
+          firstName: updatedUser.firstName, 
+          lastName: updatedUser.lastName, 
           phone: updatedUser.phone, 
           avatar: updatedUser.avatar, 
           cep: updatedUser.cep,

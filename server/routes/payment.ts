@@ -110,15 +110,16 @@ export function registerPaymentRoutes(app: Express) {
         const docNumber = (companyRecord?.document || '').replace(/\D/g, '');
         const idType = docNumber.length > 11 ? 'CNPJ' : 'CPF';
         const fullName = adminUser?.name || '';
-        const [firstName, ...lastNameParts] = fullName.split(' ');
+        const firstName = payer?.first_name || adminUser?.firstName || fullName.split(' ')[0] || '';
+        const lastName = payer?.last_name || adminUser?.lastName || fullName.split(' ').slice(1).join(' ');
         
         // Format phone to ensure only digits and proper structure
         const phoneNumber = (adminUser?.phone || '').replace(/\D/g, '');
 
         return {
           email: baseEmail || adminUser?.email || '',
-          first_name: payer?.first_name || firstName || 'Admin',
-          last_name: payer?.last_name || lastNameParts.join(' ') || 'User',
+          first_name: firstName || 'Admin',
+          last_name: (lastName || '').trim() || 'User',
           phone: phoneNumber.length >= 10 ? {
             area_code: phoneNumber.slice(0, 2),
             number: phoneNumber.slice(2)
@@ -794,12 +795,13 @@ export function registerPaymentRoutes(app: Express) {
         const docNumber = (companyRecord?.document || '').replace(/\D/g, '');
         const idType = docNumber.length > 11 ? 'CNPJ' : 'CPF';
         const fullName = adminUser?.name || '';
-        const [firstName, ...lastNameParts] = fullName.split(' ');
+        const firstName = payer?.first_name || adminUser?.firstName || fullName.split(' ')[0] || '';
+        const lastName = payer?.last_name || adminUser?.lastName || fullName.split(' ').slice(1).join(' ');
 
         return {
           email: baseEmail || adminUser?.email || '',
-          first_name: payer?.first_name || firstName || 'Admin',
-          last_name: payer?.last_name || lastNameParts.join(' ') || 'User',
+          first_name: firstName || 'Admin',
+          last_name: (lastName || '').trim() || 'User',
           identification: {
             type: payer?.identification?.type || idType,
             number: payer?.identification?.number || docNumber,

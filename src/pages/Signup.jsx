@@ -21,7 +21,8 @@ export default function Signup() {
     phone: "",
     password: "",
     confirmPassword: "",
-    name: "",
+    firstName: "",
+    lastName: "",
     plan: "monthly",
     cep: "",
     rua: "",
@@ -83,7 +84,7 @@ export default function Signup() {
 
     const requiredFields = [
       'companyName', 'companyDocument', 'username', 'email', 'phone',
-      'password', 'confirmPassword', 'name', 'cep', 
+      'password', 'confirmPassword', 'firstName', 'lastName', 'cep', 
       'rua', 'numero', 'bairro', 'cidade', 'estado'
     ];
 
@@ -127,7 +128,8 @@ export default function Signup() {
         formData.username,
         formData.email,
         formData.password,
-        formData.name,
+        formData.firstName,
+        formData.lastName,
         formData.plan,
         {
           phone: formData.phone,
@@ -186,7 +188,9 @@ export default function Signup() {
           user: { 
             username: formData.username,
             email: formData.email,
-            name: formData.name,
+            name: [formData.firstName, formData.lastName].filter(Boolean).join(" "),
+            firstName: formData.firstName,
+            lastName: formData.lastName,
             cep: formData.cep,
             rua: formData.rua,
             numero: formData.numero,
@@ -298,20 +302,39 @@ export default function Signup() {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="block text-sm font-medium">Nome Completo</label>
-            <div className="relative">
-              <User className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-              <Input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="Seu nome completo"
-                disabled={loading}
-                data-testid="input-name"
-                className="pl-10"
-              />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">Primeiro Nome</label>
+              <div className="relative">
+                <User className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                <Input
+                  type="text"
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  placeholder="Seu primeiro nome"
+                  disabled={loading}
+                  data-testid="input-first-name"
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">Sobrenome</label>
+              <div className="relative">
+                <User className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                <Input
+                  type="text"
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  placeholder="Seu sobrenome"
+                  disabled={loading}
+                  data-testid="input-last-name"
+                  className="pl-10"
+                />
+              </div>
             </div>
           </div>
 

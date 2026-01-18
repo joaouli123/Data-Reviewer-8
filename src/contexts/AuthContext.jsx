@@ -30,6 +30,8 @@ const buildMinimalAuth = (payload) => ({
         username: payload.user.username,
         email: payload.user.email,
         name: payload.user.name,
+        firstName: payload.user.firstName,
+        lastName: payload.user.lastName,
         role: payload.user.role,
         permissions: payload.user.permissions,
         companyId: payload.user.companyId,
@@ -118,7 +120,7 @@ export function AuthProvider({ children }) {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, [token]);
 
-  const signup = async (companyName, companyDocument, username, email, password, name, plan, addressData = {}) => {
+  const signup = async (companyName, companyDocument, username, email, password, firstName, lastName, plan, addressData = {}) => {
     try {
       setError(null);
       const res = await fetch("/api/auth/signup", {
@@ -130,7 +132,9 @@ export function AuthProvider({ children }) {
           username,
           email,
           password,
-          name,
+          name: [firstName, lastName].filter(Boolean).join(" "),
+          firstName,
+          lastName,
           plan,
           ...addressData
         }),

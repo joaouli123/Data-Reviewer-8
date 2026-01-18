@@ -45,8 +45,8 @@ export default function ProfilePage() {
 
   // Estado inicial seguro
   const [formData, setFormData] = useState({
-    name: '', phone: '', email: '', role: '',
-    cep: '', rua: '', numero: '', complemento: '', estado: '', cidade: '',
+    firstName: '', lastName: '', name: '', phone: '', email: '', role: '',
+    cep: '', rua: '', numero: '', complemento: '', estado: '', cidade: '', cnpj: '',
   });
 
   const [cities, setCities] = useState([]);
@@ -55,8 +55,13 @@ export default function ProfilePage() {
   // Sincroniza dados do usuário com o formulário
   useEffect(() => {
     if (user) {
+      const resolvedFirst = user.firstName || user.name?.split(' ')[0] || '';
+      const resolvedLast = user.lastName || user.name?.split(' ').slice(1).join(' ') || '';
+      const resolvedFullName = [resolvedFirst, resolvedLast].filter(Boolean).join(' ');
       setFormData({
-        name: user.name || '',
+        firstName: resolvedFirst,
+        lastName: resolvedLast,
+        name: resolvedFullName,
         phone: user.phone || '',
         email: user.email || '',
         role: user.role || '',
@@ -107,6 +112,7 @@ export default function ProfilePage() {
   const currentSubscription = company?.subscriptionPlan === 'monthly' ? 'Mensal' : (planTranslation[company?.subscriptionPlan] || company?.subscriptionPlan || "Free");
   const planValue = company?.subscriptionPlan === "pro" ? "997,00" : (company?.subscriptionPlan === "monthly" ? "215,00" : "0,00");
   const getInitials = (name) => name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'US';
+  const displayName = [formData.firstName, formData.lastName].filter(Boolean).join(' ') || formData.name;
 
   // Handlers
   const formatPhone = (value) => {
@@ -126,6 +132,16 @@ export default function ProfilePage() {
       if (numbers.length <= 11) {
         setFormData(prev => ({ ...prev, [name]: formatted }));
       }
+      return;
+    }
+    if (name === "firstName" || name === "lastName") {
+      setFormData(prev => {
+        const next = { ...prev, [name]: value };
+        const newFirst = name === "firstName" ? value : prev.firstName;
+        const newLast = name === "lastName" ? value : prev.lastName;
+        next.name = [newFirst, newLast].filter(Boolean).join(' ');
+        return next;
+      });
       return;
     }
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -175,10 +191,12 @@ export default function ProfilePage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    updateProfileMutation.mutate({
+    const payload = {
       ...formData,
+      name: displayName,
       avatar: previewUrl
-    });
+    };
+    updateProfileMutation.mutate(payload);
   };
 
   // Previne tela branca se user não estiver carregado
@@ -205,7 +223,7 @@ export default function ProfilePage() {
                 <div className="flex flex-col gap-4 items-center pb-6 border-b">
                   <Avatar className="w-24 h-24">
                     <AvatarImage src={previewUrl} />
-                    <AvatarFallback>{getInitials(formData.name)}</AvatarFallback>
+                    <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
                   </Avatar>
                   <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
                     <Upload className="w-4 h-4 mr-2" /> Alterar Foto
@@ -215,8 +233,12 @@ export default function ProfilePage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Nome Completo</Label>
-                    <Input id="name" name="name" value={formData.name} onChange={handleInputChange} data-testid="input-name" />
+                    <Label htmlFor="firstName">Primeiro Nome</Label>
+                    <Input id="firstName" name="firstName" value={formData.firstName} onChange={handleInputChange} data-testid="input-first-name" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName">Sobrenome</Label>
+                    <Input id="lastName" name="lastName" value={formData.lastName} onChange={handleInputChange} data-testid="input-last-name" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone">Telefone</Label>
@@ -241,7 +263,7 @@ export default function ProfilePage() {
                       data-testid="input-email"
                     />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="cnpj">CNPJ</Label>
                     <Input 
                       id="cnpj" 

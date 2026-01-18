@@ -52,9 +52,14 @@ export async function createUser(
   password: string,
   name: string | undefined,
   role: string = "user",
-  isSuperAdmin: boolean = false
+  isSuperAdmin: boolean = false,
+  firstName?: string,
+  lastName?: string
 ) {
   const hashedPassword = await hashPassword(password);
+  const fullName = (name || [firstName, lastName].filter(Boolean).join(" ")).trim() || undefined;
+  const resolvedFirst = firstName || fullName?.split(" ")[0];
+  const resolvedLast = lastName || (fullName ? fullName.split(" ").slice(1).join(" ").trim() || undefined : undefined);
   const result = await db
     .insert(users)
     .values({
@@ -62,7 +67,9 @@ export async function createUser(
       username,
       email,
       password: hashedPassword,
-      name,
+      name: fullName,
+      firstName: resolvedFirst,
+      lastName: resolvedLast,
       role,
       isSuperAdmin,
     })
