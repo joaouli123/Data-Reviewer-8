@@ -1,26 +1,27 @@
 import { pool } from "./db";
 
-let schemaPatched = false;
-
 // Runs the minimal DDL required by the app. Safe to call multiple times.
 export async function ensureCoreSchema() {
-  if (schemaPatched) return;
   try {
     await pool.query(`
       ALTER TABLE IF EXISTS customers
         ADD COLUMN IF NOT EXISTS company_id varchar,
         ADD COLUMN IF NOT EXISTS cpf text,
         ADD COLUMN IF NOT EXISTS cnpj text,
-        ADD COLUMN IF NOT EXISTS category text;
+        ADD COLUMN IF NOT EXISTS contact text,
+        ADD COLUMN IF NOT EXISTS category text,
+        ADD COLUMN IF NOT EXISTS status text DEFAULT 'ativo';
 
       ALTER TABLE IF EXISTS suppliers
         ADD COLUMN IF NOT EXISTS company_id varchar,
         ADD COLUMN IF NOT EXISTS cpf text,
         ADD COLUMN IF NOT EXISTS cnpj text,
+        ADD COLUMN IF NOT EXISTS contact text,
         ADD COLUMN IF NOT EXISTS category text,
-        ADD COLUMN IF NOT EXISTS payment_terms text;
+        ADD COLUMN IF NOT EXISTS payment_terms text,
+        ADD COLUMN IF NOT EXISTS status text DEFAULT 'ativo';
 
-      ALTER TABLE IF EXISTS transactions
+      ALTER TABLE IF NOT EXISTS transactions
         ADD COLUMN IF NOT EXISTS company_id varchar,
         ADD COLUMN IF NOT EXISTS category_id varchar,
         ADD COLUMN IF NOT EXISTS paid_amount numeric(15, 2),
@@ -53,7 +54,6 @@ export async function ensureCoreSchema() {
         created_at timestamp DEFAULT now() NOT NULL
       );
     `);
-    schemaPatched = true;
     console.log("[SchemaPatch] Core schema ensured");
   } catch (error) {
     console.error("[SchemaPatch] Failed to patch schema", error);
