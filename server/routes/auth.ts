@@ -823,6 +823,15 @@ export function registerAuthRoutes(app: Express) {
   // Request password reset
   app.post("/api/auth/request-reset", async (req, res) => {
     try {
+      const ip = req.headers['x-forwarded-for']?.toString().split(',')[0] || req.socket.remoteAddress || 'unknown';
+      
+      // Rate limiting for password reset requests
+      const { checkRateLimit: rateLimitModule } = await import("../middleware");
+      const rateLimitCheck = await rateLimitModule(ip);
+      if (!rateLimitCheck.allowed) {
+        return res.status(429).json({ error: "Muitas tentativas. Tente novamente em 15 minutos." });
+      }
+      
       const { email } = req.body;
 
       if (!email) {

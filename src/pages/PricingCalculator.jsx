@@ -1,12 +1,13 @@
 import { InvokeLLM, UploadFile, ExtractDataFromUploadedFile } from '@/api/integrations';
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePermission } from '@/hooks/usePermission';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Calculator, TrendingUp, DollarSign, Percent, Sparkles, Loader2 } from 'lucide-react';
+import { Calculator, TrendingUp, DollarSign, Percent, Sparkles, Loader2, Shield } from 'lucide-react';
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { toast } from 'sonner';
 import PredictivePricingAnalysis from '../components/pricing/PredictivePricingAnalysis';
@@ -14,10 +15,24 @@ import { formatCurrency } from '@/utils/formatters';
 
 export default function PricingCalculatorPage() {
   const { user } = useAuth();
-  const hasPermission = (permission) => {
-    if (user?.role === 'admin' || user?.isSuperAdmin) return true;
-    return !!user?.permissions?.[permission];
-  };
+  const { hasPermission } = usePermission();
+  
+  // Check permission for price calculator
+  if (!hasPermission('price_calc')) {
+    return (
+      <div className="p-6">
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center p-12">
+            <Shield className="w-16 h-16 text-muted-foreground mb-4" />
+            <h2 className="text-xl font-semibold mb-2">Acesso Negado</h2>
+            <p className="text-muted-foreground text-center">
+              Você não tem permissão para acessar a Calculadora de Preços
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [formData, setFormData] = useState({

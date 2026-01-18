@@ -99,22 +99,95 @@ export async function subscriptionCheckMiddleware(req: AuthenticatedRequest, res
 export function requireRole(...allowedRoles: string[]) {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     if (!req.user) {
-      return res.status(401).json({ error: "Unauthorized - No user in request" });
+      return res.status(401).json({ error: "Unauthorized" });
     }
 
-    // Super Admin bypasses role checks
+    // Super Admin bypasses role check
     if (req.user.isSuperAdmin) {
       return next();
     }
 
     if (!allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({ error: "Forbidden - Insufficient permissions" });
+      return res.status(403).json({ error: "Forbidden - Insufficient role" });
     }
 
     next();
   };
 }
 
+// ========== LAYER 4: PERMISSION-BASED AUTHORIZATION ==========
+export function requirePermission(...permissions: string[]) {
+  return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    // Super Admin bypasses permission check
+    if (req.user.isSuperAdmin) {
+      return next();
+    }
+
+    // Admin role has all permissions by default
+    if (req.user.role === 'admin') {
+      return next();
+    }
+
+    // Fetch user permissions from database
+    try {
+      const user = await findUserById(req.user.id);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      let userPermissions: any = {};
+      if (user.permissions) {
+        try {
+          userPermissions = typeof user.permissions === 'string' 
+            ? JSON.parse(user.permissions) 
+            : user.permissions;
+        } catch (e) {
+          console.error("Error parsing user permissions:", e);
+        }
+      }
+
+      // Check if user has ALL required permissions
+      const hasAllPermissions = permissions.every(perm => userPermissions[perm] === true);
+      
+      if (!hasAllPermissions) {
+        await createAuditLog(
+          req.user.id,
+          req.user.companyId,
+          "PERMISSION_DENIED",
+          "permission",
+          permissions.join(','),
+          `User attempted to access endpoint requiring: ${permissions.join(', ')}`,
+          req.clientIp || 'unknown',
+          req.headers['user-agent'] || 'unknown'
+        );
+        return res.status(403).json({ 
+          error: "Forbidden - Insufficient permissions",
+          required: permissions
+        });
+      }
+
+      next();
+    } catch (error) {
+      console.error("Error checking permissions:", error);
+      return res.status(500).json({ error: "Error checking permissions" });
+    }
+  };
+}
+
+// ========== HELPER: Extract Bearer Token ==========
+function extractToken(req: Request): string | null {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return null;
+  }
+  return authHeader.substring(7);
+}
+
+// ========== SUPER ADMIN MIDDLEWARE ==========
 export function requireSuperAdmin(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   if (!req.user) {
     return res.status(401).json({ error: "Unauthorized" });

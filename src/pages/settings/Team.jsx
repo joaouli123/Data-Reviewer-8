@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePermission } from '@/hooks/usePermission';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,7 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Mail, Copy, Trash2, Edit2, CheckCircle2, Clock, Copy as CopyIcon } from 'lucide-react';
+import { Plus, Mail, Copy, Trash2, Edit2, CheckCircle2, Clock, Copy as CopyIcon, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { queryClient } from '@/lib/queryClient';
 
@@ -34,11 +35,31 @@ const ROLES = [
 
 export default function TeamPage() {
   const { user, company } = useAuth();
+  const { hasPermission } = usePermission();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [inviteLink, setInviteLink] = useState('');
   const [activeTab, setActiveTab] = useState('direct');
+
+  // Check permission to manage users
+  const canManageUsers = hasPermission('manage_users') || hasPermission('invite_users');
+  
+  if (!canManageUsers) {
+    return (
+      <div className="p-6">
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center p-12">
+            <Shield className="w-16 h-16 text-muted-foreground mb-4" />
+            <h2 className="text-xl font-semibold mb-2">Acesso Negado</h2>
+            <p className="text-muted-foreground text-center">
+              Você não tem permissão para gerenciar usuários
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   // Form states
   const [formData, setFormData] = useState({
