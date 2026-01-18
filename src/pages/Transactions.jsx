@@ -28,6 +28,19 @@ const parseLocalDate = (dateStr) => {
   return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
 };
 
+// Retorna uma data válida a partir dos campos conhecidos ou null
+const extractTxDate = (t) => {
+  if (!t) return null;
+  const candidate = t.paymentDate || t.date || t.createdAt || t.created_at;
+  if (!candidate) return null;
+  try {
+    const d = new Date(candidate);
+    return isNaN(d.getTime()) ? null : d;
+  } catch (e) {
+    return null;
+  }
+};
+
 export default function TransactionsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
@@ -273,14 +286,12 @@ export default function TransactionsPage() {
         const isPaid = t.status === 'pago' || t.status === 'completed';
         if (!isPaid) return;
 
-        const relevantDate = t.paymentDate || t.date;
+        const relevantDate = extractTxDate(t);
         if (!relevantDate) return;
         
         let tDate;
         try {
-          const d = new Date(relevantDate);
-          if (isNaN(d.getTime())) return;
-          tDate = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 12, 0, 0);
+          tDate = Date.UTC(relevantDate.getUTCFullYear(), relevantDate.getUTCMonth(), relevantDate.getUTCDate(), 12, 0, 0);
         } catch (e) {
           return;
         }
@@ -345,15 +356,13 @@ export default function TransactionsPage() {
 
           // 6. Filtrar por Data (UTC Midday approach)
           const isPaid = t.status === 'pago' || t.status === 'completed';
-          const relevantDate = isPaid && t.paymentDate ? t.paymentDate : t.date;
-          if (!relevantDate) return true; // Show by default if date is missing to avoid disappearing
+          const relevantDate = isPaid && t.paymentDate ? extractTxDate(t) : extractTxDate(t);
+          if (!relevantDate) return true; // Sem data, deixa visível
 
           let tDate;
           try {
-            const d = new Date(relevantDate);
-            if (isNaN(d.getTime())) return true;
             // Normalizar para meio-dia UTC para evitar problemas de fuso horário
-            tDate = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 12, 0, 0);
+            tDate = Date.UTC(relevantDate.getUTCFullYear(), relevantDate.getUTCMonth(), relevantDate.getUTCDate(), 12, 0, 0);
           } catch (e) {
             return true;
           }
@@ -519,13 +528,9 @@ export default function TransactionsPage() {
                                     {/* For paid transactions, show payment date; otherwise show due date */}
                                     {(() => {
                                       try {
-                                        const isPaid = t.status === 'pago' || t.status === 'completed';
-                                        const dateToDisplay = isPaid && t.paymentDate ? t.paymentDate : t.date;
-                                        if (!dateToDisplay) return '-';
-                                        
-                                        // Ensure dateToDisplay is a string before splitting
-                                        const dateStr = typeof dateToDisplay === 'string' ? dateToDisplay : new Date(dateToDisplay).toISOString();
-                                        return format(parseLocalDate(dateStr), "dd/MM/yyyy", { locale: ptBR });
+                                        const dt = extractTxDate(t);
+                                        if (!dt) return '-';
+                                        return format(dt, "dd/MM/yyyy", { locale: ptBR });
                                       } catch (e) {
                                         console.error("Date formatting error:", e, t);
                                         return '-';
