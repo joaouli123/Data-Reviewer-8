@@ -97,23 +97,23 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted/30 p-4">
       <div className="w-full max-w-2xl flex flex-col gap-6">
-        {pendingBanner && !showResetForm && (
-          <Card className="p-6 shadow-lg border-rose-200">
+        {pendingBanner && !showResetForm ? (
+          <Card className="p-8 shadow-lg border-rose-200 max-w-md mx-auto">
             <div className="flex flex-col items-center text-center gap-4">
               <div className="w-12 h-12 rounded-full bg-rose-100 flex items-center justify-center">
                 <div className="w-6 h-6 rounded-full bg-rose-500/80 flex items-center justify-center text-white text-lg">!</div>
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-rose-700">Pagamento Pendente</h2>
-                <p className="text-sm text-rose-800 mt-1 max-w-xl">
-                  Seu acesso ao sistema foi temporariamente suspenso. Gere um novo boleto ou envie o comprovante para liberar o acesso.
+                <p className="text-sm text-rose-800 mt-2 max-w-xl">
+                  Seu acesso foi temporariamente suspenso. Gere um novo boleto ou envie o comprovante para liberar o acesso.
                 </p>
               </div>
 
-              <div className="w-full max-w-md grid grid-cols-1 gap-3">
+              <div className="w-full grid grid-cols-1 gap-3">
                 <Button
                   className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-semibold"
-                  onClick={() => setLocation("/payment-pending")}
+                  onClick={() => window.open(pendingBanner.whatsappUrl, "_blank")}
                 >
                   Falar com Suporte (WhatsApp)
                 </Button>
@@ -126,7 +126,7 @@ export default function Login() {
                 </Button>
               </div>
 
-              <div className="w-full max-w-md bg-slate-50 border border-slate-200 rounded-md p-4 text-left text-sm text-slate-700">
+              <div className="w-full bg-slate-50 border border-slate-200 rounded-md p-4 text-left text-sm text-slate-700">
                 <p className="font-semibold mb-2">Informações Importantes:</p>
                 <ul className="list-disc list-inside space-y-1 text-slate-600">
                   <li>O novo boleto terá vencimento para o próximo dia útil.</li>
@@ -136,15 +136,14 @@ export default function Login() {
               </div>
             </div>
           </Card>
-        )}
-
-        <Card className="w-full max-w-md p-8 shadow-lg mx-auto">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold">{showResetForm ? "Redefinir Senha" : "Entrar"}</h1>
-            <p className="text-sm text-muted-foreground mt-2">
-              {showResetForm ? "Digite seu email para receber o link" : "Acesse sua conta para continuar"}
-            </p>
-          </div>
+        ) : (
+          <Card className="w-full max-w-md p-8 shadow-lg mx-auto">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold">{showResetForm ? "Redefinir Senha" : "Entrar"}</h1>
+              <p className="text-sm text-muted-foreground mt-2">
+                {showResetForm ? "Digite seu email para receber o link" : "Acesse sua conta para continuar"}
+              </p>
+            </div>
         
         {!showResetForm ? (
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -245,13 +244,14 @@ export default function Login() {
           </form>
         )}
 
-          <p className="mt-6 text-center text-sm text-muted-foreground">
-            Não tem conta?{" "}
-            <Link href="/signup" className="text-primary font-medium hover:underline">
-              Criar conta
-            </Link>
-          </p>
-        </Card>
+            <p className="mt-6 text-center text-sm text-muted-foreground">
+              Não tem conta?{" "}
+              <Link href="/signup" className="text-primary font-medium hover:underline">
+                Criar conta
+              </Link>
+            </p>
+          </Card>
+        )}
       </div>
     </div>
   );
