@@ -12,6 +12,12 @@ import { CheckCircle2, Calendar, Clock, X, ChevronDown, ChevronRight, Trash2 } f
 import PaymentEditDialog from './PaymentEditDialog';
 import { apiRequest } from '@/lib/queryClient';
 
+const parseLocalDate = (dateStr) => {
+  if (!dateStr) return new Date();
+  const [year, month, day] = dateStr.split('T')[0].split('-');
+  return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+};
+
 export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }) {
   const { company } = useAuth();
   const queryClient = useQueryClient();
@@ -274,7 +280,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                       <div>
                         <h4 className="font-semibold text-base text-slate-900">{group.main.description || 'Compra'}</h4>
                         <p className="text-sm text-slate-500 mt-0.5">
-                          {group.main.date ? format(parseISO(group.main.date), "dd 'de' MMMM, yyyy", { locale: ptBR }) : '-'}
+                          {group.main.date ? format(parseLocalDate(group.main.date), "dd 'de' MMMM, yyyy", { locale: ptBR }) : '-'}
                           <span className="ml-2 text-slate-400">({group.installments.length} parcela{group.installments.length > 1 ? 's' : ''})</span>
                         </p>
                       </div>
@@ -303,7 +309,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                               R$ {Math.abs(parseFloat(installment.amount || 0) + parseFloat(installment.interest || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                             </p>
                             <p className="text-xs text-slate-500">
-                              Venc: {installment.date ? format(parseISO(installment.date), "dd/MM/yyyy") : '-'}
+                              Venc: {installment.date ? format(parseLocalDate(installment.date), "dd/MM/yyyy") : '-'}
                             </p>
                           </div>
                         </div>
@@ -313,7 +319,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                               <div className="flex flex-col items-end gap-0.5 mr-2">
                                 {installment.paymentDate && (
                                   <p className="text-xs text-emerald-600">
-                                    {format(parseISO(installment.paymentDate), "dd/MM/yyyy")}
+                                    {format(parseLocalDate(installment.paymentDate), "dd/MM/yyyy")}
                                   </p>
                                 )}
                                 {(installment.paidAmount || installment.amount) && (
