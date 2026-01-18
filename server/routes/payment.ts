@@ -253,7 +253,7 @@ export function registerPaymentRoutes(app: Express) {
             const payerData: any = {
               email: resolvedPayer?.email || email,
               identification: {
-                type: resolvedPayer?.identification?.type || (isCNPJ ? 'CNPJ' : 'CPF'),
+                type: docDigits.length === 14 ? 'CNPJ' : 'CPF',
                 number: docDigits
               },
               address: {
