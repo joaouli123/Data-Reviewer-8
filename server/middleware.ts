@@ -226,25 +226,8 @@ export async function auditMiddleware(action: string, resourceType: string) {
   };
 }
 
-export function extractToken(req: Request): string | null {
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith("Bearer ")) {
-    return authHeader.substring(7);
-  }
-  
-  const cookies = req.headers.cookie;
-  if (cookies) {
-    const tokenCookie = cookies
-      .split(";")
-      .find(c => c.trim().startsWith("token="));
-    if (tokenCookie) {
-      return tokenCookie.split("=")[1];
-    }
-  }
-  
-  return null;
-}
-
+// ========== ENSURE COMPANY ACCESS MIDDLEWARE ==========
+// ========== ENSURE COMPANY ACCESS MIDDLEWARE ==========
 export function ensureCompanyAccess(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   if (!req.user) {
     return res.status(401).json({ error: "Unauthorized" });

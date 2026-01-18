@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Building2, FileText, User, UserCheck, Mail, Lock, CheckCircle2, UserPlus, ArrowLeft, Phone } from "lucide-react";
-import { formatCNPJ, formatCPF } from "@/utils/masks";
+import { formatCNPJ, formatCPF, formatPhone } from "@/utils/masks";
 
 const PLANS = {
   monthly: { name: 'Mensal', price: 'R$ 215', features: 'Acesso completo ao sistema' },
@@ -50,6 +50,9 @@ export default function Signup() {
     if (name === "companyDocument") {
       const digits = value.replace(/\D/g, "");
       const formatted = digits.length <= 11 ? formatCPF(value) : formatCNPJ(value);
+      setFormData((prev) => ({ ...prev, [name]: formatted }));
+    } else if (name === "phone") {
+      const formatted = formatPhone(value);
       setFormData((prev) => ({ ...prev, [name]: formatted }));
     } else if (name === "cep") {
       const cep = value.replace(/\D/g, "");
@@ -96,6 +99,13 @@ export default function Signup() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       toast.error("Email inválido");
+      return;
+    }
+
+    // Validate phone (min 10 digits)
+    const phoneDigits = formData.phone.replace(/\D/g, '');
+    if (phoneDigits.length < 10) {
+      toast.error("Telefone inválido. Deve ter pelo menos 10 dígitos");
       return;
     }
 
