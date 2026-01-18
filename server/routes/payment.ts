@@ -291,6 +291,8 @@ export function registerPaymentRoutes(app: Express) {
 
             console.log(`[Payment] Attempting boleto with ${methodId}:`, JSON.stringify(boletoPayload, null, 2));
 
+            // Log payload antes do envio
+            console.log("[Payment][DEBUG] Enviando payload para Mercado Pago:", JSON.stringify(boletoPayload, null, 2));
             const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
               method: 'POST',
               headers: {
@@ -301,12 +303,26 @@ export function registerPaymentRoutes(app: Express) {
               body: JSON.stringify(boletoPayload),
             });
 
+            // Log status da resposta
+            console.log("[Payment][DEBUG] Status da resposta Mercado Pago:", mpResponse.status, mpResponse.statusText);
+
+            const responseText = await mpResponse.text();
+            let parsedResponse;
+            try {
+              parsedResponse = JSON.parse(responseText);
+            } catch (e) {
+              parsedResponse = responseText;
+            }
+
+            // Log resposta bruta
+            console.log("[Payment][DEBUG] Resposta bruta Mercado Pago:", responseText);
+
             if (mpResponse.ok) {
-              paymentResponse = await mpResponse.json();
+              paymentResponse = parsedResponse;
               break;
             }
 
-            lastErrorData = await mpResponse.json();
+            lastErrorData = parsedResponse;
             console.error("[Payment] Mercado Pago API error:", lastErrorData);
           }
 
