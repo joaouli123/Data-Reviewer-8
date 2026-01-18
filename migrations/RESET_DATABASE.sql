@@ -188,6 +188,15 @@ CREATE TABLE rate_limit (
   blocked_until TIMESTAMP
 );
 
+-- Login attempts table
+CREATE TABLE login_attempts (
+  id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  ip_address TEXT NOT NULL,
+  username TEXT NOT NULL,
+  success BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMP NOT NULL DEFAULT now()
+);
+
 -- Create indexes for performance
 CREATE INDEX idx_users_company_id ON users(company_id);
 CREATE INDEX idx_users_username ON users(username);
@@ -205,6 +214,8 @@ CREATE INDEX idx_subscriptions_company_id ON subscriptions(company_id);
 CREATE INDEX idx_audit_logs_company_id ON audit_logs(company_id);
 CREATE INDEX idx_audit_logs_user_id ON audit_logs(user_id);
 CREATE INDEX idx_rate_limit_identifier ON rate_limit(identifier);
+CREATE INDEX idx_login_attempts_ip ON login_attempts(ip_address);
+CREATE INDEX idx_login_attempts_created ON login_attempts(created_at);
 
 -- ============================================
 -- INSERT SUPERADMIN
