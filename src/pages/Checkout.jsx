@@ -223,7 +223,10 @@ export default function Checkout() {
           setLocation(`/payment-success?payment_id=${result.paymentId || result.id}`);
         }
       } else {
-        toast.error(result.message || 'Erro no processamento');
+        const missing = Array.isArray(result.missingFields) ? ` Campos faltando: ${result.missingFields.join(', ')}` : '';
+        const details = result.details || result.error || result.message || 'Erro no processamento';
+        console.error('Erro pagamento:', result);
+        toast.error(`${details}${missing}`);
       }
     } catch (error) {
       toast.error('Falha na comunicação com o servidor');
