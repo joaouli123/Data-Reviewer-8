@@ -170,6 +170,10 @@ function SubscriptionListContent() {
     const isExpired = !!subscription.expiresAt && new Date(subscription.expiresAt) <= now && !subscription.isLifetime;
     const isBlocked = subscription.status === 'blocked' || subscription.companySubscriptionStatus === 'suspended';
 
+    if (subscription.status === 'pending') {
+      return { variant: 'secondary', label: 'Pendente' };
+    }
+
     if (isBlocked) {
       return { variant: 'destructive', label: 'Bloqueada' };
     }

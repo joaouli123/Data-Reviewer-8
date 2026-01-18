@@ -360,6 +360,14 @@ export function registerPaymentRoutes(app: Express) {
               updatedAt: new Date(),
             })
             .where(eq(companies.id, companyId));
+        } else {
+          await db.update(companies)
+            .set({
+              paymentStatus: 'pending',
+              subscriptionPlan: plan,
+              updatedAt: new Date(),
+            })
+            .where(eq(companies.id, companyId));
         }
 
         const [existingSub] = await db
@@ -873,6 +881,10 @@ export function registerPaymentRoutes(app: Express) {
             updatedAt: new Date()
           })
           .where(eq(subscriptions.companyId, companyId));
+
+        await db.update(companies)
+          .set({ paymentStatus: 'pending', updatedAt: new Date() })
+          .where(eq(companies.id, companyId));
 
         res.json({
           success: true,

@@ -17,6 +17,7 @@ import {
   hashPassword
 } from "../auth";
 import { authMiddleware, checkRateLimit, recordLoginAttempt, AuthenticatedRequest } from "../middleware";
+import { generateBoletoForCompany } from "../utils/boleto";
 
 export function registerAuthRoutes(app: Express) {
   // Sign up
@@ -147,9 +148,26 @@ export function registerAuthRoutes(app: Express) {
       }
 
       const checkoutUrl = `${appUrl}/checkout?plan=${encodeURIComponent(newSubscriptionPlan)}`;
+      let boletoUrl: string | null = null;
 
       // Enviar e-mail de boas-vindas com o boleto
       try {
+        try {
+          boletoUrl = await generateBoletoForCompany({
+            companyId: company.id,
+            amount,
+            plan: newSubscriptionPlan,
+          });
+
+          if (boletoUrl) {
+            await db.update(subscriptions)
+              .set({ ticket_url: boletoUrl, updatedAt: new Date() } as any)
+              .where(eq(subscriptions.companyId, company.id));
+          }
+        } catch (boletoErr) {
+          console.error("Error generating boleto on signup:", boletoErr);
+        }
+
         const { Resend: ResendClient } = await import('resend');
         const resend = new ResendClient(process.env.RESEND_API_KEY);
         await resend.emails.send({
@@ -164,8 +182,10 @@ export function registerAuthRoutes(app: Express) {
               <p>Para começar a usar o sistema, é necessário realizar o pagamento da sua assinatura.</p>
               <p><strong>Plano:</strong> ${planLabel}</p>
               <p><strong>Valor:</strong> R$ ${parseFloat(amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-              <p>Para emitir o boleto, acesse o checkout:</p>
-              <p><a href="${checkoutUrl}">${checkoutUrl}</a></p>
+              ${boletoUrl
+                ? `<p>Seu boleto já está disponível:</p><p><a href="${boletoUrl}">${boletoUrl}</a></p>`
+                : `<p>Para emitir o boleto, acesse o checkout:</p><p><a href="${checkoutUrl}">${checkoutUrl}</a></p>`
+              }
               <p>Após a confirmação do pagamento, seu acesso será liberado automaticamente.</p>
               <p>Compensação bancária do boleto: até 1 dia útil.</p>
               <br/>

@@ -59,6 +59,24 @@ export function registerAdminRoutes(app: Express) {
         ...updates,
         updatedAt: new Date()
       }).where(eq(companies.id, id));
+
+      if (updates.subscriptionStatus || updates.paymentStatus) {
+        const [latestSub] = await db
+          .select({ id: subscriptions.id, status: subscriptions.status })
+          .from(subscriptions)
+          .where(eq(subscriptions.companyId, id))
+          .orderBy(desc(subscriptions.createdAt))
+          .limit(1);
+
+        if (latestSub) {
+          const shouldActivate = updates.subscriptionStatus === 'active' || updates.paymentStatus === 'approved';
+          const nextStatus = shouldActivate ? 'active' : 'pending';
+
+          await db.update(subscriptions)
+            .set({ status: nextStatus, updatedAt: new Date() })
+            .where(eq(subscriptions.id, latestSub.id));
+        }
+      }
       
       res.json({ success: true });
     } catch (error) {
