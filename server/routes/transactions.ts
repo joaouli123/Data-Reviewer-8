@@ -42,6 +42,7 @@ export function registerTransactionRoutes(app: Express) {
   app.get("/api/transactions", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      if (!req.user.companyId) return res.status(400).json({ error: "Company ID missing" });
       
       if (!await checkPermission(req, PERMISSIONS.VIEW_TRANSACTIONS)) {
         return res.status(403).json({ error: "Você não tem permissão para visualizar transações" });
@@ -77,6 +78,7 @@ export function registerTransactionRoutes(app: Express) {
   app.post("/api/transactions", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      if (!req.user.companyId) return res.status(400).json({ error: "Company ID missing" });
       
       if (!await checkPermission(req, PERMISSIONS.CREATE_TRANSACTIONS)) {
         return res.status(403).json({ error: "Você não tem permissão para criar transações" });
@@ -106,6 +108,7 @@ export function registerTransactionRoutes(app: Express) {
   app.delete("/api/transactions/:id", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      if (!req.user.companyId) return res.status(400).json({ error: "Company ID missing" });
 
       if (!await checkPermission(req, PERMISSIONS.DELETE_TRANSACTIONS)) {
         return res.status(403).json({ error: "Você não tem permissão para excluir transações" });
@@ -121,6 +124,7 @@ export function registerTransactionRoutes(app: Express) {
   app.patch("/api/transactions/:id", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      if (!req.user.companyId) return res.status(400).json({ error: "Company ID missing" });
       
       if (!await checkPermission(req, PERMISSIONS.EDIT_TRANSACTIONS)) {
         return res.status(403).json({ error: "Você não tem permissão para editar transações" });

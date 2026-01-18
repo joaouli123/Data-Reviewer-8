@@ -84,6 +84,7 @@ export class DatabaseStorage {
   // Vou colocar os principais aqui para garantir que compile:
 
   async getCategories(companyId: any) {
+    if (!companyId) return [];
     return await db.select().from(categories).where(eq(categories.companyId, companyId));
   }
 
@@ -105,6 +106,7 @@ export class DatabaseStorage {
   }
 
   async getTransactions(companyId: any) {
+    if (!companyId) return [];
     return await db.select().from(transactions).where(eq(transactions.companyId, companyId)).orderBy(desc(transactions.date));
   }
 
@@ -123,6 +125,7 @@ export class DatabaseStorage {
   }
 
   async getCustomers(companyId: any) {
+    if (!companyId) return [];
     const allCustomers = await db.select().from(customers).where(eq(customers.companyId, companyId));
     
     // Busca todas as transações de entrada (receita)
@@ -156,6 +159,7 @@ export class DatabaseStorage {
   }
 
   async getSuppliers(companyId: any) {
+    if (!companyId) return [];
     const allSuppliers = await db.select().from(suppliers).where(eq(suppliers.companyId, companyId));
     
     // Busca todas as transações de saída (despesa)

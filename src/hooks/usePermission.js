@@ -7,6 +7,9 @@ export function usePermission() {
     // Super admin tem todas as permissões
     if (user?.isSuperAdmin) return true;
 
+    // Admin tem todas as permissões
+    if (user?.role === 'admin') return true;
+
     // Se não tem permissions, usa role padrão
     if (!user?.permissions) {
       return false;

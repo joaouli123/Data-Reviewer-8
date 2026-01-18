@@ -19,6 +19,7 @@ export function registerSupplierRoutes(app: Express) {
   app.get("/api/suppliers", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      if (!req.user.companyId) return res.status(400).json({ error: "Company ID missing" });
       if (!await checkPermission(req, 'view_suppliers')) return res.status(403).json({ error: "Acesso negado" });
       const suppliers = await storage.getSuppliers(req.user.companyId);
       res.json(suppliers.map((s: any) => ({ ...s, totalPurchases: Number(s.totalPurchases || 0) })));
@@ -30,6 +31,7 @@ export function registerSupplierRoutes(app: Express) {
   app.post("/api/suppliers", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      if (!req.user.companyId) return res.status(400).json({ error: "Company ID missing" });
       if (!await checkPermission(req, 'manage_suppliers')) return res.status(403).json({ error: "Acesso negado" });
       const cleanData: any = {};
       for (const [key, value] of Object.entries(req.body)) {
@@ -46,6 +48,7 @@ export function registerSupplierRoutes(app: Express) {
   app.patch("/api/suppliers/:id", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      if (!req.user.companyId) return res.status(400).json({ error: "Company ID missing" });
       if (!await checkPermission(req, 'manage_suppliers')) return res.status(403).json({ error: "Acesso negado" });
       const cleanData: any = {};
       for (const [key, value] of Object.entries(req.body)) {
@@ -63,6 +66,7 @@ export function registerSupplierRoutes(app: Express) {
   app.delete("/api/suppliers/:id", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      if (!req.user.companyId) return res.status(400).json({ error: "Company ID missing" });
       if (!await checkPermission(req, 'manage_suppliers')) return res.status(403).json({ error: "Acesso negado" });
       await storage.deleteSupplier(req.user.companyId, req.params.id);
       res.status(204).end();

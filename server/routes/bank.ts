@@ -24,7 +24,7 @@ export function registerBankRoutes(app: Express) {
       res.header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
 
       if (!req.user || !req.user.companyId) {
-        return res.status(401).json({ error: "Unauthorized - Company ID missing" });
+        return res.status(400).json({ error: "Company ID missing" });
       }
       
       const companyId = req.user.companyId;
@@ -39,6 +39,7 @@ export function registerBankRoutes(app: Express) {
   app.post("/api/bank/upload-ofx", authMiddleware, requirePermission("import_bank"), async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      if (!req.user.companyId) return res.status(400).json({ error: "Company ID missing" });
       const parsed = uploadSchema.safeParse(req.body);
       if (!parsed.success) {
         return res.status(400).json({ error: "Conteúdo inválido" });
@@ -157,7 +158,8 @@ export function registerBankRoutes(app: Express) {
     try {
       const bankItemId = req.params.id;
       if (!bankItemId) return res.json([]);
-      const companyId = req.user!.companyId;
+      if (!req.user?.companyId) return res.status(400).json({ error: "Company ID missing" });
+      const companyId = req.user.companyId;
       
       // 1. Buscar o item bancário
       const bankItem = await storage.getBankStatementItemById(companyId, bankItemId);
@@ -233,19 +235,20 @@ export function registerBankRoutes(app: Express) {
   });
 
   app.post("/api/bank/match", authMiddleware, requirePermission("import_bank"), async (req: AuthenticatedRequest, res) => {
+      if (!req.user?.companyId) return res.status(400).json({ error: "Company ID missing" });
       const parsed = matchSchema.safeParse(req.body);
       if (!parsed.success) {
         return res.status(400).json({ error: "Dados inválidos" });
       }
 
       const { bankItemId, transactionId } = parsed.data;
-      const matched = await storage.matchBankStatementItem(req.user!.companyId, bankItemId, transactionId);
+        const matched = await storage.matchBankStatementItem(req.user.companyId, bankItemId, transactionId);
       res.json(matched);
   });
 
   app.delete("/api/bank/clear", authMiddleware, requirePermission("import_bank"), async (req: AuthenticatedRequest, res) => {
     try {
-      if (!req.user || !req.user.companyId) return res.status(401).json({ error: "Unauthorized" });
+      if (!req.user?.companyId) return res.status(400).json({ error: "Company ID missing" });
       await storage.clearBankStatementItems(req.user.companyId);
       res.json({ message: "Limpo" });
     } catch (error) {
