@@ -1,9 +1,9 @@
 import { Express } from "express";
 import { storage } from "../storage";
-import { authMiddleware, AuthenticatedRequest } from "../middleware";
+import { authMiddleware, AuthenticatedRequest, requirePermission } from "../middleware";
 
 export function registerCashFlowRoutes(app: Express) {
-  app.get("/api/cash-flow", authMiddleware, async (req: AuthenticatedRequest, res) => {
+  app.get("/api/cash-flow", authMiddleware, requirePermission("view_reports"), async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const cashFlow = await storage.getCashFlow(req.user.companyId);

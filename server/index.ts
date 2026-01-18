@@ -11,6 +11,16 @@ import { checkAndSendSubscriptionEmails } from "./api/subscription-cron";
 const app = express();
 const PORT = parseInt(process.env.PORT || "5000", 10);
 const isDev = process.env.NODE_ENV !== "production";
+const defaultAllowedOrigins = ["https://huacontrol.com.br", "https://www.huacontrol.com.br"];
+const allowedOrigins = new Set(
+  (process.env.ALLOWED_ORIGINS || process.env.APP_URL || "")
+    .split(",")
+    .map(origin => origin.trim())
+    .filter(Boolean)
+);
+if (allowedOrigins.size === 0) {
+  defaultAllowedOrigins.forEach(origin => allowedOrigins.add(origin));
+}
 
 // Mock cron job - in production this would be a real cron job
 // Run once on startup and then every 24 hours
@@ -33,6 +43,26 @@ app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false
 }));
+
+// CORS (allowlist)
+app.use((req, res, next) => {
+  const origin = req.headers.origin as string | undefined;
+
+  if (origin && (isDev || allowedOrigins.has(origin))) {
+    res.header("Access-Control-Allow-Origin", origin);
+    res.header("Vary", "Origin");
+  }
+
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+
+  next();
+});
 
 // Basic Rate Limiting
 const rateLimitMap = new Map<string, { count: number; lastReset: number }>();

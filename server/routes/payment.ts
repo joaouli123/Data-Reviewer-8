@@ -750,10 +750,70 @@ export function registerPaymentRoutes(app: Express) {
   // Regenerate boleto with next day expiration
   app.post("/api/payment/regenerate-boleto", async (req: Request, res: Response) => {
     try {
-      const { companyId, email, amount, plan, payer } = req.body;
+      const { companyId: rawCompanyId, email: rawEmail, amount: rawAmount, plan: rawPlan, payer } = req.body;
 
-      if (!companyId || !email || !amount) {
-        return res.status(400).json({ error: "Missing required fields" });
+      let companyId = rawCompanyId as string | undefined;
+      let companyRecord: typeof companies.$inferSelect | undefined;
+      let adminUser: typeof users.$inferSelect | undefined;
+
+      if (!companyId && (rawEmail || payer?.email || payer?.identification?.number)) {
+        if (payer?.identification?.number) {
+          const docDigits = String(payer.identification.number).replace(/\D/g, '');
+          if (docDigits) {
+            const [companyByDoc] = await db
+              .select()
+              .from(companies)
+              .where(eq(companies.document, docDigits))
+              .limit(1);
+            if (companyByDoc) companyId = companyByDoc.id;
+          }
+        }
+
+        if (!companyId && (rawEmail || payer?.email)) {
+          const emailLookup = rawEmail || payer?.email;
+          const [userByEmail] = await db
+            .select()
+            .from(users)
+            .where(eq(users.email, emailLookup))
+            .limit(1);
+          if (userByEmail) companyId = userByEmail.companyId;
+        }
+      }
+
+      if (!companyId) {
+        return res.status(400).json({ error: "Missing required fields", missingFields: ["companyId"] });
+      }
+
+      [companyRecord] = await db.select().from(companies).where(eq(companies.id, companyId)).limit(1);
+      [adminUser] = await db
+        .select()
+        .from(users)
+        .where(and(eq(users.companyId, companyId), eq(users.role, "admin")))
+        .limit(1);
+
+      const [latestSub] = await db
+        .select({ amount: subscriptions.amount, plan: subscriptions.plan })
+        .from(subscriptions)
+        .where(eq(subscriptions.companyId, companyId))
+        .orderBy(desc(subscriptions.createdAt))
+        .limit(1);
+
+      const planAmounts: Record<string, string> = {
+        monthly: "215.00",
+        basic: "0.00",
+        pro: "997.00",
+        enterprise: "0.00",
+      };
+
+      const resolvedPlan = rawPlan || companyRecord?.subscriptionPlan || latestSub?.plan || "monthly";
+      const email = rawEmail || payer?.email || adminUser?.email || "";
+      const amount = rawAmount || latestSub?.amount || planAmounts[resolvedPlan] || "";
+
+      const missingRequired: string[] = [];
+      if (!email) missingRequired.push("email");
+      if (!amount) missingRequired.push("amount");
+      if (missingRequired.length > 0) {
+        return res.status(400).json({ error: "Missing required fields", missingFields: missingRequired });
       }
 
       if (!MERCADOPAGO_ACCESS_TOKEN) {
@@ -784,13 +844,6 @@ export function registerPaymentRoutes(app: Express) {
             address: payer?.address,
           };
         }
-
-        const [companyRecord] = await db.select().from(companies).where(eq(companies.id, companyId)).limit(1);
-        const [adminUser] = await db
-          .select()
-          .from(users)
-          .where(and(eq(users.companyId, companyId), eq(users.role, "admin")))
-          .limit(1);
 
         const docNumber = (companyRecord?.document || '').replace(/\D/g, '');
         const idType = docNumber.length > 11 ? 'CNPJ' : 'CPF';

@@ -21,6 +21,45 @@ const RATE_LIMIT_MAX_ATTEMPTS = 5;
 const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
 const RATE_LIMIT_BLOCK_DURATION_MS = 15 * 60 * 1000; // 15 minutes
 
+type SimpleRateLimitEntry = {
+  count: number;
+  resetAt: number;
+};
+
+const simpleRateLimitStore = new Map<string, SimpleRateLimitEntry>();
+
+export function createSimpleRateLimiter(options: { windowMs: number; max: number; keyPrefix?: string }) {
+  const { windowMs, max, keyPrefix = "default" } = options;
+
+  return (req: Request, res: Response, next: NextFunction) => {
+    const ip = (req.headers["x-forwarded-for"]?.toString().split(",")[0] || req.socket.remoteAddress || "unknown").trim();
+    const now = Date.now();
+    const key = `${keyPrefix}:${ip}`;
+    const entry = simpleRateLimitStore.get(key);
+
+    if (!entry || now > entry.resetAt) {
+      simpleRateLimitStore.set(key, { count: 1, resetAt: now + windowMs });
+      res.setHeader("X-RateLimit-Remaining", String(Math.max(0, max - 1)));
+      res.setHeader("X-RateLimit-Reset", String(Math.ceil((now + windowMs) / 1000)));
+      return next();
+    }
+
+    if (entry.count >= max) {
+      const retryAfter = Math.ceil((entry.resetAt - now) / 1000);
+      res.setHeader("Retry-After", String(Math.max(1, retryAfter)));
+      res.setHeader("X-RateLimit-Remaining", "0");
+      res.setHeader("X-RateLimit-Reset", String(Math.ceil(entry.resetAt / 1000)));
+      return res.status(429).json({ error: "Too many requests" });
+    }
+
+    entry.count += 1;
+    simpleRateLimitStore.set(key, entry);
+    res.setHeader("X-RateLimit-Remaining", String(Math.max(0, max - entry.count)));
+    res.setHeader("X-RateLimit-Reset", String(Math.ceil(entry.resetAt / 1000)));
+    return next();
+  };
+}
+
 export async function checkRateLimit(ip: string): Promise<{ allowed: boolean; remaining: number }> {
   const oneMinuteAgo = new Date(Date.now() - RATE_LIMIT_WINDOW_MS);
   

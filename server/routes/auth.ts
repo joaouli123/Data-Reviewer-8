@@ -17,12 +17,15 @@ import {
   hashPassword,
   checkSubscriptionStatus
 } from "../auth";
-import { authMiddleware, checkRateLimit, recordLoginAttempt, AuthenticatedRequest } from "../middleware";
+import { authMiddleware, checkRateLimit, recordLoginAttempt, AuthenticatedRequest, requirePermission, createSimpleRateLimiter } from "../middleware";
 import { generateBoletoForCompany } from "../utils/boleto";
 
 export function registerAuthRoutes(app: Express) {
+  const signupRateLimiter = createSimpleRateLimiter({ windowMs: 10 * 60 * 1000, max: 5, keyPrefix: "signup" });
+  const resetRateLimiter = createSimpleRateLimiter({ windowMs: 10 * 60 * 1000, max: 5, keyPrefix: "password-reset" });
+
   // Sign up
-  app.post("/api/auth/signup", async (req, res) => {
+  app.post("/api/auth/signup", signupRateLimiter, async (req, res) => {
     try {
       const { 
         companyName, 
@@ -626,15 +629,10 @@ export function registerAuthRoutes(app: Express) {
   });
 
   // User Management Routes
-  app.get("/api/users", authMiddleware, async (req: AuthenticatedRequest, res) => {
+  app.get("/api/users", authMiddleware, requirePermission("manage_users"), async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       
-      // Permitir apenas admin ou super_admin de ver usuários
-      if (req.user.role !== 'admin' && !req.user.isSuperAdmin) {
-        return res.status(403).json({ error: "Acesso negado" });
-      }
-
       const companyUsers = await db.select()
         .from(users)
         .where(eq(users.companyId, req.user.companyId))
@@ -655,17 +653,13 @@ export function registerAuthRoutes(app: Express) {
     }
   });
 
-  app.post("/api/invitations", authMiddleware, async (req: AuthenticatedRequest, res) => {
+  app.post("/api/invitations", authMiddleware, requirePermission("invite_users"), async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       
       const [dbUser] = await db.select().from(users).where(eq(users.id, req.user.id)).limit(1);
       const perms = dbUser?.permissions ? (typeof dbUser.permissions === 'string' ? JSON.parse(dbUser.permissions) : dbUser.permissions) : {};
       
-      if (req.user.role !== 'admin' && !req.user.isSuperAdmin && !perms.invite_users) {
-        return res.status(403).json({ error: "Acesso negado" });
-      }
-
       const { email, role, permissions, name, username, password } = req.body;
 
       // Define default permissions for operational users if none provided
@@ -709,7 +703,7 @@ export function registerAuthRoutes(app: Express) {
     }
   });
 
-  app.delete("/api/users/:id", authMiddleware, async (req: AuthenticatedRequest, res) => {
+  app.delete("/api/users/:id", authMiddleware, requirePermission("manage_users"), async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       if (req.user.id === req.params.id) return res.status(400).json({ error: "Cannot delete yourself" });
@@ -721,7 +715,7 @@ export function registerAuthRoutes(app: Express) {
     }
   });
 
-  app.patch("/api/users/:id/permissions", authMiddleware, async (req: AuthenticatedRequest, res) => {
+  app.patch("/api/users/:id/permissions", authMiddleware, requirePermission("manage_users"), async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const { permissions } = req.body;
@@ -737,7 +731,7 @@ export function registerAuthRoutes(app: Express) {
   });
 
   // Create invitation and send email
-  app.post("/api/invitations/send-email", authMiddleware, async (req: AuthenticatedRequest, res) => {
+  app.post("/api/invitations/send-email", authMiddleware, requirePermission("invite_users"), async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       
@@ -873,7 +867,7 @@ export function registerAuthRoutes(app: Express) {
   });
 
   // Generate invite link (for copy link functionality)
-  app.post("/api/invitations/generate-link", authMiddleware, async (req: AuthenticatedRequest, res) => {
+  app.post("/api/invitations/generate-link", authMiddleware, requirePermission("invite_users"), async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       
@@ -908,7 +902,7 @@ export function registerAuthRoutes(app: Express) {
   });
 
   // Request password reset
-  app.post("/api/auth/request-reset", async (req, res) => {
+  app.post("/api/auth/request-reset", resetRateLimiter, async (req, res) => {
     try {
       const ip = req.headers['x-forwarded-for']?.toString().split(',')[0] || req.socket.remoteAddress || 'unknown';
       

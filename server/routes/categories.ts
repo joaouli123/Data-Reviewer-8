@@ -1,13 +1,13 @@
 import { Express } from "express";
 import { storage } from "../storage";
 import { insertCategorySchema, DEFAULT_CATEGORIES } from "../../shared/schema";
-import { authMiddleware, AuthenticatedRequest } from "../middleware";
+import { authMiddleware, AuthenticatedRequest, requirePermission } from "../middleware";
 import { z } from "zod";
 
 export function registerCategoryRoutes(app: Express) {
 
   // GET: Lista as categorias (cria padrões se não existirem)
-  app.get("/api/categories", authMiddleware, async (req: AuthenticatedRequest, res) => {
+  app.get("/api/categories", authMiddleware, requirePermission("view_transactions"), async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
 
@@ -32,7 +32,7 @@ export function registerCategoryRoutes(app: Express) {
   });
 
   // POST: Cria nova categoria (Despesa ou Receita)
-  app.post("/api/categories", authMiddleware, async (req: AuthenticatedRequest, res) => {
+  app.post("/api/categories", authMiddleware, requirePermission("create_transactions"), async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
 
@@ -70,7 +70,7 @@ export function registerCategoryRoutes(app: Express) {
   });
 
   // PATCH: Atualiza categoria
-  app.patch("/api/categories/:id", authMiddleware, async (req: AuthenticatedRequest, res) => {
+  app.patch("/api/categories/:id", authMiddleware, requirePermission("edit_transactions"), async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const categoryId = req.params.id;
@@ -103,7 +103,7 @@ export function registerCategoryRoutes(app: Express) {
   });
 
   // DELETE: Remove uma categoria customizada
-  app.delete("/api/categories/:id", authMiddleware, async (req: AuthenticatedRequest, res) => {
+  app.delete("/api/categories/:id", authMiddleware, requirePermission("delete_transactions"), async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const categoryId = req.params.id;

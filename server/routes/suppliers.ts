@@ -46,6 +46,7 @@ export function registerSupplierRoutes(app: Express) {
   app.patch("/api/suppliers/:id", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      if (!await checkPermission(req, 'manage_suppliers')) return res.status(403).json({ error: "Acesso negado" });
       const cleanData: any = {};
       for (const [key, value] of Object.entries(req.body)) {
         cleanData[key] = (value === '' || value === undefined) ? null : value;
@@ -62,6 +63,7 @@ export function registerSupplierRoutes(app: Express) {
   app.delete("/api/suppliers/:id", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      if (!await checkPermission(req, 'manage_suppliers')) return res.status(403).json({ error: "Acesso negado" });
       await storage.deleteSupplier(req.user.companyId, req.params.id);
       res.status(204).end();
     } catch (error: any) {

@@ -1,6 +1,7 @@
 import { Express } from "express";
 import { storage } from "../storage";
-import { authMiddleware, AuthenticatedRequest } from "../middleware";
+import { authMiddleware, AuthenticatedRequest, requirePermission } from "../middleware";
+import { z } from "zod";
 
 // Função auxiliar para garantir que o valor seja um número limpo (decimal US)
 function parseMoney(value: any): number {
@@ -20,7 +21,42 @@ function parseLocalDate(value: string): Date {
 }
 
 export function registerSalesPurchasesRoutes(app: Express) {
-  app.get("/api/sales", authMiddleware, async (req: AuthenticatedRequest, res) => {
+  const saleSchema = z.object({
+    customerId: z.union([z.string(), z.number()]),
+    saleDate: z.string().min(1),
+    totalAmount: z.union([z.string(), z.number()]),
+    installmentCount: z.union([z.string(), z.number()]).optional(),
+    status: z.string().optional(),
+    description: z.string().optional(),
+    categoryId: z.union([z.string(), z.number()]).optional().nullable(),
+    paymentMethod: z.string().optional(),
+    customInstallments: z.array(
+      z.object({
+        date: z.string().optional(),
+        due_date: z.string().optional(),
+        amount: z.union([z.string(), z.number()]).optional()
+      })
+    ).optional()
+  });
+
+  const purchaseSchema = z.object({
+    supplierId: z.union([z.string(), z.number()]),
+    purchaseDate: z.string().min(1),
+    totalAmount: z.union([z.string(), z.number()]),
+    installmentCount: z.union([z.string(), z.number()]).optional(),
+    status: z.string().optional(),
+    description: z.string().optional(),
+    categoryId: z.union([z.string(), z.number()]).optional().nullable(),
+    paymentMethod: z.string().optional(),
+    customInstallments: z.array(
+      z.object({
+        date: z.string().optional(),
+        due_date: z.string().optional(),
+        amount: z.union([z.string(), z.number()]).optional()
+      })
+    ).optional()
+  });
+  app.get("/api/sales", authMiddleware, requirePermission("view_transactions"), async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const salesData = await storage.getSales(req.user.companyId);
@@ -30,7 +66,7 @@ export function registerSalesPurchasesRoutes(app: Express) {
     }
   });
 
-  app.get("/api/purchases", authMiddleware, async (req: AuthenticatedRequest, res) => {
+  app.get("/api/purchases", authMiddleware, requirePermission("view_transactions"), async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const purchasesData = await storage.getPurchases(req.user.companyId);
@@ -40,10 +76,15 @@ export function registerSalesPurchasesRoutes(app: Express) {
     }
   });
 
-  app.post("/api/sales", authMiddleware, async (req: AuthenticatedRequest, res) => {
+  app.post("/api/sales", authMiddleware, requirePermission("create_transactions"), async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
-      const { customerId, saleDate, totalAmount, installmentCount, status, description, categoryId, paymentMethod, customInstallments } = req.body;
+      const parsed = saleSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Dados inválidos" });
+      }
+
+      const { customerId, saleDate, totalAmount, installmentCount, status, description, categoryId, paymentMethod, customInstallments } = parsed.data;
 
       const cleanTotal = parseMoney(totalAmount);
 
@@ -108,10 +149,15 @@ export function registerSalesPurchasesRoutes(app: Express) {
     }
   });
 
-  app.post("/api/purchases", authMiddleware, async (req: AuthenticatedRequest, res) => {
+  app.post("/api/purchases", authMiddleware, requirePermission("create_transactions"), async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
-      const { supplierId, purchaseDate, totalAmount, installmentCount, status, description, categoryId, paymentMethod, customInstallments } = req.body;
+      const parsed = purchaseSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Dados inválidos" });
+      }
+
+      const { supplierId, purchaseDate, totalAmount, installmentCount, status, description, categoryId, paymentMethod, customInstallments } = parsed.data;
 
       const cleanTotal = parseMoney(totalAmount);
 

@@ -1,7 +1,8 @@
 import { Express } from "express";
 import { storage } from "../storage";
-import { authMiddleware, AuthenticatedRequest } from "../middleware";
+import { authMiddleware, AuthenticatedRequest, requirePermission } from "../middleware";
 import * as ofx from 'node-ofx-parser';
+import { z } from "zod";
 
 // --- CORREÇÃO 1: Caminho relativo duplo para chegar na raiz 'shared' ---
 import { db } from "../db";
@@ -9,7 +10,16 @@ import { bankStatementItems } from "../../shared/schema";
 
 export function registerBankRoutes(app: Express) {
 
-  app.get("/api/bank/items", authMiddleware, async (req: AuthenticatedRequest, res) => {
+  const uploadSchema = z.object({
+    ofxContent: z.string().min(1)
+  });
+
+  const matchSchema = z.object({
+    bankItemId: z.string().min(1),
+    transactionId: z.string().min(1)
+  });
+
+  app.get("/api/bank/items", authMiddleware, requirePermission("import_bank"), async (req: AuthenticatedRequest, res) => {
     try {
       res.header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
 
@@ -26,10 +36,15 @@ export function registerBankRoutes(app: Express) {
   });
 
   // --- ROTA 2: UPLOAD OFX ---
-  app.post("/api/bank/upload-ofx", authMiddleware, async (req: AuthenticatedRequest, res) => {
+  app.post("/api/bank/upload-ofx", authMiddleware, requirePermission("import_bank"), async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
-      const { ofxContent } = req.body;
+      const parsed = uploadSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Conteúdo inválido" });
+      }
+
+      const { ofxContent } = parsed.data;
 
       if (!ofxContent) return res.status(400).json({ error: "Conteúdo inválido" });
 
@@ -138,9 +153,10 @@ export function registerBankRoutes(app: Express) {
   });
 
   // --- ROTAS DE SUPORTE ---
-  app.get("/api/bank/suggest/:id", authMiddleware, async (req: AuthenticatedRequest, res) => {
+  app.get("/api/bank/suggest/:id", authMiddleware, requirePermission("import_bank"), async (req: AuthenticatedRequest, res) => {
     try {
       const bankItemId = req.params.id;
+      if (!bankItemId) return res.json([]);
       const companyId = req.user!.companyId;
       
       // 1. Buscar o item bancário
@@ -216,13 +232,18 @@ export function registerBankRoutes(app: Express) {
     }
   });
 
-  app.post("/api/bank/match", authMiddleware, async (req: AuthenticatedRequest, res) => {
-      const { bankItemId, transactionId } = req.body;
+  app.post("/api/bank/match", authMiddleware, requirePermission("import_bank"), async (req: AuthenticatedRequest, res) => {
+      const parsed = matchSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Dados inválidos" });
+      }
+
+      const { bankItemId, transactionId } = parsed.data;
       const matched = await storage.matchBankStatementItem(req.user!.companyId, bankItemId, transactionId);
       res.json(matched);
   });
 
-  app.delete("/api/bank/clear", authMiddleware, async (req: AuthenticatedRequest, res) => {
+  app.delete("/api/bank/clear", authMiddleware, requirePermission("import_bank"), async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user || !req.user.companyId) return res.status(401).json({ error: "Unauthorized" });
       await storage.clearBankStatementItems(req.user.companyId);
