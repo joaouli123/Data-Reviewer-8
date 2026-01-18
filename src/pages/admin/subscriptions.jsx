@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
-import { Download, MoreVertical, Trash2, Eye, Mail, CheckCircle, XCircle, Send, Loader2 } from 'lucide-react';
+import { Download, MoreVertical, Trash2, Eye, Mail, CheckCircle, XCircle, Send, Loader2, Sparkles } from 'lucide-react';
 import { SubscriptionEditModal } from '@/components/admin/SubscriptionEditModal';
 import { formatDateWithTimezone } from '@/utils/dateFormatter';
 import { formatCurrency } from '@/utils/formatters';
@@ -40,18 +40,28 @@ const apiRequest = async (method, url, body = null) => {
   return response.json();
 };
 
+const planLabels = {
+  monthly: 'Mensal',
+  basic: 'Básico',
+  pro: 'Pro',
+  enterprise: 'Enterprise',
+};
+
+const getPlanLabel = (plan) => planLabels[plan] || (plan ? plan.toUpperCase() : 'N/A');
+
 const exportToExcel = (data) => {
   const csv = [
-    ['Data Assinatura', 'Nome Empresa', 'Comprador', 'Plano', 'Valor', 'Forma Pagamento', 'Vencimento', 'Status'],
+    ['Data Assinatura', 'Nome Empresa', 'Comprador', 'Plano', 'Valor', 'Forma Pagamento', 'Vencimento', 'Status Pagamento', 'Status Conta'],
     ...data.map(s => [
       formatDateWithTimezone(s.createdAt),
       s.companyName || '',
       s.subscriberName || '',
-      s.plan || '',
+      getPlanLabel(s.plan),
       s.amount ? `R$ ${parseFloat(s.amount).toFixed(2)}` : 'N/A',
       s.paymentMethod || '',
       s.isLifetime ? 'Vitalício' : (s.expiresAt ? formatDateWithTimezone(s.expiresAt) : 'N/A'),
-      s.status === 'active' ? 'Ativa' : s.status === 'blocked' ? 'Bloqueada' : 'Inativa',
+      s.companyPaymentStatus === 'approved' ? 'Pago' : s.companyPaymentStatus === 'rejected' ? 'Recusado' : 'Pendente',
+      s.companySubscriptionStatus === 'active' ? 'Ativa' : s.companySubscriptionStatus === 'suspended' ? 'Suspensa' : 'Inativa',
     ])
   ].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
 
@@ -121,21 +131,58 @@ function SubscriptionListContent() {
     onError: (err) => toast.error(err.message),
   });
 
+  const resendWelcome = useMutation({
+    mutationFn: (id) => apiRequest('POST', `/api/admin/subscriptions/${id}/resend-welcome`),
+    onSuccess: (data) => {
+      toast.success(data.message || 'E-mail reenviado com sucesso');
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const normalized = useMemo(() => {
+    const byCompany = new Map();
+    subscriptions.forEach((s) => {
+      const key = s.companyId || s.id;
+      const existing = byCompany.get(key);
+      if (!existing) {
+        byCompany.set(key, s);
+        return;
+      }
+      const existingDate = new Date(existing.createdAt || 0).getTime();
+      const nextDate = new Date(s.createdAt || 0).getTime();
+      if (nextDate >= existingDate) {
+        byCompany.set(key, s);
+      }
+    });
+    return Array.from(byCompany.values());
+  }, [subscriptions]);
+
   const filtered = useMemo(() => {
-    return subscriptions.filter(s =>
+    return normalized.filter(s =>
       (s.companyName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       s.subscriberName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       s.paymentMethod?.toLowerCase().includes(searchTerm.toLowerCase()))
     );
-  }, [subscriptions, searchTerm]);
+  }, [normalized, searchTerm]);
 
-  const isActive = (subscription) => {
-    if (subscription.status === 'blocked') return false;
-    if (subscription.isLifetime) return true;
-    if (subscription.expiresAt) {
-      return new Date(subscription.expiresAt) > new Date();
+  const getStatusBadge = (subscription) => {
+    const now = new Date();
+    const isExpired = !!subscription.expiresAt && new Date(subscription.expiresAt) <= now && !subscription.isLifetime;
+    const isBlocked = subscription.status === 'blocked' || subscription.companySubscriptionStatus === 'suspended';
+
+    if (isBlocked) {
+      return { variant: 'destructive', label: 'Bloqueada' };
     }
-    return subscription.status === 'active';
+
+    if (subscription.companyPaymentStatus === 'approved') {
+      return { variant: 'default', label: 'Pago' };
+    }
+
+    if (isExpired) {
+      return { variant: 'destructive', label: 'Vencido' };
+    }
+
+    return { variant: 'secondary', label: 'Pendente' };
   };
 
   return (
@@ -177,7 +224,7 @@ function SubscriptionListContent() {
                   <TableHead>Empresa</TableHead>
                   <TableHead>Plano</TableHead>
                   <TableHead>Valor</TableHead>
-                  <TableHead>Primeiro Pagamento</TableHead>
+                  <TableHead>Data da Assinatura</TableHead>
                   <TableHead>Próximo Vencimento</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
@@ -203,7 +250,7 @@ function SubscriptionListContent() {
                         <div className="font-medium">{s.companyName}</div>
                         <div className="text-xs text-muted-foreground font-mono">{s.companyDocument}</div>
                       </TableCell>
-                      <TableCell><Badge variant="outline">{s.plan?.toUpperCase()}</Badge></TableCell>
+                      <TableCell><Badge variant="outline">{getPlanLabel(s.plan)}</Badge></TableCell>
                       <TableCell>{formatCurrency(s.amount)}</TableCell>
                       <TableCell className="text-sm">
                         {formatDateWithTimezone(s.createdAt)}
@@ -219,10 +266,10 @@ function SubscriptionListContent() {
                       </TableCell>
                       <TableCell>
                         <Badge 
-                          variant={isActive(s) ? 'default' : s.status === 'blocked' ? 'destructive' : 'secondary'}
+                          variant={getStatusBadge(s).variant}
                           data-testid={`badge-status-${s.id}`}
                         >
-                          {isActive(s) ? 'Ativo' : s.status === 'blocked' ? 'Bloqueada' : 'Pendente/Inativa'}
+                          {getStatusBadge(s).label}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
@@ -230,9 +277,10 @@ function SubscriptionListContent() {
                           subscription={s}
                           onView={() => setSelectedSubscription(s)}
                           onResendBoleto={() => setMailSub(s)}
+                          onResendWelcome={() => resendWelcome.mutate(s.id)}
                           onToggleCompanyStatus={(newStatus) => toggleCompanyStatus.mutate({ companyId: s.companyId, status: newStatus })}
                           onDelete={() => setDeleteConfirm(s)}
-                          isPending={toggleCompanyStatus.isPending || resendBoleto.isPending}
+                          isPending={toggleCompanyStatus.isPending || resendBoleto.isPending || resendWelcome.isPending}
                         />
                       </TableCell>
                     </TableRow>
@@ -320,7 +368,9 @@ function SubscriptionListContent() {
   );
 }
 
-function SubscriptionActionsMenu({ subscription, onView, onResendBoleto, onToggleCompanyStatus, onDelete, isPending }) {
+function SubscriptionActionsMenu({ subscription, onView, onResendBoleto, onResendWelcome, onToggleCompanyStatus, onDelete, isPending }) {
+  const isCompanyActive = subscription.companySubscriptionStatus === 'active';
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -342,12 +392,16 @@ function SubscriptionActionsMenu({ subscription, onView, onResendBoleto, onToggl
           <Mail className="h-4 w-4 mr-2" />
           Enviar E-mail
         </DropdownMenuItem>
+        <DropdownMenuItem onClick={onResendWelcome} data-testid={`action-resend-welcome-${subscription.id}`}>
+          <Sparkles className="h-4 w-4 mr-2" />
+          Reenviar Boas-vindas
+        </DropdownMenuItem>
         <DropdownMenuItem 
-          onClick={() => onToggleCompanyStatus(subscription.status === 'active' ? 'suspended' : 'active')}
-          className={subscription.status === 'active' ? 'text-destructive' : 'text-green-600'}
+          onClick={() => onToggleCompanyStatus(isCompanyActive ? 'suspended' : 'active')}
+          className={isCompanyActive ? 'text-destructive' : 'text-green-600'}
           data-testid={`action-toggle-status-${subscription.id}`}
         >
-          {subscription.status === 'active' ? (
+          {isCompanyActive ? (
             <><XCircle className="h-4 w-4 mr-2" /> Suspender Conta</>
           ) : (
             <><CheckCircle className="h-4 w-4 mr-2" /> Ativar Conta</>

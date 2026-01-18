@@ -217,7 +217,8 @@ export default function Checkout() {
           toast.success('Boleto gerado com sucesso!');
           // Redirect to a page that shows the ticket or open it directly
           window.open(result.ticket_url, '_blank');
-          setLocation(`/payment-success?payment_id=${result.paymentId || result.id}&ticket_url=${encodeURIComponent(result.ticket_url)}`);
+          const dueDateParam = result.dueDate ? `&due_date=${encodeURIComponent(result.dueDate)}` : '';
+          setLocation(`/payment-success?payment_id=${result.paymentId || result.id}&ticket_url=${encodeURIComponent(result.ticket_url)}${dueDateParam}`);
         } else {
           toast.success('Instruções de pagamento foram enviadas para seu email!');
           setLocation(`/payment-success?payment_id=${result.paymentId || result.id}`);

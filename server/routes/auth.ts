@@ -115,9 +115,38 @@ export function registerAuthRoutes(app: Express) {
         .set({ cep, rua, numero, complemento: bairro, cidade, estado } as any)
         .where(eq(users.id, user.id));
       
-      const newSubscriptionPlan = plan || "pro";
-      const amount = newSubscriptionPlan === "pro" ? "997.00" : (newSubscriptionPlan === "monthly" ? "97.00" : "0.00");
-      const ticketUrl = `https://boletos.huacontrol.com.br/gerar?id=${company.id}`; // Exemplo de URL de boleto
+      const planLabels: Record<string, string> = {
+        monthly: "Mensal",
+        basic: "Básico",
+        pro: "Pro",
+        enterprise: "Enterprise",
+      };
+      const planAmounts: Record<string, string> = {
+        monthly: "215.00",
+        basic: "0.00",
+        pro: "997.00",
+        enterprise: "0.00",
+      };
+
+      const newSubscriptionPlan = plan || "monthly";
+      const amount = planAmounts[newSubscriptionPlan] || "0.00";
+      const planLabel = planLabels[newSubscriptionPlan] || newSubscriptionPlan.toUpperCase();
+
+      const origin = (req.headers.origin || '').toString();
+      const referer = (req.headers.referer || '').toString();
+      let appUrl = origin;
+      if (!appUrl && referer) {
+        try {
+          appUrl = new URL(referer).origin;
+        } catch {
+          appUrl = '';
+        }
+      }
+      if (!appUrl) {
+        appUrl = process.env.APP_URL || 'https://huacontrol.com.br';
+      }
+
+      const checkoutUrl = `${appUrl}/checkout?plan=${encodeURIComponent(newSubscriptionPlan)}`;
 
       // Enviar e-mail de boas-vindas com o boleto
       try {
@@ -126,16 +155,22 @@ export function registerAuthRoutes(app: Express) {
         await resend.emails.send({
           from: 'Financeiro <contato@huacontrol.com.br>',
           to: email,
-          subject: 'Conta Criada com Sucesso - Pagamento Pendente',
+          subject: 'Conta criada com sucesso - Pagamento pendente',
           html: `
-            <p>Olá, ${name || username}</p>
-            <p>Sua conta na HuaControl foi criada com sucesso.</p>
-            <p>Para começar a usar o sistema, é necessário realizar o pagamento da sua assinatura.</p>
-            <p>Plano: ${newSubscriptionPlan.toUpperCase()}</p>
-            <p>Valor: R$ ${parseFloat(amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-            <p>Você pode acessar seu boleto no link abaixo:</p>
-            <p><a href="${ticketUrl}">${ticketUrl}</a></p>
-            <p>Após a confirmação do pagamento, seu acesso será liberado automaticamente.</p>
+            <div style="font-family: sans-serif; color: #333;">
+              <h2 style="margin-bottom: 12px;">Conta criada com sucesso</h2>
+              <p>Olá, ${name || username}</p>
+              <p>Sua conta na HuaControl foi criada com sucesso.</p>
+              <p>Para começar a usar o sistema, é necessário realizar o pagamento da sua assinatura.</p>
+              <p><strong>Plano:</strong> ${planLabel}</p>
+              <p><strong>Valor:</strong> R$ ${parseFloat(amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+              <p>Para emitir o boleto, acesse o checkout:</p>
+              <p><a href="${checkoutUrl}">${checkoutUrl}</a></p>
+              <p>Após a confirmação do pagamento, seu acesso será liberado automaticamente.</p>
+              <p>Compensação bancária do boleto: até 1 dia útil.</p>
+              <br/>
+              <p>Atenciosamente,<br/>Equipe HuaControl</p>
+            </div>
           `
         });
       } catch (emailErr) {
@@ -170,12 +205,12 @@ export function registerAuthRoutes(app: Express) {
           await db.insert(subscriptions).values({ 
             companyId: company.id, 
             plan: newSubscriptionPlan, 
-            status: "active",
+            status: "pending",
             amount: amount,
             subscriberName: name || username,
             createdAt: new Date()
           } as any);
-          await db.update(companies).set({ subscriptionPlan: newSubscriptionPlan, paymentStatus: "approved" } as any).where(eq(companies.id, company.id));
+          await db.update(companies).set({ subscriptionPlan: newSubscriptionPlan, paymentStatus: "pending" } as any).where(eq(companies.id, company.id));
         }
       } catch (err) {
         console.error("Error setting up company subscription:", err);

@@ -1,4 +1,4 @@
-import { AlertCircle, LogOut, MessageCircle, FileText, Loader2 } from "lucide-react";
+import { AlertCircle, LogOut, MessageCircle, FileText, Loader2, CheckCircle2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,9 +7,11 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { toast } from "sonner";
+import { useState } from "react";
 
 export default function PaymentPending() {
   const { logout, company, user } = useAuth();
+  const [issuedInfo, setIssuedInfo] = useState(null);
 
   const { data: subscription, isLoading } = useQuery({
     queryKey: ["/api/subscriptions/active"],
@@ -50,8 +52,10 @@ export default function PaymentPending() {
     },
     onSuccess: (data) => {
       if (data.ticket_url) {
+        setIssuedInfo({ ticketUrl: data.ticket_url, dueDate: data.dueDate || null });
         window.open(data.ticket_url, '_blank');
         queryClient.invalidateQueries({ queryKey: ["/api/subscriptions/active"] });
+        toast.success("Boleto gerado com sucesso!");
       }
     },
     onError: (error) => {
@@ -62,6 +66,12 @@ export default function PaymentPending() {
 
   const whatsappNumber = "5554996231432";
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=Olá,%20meu%20acesso%20está%20suspenso%20e%20gostaria%20de%20regularizar%20minha%20assinatura.`;
+
+  const ticketUrl = issuedInfo?.ticketUrl || subscription?.ticket_url;
+  const dueDateValue = issuedInfo?.dueDate || subscription?.expiresAt;
+  const dueDateText = dueDateValue
+    ? format(new Date(dueDateValue), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+    : "próximo dia útil";
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-background p-4">
@@ -76,6 +86,18 @@ export default function PaymentPending() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 text-center">
+          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-left">
+            <div className="flex items-center gap-2 text-emerald-700 text-sm font-semibold">
+              <CheckCircle2 className="w-4 h-4" />
+              Conta criada com sucesso
+            </div>
+            <p className="text-xs text-emerald-700 mt-1">
+              Seu boleto já foi emitido. Vencimento: <strong>{dueDateText}</strong>.
+            </p>
+            <p className="text-xs text-emerald-700 mt-1">
+              Prazo de compensação: até <strong>3 dias úteis</strong> após o pagamento.
+            </p>
+          </div>
           {subscription?.expiresAt && (
             <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-3 mb-4">
               <p className="text-sm font-medium text-destructive">
@@ -85,7 +107,7 @@ export default function PaymentPending() {
           )}
           
           <p className="text-muted-foreground text-sm">
-            Identificamos que existe uma pendência financeira em sua conta. Para regularizar seu acesso, você pode gerar um novo boleto abaixo ou falar com nosso suporte.
+            Identificamos uma pendência financeira. Para regularizar seu acesso, você pode baixar o boleto novamente, gerar um novo boleto ou falar com nosso suporte.
           </p>
 
           <div className="grid grid-cols-1 gap-3 pt-2">
@@ -96,6 +118,15 @@ export default function PaymentPending() {
               <MessageCircle className="w-5 h-5" />
               Falar com Suporte (WhatsApp)
             </Button>
+
+            {ticketUrl && (
+              <Button asChild variant="secondary" className="w-full gap-2 h-11">
+                <a href={ticketUrl} target="_blank" rel="noopener noreferrer">
+                  <Download className="w-5 h-5" />
+                  Baixar boleto novamente
+                </a>
+              </Button>
+            )}
 
             <Button 
               variant="outline"
@@ -108,7 +139,7 @@ export default function PaymentPending() {
               ) : (
                 <FileText className="w-5 h-5 text-primary" />
               )}
-              Gerar Boleto (Vence Amanhã)
+              Gerar novo boleto
             </Button>
           </div>
 
@@ -118,8 +149,8 @@ export default function PaymentPending() {
               Informações Importantes:
             </p>
             <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-              <li>O novo boleto terá vencimento para o próximo dia útil.</li>
-              <li>O desbloqueio do sistema ocorre em até 24h após o pagamento.</li>
+              <li>O vencimento do boleto é: <strong>{dueDateText}</strong>.</li>
+              <li>Compensação bancária em até <strong>1 dia útil</strong>.</li>
               <li>Para liberação imediata, envie o comprovante no WhatsApp acima.</li>
             </ul>
           </div>

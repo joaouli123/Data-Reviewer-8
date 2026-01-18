@@ -3,6 +3,7 @@ import { db } from "../db";
 import { eq, desc, sql, and } from "drizzle-orm";
 import { authMiddleware, requireSuperAdmin, AuthenticatedRequest } from "../middleware";
 import { companies, users, subscriptions, auditLogs } from "../../shared/schema";
+import { generateBoletoForCompany } from "../utils/boleto";
 
 import { Resend } from 'resend';
 
@@ -70,12 +71,24 @@ export function registerAdminRoutes(app: Express) {
     try {
       const { id } = req.params;
       const { dueDate } = req.body;
+
+      if (!dueDate) {
+        return res.status(400).json({ error: "Due date is required" });
+      }
+
+      const parsedDueDate = new Date(dueDate);
+      if (Number.isNaN(parsedDueDate.getTime())) {
+        return res.status(400).json({ error: "Invalid due date" });
+      }
+
+      parsedDueDate.setHours(23, 59, 59, 999);
       
       const [subscription] = await db
         .select({
           id: subscriptions.id,
           companyId: subscriptions.companyId,
           subscriberName: subscriptions.subscriberName,
+          plan: subscriptions.plan,
           amount: subscriptions.amount,
           companyName: companies.name,
           ticketUrl: subscriptions.ticket_url,
@@ -103,6 +116,26 @@ export function registerAdminRoutes(app: Express) {
       }
 
       console.log(`[Admin] Resending boleto for subscription ${id} to ${emailTo} with due date ${dueDate}`);
+
+      const newTicketUrl = await generateBoletoForCompany({
+        companyId: subscription.companyId,
+        amount: subscription.amount,
+        plan: subscription.plan,
+        expirationDate: parsedDueDate,
+      });
+
+      if (!newTicketUrl) {
+        return res.status(500).json({ error: "Failed to generate boleto" });
+      }
+
+      await db.update(subscriptions)
+        .set({
+          ticket_url: newTicketUrl,
+          expiresAt: parsedDueDate,
+          status: 'pending',
+          updatedAt: new Date(),
+        })
+        .where(eq(subscriptions.id, id));
       
       try {
         await resend.emails.send({
@@ -111,9 +144,9 @@ export function registerAdminRoutes(app: Express) {
           subject: `Novo Boleto Gerado - ${subscription.companyName}`,
           html: `
             <p>Olá, ${companyAdmin?.name || 'Administrador'}</p>
-            <p>Um novo boleto foi gerado para sua assinatura com vencimento em ${new Date(dueDate).toLocaleDateString('pt-BR')}.</p>
+            <p>Um novo boleto foi gerado para sua assinatura com vencimento em ${parsedDueDate.toLocaleDateString('pt-BR')}.</p>
             <p>Valor: R$ ${parseFloat(subscription.amount || "0").toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-            ${subscription.ticketUrl ? `<p>Acesse seu boleto aqui: <a href="${subscription.ticketUrl}">${subscription.ticketUrl}</a></p>` : ''}
+            <p>Acesse seu boleto aqui: <a href="${newTicketUrl}">${newTicketUrl}</a></p>
           `
         });
       } catch (emailError) {
@@ -128,6 +161,86 @@ export function registerAdminRoutes(app: Express) {
     } catch (error) {
       console.error("Error resending boleto:", error);
       res.status(500).json({ error: "Failed to resend boleto" });
+    }
+  });
+
+  // Resend welcome email
+  app.post("/api/admin/subscriptions/:id/resend-welcome", authMiddleware, requireSuperAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      const planLabels: Record<string, string> = {
+        monthly: "Mensal",
+        basic: "Básico",
+        pro: "Pro",
+        enterprise: "Enterprise",
+      };
+      const planAmounts: Record<string, string> = {
+        monthly: "215.00",
+        basic: "0.00",
+        pro: "997.00",
+        enterprise: "0.00",
+      };
+
+      const [subscription] = await db
+        .select({
+          id: subscriptions.id,
+          companyId: subscriptions.companyId,
+          plan: subscriptions.plan,
+          amount: subscriptions.amount,
+          companyName: companies.name,
+        })
+        .from(subscriptions)
+        .leftJoin(companies, eq(subscriptions.companyId, companies.id))
+        .where(eq(subscriptions.id, id))
+        .limit(1);
+
+      if (!subscription) {
+        return res.status(404).json({ error: "Subscription not found" });
+      }
+
+      const [companyAdmin] = await db
+        .select({ email: users.email, name: users.name })
+        .from(users)
+        .where(and(eq(users.companyId, subscription.companyId), eq(users.role, "admin")))
+        .limit(1);
+
+      const emailTo = companyAdmin?.email;
+      if (!emailTo) {
+        return res.status(400).json({ error: "No admin email found for this company" });
+      }
+
+      const appUrl = process.env.APP_URL || 'https://huacontrol.com.br';
+      const planLabel = planLabels[subscription.plan || ''] || (subscription.plan ? subscription.plan.toUpperCase() : 'N/A');
+      const amount = planAmounts[subscription.plan || ''] || (subscription.amount ? String(subscription.amount) : '0.00');
+      const checkoutUrl = `${appUrl}/checkout?plan=${encodeURIComponent(subscription.plan || 'monthly')}`;
+
+      await resend.emails.send({
+        from: 'Boas-vindas <contato@huacontrol.com.br>',
+        to: emailTo,
+        subject: `Conta criada com sucesso - Pagamento pendente`,
+        html: `
+          <div style="font-family: sans-serif; color: #333;">
+            <h2 style="margin-bottom: 12px;">Conta criada com sucesso</h2>
+            <p>Olá, ${companyAdmin?.name || 'Administrador'}</p>
+            <p>Sua conta na HuaControl foi criada com sucesso.</p>
+            <p>Para começar a usar o sistema, é necessário realizar o pagamento da sua assinatura.</p>
+            <p><strong>Plano:</strong> ${planLabel}</p>
+            <p><strong>Valor:</strong> R$ ${parseFloat(amount || "0").toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+            <p>Para emitir o boleto, acesse o checkout:</p>
+            <p><a href="${checkoutUrl}">${checkoutUrl}</a></p>
+            <p>Após a confirmação do pagamento, seu acesso será liberado automaticamente.</p>
+            <p>Compensação bancária do boleto: até 1 dia útil.</p>
+            <br/>
+            <p>Atenciosamente,<br/>Equipe HuaControl</p>
+          </div>
+        `
+      });
+
+      res.json({ success: true, message: `E-mail reenviado para ${emailTo}` });
+    } catch (error) {
+      console.error("Error resending welcome email:", error);
+      res.status(500).json({ error: "Failed to resend welcome email" });
     }
   });
 
@@ -187,6 +300,8 @@ export function registerAdminRoutes(app: Express) {
           ticket_url: subscriptions.ticket_url,
           companyName: companies.name,
           companyDocument: companies.document,
+          companySubscriptionStatus: companies.subscriptionStatus,
+          companyPaymentStatus: companies.paymentStatus,
         })
         .from(subscriptions)
         .leftJoin(companies, eq(subscriptions.companyId, companies.id))

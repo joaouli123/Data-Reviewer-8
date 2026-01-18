@@ -1,6 +1,6 @@
 import { Express, Request, Response } from "express";
 import { db } from "../db";
-import { eq, sql, and } from "drizzle-orm";
+import { eq, sql, and, desc } from "drizzle-orm";
 import { companies, subscriptions, users, User } from "../../shared/schema";
 import crypto from "crypto";
 
@@ -83,6 +83,7 @@ export function registerPaymentRoutes(app: Express) {
       let paymentResponse;
       let paymentStatus = 'pending';
       let mpPaymentId = null;
+      let boletoDueDate: Date | null = null;
 
       const resolvePayer = async () => {
         const baseEmail = email || payer?.email || '';
@@ -198,6 +199,11 @@ export function registerPaymentRoutes(app: Express) {
           paymentStatus = 'pending';
           mpPaymentId = paymentResponse.id;
         } else {
+          const expirationDate = new Date();
+          expirationDate.setDate(expirationDate.getDate() + 1);
+          expirationDate.setHours(23, 59, 59, 999);
+          boletoDueDate = expirationDate;
+
           const missingFields = [] as string[];
           if (!resolvedPayer?.email) missingFields.push('email');
           if (!resolvedPayer?.identification?.number) missingFields.push('identification.number');
@@ -308,6 +314,7 @@ export function registerPaymentRoutes(app: Express) {
               token: token,
               installments: 1,
               payment_method_id: payment_method_id === 'credit_card' ? 'master' : payment_method_id,
+              date_of_expiration: expirationDate.toISOString(),
               payer: {
                 email: email,
               },
@@ -355,9 +362,14 @@ export function registerPaymentRoutes(app: Express) {
             .where(eq(companies.id, companyId));
         }
 
-        // Create subscription record
-        await db.insert(subscriptions).values({
-          companyId,
+        const [existingSub] = await db
+          .select()
+          .from(subscriptions)
+          .where(eq(subscriptions.companyId, companyId))
+          .orderBy(desc(subscriptions.createdAt))
+          .limit(1);
+
+        const subPayload = {
           plan,
           status: paymentStatus === 'approved' ? 'active' : 'pending',
           subscriberName: `${resolvedPayer?.first_name || ''} ${resolvedPayer?.last_name || ''}`.trim() || email,
@@ -366,7 +378,19 @@ export function registerPaymentRoutes(app: Express) {
           isLifetime,
           expiresAt,
           ticket_url: paymentResponse?.transaction_details?.external_resource_url,
-        });
+          updatedAt: new Date(),
+        };
+
+        if (existingSub) {
+          await db.update(subscriptions)
+            .set(subPayload)
+            .where(eq(subscriptions.id, existingSub.id));
+        } else {
+          await db.insert(subscriptions).values({
+            companyId,
+            ...subPayload,
+          });
+        }
 
         console.log("[Payment] Subscription record created");
       }
@@ -408,6 +432,7 @@ export function registerPaymentRoutes(app: Express) {
           qr_code: paymentResponse?.point_of_interaction?.transaction_data?.qr_code,
           qr_code_base64: paymentResponse?.point_of_interaction?.transaction_data?.qr_code_base64,
           ticket_url: paymentResponse?.transaction_details?.external_resource_url,
+          dueDate: boletoDueDate ? boletoDueDate.toISOString() : null,
         });
       } else if (paymentStatus === 'pending' || paymentStatus === 'in_process') {
         // Boleto e outros métodos que ficam pending devem ser aceitos
@@ -417,6 +442,7 @@ export function registerPaymentRoutes(app: Express) {
           message: 'Aguardando pagamento',
           paymentId: mpPaymentId,
           ticket_url: paymentResponse?.transaction_details?.external_resource_url,
+          dueDate: boletoDueDate ? boletoDueDate.toISOString() : null,
         });
       } else {
         // rejected, cancelled, etc
@@ -689,6 +715,10 @@ export function registerPaymentRoutes(app: Express) {
       const isTestMode = MERCADOPAGO_ACCESS_TOKEN?.startsWith('TEST-');
       let paymentResponse;
 
+      const expirationDate = new Date();
+      expirationDate.setDate(expirationDate.getDate() + 1);
+      expirationDate.setHours(23, 59, 59, 999);
+
       const resolvePayer = async () => {
         const baseEmail = email || payer?.email || '';
         const hasIdentification = !!payer?.identification?.number;
@@ -746,11 +776,6 @@ export function registerPaymentRoutes(app: Express) {
           }
         };
       } else {
-        // Set date_of_expiration to tomorrow
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        tomorrow.setHours(23, 59, 59, 999);
-
         const missingFields = [] as string[];
         if (!resolvedPayer?.email) missingFields.push('email');
         if (!resolvedPayer?.identification?.number) missingFields.push('identification.number');
@@ -791,7 +816,7 @@ export function registerPaymentRoutes(app: Express) {
             body: JSON.stringify({
               transaction_amount: Number(parseFloat(amount).toFixed(2)),
               payment_method_id: methodId,
-              date_of_expiration: tomorrow.toISOString(),
+              date_of_expiration: expirationDate.toISOString(),
               payer: {
                 email: resolvedPayer?.email || email,
                 first_name: resolvedPayer?.first_name || 'Admin',
@@ -844,13 +869,15 @@ export function registerPaymentRoutes(app: Express) {
           .set({
             ticket_url: paymentResponse.transaction_details?.external_resource_url,
             status: 'pending',
+            expiresAt: expirationDate,
             updatedAt: new Date()
           })
           .where(eq(subscriptions.companyId, companyId));
 
         res.json({
           success: true,
-          ticket_url: paymentResponse.transaction_details?.external_resource_url
+          ticket_url: paymentResponse.transaction_details?.external_resource_url,
+          dueDate: expirationDate.toISOString()
         });
       } else {
         res.status(400).json({ error: "Failed to generate new boleto", details: paymentResponse });
