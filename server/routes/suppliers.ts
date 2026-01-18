@@ -24,6 +24,7 @@ export function registerSupplierRoutes(app: Express) {
       const suppliers = await storage.getSuppliers(req.user.companyId);
       res.json(suppliers.map((s: any) => ({ ...s, totalPurchases: Number(s.totalPurchases || 0) })));
     } catch (error) {
+      console.error("[Suppliers] list error", error);
       res.status(500).json({ error: "Failed to fetch suppliers" });
     }
   });
@@ -59,6 +60,7 @@ export function registerSupplierRoutes(app: Express) {
       if (!supplier) return res.status(404).json({ error: "Supplier not found" });
       res.json(supplier);
     } catch (error: any) {
+      console.error("[Suppliers] update error", error);
       res.status(400).json({ error: error.message || "Invalid supplier data" });
     }
   });
@@ -71,6 +73,7 @@ export function registerSupplierRoutes(app: Express) {
       await storage.deleteSupplier(req.user.companyId, req.params.id);
       res.status(204).end();
     } catch (error: any) {
+      console.error("[Suppliers] delete error", error);
       res.status(500).json({ error: error?.message || "Failed to delete supplier" });
     }
   });

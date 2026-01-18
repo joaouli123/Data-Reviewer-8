@@ -71,6 +71,7 @@ export function registerTransactionRoutes(app: Express) {
       
       res.json(transactions);
     } catch (error) {
+      console.error("[Transactions] list error", error);
       res.status(500).json({ error: "Failed to fetch transactions" });
     }
   });
@@ -101,6 +102,7 @@ export function registerTransactionRoutes(app: Express) {
       const transaction = await storage.createTransaction(req.user.companyId, data);
       res.status(201).json(transaction);
     } catch (error: any) {
+      console.error("[Transactions] create error", error);
       res.status(400).json({ error: error.message || "Invalid transaction data" });
     }
   });
@@ -117,6 +119,7 @@ export function registerTransactionRoutes(app: Express) {
       await storage.deleteTransaction(req.user.companyId, req.params.id);
       res.sendStatus(204);
     } catch (error) {
+      console.error("[Transactions] delete error", error);
       res.status(500).json({ error: "Failed to delete transaction" });
     }
   });
@@ -141,6 +144,7 @@ export function registerTransactionRoutes(app: Express) {
       const transaction = await storage.updateTransaction(req.user.companyId, req.params.id, body);
       res.json(transaction);
     } catch (error: any) {
+      console.error("[Transactions] update error", error);
       res.status(400).json({ error: error.message || "Failed to update transaction" });
     }
   });

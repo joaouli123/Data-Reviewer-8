@@ -31,6 +31,7 @@ export function registerBankRoutes(app: Express) {
       const items = await storage.getBankStatementItems(companyId);
       res.json(items);
     } catch (error) {
+      console.error("[Bank] list items error", error);
       res.status(500).json({ error: "Failed to fetch bank statement items" });
     }
   });

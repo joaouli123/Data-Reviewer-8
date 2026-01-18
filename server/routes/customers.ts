@@ -24,6 +24,7 @@ export function registerCustomerRoutes(app: Express) {
       const customers = await storage.getCustomers(req.user.companyId);
       res.json(customers.map((c: any) => ({ ...c, totalSales: Number(c.totalSales || 0) })));
     } catch (error) {
+      console.error("[Customers] list error", error);
       res.status(500).json({ error: "Failed to fetch customers" });
     }
   });
@@ -59,6 +60,7 @@ export function registerCustomerRoutes(app: Express) {
       if (!customer) return res.status(404).json({ error: "Customer not found" });
       res.json(customer);
     } catch (error: any) {
+      console.error("[Customers] update error", error);
       res.status(400).json({ error: error.message || "Invalid customer data" });
     }
   });
@@ -71,6 +73,7 @@ export function registerCustomerRoutes(app: Express) {
       await storage.deleteCustomer(req.user.companyId, req.params.id);
       res.status(204).end();
     } catch (error: any) {
+      console.error("[Customers] delete error", error);
       res.status(500).json({ error: error?.message || "Failed to delete customer" });
     }
   });
