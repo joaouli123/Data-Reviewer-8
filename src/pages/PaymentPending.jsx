@@ -13,6 +13,22 @@ export default function PaymentPending() {
   const { logout, company, user } = useAuth();
   const [issuedInfo, setIssuedInfo] = useState(null);
 
+  const getStoredAuth = () => {
+    if (typeof window === "undefined") return null;
+    const stored = localStorage.getItem("auth") || sessionStorage.getItem("auth");
+    if (!stored) return null;
+    try {
+      return JSON.parse(stored);
+    } catch {
+      return null;
+    }
+  };
+
+  const storedAuth = getStoredAuth();
+  const resolvedCompanyId = company?.id || user?.companyId || storedAuth?.company?.id || storedAuth?.user?.companyId || null;
+  const resolvedEmail = user?.email || storedAuth?.user?.email || "";
+  const resolvedPlan = company?.subscriptionPlan || storedAuth?.company?.subscriptionPlan || "monthly";
+
   const { data: subscription, isLoading } = useQuery({
     queryKey: ["/api/subscriptions/active"],
     queryFn: async () => {
@@ -25,26 +41,30 @@ export default function PaymentPending() {
 
   const regenerateBoletoMutation = useMutation({
     mutationFn: async () => {
+      if (!resolvedCompanyId) {
+        throw new Error("Missing required fields Campos faltando: companyId");
+      }
+
       const data = await apiRequest("POST", "/api/payment/regenerate-boleto", {
-        companyId: company?.id,
-        email: user?.email,
+        companyId: resolvedCompanyId,
+        email: resolvedEmail,
         amount: subscription?.amount || "215.00",
-        plan: company?.subscriptionPlan || "monthly",
+        plan: resolvedPlan,
         payer: {
-          email: user?.email,
-          first_name: user?.name?.split(' ')[0] || 'Admin',
-          last_name: user?.name?.split(' ').slice(1).join(' ') || 'User',
+          email: resolvedEmail,
+          first_name: user?.name?.split(' ')[0] || storedAuth?.user?.firstName || 'Admin',
+          last_name: user?.name?.split(' ').slice(1).join(' ') || storedAuth?.user?.lastName || 'User',
           identification: {
             type: company?.document?.replace(/\D/g, '').length > 11 ? 'CNPJ' : 'CPF',
             number: company?.document?.replace(/\D/g, '') || ''
           },
           address: {
-            zip_code: user?.cep?.replace(/\D/g, '') || '',
-            street_name: user?.rua || '',
-            street_number: user?.numero || '',
-            neighborhood: user?.bairro || user?.complemento || '',
-            city: user?.cidade || '',
-            federal_unit: user?.estado || ''
+            zip_code: user?.cep?.replace(/\D/g, '') || storedAuth?.user?.cep || '',
+            street_name: user?.rua || storedAuth?.user?.rua || '',
+            street_number: user?.numero || storedAuth?.user?.numero || '',
+            neighborhood: user?.bairro || user?.complemento || storedAuth?.user?.bairro || storedAuth?.user?.complemento || '',
+            city: user?.cidade || storedAuth?.user?.cidade || '',
+            federal_unit: user?.estado || storedAuth?.user?.estado || ''
           }
         }
       });
@@ -132,7 +152,7 @@ export default function PaymentPending() {
               variant="outline"
               className="w-full gap-2 h-11 border-primary/20 hover:bg-primary/5" 
               onClick={() => regenerateBoletoMutation.mutate()}
-              disabled={regenerateBoletoMutation.isPending || isLoading}
+              disabled={regenerateBoletoMutation.isPending || isLoading || !resolvedCompanyId}
             >
               {regenerateBoletoMutation.isPending ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
