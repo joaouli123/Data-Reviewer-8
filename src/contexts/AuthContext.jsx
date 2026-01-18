@@ -200,6 +200,22 @@ export function AuthProvider({ children }) {
       }
 
       if (!res.ok) {
+        if (data?.error?.includes("PAGAMENTO_PENDENTE") || data?.paymentPending) {
+          setUser(data.user || null);
+          setCompany(data.company || null);
+          setIsPaymentPending(true);
+          safeSetAuth({
+            user: data.user || null,
+            company: data.company || null,
+            token: null,
+            paymentPending: true,
+            plan: data?.company?.subscriptionPlan || data?.plan
+          });
+          return {
+            ...data,
+            paymentPending: true
+          };
+        }
         throw new Error(data.error || "Login failed");
       }
 
