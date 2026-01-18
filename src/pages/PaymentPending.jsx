@@ -6,6 +6,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { toast } from "sonner";
 
 export default function PaymentPending() {
   const { logout, company, user } = useAuth();
@@ -59,6 +60,7 @@ export default function PaymentPending() {
     },
     onError: (error) => {
       console.error("Erro ao gerar boleto:", error);
+      toast.error(error?.message || "Erro ao gerar boleto");
     }
   });
 

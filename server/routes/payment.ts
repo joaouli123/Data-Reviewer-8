@@ -639,6 +639,54 @@ export function registerPaymentRoutes(app: Express) {
       const isTestMode = MERCADOPAGO_ACCESS_TOKEN?.startsWith('TEST-');
       let paymentResponse;
 
+      const resolvePayer = async () => {
+        const baseEmail = email || payer?.email || '';
+        const hasIdentification = !!payer?.identification?.number;
+        const hasAddress = !!payer?.address?.zip_code && !!payer?.address?.street_name && !!payer?.address?.street_number && !!payer?.address?.city && !!payer?.address?.federal_unit;
+
+        if (hasIdentification && hasAddress) {
+          return {
+            email: baseEmail,
+            first_name: payer?.first_name || '',
+            last_name: payer?.last_name || '',
+            identification: payer?.identification,
+            address: payer?.address,
+          };
+        }
+
+        const [companyRecord] = await db.select().from(companies).where(eq(companies.id, companyId)).limit(1);
+        const [adminUser] = await db
+          .select()
+          .from(users)
+          .where(and(eq(users.companyId, companyId), eq(users.role, "admin")))
+          .limit(1);
+
+        const docNumber = (companyRecord?.document || '').replace(/\D/g, '');
+        const idType = docNumber.length > 11 ? 'CNPJ' : 'CPF';
+        const fullName = adminUser?.name || '';
+        const [firstName, ...lastNameParts] = fullName.split(' ');
+
+        return {
+          email: baseEmail || adminUser?.email || '',
+          first_name: payer?.first_name || firstName || 'Admin',
+          last_name: payer?.last_name || lastNameParts.join(' ') || 'User',
+          identification: {
+            type: payer?.identification?.type || idType,
+            number: payer?.identification?.number || docNumber,
+          },
+          address: {
+            zip_code: payer?.address?.zip_code || adminUser?.cep || '',
+            street_name: payer?.address?.street_name || adminUser?.rua || '',
+            street_number: payer?.address?.street_number || adminUser?.numero || '',
+            neighborhood: payer?.address?.neighborhood || adminUser?.complemento || '',
+            city: payer?.address?.city || adminUser?.cidade || '',
+            federal_unit: payer?.address?.federal_unit || adminUser?.estado || '',
+          },
+        };
+      };
+
+      const resolvedPayer = await resolvePayer();
+
       if (isTestMode) {
         paymentResponse = {
           id: `BOLETO_REGEN_TEST_${Date.now()}`,
@@ -653,6 +701,22 @@ export function registerPaymentRoutes(app: Express) {
         tomorrow.setDate(tomorrow.getDate() + 1);
         tomorrow.setHours(23, 59, 59, 999);
 
+        const missingFields = [] as string[];
+        if (!resolvedPayer?.identification?.number) missingFields.push('identification.number');
+        if (!resolvedPayer?.address?.zip_code) missingFields.push('address.zip_code');
+        if (!resolvedPayer?.address?.street_name) missingFields.push('address.street_name');
+        if (!resolvedPayer?.address?.street_number) missingFields.push('address.street_number');
+        if (!resolvedPayer?.address?.city) missingFields.push('address.city');
+        if (!resolvedPayer?.address?.federal_unit) missingFields.push('address.federal_unit');
+
+        if (missingFields.length > 0) {
+          return res.status(400).json({
+            error: "Failed to generate new boleto",
+            message: 'Dados do pagador incompletos para emissão de boleto',
+            missingFields,
+          });
+        }
+
         const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
           method: 'POST',
           headers: {
@@ -665,20 +729,20 @@ export function registerPaymentRoutes(app: Express) {
             payment_method_id: 'bolbradesco',
             date_of_expiration: tomorrow.toISOString(),
             payer: {
-              email: email,
-              first_name: payer?.first_name || 'Admin',
-              last_name: payer?.last_name || 'User',
+              email: resolvedPayer?.email || email,
+              first_name: resolvedPayer?.first_name || 'Admin',
+              last_name: resolvedPayer?.last_name || 'User',
               identification: {
-                type: payer?.identification?.type || 'CPF',
-                number: String(payer?.identification?.number || '').replace(/\D/g, '')
+                type: resolvedPayer?.identification?.type || 'CPF',
+                number: String(resolvedPayer?.identification?.number || '').replace(/\D/g, '')
               },
               address: {
-                zip_code: String(payer?.address?.zip_code || '').replace(/\D/g, ''),
-                street_name: String(payer?.address?.street_name || ''),
-                street_number: String(payer?.address?.street_number || ''),
-                neighborhood: String(payer?.address?.neighborhood || ''),
-                city: String(payer?.address?.city || ''),
-                federal_unit: String(payer?.address?.federal_unit || '')
+                zip_code: String(resolvedPayer?.address?.zip_code || '').replace(/\D/g, ''),
+                street_name: String(resolvedPayer?.address?.street_name || ''),
+                street_number: String(resolvedPayer?.address?.street_number || ''),
+                neighborhood: String(resolvedPayer?.address?.neighborhood || ''),
+                city: String(resolvedPayer?.address?.city || ''),
+                federal_unit: String(resolvedPayer?.address?.federal_unit || '')
               }
             },
             description: `Renovação Assinatura - HUACONTROL`,

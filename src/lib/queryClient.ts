@@ -46,7 +46,10 @@ export async function apiRequest(
       const contentType = response.headers.get("content-type");
       if (contentType && contentType.includes("application/json")) {
         const error = await response.json();
-        errorMessage = error.error || errorMessage;
+        const missing = Array.isArray(error.missingFields)
+          ? ` Campos faltando: ${error.missingFields.join(", ")}`
+          : "";
+        errorMessage = (error.details || error.message || error.error || errorMessage) + missing;
       } else {
         // Se não for JSON, logar o texto para debug mas não tentar parsear como JSON
         const text = await response.text();
