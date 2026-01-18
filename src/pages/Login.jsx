@@ -4,15 +4,14 @@ import { useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { User, Lock, LogIn, Mail } from "lucide-react";
+import { User, Lock, LogIn, Mail, ArrowLeft } from "lucide-react";
 
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showResetModal, setShowResetModal] = useState(false);
+  const [showResetForm, setShowResetForm] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [sendingReset, setSendingReset] = useState(false);
   const { login } = useAuth();
@@ -74,7 +73,7 @@ export default function Login() {
 
       if (response.ok) {
         toast.success("Email de redefinição enviado! Verifique sua caixa de entrada");
-        setShowResetModal(false);
+        setShowResetForm(false);
         setResetEmail("");
       } else {
         toast.error(data.error || "Erro ao enviar email");
@@ -90,62 +89,110 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted/30 p-4">
       <Card className="w-full max-w-md p-8 shadow-lg">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold">Entrar</h1>
-          <p className="text-sm text-muted-foreground mt-2">Acesse sua conta para continuar</p>
+          <h1 className="text-3xl font-bold">{showResetForm ? "Redefinir Senha" : "Entrar"}</h1>
+          <p className="text-sm text-muted-foreground mt-2">
+            {showResetForm ? "Digite seu email para receber o link" : "Acesse sua conta para continuar"}
+          </p>
         </div>
         
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="space-y-2">
-            <label className="block text-sm font-medium">Usuário ou Email</label>
-            <div className="relative">
-              <User className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-              <Input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Digite seu usuário ou email"
-                disabled={loading}
-                data-testid="input-username"
-                className="pl-10"
-              />
+        {!showResetForm ? (
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">Usuário ou Email</label>
+              <div className="relative">
+                <User className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                <Input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Digite seu usuário ou email"
+                  disabled={loading}
+                  data-testid="input-username"
+                  className="pl-10"
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <label className="block text-sm font-medium">Senha</label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-              <Input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Digite sua senha"
-                disabled={loading}
-                data-testid="input-password"
-                className="pl-10"
-              />
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">Senha</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                <Input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Digite sua senha"
+                  disabled={loading}
+                  data-testid="input-password"
+                  className="pl-10"
+                />
+              </div>
+              <div className="text-right">
+                <button
+                  type="button"
+                  onClick={() => setShowResetForm(true)}
+                  className="text-sm text-primary hover:underline"
+                >
+                  Esqueceu sua senha?
+                </button>
+              </div>
             </div>
-            <div className="text-right">
-              <button
+
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full mt-6"
+              data-testid="button-login"
+            >
+              <LogIn className="w-4 h-4 mr-2" />
+              {loading ? "Entrando..." : "Entrar"}
+            </Button>
+          </form>
+        ) : (
+          <form onSubmit={handleRequestReset} className="space-y-5">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">Email</label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                <Input
+                  type="email"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  placeholder="Digite seu email"
+                  disabled={sendingReset}
+                  className="pl-10"
+                  autoFocus
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Enviaremos um link de redefinição para este email
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <Button
                 type="button"
-                onClick={() => setShowResetModal(true)}
-                className="text-sm text-primary hover:underline"
+                variant="outline"
+                onClick={() => {
+                  setShowResetForm(false);
+                  setResetEmail("");
+                }}
+                disabled={sendingReset}
+                className="flex-1"
               >
-                Esqueceu sua senha?
-              </button>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Voltar
+              </Button>
+              <Button
+                type="submit"
+                disabled={sendingReset}
+                className="flex-1"
+              >
+                {sendingReset ? "Enviando..." : "Enviar Link"}
+              </Button>
             </div>
-          </div>
-
-          <Button
-            type="submit"
-            disabled={loading}
-            className="w-full mt-6"
-            data-testid="button-login"
-          >
-            <LogIn className="w-4 h-4 mr-2" />
-            {loading ? "Entrando..." : "Entrar"}
-          </Button>
-        </form>
+          </form>
+        )}
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Não tem conta?{" "}
@@ -154,15 +201,9 @@ export default function Login() {
           </Link>
         </p>
       </Card>
-
-      {/* Reset Password Modal */}
-      <Dialog open={showResetModal} onOpenChange={setShowResetModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Redefinir Senha</DialogTitle>
-          </DialogHeader>
-          
-          <form onSubmit={handleRequestReset} className="space-y-4 mt-4">
+    </div>
+  );
+}
             <div className="space-y-2">
               <label className="block text-sm font-medium">Email</label>
               <div className="relative">

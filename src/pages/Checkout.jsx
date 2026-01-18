@@ -156,17 +156,27 @@ export default function Checkout() {
       setIsProcessing(true);
       toast.loading('Processando pagamento com segurança...');
 
+      // Define payment_method_id based on selected method
+      let payment_method_id = 'boleto'; // default
+      if (paymentMethod === 'pix') {
+        payment_method_id = 'pix';
+      } else if (paymentMethod === 'credit_card') {
+        payment_method_id = 'master'; // Will be overridden after card token
+      } else if (paymentMethod === 'boleto') {
+        payment_method_id = 'bolbradesco';
+      }
+
       let payload = {
         companyId: company?.id,
         plan: selectedPlan,
         email: user?.email,
         total_amount: PLANS[selectedPlan].price.toFixed(2),
-        payment_method_id: 'bolbradesco',
+        payment_method_id: payment_method_id,
         recurring: true,
         payer: {
           email: user?.email,
-          first_name: user?.name?.split(' ')[0] || '',
-          last_name: user?.name?.split(' ').slice(1).join(' ') || 'Admin',
+          first_name: user?.name?.split(' ')[0] || 'Cliente',
+          last_name: user?.name?.split(' ').slice(1).join(' ') || 'HUA',
           identification: {
             type: company?.document?.replace(/\D/g, '').length > 11 ? 'CNPJ' : 'CPF',
             number: company?.document?.replace(/\D/g, '') || ''
@@ -174,8 +184,8 @@ export default function Checkout() {
           address: {
             zip_code: user?.cep?.replace(/\D/g, '') || '',
             street_name: user?.rua || '',
-            street_number: user?.numero || '',
-            neighborhood: user?.bairro || user?.complemento || '',
+            street_number: user?.numero || 'S/N',
+            neighborhood: user?.bairro || user?.complemento || 'Centro',
             city: user?.cidade || '',
             federal_unit: user?.estado || ''
           }

@@ -211,9 +211,15 @@ export function registerPaymentRoutes(app: Express) {
           expirationDate.setHours(23, 59, 59, 999);
           boletoDueDate = expirationDate;
 
+          // Log resolved payer for debugging
+          console.log('[Payment] Resolved payer for boleto:', JSON.stringify(resolvedPayer, null, 2));
+
           const missingFields = [] as string[];
           if (!resolvedPayer?.email) missingFields.push('email');
+          if (!resolvedPayer?.first_name) missingFields.push('first_name');
+          if (!resolvedPayer?.last_name) missingFields.push('last_name');
           if (!resolvedPayer?.identification?.number) missingFields.push('identification.number');
+          if (!resolvedPayer?.identification?.type) missingFields.push('identification.type');
           if (!resolvedPayer?.address?.zip_code) missingFields.push('address.zip_code');
           if (!resolvedPayer?.address?.street_name) missingFields.push('address.street_name');
           if (!resolvedPayer?.address?.street_number) missingFields.push('address.street_number');
@@ -222,13 +228,15 @@ export function registerPaymentRoutes(app: Express) {
 
           const docDigits = String(resolvedPayer?.identification?.number || '').replace(/\D/g, '');
           if (docDigits.length !== 11 && docDigits.length !== 14) {
+            console.error('[Payment] Invalid CPF/CNPJ:', docDigits);
             return res.status(400).json({
               message: 'CPF/CNPJ inválido para emissão de boleto',
-              details: 'O documento deve ter 11 (CPF) ou 14 (CNPJ) dígitos.',
+              details: `O documento deve ter 11 (CPF) ou 14 (CNPJ) dígitos. Recebido: ${docDigits.length} dígitos.`,
             });
           }
 
           if (missingFields.length > 0) {
+            console.error('[Payment] Missing fields for boleto:', missingFields);
             return res.status(400).json({
               message: 'Dados do pagador incompletos para emissão de boleto',
               missingFields,
@@ -240,6 +248,37 @@ export function registerPaymentRoutes(app: Express) {
           let lastErrorData: any = null;
 
           for (const methodId of boletoMethods) {
+            const boletoPayload = {
+              transaction_amount: Number(parseFloat(total_amount).toFixed(2)),
+              payment_method_id: methodId,
+              payer: {
+                email: resolvedPayer?.email || email,
+                first_name: resolvedPayer?.first_name || 'Admin',
+                last_name: resolvedPayer?.last_name || 'User',
+                identification: {
+                  type: resolvedPayer?.identification?.type || 'CPF',
+                  number: String(resolvedPayer?.identification?.number || '').replace(/\D/g, '')
+                },
+                address: {
+                  zip_code: String(resolvedPayer?.address?.zip_code || '').replace(/\D/g, ''),
+                  street_name: String(resolvedPayer?.address?.street_name || ''),
+                  street_number: String(resolvedPayer?.address?.street_number || 'S/N'),
+                  neighborhood: String(resolvedPayer?.address?.neighborhood || 'Centro'),
+                  city: String(resolvedPayer?.address?.city || ''),
+                  federal_unit: String(resolvedPayer?.address?.federal_unit || '')
+                }
+              },
+              description: `Assinatura Mensal - HUACONTROL`,
+              external_reference: companyId,
+              date_of_expiration: expirationDate.toISOString(),
+              metadata: {
+                company_id: companyId,
+                plan: 'monthly'
+              }
+            };
+
+            console.log(`[Payment] Attempting boleto with ${methodId}:`, JSON.stringify(boletoPayload, null, 2));
+
             const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
               method: 'POST',
               headers: {
@@ -247,33 +286,7 @@ export function registerPaymentRoutes(app: Express) {
                 'Content-Type': 'application/json',
                 'X-Idempotency-Key': `${companyId}-${methodId}-${Date.now()}`,
               },
-              body: JSON.stringify({
-                transaction_amount: Number(parseFloat(total_amount).toFixed(2)),
-                payment_method_id: methodId,
-                payer: {
-                  email: resolvedPayer?.email || email,
-                  first_name: resolvedPayer?.first_name || 'Admin',
-                  last_name: resolvedPayer?.last_name || 'User',
-                  identification: {
-                    type: resolvedPayer?.identification?.type || 'CPF',
-                    number: String(resolvedPayer?.identification?.number || '').replace(/\D/g, '')
-                  },
-                  address: {
-                    zip_code: String(resolvedPayer?.address?.zip_code || '').replace(/\D/g, ''),
-                    street_name: String(resolvedPayer?.address?.street_name || ''),
-                    street_number: String(resolvedPayer?.address?.street_number || 'S/N'),
-                    neighborhood: String(resolvedPayer?.address?.neighborhood || ''),
-                    city: String(resolvedPayer?.address?.city || ''),
-                    federal_unit: String(resolvedPayer?.address?.federal_unit || '')
-                  }
-                },
-                description: `Assinatura Mensal - HUACONTROL`,
-                external_reference: companyId,
-                metadata: {
-                  company_id: companyId,
-                  plan: 'monthly'
-                }
-              }),
+              body: JSON.stringify(boletoPayload),
             });
 
             if (mpResponse.ok) {
