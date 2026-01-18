@@ -106,18 +106,33 @@ export function AuthProvider({ children }) {
   const login = async (username, password) => {
     try {
       setError(null);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
+
+      let data = null;
+      const text = await res.text();
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        data = { error: "Resposta inválida do servidor" };
+      }
+
       if (!res.ok) {
-        const data = await res.json();
         throw new Error(data.error || "Login failed");
       }
 
-      const data = await res.json();
+      if (!data) {
+        throw new Error("Resposta inválida do servidor");
+      }
       
       // If payment is pending, don't set token but save company info
       if (data.paymentPending) {
@@ -150,8 +165,9 @@ export function AuthProvider({ children }) {
       
       return data;
     } catch (err) {
-      setError(err.message);
-      throw err;
+      const message = err.name === 'AbortError' ? 'Tempo esgotado ao conectar ao servidor' : err.message;
+      setError(message);
+      throw new Error(message);
     }
   };
 
