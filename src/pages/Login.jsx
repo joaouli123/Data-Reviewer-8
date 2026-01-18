@@ -48,7 +48,15 @@ export default function Login() {
         setLocation("/dashboard");
       }
     } catch (error) {
-      toast.error(error.message);
+      const msg = error?.message || "";
+      if (msg.includes("PAGAMENTO_PENDENTE") || msg.toLowerCase().includes("pagamento pendente")) {
+        const whatsappNumber = "5554996231432";
+        const whatsappUrl = `https://wa.me/${whatsappNumber}?text=Olá,%20envio%20comprovante%20do%20boleto%20para%20liberação%20do%20acesso.`;
+        setPendingBanner({ whatsappUrl });
+        setLoading(false);
+        return;
+      }
+      toast.error(msg || "Erro ao entrar");
     } finally {
       setLoading(false);
     }
