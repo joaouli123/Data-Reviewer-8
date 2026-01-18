@@ -18,6 +18,19 @@ const parseLocalDate = (dateStr) => {
   return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
 };
 
+// Garante uma data para exibição/ordenação usando paymentDate -> date -> createdAt
+const extractTxDate = (t) => {
+  if (!t) return null;
+  const candidate = t.paymentDate || t.date || t.createdAt || t.created_at;
+  if (!candidate) return null;
+  try {
+    const d = new Date(candidate);
+    return isNaN(d.getTime()) ? null : d;
+  } catch (e) {
+    return null;
+  }
+};
+
 export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }) {
   const { company } = useAuth();
   const queryClient = useQueryClient();
@@ -66,7 +79,13 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
       groups[groupKey].push(p);
     });
     return Object.values(groups).map(group => {
-      const sortedInstallments = group.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      const sortedInstallments = group.sort((a, b) => {
+        const da = extractTxDate(a);
+        const db = extractTxDate(b);
+        const ta = da ? da.getTime() : 0;
+        const tb = db ? db.getTime() : 0;
+        return ta - tb;
+      });
       const main = sortedInstallments[0];
       const totalAmount = sortedInstallments.reduce((acc, p) => acc + parseFloat(p.amount || 0), 0);
       const isPaid = sortedInstallments.every(p => p.status === 'completed' || p.status === 'pago');
@@ -84,8 +103,10 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
         installments: sortedInstallments
       };
     }).sort((a, b) => {
-      const dateB = new Date(b.main.date).getTime();
-      const dateA = new Date(a.main.date).getTime();
+      const db = extractTxDate(b.main);
+      const da = extractTxDate(a.main);
+      const dateB = db ? db.getTime() : 0;
+      const dateA = da ? da.getTime() : 0;
       if (dateB !== dateA) return dateB - dateA;
       
       const createB = b.main.createdAt ? new Date(b.main.createdAt).getTime() : 0;
@@ -287,7 +308,10 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                               R$ {Math.abs(parseFloat(installment.amount || 0) + parseFloat(installment.interest || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                             </p>
                             <p className="text-xs text-slate-500">
-                              Venc: {installment.date ? format(parseLocalDate(installment.date), "dd/MM/yyyy") : '-'}
+                              {(() => {
+                                const dt = extractTxDate(installment);
+                                return dt ? `Venc: ${format(dt, "dd/MM/yyyy", { locale: ptBR })}` : 'Venc: -';
+                              })()}
                             </p>
                           </div>
                         </div>
