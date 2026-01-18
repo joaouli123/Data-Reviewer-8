@@ -14,6 +14,14 @@ const PERMISSIONS = {
   IMPORT_BANK: 'import_bank'
 };
 
+// Evita shift de data por timezone (YYYY-MM-DD)
+const parseLocalDate = (value: string) => {
+  if (!value) return new Date();
+  const [year, month, day] = value.split('-').map(Number);
+  if (!year || !month || !day) return new Date(value);
+  return new Date(year, month - 1, day, 0, 0, 0, 0);
+};
+
 // Helper to check permissions
 const checkPermission = async (req: AuthenticatedRequest, permission: string) => {
   if (req.user?.role === 'admin' || req.user?.isSuperAdmin) return true;
@@ -76,10 +84,10 @@ export function registerTransactionRoutes(app: Express) {
       
       const body = { ...req.body };
       if (body.date && typeof body.date === 'string') {
-        body.date = new Date(body.date);
+        body.date = parseLocalDate(body.date);
       }
       if (body.paymentDate && typeof body.paymentDate === 'string') {
-        body.paymentDate = new Date(body.paymentDate);
+        body.paymentDate = parseLocalDate(body.paymentDate);
       }
       
       // Ensure amount is handled as string for decimal validation if it comes as number
@@ -120,10 +128,10 @@ export function registerTransactionRoutes(app: Express) {
 
       const body = { ...req.body };
       if (body.date && typeof body.date === 'string') {
-        body.date = new Date(body.date);
+        body.date = parseLocalDate(body.date);
       }
       if (body.paymentDate && typeof body.paymentDate === 'string') {
-        body.paymentDate = new Date(body.paymentDate);
+        body.paymentDate = parseLocalDate(body.paymentDate);
       }
       
       const transaction = await storage.updateTransaction(req.user.companyId, req.params.id, body);

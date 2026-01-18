@@ -11,6 +11,14 @@ function parseMoney(value: any): number {
   return parseFloat(cleanValue) || 0;
 }
 
+// Evita shift de data por timezone (YYYY-MM-DD)
+function parseLocalDate(value: string): Date {
+  if (!value) return new Date();
+  const [year, month, day] = value.split('-').map(Number);
+  if (!year || !month || !day) return new Date(value);
+  return new Date(year, month - 1, day, 0, 0, 0, 0);
+}
+
 export function registerSalesPurchasesRoutes(app: Express) {
   app.get("/api/sales", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
@@ -42,7 +50,7 @@ export function registerSalesPurchasesRoutes(app: Express) {
       const saleData = {
         companyId: req.user.companyId,
         customerId,
-        date: new Date(saleDate),
+        date: parseLocalDate(saleDate),
         amount: cleanTotal.toFixed(2),
         installmentCount: parseInt(installmentCount) || 1,
         status: status || 'pago',
@@ -67,9 +75,9 @@ export function registerSalesPurchasesRoutes(app: Express) {
         const isLast = i === count - 1;
         const currentAmount = isLast ? lastInstallmentAmount : amountPerInstallment.toFixed(2);
 
-        let dueDate = new Date(saleDate);
+        let dueDate = parseLocalDate(saleDate);
         if (customInstallments && customInstallments[i]) {
-          dueDate = new Date(customInstallments[i].due_date || customInstallments[i].date);
+          dueDate = parseLocalDate(customInstallments[i].due_date || customInstallments[i].date);
         } else {
           dueDate.setMonth(dueDate.getMonth() + i);
         }
@@ -110,7 +118,7 @@ export function registerSalesPurchasesRoutes(app: Express) {
       const purchaseData = {
         companyId: req.user.companyId,
         supplierId,
-        date: new Date(purchaseDate),
+        date: parseLocalDate(purchaseDate),
         amount: cleanTotal.toFixed(2),
         installmentCount: parseInt(installmentCount) || 1,
         status: status || 'pago',
@@ -135,9 +143,9 @@ export function registerSalesPurchasesRoutes(app: Express) {
         const isLast = i === count - 1;
         const currentAmount = isLast ? lastInstallmentAmount : amountPerInstallment.toFixed(2);
 
-        let dueDate = new Date(purchaseDate);
+        let dueDate = parseLocalDate(purchaseDate);
         if (customInstallments && customInstallments[i]) {
-          dueDate = new Date(customInstallments[i].date || customInstallments[i].due_date);
+          dueDate = parseLocalDate(customInstallments[i].date || customInstallments[i].due_date);
         } else {
           dueDate.setMonth(dueDate.getMonth() + i);
         }
