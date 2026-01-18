@@ -124,6 +124,18 @@ export default function DashboardPage() {
 
   const allTransactions = Array.isArray(allTxData) ? allTxData : (allTxData?.data || []);
 
+  const extractDateStr = (t) => {
+    if (!t || !t.date) return null;
+    try {
+      if (typeof t.date === 'string') {
+        return t.date.split('T')[0];
+      }
+      return t.date.toISOString().split('T')[0];
+    } catch (e) {
+      return null;
+    }
+  };
+
   // Calculate metrics based on date range
   const calculateMetrics = () => {
     const startDateStr = format(dateRange.startDate, 'yyyy-MM-dd');
@@ -133,9 +145,9 @@ export default function DashboardPage() {
     
     // Filter transactions by date range
     const filteredTransactions = allTransactions.filter(t => {
-      if (!t.date) return false;
+      const tDateStr = extractDateStr(t);
+      if (!tDateStr) return false;
       try {
-        const tDateStr = t.date.split('T')[0];
         const tDate = parseISO(tDateStr);
         return tDate >= startDate && tDate <= endDate;
       } catch (e) {
@@ -168,7 +180,8 @@ export default function DashboardPage() {
     const thirtyDaysFromNow = new Date(thirtyDaysFromNowStr + 'T23:59:59Z');
     
     const futureRevenueTransactions = allTransactions.filter(t => {
-      const tDateStr = t.date.split('T')[0];
+      const tDateStr = extractDateStr(t);
+      if (!tDateStr) return false;
       const tDate = parseISO(tDateStr);
       return ['venda', 'venda_prazo', 'receita', 'income'].includes(t.type) && tDate >= today && tDate <= thirtyDaysFromNow;
     });
@@ -176,7 +189,8 @@ export default function DashboardPage() {
     const futureRevenue = futureRevenueTransactions.reduce((sum, t) => sum + Math.abs((parseFloat(t.amount || 0) + parseFloat(t.interest || 0))), 0);
     
     const futureExpensesTransactions = allTransactions.filter(t => {
-      const tDateStr = t.date.split('T')[0];
+      const tDateStr = extractDateStr(t);
+      if (!tDateStr) return false;
       const tDate = parseISO(tDateStr);
       return ['compra', 'compra_prazo', 'despesa', 'expense'].includes(t.type) && tDate >= today && tDate <= thirtyDaysFromNow;
     });
@@ -190,8 +204,9 @@ export default function DashboardPage() {
     // Chart data - ONLY months with actual transactions
     const monthsWithData = new Map();
     allTransactions.forEach(t => {
-      if (!t.date) return;
-      const monthKey = t.date.slice(0, 7); // YYYY-MM
+      const dateStr = extractDateStr(t);
+      if (!dateStr) return;
+      const monthKey = dateStr.slice(0, 7); // YYYY-MM
       if (!monthsWithData.has(monthKey)) {
         monthsWithData.set(monthKey, []);
       }
