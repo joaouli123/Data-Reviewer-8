@@ -34,6 +34,30 @@ interface PaymentRequest {
 }
 
 export function registerPaymentRoutes(app: Express) {
+  app.get("/api/payment/test-token", async (_req: Request, res: Response) => {
+    try {
+      if (!MERCADOPAGO_ACCESS_TOKEN) {
+        return res.status(500).json({ error: "MERCADOPAGO_ACCESS_TOKEN not configured" });
+      }
+
+      const mpResponse = await fetch('https://api.mercadopago.com/users/me', {
+        headers: {
+          'Authorization': `Bearer ${MERCADOPAGO_ACCESS_TOKEN}`,
+        },
+      });
+
+      const data = await mpResponse.json();
+
+      if (!mpResponse.ok) {
+        return res.status(400).json({ error: "Invalid access token", details: data });
+      }
+
+      return res.json({ success: true, user_id: data?.id, email: data?.email });
+    } catch (error) {
+      console.error("[Payment] Error testing access token:", error);
+      return res.status(500).json({ error: "Failed to test access token" });
+    }
+  });
   
   // Process payment
   app.post("/api/payment/process", async (req: Request, res: Response) => {

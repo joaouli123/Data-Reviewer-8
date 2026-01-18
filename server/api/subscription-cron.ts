@@ -5,6 +5,99 @@ import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+async function generateBoletoForCompany(params: { companyId: string; amount: string | null; plan?: string | null; expirationDate?: Date }) {
+  if (!process.env.MERCADOPAGO_ACCESS_TOKEN) {
+    throw new Error("MERCADOPAGO_ACCESS_TOKEN not configured");
+  }
+
+  const [companyRecord] = await db
+    .select({ document: companies.document })
+    .from(companies)
+    .where(eq(companies.id, params.companyId))
+    .limit(1);
+
+  const [adminUser] = await db
+    .select({
+      email: users.email,
+      name: users.name,
+      cep: users.cep,
+      rua: users.rua,
+      numero: users.numero,
+      complemento: users.complemento,
+      cidade: users.cidade,
+      estado: users.estado,
+    })
+    .from(users)
+    .where(and(eq(users.companyId, params.companyId), eq(users.role, 'admin')))
+    .limit(1);
+
+  const docNumber = (companyRecord?.document || '').replace(/\D/g, '');
+  if (docNumber.length !== 11 && docNumber.length !== 14) {
+    throw new Error("CPF/CNPJ inválido para emissão de boleto");
+  }
+
+  const fullName = adminUser?.name || '';
+  const [firstName, ...lastNameParts] = fullName.split(' ');
+
+  const expiration = params.expirationDate || (() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 3);
+    d.setHours(23, 59, 59, 999);
+    return d;
+  })();
+
+  const boletoMethods = ['bolbradesco', 'boleto'];
+  let lastError: any = null;
+
+  for (const methodId of boletoMethods) {
+    const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}`,
+        'Content-Type': 'application/json',
+        'X-Idempotency-Key': `cron-${params.companyId}-${methodId}-${Date.now()}`,
+      },
+      body: JSON.stringify({
+        transaction_amount: Number(parseFloat(params.amount || '0').toFixed(2)),
+        payment_method_id: methodId,
+        date_of_expiration: expiration.toISOString(),
+        payer: {
+          email: adminUser?.email || '',
+          first_name: firstName || 'Admin',
+          last_name: lastNameParts.join(' ') || 'User',
+          identification: {
+            type: docNumber.length > 11 ? 'CNPJ' : 'CPF',
+            number: docNumber,
+          },
+          address: {
+            zip_code: String(adminUser?.cep || '').replace(/\D/g, ''),
+            street_name: String(adminUser?.rua || ''),
+            street_number: String(adminUser?.numero || ''),
+            neighborhood: String(adminUser?.complemento || ''),
+            city: String(adminUser?.cidade || ''),
+            federal_unit: String(adminUser?.estado || ''),
+          },
+        },
+        description: `Renovação Assinatura - HUACONTROL`,
+        external_reference: params.companyId,
+        metadata: {
+          company_id: params.companyId,
+          plan: params.plan || 'monthly',
+        },
+      }),
+    });
+
+    if (mpResponse.ok) {
+      const payment = await mpResponse.json();
+      return payment?.transaction_details?.external_resource_url || null;
+    }
+
+    lastError = await mpResponse.json();
+  }
+
+  throw new Error(lastError?.message || lastError?.cause || 'Failed to generate boleto');
+}
+
 export async function checkAndSendSubscriptionEmails() {
   const fiveDaysFromNow = new Date();
   fiveDaysFromNow.setDate(fiveDaysFromNow.getDate() + 5);
@@ -26,6 +119,7 @@ export async function checkAndSendSubscriptionEmails() {
         expiresAt: subscriptions.expiresAt,
         amount: subscriptions.amount,
         ticketUrl: subscriptions.ticket_url,
+        plan: subscriptions.plan,
         companyName: companies.name,
       })
       .from(subscriptions)
@@ -45,6 +139,24 @@ export async function checkAndSendSubscriptionEmails() {
         .limit(1);
 
       if (admin?.email) {
+        let newTicketUrl = sub.ticketUrl;
+        try {
+          newTicketUrl = await generateBoletoForCompany({
+            companyId: sub.companyId as string,
+            amount: sub.amount || "0",
+            plan: sub.plan,
+            expirationDate: sub.expiresAt ? new Date(sub.expiresAt) : undefined,
+          });
+
+          if (newTicketUrl) {
+            await db.update(subscriptions)
+              .set({ ticket_url: newTicketUrl, updatedAt: new Date() })
+              .where(eq(subscriptions.id, sub.id));
+          }
+        } catch (genErr) {
+          console.error(`[Cron] Failed to generate boleto for ${sub.companyName}:`, genErr);
+        }
+
         console.log(`[Cron] Sending payment reminder email to ${admin.email} for company ${sub.companyName}`);
         
         try {
@@ -57,7 +169,7 @@ export async function checkAndSendSubscriptionEmails() {
                 <h2>Olá, ${admin.name || 'Administrador'}</h2>
                 <p>Sua assinatura vence em 5 dias (${new Date(sub.expiresAt!).toLocaleDateString('pt-BR')}).</p>
                 <p>Valor: <strong>R$ ${parseFloat(sub.amount || "0").toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></p>
-                ${sub.ticketUrl ? `<p>Você pode acessar seu boleto no link abaixo:</p><p><a href="${sub.ticketUrl}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Acessar Boleto</a></p>` : ''}
+                ${newTicketUrl ? `<p>Você pode acessar seu boleto no link abaixo:</p><p><a href="${newTicketUrl}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Acessar Boleto</a></p>` : ''}
                 <p>Evite o bloqueio do sistema mantendo seu pagamento em dia.</p>
                 <br/>
                 <p>Atenciosamente,<br/>Equipe Hua Control</p>
@@ -110,6 +222,24 @@ export async function checkAndSendSubscriptionEmails() {
         tomorrow.setDate(tomorrow.getDate() + 1);
         const dueDateStr = tomorrow.toLocaleDateString('pt-BR');
 
+        let newTicketUrl = sub.ticketUrl;
+        try {
+          newTicketUrl = await generateBoletoForCompany({
+            companyId: sub.companyId as string,
+            amount: sub.amount || "0",
+            plan: "monthly",
+            expirationDate: tomorrow,
+          });
+
+          if (newTicketUrl) {
+            await db.update(subscriptions)
+              .set({ ticket_url: newTicketUrl, status: 'pending', updatedAt: new Date() })
+              .where(eq(subscriptions.id, sub.id));
+          }
+        } catch (genErr) {
+          console.error(`[Cron] Failed to generate boleto for ${sub.companyName}:`, genErr);
+        }
+
         try {
           await resend.emails.send({
             from: 'Financeiro <contato@huacontrol.com.br>',
@@ -123,7 +253,7 @@ export async function checkAndSendSubscriptionEmails() {
                 <p>Para reativar sua conta, realize o pagamento do boleto abaixo.</p>
                 <p>Novo Vencimento: <strong>${dueDateStr}</strong></p>
                 <p>Valor: <strong>R$ ${parseFloat(sub.amount || "0").toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></p>
-                ${sub.ticketUrl ? `<p><a href="${sub.ticketUrl}" style="background-color: #d9534f; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Boleto Atualizado</a></p>` : ''}
+                ${newTicketUrl ? `<p><a href="${newTicketUrl}" style="background-color: #d9534f; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Boleto Atualizado</a></p>` : ''}
                 <p>Após a confirmação do pagamento, seu acesso será liberado automaticamente.</p>
                 <br/>
                 <p>Atenciosamente,<br/>Equipe Hua Control</p>
