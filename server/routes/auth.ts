@@ -250,9 +250,24 @@ export function registerAuthRoutes(app: Express) {
       }
       const token = generateToken({ userId: user.id, companyId: company.id, role: user.role });
       await createSession(user.id, company.id, token);
+      
       res.status(201).json({
-        user: { id: user.id, username: user.username, email: user.email, name: user.name, phone: user.phone, avatar: user.avatar, role: user.role, isSuperAdmin: user.isSuperAdmin, companyId: company.id, permissions: {} },
-        company: { id: company.id, name: company.name, paymentStatus: company.paymentStatus, subscriptionPlan: newSubscriptionPlan, document: company.document },
+        user: { 
+          id: user.id, 
+          username: user.username, 
+          email: user.email, 
+          name: user.name, 
+          role: user.role, 
+          isSuperAdmin: user.isSuperAdmin, 
+          companyId: company.id, 
+          permissions: {} 
+        },
+        company: { 
+          id: company.id, 
+          name: company.name, 
+          paymentStatus: company.paymentStatus, 
+          subscriptionPlan: newSubscriptionPlan
+        },
         token
       });
     } catch (error) {
@@ -307,31 +322,31 @@ export function registerAuthRoutes(app: Express) {
       const token = generateToken({ userId: user.id, companyId: companyId as string, role: user.role, isSuperAdmin: user.isSuperAdmin });
       await createSession(user.id, companyId, token);
       await createAuditLog(user.id, companyId, "LOGIN", "user", user.id, undefined, ip, req.headers['user-agent'] || 'unknown');
+      
+      // Sanitize avatar to prevent HTTP2 protocol errors
+      let sanitizedAvatar = user.avatar;
+      if (sanitizedAvatar && typeof sanitizedAvatar === 'string' && sanitizedAvatar.startsWith('data:image')) {
+        if (sanitizedAvatar.length > 2000) {
+          sanitizedAvatar = null; // Remove large avatars from login response
+        }
+      }
+      
       res.json({
         user: { 
           id: user.id, 
           username: user.username, 
           email: user.email, 
           name: user.name, 
-          phone: user.phone, 
-          avatar: user.avatar, 
           role: user.role, 
           isSuperAdmin: user.isSuperAdmin, 
           companyId: user.companyId, 
-          cep: user.cep, 
-          rua: user.rua, 
-          numero: user.numero, 
-          complemento: user.complemento, 
-          estado: user.estado, 
-          cidade: user.cidade, 
           permissions: user.permissions ? (typeof user.permissions === 'string' ? JSON.parse(user.permissions) : user.permissions) : {} 
         },
         company: company ? { 
           id: company.id, 
           name: company.name, 
           paymentStatus: company.paymentStatus, 
-          subscriptionPlan: company.subscriptionPlan, 
-          document: company.document 
+          subscriptionPlan: company.subscriptionPlan
         } : null,
         token, 
         paymentPending: false
@@ -348,9 +363,40 @@ export function registerAuthRoutes(app: Express) {
       const user = await findUserById(req.user.id);
       const company = await findCompanyById(req.user.companyId);
       if (!user || !company) return res.status(404).json({ error: "User or company not found" });
+      
+      // Sanitize avatar to prevent HTTP2 protocol errors
+      let sanitizedAvatar = user.avatar;
+      if (sanitizedAvatar && typeof sanitizedAvatar === 'string' && sanitizedAvatar.startsWith('data:image')) {
+        if (sanitizedAvatar.length > 2000) {
+          sanitizedAvatar = null;
+        }
+      }
+      
       res.json({
-        user: { id: user.id, username: user.username, email: user.email, name: user.name, phone: user.phone, avatar: user.avatar, role: user.role, isSuperAdmin: user.isSuperAdmin, companyId: user.companyId, cep: user.cep, rua: user.rua, numero: user.numero, complemento: user.complemento, estado: user.estado, cidade: user.cidade, permissions: user.permissions ? JSON.parse(user.permissions) : {} },
-        company: { id: company.id, name: company.name, paymentStatus: company.paymentStatus, subscriptionPlan: company.subscriptionPlan, document: company.document }
+        user: { 
+          id: user.id, 
+          username: user.username, 
+          email: user.email, 
+          name: user.name, 
+          phone: user.phone, 
+          avatar: sanitizedAvatar, 
+          role: user.role, 
+          isSuperAdmin: user.isSuperAdmin, 
+          companyId: user.companyId, 
+          cep: user.cep, 
+          rua: user.rua, 
+          numero: user.numero, 
+          complemento: user.complemento, 
+          estado: user.estado, 
+          cidade: user.cidade, 
+          permissions: user.permissions ? JSON.parse(user.permissions) : {} 
+        },
+        company: { 
+          id: company.id, 
+          name: company.name, 
+          paymentStatus: company.paymentStatus, 
+          subscriptionPlan: company.subscriptionPlan
+        }
       });
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch user" });
