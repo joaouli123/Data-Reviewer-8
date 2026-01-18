@@ -185,13 +185,16 @@ export function AuthProvider({ children }) {
     if (authData) {
       try {
         const current = JSON.parse(authData);
+        const sanitizedUser = { ...current.user, ...newUserData };
+        if (sanitizedUser?.avatar && typeof sanitizedUser.avatar === 'string' && sanitizedUser.avatar.startsWith('data:image')) {
+          if (sanitizedUser.avatar.length > 2000) {
+            delete sanitizedUser.avatar;
+          }
+        }
         // Preserve token and other critical info
         localStorage.setItem("auth", JSON.stringify({ 
           ...current, 
-          user: {
-            ...current.user,
-            ...newUserData
-          }
+          user: sanitizedUser
         }));
       } catch (e) {
         console.error("Error updating localStorage auth:", e);

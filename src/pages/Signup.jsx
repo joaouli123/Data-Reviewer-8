@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Building2, FileText, User, UserCheck, Mail, Lock, CheckCircle2, UserPlus, ArrowLeft } from "lucide-react";
+import { Building2, FileText, User, UserCheck, Mail, Lock, CheckCircle2, UserPlus, ArrowLeft, Phone } from "lucide-react";
 import { formatCNPJ, formatCPF } from "@/utils/masks";
 
 const PLANS = {
@@ -18,6 +18,7 @@ export default function Signup() {
     companyDocument: "",
     username: "",
     email: "",
+    phone: "",
     password: "",
     confirmPassword: "",
     name: "",
@@ -78,7 +79,7 @@ export default function Signup() {
     e.preventDefault();
 
     const requiredFields = [
-      'companyName', 'companyDocument', 'username', 'email', 
+      'companyName', 'companyDocument', 'username', 'email', 'phone',
       'password', 'confirmPassword', 'name', 'cep', 
       'rua', 'numero', 'bairro', 'cidade', 'estado'
     ];
@@ -119,6 +120,7 @@ export default function Signup() {
         formData.name,
         formData.plan,
         {
+          phone: formData.phone,
           cep: formData.cep,
           rua: formData.rua,
           numero: formData.numero,
@@ -409,6 +411,23 @@ export default function Signup() {
                 placeholder="seu@email.com"
                 disabled={loading}
                 data-testid="input-email"
+                className="pl-10"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-medium">Telefone</label>
+            <div className="relative">
+              <Phone className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+              <Input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="(11) 99999-9999"
+                disabled={loading}
+                data-testid="input-phone"
                 className="pl-10"
               />
             </div>

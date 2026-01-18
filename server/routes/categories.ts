@@ -69,6 +69,39 @@ export function registerCategoryRoutes(app: Express) {
     }
   });
 
+  // PATCH: Atualiza categoria
+  app.patch("/api/categories/:id", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      const categoryId = req.params.id;
+
+      const normalizedType = req.body?.type === 'income'
+        ? 'entrada'
+        : req.body?.type === 'expense'
+        ? 'saida'
+        : req.body?.type;
+
+      const parseResult = insertCategorySchema.safeParse({
+        ...req.body,
+        type: normalizedType,
+        companyId: req.user.companyId,
+      });
+
+      if (!parseResult.success) {
+        return res.status(400).json({ error: parseResult.error });
+      }
+
+      const { name, type } = parseResult.data;
+      const updated = await storage.updateCategory(req.user.companyId, categoryId, { name, type });
+
+      if (!updated) return res.status(404).json({ error: "Category not found" });
+      res.json(updated);
+    } catch (error) {
+      console.error("Category update error:", error);
+      res.status(500).json({ error: "Failed to update category" });
+    }
+  });
+
   // DELETE: Remove uma categoria customizada
   app.delete("/api/categories/:id", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {

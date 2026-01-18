@@ -92,6 +92,14 @@ export class DatabaseStorage {
     return category;
   }
 
+  async updateCategory(companyId: any, id: any, data: any) {
+    const [updated] = await db.update(categories)
+      .set(data)
+      .where(and(eq(categories.companyId, companyId), eq(categories.id, id)))
+      .returning();
+    return updated;
+  }
+
   async deleteCategory(companyId: any, id: any) {
     await db.delete(categories).where(and(eq(categories.companyId, companyId), eq(categories.id, id)));
   }

@@ -32,6 +32,7 @@ export function registerAuthRoutes(app: Express) {
         password, 
         name, 
         plan,
+        phone,
         cep,
         rua,
         numero,
@@ -64,7 +65,7 @@ export function registerAuthRoutes(app: Express) {
           if (!existingAdmin && username && email && password) {
             const createdAdmin = await createUser(existingCompany.id, username, email, password, name, "admin");
             await db.update(users)
-              .set({ cep, rua, numero, complemento: bairro, cidade, estado } as any)
+              .set({ phone, cep, rua, numero, complemento: bairro, cidade, estado } as any)
               .where(eq(users.id, createdAdmin.id));
 
             existingAdmins = await db
@@ -114,7 +115,7 @@ export function registerAuthRoutes(app: Express) {
       
       // Update user with address fields
       await db.update(users)
-        .set({ cep, rua, numero, complemento: bairro, cidade, estado } as any)
+        .set({ phone, cep, rua, numero, complemento: bairro, cidade, estado } as any)
         .where(eq(users.id, user.id));
       
       const planLabels: Record<string, string> = {
