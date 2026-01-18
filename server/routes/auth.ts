@@ -14,7 +14,8 @@ import {
   createCompany,
   createUser,
   findUserById,
-  hashPassword
+  hashPassword,
+  checkSubscriptionStatus
 } from "../auth";
 import { authMiddleware, checkRateLimit, recordLoginAttempt, AuthenticatedRequest } from "../middleware";
 import { generateBoletoForCompany } from "../utils/boleto";
@@ -293,7 +294,8 @@ export function registerAuthRoutes(app: Express) {
       
       await recordLoginAttempt(ip, username, true);
       
-      if (company && company.paymentStatus !== "approved" && !user.isSuperAdmin) {
+      const hasAccess = company ? await checkSubscriptionStatus(company.id) : false;
+      if (company && !hasAccess && !user.isSuperAdmin) {
         return res.status(403).json({
           error: "PAGAMENTO_PENDENTE",
           message: "Seu acesso está bloqueado pois o pagamento da assinatura está pendente. Por favor, realize o pagamento do boleto ou entre em contato com o suporte.",

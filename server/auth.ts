@@ -158,11 +158,7 @@ export async function checkSubscriptionStatus(companyId: string): Promise<boolea
     .where(eq(companies.id, companyId));
   
   if (!company.length) return false;
-  
-  // Bloqueia se o status de pagamento não for aprovado
-  if (company[0].paymentStatus !== "approved") {
-    return false;
-  }
+  const companyRow = company[0];
 
   const sub = await db
     .select()
@@ -171,8 +167,14 @@ export async function checkSubscriptionStatus(companyId: string): Promise<boolea
       eq(subscriptions.companyId, companyId),
       eq(subscriptions.status, "active")
     ));
-  
-  return sub.length > 0;
+
+  const hasActiveSub = sub.length > 0;
+  if (!hasActiveSub) return false;
+
+  if (companyRow.subscriptionStatus === "active") return true;
+  if (companyRow.paymentStatus === "approved") return true;
+
+  return false;
 }
 
 export async function createAuditLog(
