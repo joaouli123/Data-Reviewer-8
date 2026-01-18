@@ -10,6 +10,35 @@ import { formatDateWithTimezone } from '@/utils/dateFormatter';
 
 export function SubscriptionEditModal({ subscription, open, onOpenChange, onSave, isPending }) {
   const [isEditing, setIsEditing] = useState(false);
+
+  const planLabels = {
+    monthly: 'Mensal',
+    basic: 'Básico',
+    pro: 'Pro',
+    enterprise: 'Enterprise',
+  };
+
+  const paymentMethodLabels = {
+    credit_card: 'Cartão de Crédito',
+    debit_card: 'Cartão de Débito',
+    pix: 'PIX',
+    bank_transfer: 'Transferência Bancária',
+    boleto: 'Boleto',
+    bolbradesco: 'Boleto',
+  };
+
+  const statusLabels = {
+    active: 'Ativo',
+    pending: 'Pendente',
+    blocked: 'Bloqueado',
+    cancelled: 'Cancelado',
+  };
+
+  const statusVariant = (status) => {
+    if (status === 'active') return 'default';
+    if (status === 'blocked') return 'destructive';
+    return 'secondary';
+  };
   
   const form = useForm({
     defaultValues: {
@@ -71,7 +100,8 @@ export function SubscriptionEditModal({ subscription, open, onOpenChange, onSave
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="basic">Basic</SelectItem>
+                        <SelectItem value="monthly">Mensal</SelectItem>
+                        <SelectItem value="basic">Básico</SelectItem>
                         <SelectItem value="pro">Pro</SelectItem>
                         <SelectItem value="enterprise">Enterprise</SelectItem>
                       </SelectContent>
@@ -99,6 +129,7 @@ export function SubscriptionEditModal({ subscription, open, onOpenChange, onSave
                         <SelectItem value="pix">PIX</SelectItem>
                         <SelectItem value="bank_transfer">Transferência Bancária</SelectItem>
                         <SelectItem value="boleto">Boleto</SelectItem>
+                        <SelectItem value="bolbradesco">Boleto (Bradesco)</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -140,8 +171,9 @@ export function SubscriptionEditModal({ subscription, open, onOpenChange, onSave
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="active">Ativo</SelectItem>
-                        <SelectItem value="blocked">Cancelado</SelectItem>
-                        <SelectItem value="cancelled">Não Pagou</SelectItem>
+                        <SelectItem value="pending">Pendente</SelectItem>
+                        <SelectItem value="blocked">Bloqueado</SelectItem>
+                        <SelectItem value="cancelled">Cancelado</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -183,7 +215,7 @@ export function SubscriptionEditModal({ subscription, open, onOpenChange, onSave
 
               <div>
                 <p className="text-xs text-muted-foreground uppercase mb-2">Plano</p>
-                <p className="text-lg font-medium capitalize" data-testid="text-plan">{subscription?.plan || 'N/A'}</p>
+                <p className="text-lg font-medium" data-testid="text-plan">{planLabels[subscription?.plan] || 'N/A'}</p>
               </div>
 
               <div>
@@ -195,7 +227,9 @@ export function SubscriptionEditModal({ subscription, open, onOpenChange, onSave
 
               <div>
                 <p className="text-xs text-muted-foreground uppercase mb-2">Forma de Pagamento</p>
-                <p className="text-lg font-medium" data-testid="text-payment-method">{subscription?.paymentMethod || 'N/A'}</p>
+                <p className="text-lg font-medium" data-testid="text-payment-method">
+                  {paymentMethodLabels[subscription?.paymentMethod] || 'N/A'}
+                </p>
               </div>
 
               <div>
@@ -220,9 +254,9 @@ export function SubscriptionEditModal({ subscription, open, onOpenChange, onSave
                 <p className="text-xs text-muted-foreground uppercase mb-2">Status</p>
                 <p data-testid="text-status">
                   <Badge 
-                    variant={subscription?.status === 'active' ? 'default' : subscription?.status === 'blocked' ? 'destructive' : 'secondary'}
+                    variant={statusVariant(subscription?.status)}
                   >
-                    {subscription?.status === 'active' ? 'Ativo' : subscription?.status === 'blocked' ? 'Cancelado' : 'Não Pagou'}
+                    {statusLabels[subscription?.status] || 'Pendente'}
                   </Badge>
                 </p>
               </div>

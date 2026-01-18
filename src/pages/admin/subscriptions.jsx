@@ -109,10 +109,10 @@ function SubscriptionListContent() {
   });
 
   const toggleCompanyStatus = useMutation({
-    mutationFn: ({ companyId, status }) => 
+    mutationFn: ({ companyId, subscriptionStatus, paymentStatus }) => 
       apiRequest('PATCH', `/api/admin/companies/${companyId}`, { 
-        subscriptionStatus: status, 
-        paymentStatus: status === 'active' ? 'approved' : 'pending' 
+        subscriptionStatus, 
+        paymentStatus 
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/subscriptions'] });
@@ -282,7 +282,7 @@ function SubscriptionListContent() {
                           onView={() => setSelectedSubscription(s)}
                           onResendBoleto={() => setMailSub(s)}
                           onResendWelcome={() => resendWelcome.mutate(s.id)}
-                          onToggleCompanyStatus={(newStatus) => toggleCompanyStatus.mutate({ companyId: s.companyId, status: newStatus })}
+                          onToggleCompanyStatus={(payload) => toggleCompanyStatus.mutate({ companyId: s.companyId, ...payload })}
                           onDelete={() => setDeleteConfirm(s)}
                           isPending={toggleCompanyStatus.isPending || resendBoleto.isPending || resendWelcome.isPending}
                         />
@@ -373,6 +373,7 @@ function SubscriptionListContent() {
 }
 
 function SubscriptionActionsMenu({ subscription, onView, onResendBoleto, onResendWelcome, onToggleCompanyStatus, onDelete, isPending }) {
+  const isPaid = subscription.companyPaymentStatus === 'approved' && subscription.status === 'active';
   const isCompanyActive = subscription.companySubscriptionStatus === 'active';
 
   return (
@@ -401,14 +402,20 @@ function SubscriptionActionsMenu({ subscription, onView, onResendBoleto, onResen
           Reenviar Boas-vindas
         </DropdownMenuItem>
         <DropdownMenuItem 
-          onClick={() => onToggleCompanyStatus(isCompanyActive ? 'suspended' : 'active')}
-          className={isCompanyActive ? 'text-destructive' : 'text-green-600'}
+          onClick={() =>
+            onToggleCompanyStatus(
+              isPaid
+                ? { subscriptionStatus: 'suspended', paymentStatus: 'pending' }
+                : { subscriptionStatus: 'active', paymentStatus: 'approved' }
+            )
+          }
+          className={isPaid ? 'text-destructive' : 'text-green-600'}
           data-testid={`action-toggle-status-${subscription.id}`}
         >
-          {isCompanyActive ? (
+          {isPaid ? (
             <><XCircle className="h-4 w-4 mr-2" /> Suspender Conta</>
           ) : (
-            <><CheckCircle className="h-4 w-4 mr-2" /> Ativar Conta</>
+            <><CheckCircle className="h-4 w-4 mr-2" /> Ativar Conta (confirmar pagamento)</>
           )}
         </DropdownMenuItem>
         <DropdownMenuItem 

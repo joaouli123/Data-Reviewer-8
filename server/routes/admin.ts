@@ -495,11 +495,32 @@ export function registerAdminRoutes(app: Express) {
     try {
       const { id } = req.params;
       const updates = req.body;
+
+      const [currentSub] = await db
+        .select({ id: subscriptions.id, companyId: subscriptions.companyId })
+        .from(subscriptions)
+        .where(eq(subscriptions.id, id))
+        .limit(1);
+
+      if (!currentSub) {
+        return res.status(404).json({ error: "Subscription not found" });
+      }
       
       await db.update(subscriptions).set({
         ...updates,
         updatedAt: new Date()
       }).where(eq(subscriptions.id, id));
+
+      if (updates.status) {
+        const isActive = updates.status === 'active';
+        await db.update(companies)
+          .set({
+            paymentStatus: isActive ? 'approved' : 'pending',
+            subscriptionStatus: isActive ? 'active' : 'suspended',
+            updatedAt: new Date(),
+          })
+          .where(eq(companies.id, currentSub.companyId));
+      }
       
       res.json({ success: true });
     } catch (error) {
