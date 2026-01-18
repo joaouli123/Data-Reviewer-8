@@ -2,7 +2,7 @@ import { db } from "./db";
 import { eq, and, desc, sql } from "drizzle-orm";
 import {
   bankStatementItems, transactions, users, customers, suppliers, categories,
-  companies, sales, purchases
+  companies, sales, purchases, cashFlow
 } from "../shared/schema";
 
 // Função para formatar dinheiro corretamente
@@ -176,6 +176,15 @@ export class DatabaseStorage {
         .reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || "0") + parseFloat(t.interest || "0")), 0);
       return { ...supplier, totalPurchases: totalPurchases.toFixed(2) };
     });
+  }
+
+  // --- Fluxo de Caixa agregado ---
+  async getCashFlow(companyId: any) {
+    if (!companyId) return [];
+    return await db.select()
+      .from(cashFlow)
+      .where(eq(cashFlow.companyId, companyId))
+      .orderBy(desc(cashFlow.date));
   }
 
   async createSupplier(companyId: any, data: any) {
