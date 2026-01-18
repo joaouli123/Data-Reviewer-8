@@ -151,8 +151,14 @@ export default function PaymentPending() {
             <Button 
               variant="outline"
               className="w-full gap-2 h-11 border-primary/20 hover:bg-primary/5" 
-              onClick={() => regenerateBoletoMutation.mutate()}
-              disabled={regenerateBoletoMutation.isPending || isLoading || !resolvedCompanyId}
+              onClick={() => {
+                if (!resolvedCompanyId) {
+                  toast.error("Não foi possível identificar sua empresa. Faça login novamente.");
+                  return;
+                }
+                regenerateBoletoMutation.mutate();
+              }}
+              disabled={regenerateBoletoMutation.isPending || isLoading}
             >
               {regenerateBoletoMutation.isPending ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
