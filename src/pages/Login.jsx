@@ -31,9 +31,7 @@ export default function Login() {
       // Check if payment is pending
       if (data.paymentPending) {
         toast.info("Sua conta precisa de pagamento para ser ativada");
-        // Use plan from subscription or default to pro
-        const plan = data.company?.subscriptionPlan || "pro";
-        setTimeout(() => setLocation(`/checkout?plan=${plan}`), 1500);
+        setTimeout(() => setLocation("/payment-pending"), 1500);
         return;
       }
       

@@ -250,7 +250,7 @@ export function registerPaymentRoutes(app: Express) {
 
           for (const methodId of boletoMethods) {
             // Build payer object
-            const payerData: any = {
+            const payerData = {
               email: resolvedPayer?.email || email,
               identification: {
                 type: docDigits.length === 14 ? 'CNPJ' : 'CPF',
@@ -263,18 +263,12 @@ export function registerPaymentRoutes(app: Express) {
                 neighborhood: String(resolvedPayer?.address?.neighborhood || 'Centro'),
                 city: String(resolvedPayer?.address?.city || ''),
                 federal_unit: String(resolvedPayer?.address?.federal_unit || '')
-              }
+              },
+              // Sempre envie first_name e last_name, mesmo para CNPJ
+              first_name: resolvedPayer?.first_name || (isCNPJ ? 'Empresa' : 'Admin'),
+              last_name: resolvedPayer?.last_name || (isCNPJ ? 'PJ' : 'User'),
+              entity_type: isCNPJ ? 'company' : 'individual'
             };
-
-            // Para CNPJ: não enviar first_name/last_name, apenas entity_type
-            if (isCNPJ) {
-              payerData.entity_type = 'company';
-            } else {
-              // Para CPF: enviar first_name e last_name
-              payerData.first_name = resolvedPayer?.first_name || 'Admin';
-              payerData.last_name = resolvedPayer?.last_name || 'User';
-              payerData.entity_type = 'individual';
-            }
 
             const boletoPayload = {
               transaction_amount: Number(parseFloat(total_amount).toFixed(2)),
