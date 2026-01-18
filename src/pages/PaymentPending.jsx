@@ -40,7 +40,7 @@ export default function PaymentPending() {
             zip_code: user?.cep?.replace(/\D/g, '') || '',
             street_name: user?.rua || '',
             street_number: user?.numero || '',
-            neighborhood: user?.bairro || '',
+            neighborhood: user?.bairro || user?.complemento || '',
             city: user?.cidade || '',
             federal_unit: user?.estado || ''
           }
