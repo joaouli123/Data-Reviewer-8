@@ -3,16 +3,19 @@ import { useLocation } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Mail, CheckCircle } from 'lucide-react';
+import { Mail, CheckCircle, Building2 } from 'lucide-react';
 
 export default function AcceptInvitePage() {
   const [location, setLocation] = useLocation();
   const [token, setToken] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [accepted, setAccepted] = useState(false);
+  const [inviteInfo, setInviteInfo] = useState(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -34,6 +37,10 @@ export default function AcceptInvitePage() {
     }
     if (!validatePassword(password)) {
       toast.error('Senha deve ter no mínimo 6 caracteres');
+      return;
+    }
+    if (password !== confirmPassword) {
+      toast.error('As senhas não coincidem');
       return;
     }
 
@@ -77,22 +84,42 @@ export default function AcceptInvitePage() {
             </div>
           ) : (
             <form onSubmit={handleAccept} className="space-y-4">
-              <Input
-                type="text"
-                placeholder="Nome de usuário"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                disabled={loading}
-                data-testid="input-accept-username"
-              />
-              <Input
-                type="password"
-                placeholder="Senha"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={loading}
-                data-testid="input-accept-password"
-              />
+              <div className="space-y-2">
+                <Label htmlFor="username">Nome de usuário</Label>
+                <Input
+                  id="username"
+                  type="text"
+                  placeholder="Digite seu nome de usuário"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  disabled={loading}
+                  data-testid="input-accept-username"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Senha</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Mínimo 6 caracteres"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
+                  data-testid="input-accept-password"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirmar Senha</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="Digite a senha novamente"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  disabled={loading}
+                  data-testid="input-accept-confirm-password"
+                />
+              </div>
               {!token && (
                 <div className="p-3 bg-amber-50 border border-amber-200 rounded-md">
                   <p className="text-sm text-amber-800">Link de convite inválido ou expirado</p>

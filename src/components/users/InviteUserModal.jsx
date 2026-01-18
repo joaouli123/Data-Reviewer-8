@@ -60,14 +60,39 @@ export default function InviteUserModal({ open, onOpenChange, onInvite }) {
     }
   };
 
-  const handleCopyLink = () => {
+  const handleCopyLink = async () => {
     if (!inviteData.email || !inviteData.name) {
       toast.error('Email e nome são obrigatórios');
       return;
     }
-    const link = `${window.location.origin}/signup?companyId=${company?.id}&email=${encodeURIComponent(inviteData.email)}&name=${encodeURIComponent(inviteData.name)}&role=${inviteData.role}`;
-    navigator.clipboard.writeText(link);
-    toast.success('Link copiado para a área de transferência!');
+    setLoading(true);
+    try {
+      const token = JSON.parse(localStorage.getItem('auth') || '{}').token;
+      const response = await fetch('/api/invitations/generate-link', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          email: inviteData.email,
+          name: inviteData.name,
+          role: inviteData.role
+        })
+      });
+      
+      if (!response.ok) throw new Error('Falha ao gerar link');
+      
+      const data = await response.json();
+      const link = `${window.location.origin}/accept-invite?token=${data.token}`;
+      navigator.clipboard.writeText(link);
+      toast.success('Link copiado para a área de transferência!');
+      resetModal();
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSendEmail = async () => {
@@ -120,6 +145,7 @@ export default function InviteUserModal({ open, onOpenChange, onInvite }) {
             {step === 'methods' && 'Convidar Novo Usuário'}
             {step === 'create' && 'Criar Usuário Agora'}
             {step === 'email' && 'Enviar Link por Email'}
+            {step === 'copylink' && 'Copiar Link de Convite'}
           </DialogTitle>
         </DialogHeader>
 
@@ -140,8 +166,8 @@ export default function InviteUserModal({ open, onOpenChange, onInvite }) {
             </Card>
 
             <Card 
-              className="p-6 cursor-pointer hover-elevate transition-all flex flex-col items-center text-center gap-4 opacity-50 cursor-not-allowed"
-              onClick={() => toast.info('Funcionalidade em desenvolvimento')}
+              className="p-6 cursor-pointer hover-elevate transition-all flex flex-col items-center text-center gap-4"
+              onClick={() => setStep('copylink')}
               data-testid="card-copy-link"
             >
               <div className="p-3 bg-blue-100 rounded-lg">
@@ -169,7 +195,7 @@ export default function InviteUserModal({ open, onOpenChange, onInvite }) {
           </div>
         )}
 
-        {(step === 'create' || step === 'email') && (
+        {(step === 'create' || step === 'email' || step === 'copylink') && (
           <div className="space-y-6 py-6">
             <div className="space-y-2">
               <Label htmlFor="name">Nome do Usuário</Label>
@@ -260,13 +286,15 @@ export default function InviteUserModal({ open, onOpenChange, onInvite }) {
                 Voltar
               </Button>
               <Button 
-                onClick={step === 'create' ? handleCreateNow : handleSendEmail}
+                onClick={step === 'create' ? handleCreateNow : (step === 'copylink' ? handleCopyLink : handleSendEmail)}
                 disabled={loading}
                 className="flex-1"
-                data-testid={`button-${step}-confirm`}
+                data-testid="button-confirm-invite"
               >
                 {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                {step === 'create' ? 'Criar Usuário' : 'Enviar Email'}
+                {step === 'create' && 'Criar Usuário'}
+                {step === 'email' && 'Enviar Email'}
+                {step === 'copylink' && 'Copiar Link'}
               </Button>
             </div>
           </div>

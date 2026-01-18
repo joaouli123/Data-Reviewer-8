@@ -1,7 +1,7 @@
 import { Express } from "express";
 import { eq, desc, and } from "drizzle-orm";
 import { db } from "../db";
-import { users, companies, subscriptions, categories } from "../../shared/schema";
+import { users, companies, subscriptions, categories, invitations } from "../../shared/schema";
 import { 
   findUserByUsername, 
   findUserByEmail, 
@@ -600,6 +600,177 @@ export function registerAuthRoutes(app: Express) {
       res.json({ message: "Permissions updated successfully" });
     } catch (error) {
       res.status(500).json({ error: "Failed to update permissions" });
+    }
+  });
+
+  // Create invitation and send email
+  app.post("/api/invitations/send-email", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      
+      const { email, name, role, companyId } = req.body;
+      if (!email || !name || !role) {
+        return res.status(400).json({ error: "Email, nome e cargo são obrigatórios" });
+      }
+
+      // Generate unique token
+      const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
+      
+      // Set expiration to 10 minutes
+      const expiresAt = new Date();
+      expiresAt.setMinutes(expiresAt.getMinutes() + 10);
+
+      // Create invitation
+      await db.insert(invitations).values({
+        companyId: req.user.companyId,
+        token,
+        email,
+        role,
+        permissions: JSON.stringify({}),
+        expiresAt,
+        createdBy: req.user.id
+      } as any);
+
+      // Get company info
+      const company = await findCompanyById(req.user.companyId);
+
+      // Send email with invite link
+      const origin = (req.headers.origin || '').toString();
+      const referer = (req.headers.referer || '').toString();
+      let appUrl = origin;
+      if (!appUrl && referer) {
+        try {
+          appUrl = new URL(referer).origin;
+        } catch {
+          appUrl = '';
+        }
+      }
+      if (!appUrl) {
+        appUrl = process.env.APP_URL || 'https://huacontrol.com.br';
+      }
+
+      const inviteLink = `${appUrl}/accept-invite?token=${token}`;
+
+      try {
+        const { Resend: ResendClient } = await import('resend');
+        const resend = new ResendClient(process.env.RESEND_API_KEY);
+        await resend.emails.send({
+          from: 'Equipe <contato@huacontrol.com.br>',
+          to: email,
+          subject: `Convite para ${company?.name || 'HuaControl'}`,
+          html: `
+            <div style="font-family: sans-serif; color: #333;">
+              <h2>Olá, ${name}</h2>
+              <p>Você foi convidado para fazer parte da equipe <strong>${company?.name || 'HuaControl'}</strong>.</p>
+              <p>Cargo: <strong>${role === 'admin' ? 'Admin' : 'Operacional'}</strong></p>
+              <p>Clique no link abaixo para aceitar o convite e criar sua conta:</p>
+              <p><a href="${inviteLink}" style="display: inline-block; padding: 12px 24px; background: #3b82f6; color: white; text-decoration: none; border-radius: 6px;">Aceitar Convite</a></p>
+              <p style="color: #666; font-size: 14px;">Este link expira em 10 minutos.</p>
+              <p style="color: #666; font-size: 12px;">Se você não solicitou este convite, ignore este email.</p>
+            </div>
+          `
+        });
+      } catch (emailErr) {
+        console.error("Error sending invite email:", emailErr);
+        return res.status(500).json({ error: "Falha ao enviar email" });
+      }
+
+      res.json({ success: true, token });
+    } catch (error) {
+      console.error("Error creating invitation:", error);
+      res.status(500).json({ error: "Failed to create invitation" });
+    }
+  });
+
+  // Accept invitation
+  app.post("/api/invitations/accept", async (req, res) => {
+    try {
+      const { token, username, password } = req.body;
+      
+      if (!token || !username || !password) {
+        return res.status(400).json({ error: "Token, username e senha são obrigatórios" });
+      }
+
+      if (password.length < 6) {
+        return res.status(400).json({ error: "A senha deve ter no mínimo 6 caracteres" });
+      }
+
+      // Find invitation
+      const [invitation] = await db.select()
+        .from(invitations)
+        .where(eq(invitations.token, token))
+        .limit(1);
+
+      if (!invitation) {
+        return res.status(404).json({ error: "Convite não encontrado" });
+      }
+
+      // Check if already accepted
+      if (invitation.acceptedAt) {
+        return res.status(400).json({ error: "Este convite já foi aceito" });
+      }
+
+      // Check expiration
+      if (new Date() > new Date(invitation.expiresAt)) {
+        return res.status(400).json({ error: "Este convite expirou" });
+      }
+
+      // Create user
+      const hashedPassword = await hashPassword(password);
+      const [newUser] = await db.insert(users).values({
+        companyId: invitation.companyId,
+        username,
+        email: invitation.email,
+        password: hashedPassword,
+        role: invitation.role,
+        permissions: invitation.permissions || "{}",
+        status: "active"
+      }).returning();
+
+      // Mark invitation as accepted
+      await db.update(invitations)
+        .set({ acceptedAt: new Date(), acceptedBy: newUser.id } as any)
+        .where(eq(invitations.token, token));
+
+      res.json({ success: true, user: newUser });
+    } catch (error) {
+      console.error("Error accepting invitation:", error);
+      res.status(500).json({ error: "Failed to accept invitation" });
+    }
+  });
+
+  // Generate invite link (for copy link functionality)
+  app.post("/api/invitations/generate-link", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      
+      const { email, name, role } = req.body;
+      if (!email || !name || !role) {
+        return res.status(400).json({ error: "Email, nome e cargo são obrigatórios" });
+      }
+
+      // Generate unique token
+      const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
+      
+      // Set expiration to 10 minutes
+      const expiresAt = new Date();
+      expiresAt.setMinutes(expiresAt.getMinutes() + 10);
+
+      // Create invitation
+      await db.insert(invitations).values({
+        companyId: req.user.companyId,
+        token,
+        email,
+        role,
+        permissions: JSON.stringify({}),
+        expiresAt,
+        createdBy: req.user.id
+      } as any);
+
+      res.json({ token });
+    } catch (error) {
+      console.error("Error generating invite link:", error);
+      res.status(500).json({ error: "Failed to generate invite link" });
     }
   });
 }
