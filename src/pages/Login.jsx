@@ -30,8 +30,38 @@ export default function Login() {
       
       // Check if payment is pending
       if (data.paymentPending) {
-        toast.info("Sua conta precisa de pagamento para ser ativada");
-        setTimeout(() => setLocation("/payment-pending"), 1500);
+        const whatsappNumber = "5554996231432";
+        const whatsappUrl = `https://wa.me/${whatsappNumber}?text=Olá,%20envio%20comprovante%20do%20boleto%20para%20liberação%20do%20acesso.`;
+
+        toast.custom(() => (
+          <div className="p-4 bg-rose-50 border border-rose-200 rounded-lg shadow-sm max-w-sm text-left">
+            <div className="flex items-center gap-2 text-rose-700 font-semibold">
+              <span className="inline-flex h-2 w-2 rounded-full bg-rose-500" />
+              PAGAMENTO_PENDENTE
+            </div>
+            <p className="text-sm text-rose-800 mt-2">
+              Gere o boleto ou envie o comprovante para liberar o acesso.
+            </p>
+            <div className="mt-3 grid grid-cols-1 gap-2">
+              <Button
+                size="sm"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                onClick={() => setLocation("/payment-pending")}
+              >
+                Gerar / baixar boleto
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full border-blue-200 text-blue-700 hover:bg-blue-50"
+                onClick={() => window.open(whatsappUrl, "_blank")}
+              >
+                Enviar comprovante (WhatsApp)
+              </Button>
+            </div>
+          </div>
+        ), { duration: 8000 });
+        setTimeout(() => setLocation("/payment-pending"), 500);
         return;
       }
       
