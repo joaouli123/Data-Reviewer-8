@@ -8,10 +8,12 @@ import { ptBR } from "date-fns/locale";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { toast } from "sonner";
 import { useState } from "react";
+import { useLocation } from "wouter";
 
 export default function PaymentPending() {
   const { logout, company, user } = useAuth();
   const [issuedInfo, setIssuedInfo] = useState(null);
+  const [, setLocation] = useLocation();
 
   const getStoredAuth = () => {
     if (typeof window === "undefined") return null;
@@ -185,7 +187,10 @@ export default function PaymentPending() {
           <Button 
             variant="ghost" 
             className="w-full gap-2 text-muted-foreground hover:text-destructive transition-colors" 
-            onClick={() => logout()}
+            onClick={async () => {
+              await logout();
+              setLocation("/login");
+            }}
           >
             <LogOut className="w-4 h-4" />
             Sair da Conta
