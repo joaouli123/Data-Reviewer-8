@@ -2,6 +2,75 @@ import { createContext, useContext, useState, useEffect } from "react";
 
 const AuthContext = createContext();
 
+const MAX_INLINE_IMAGE_SIZE = 2000;
+
+const sanitizeUser = (user) => {
+  if (!user) return user;
+  const sanitized = { ...user };
+  if (typeof sanitized.avatar === 'string' && sanitized.avatar.startsWith('data:image')) {
+    if (sanitized.avatar.length > MAX_INLINE_IMAGE_SIZE) {
+      delete sanitized.avatar;
+    }
+  }
+  return sanitized;
+};
+
+const sanitizeAuthPayload = (payload) => {
+  if (!payload) return payload;
+  return {
+    ...payload,
+    user: sanitizeUser(payload.user),
+  };
+};
+
+const buildMinimalAuth = (payload) => ({
+  user: payload?.user
+    ? {
+        id: payload.user.id,
+        username: payload.user.username,
+        email: payload.user.email,
+        name: payload.user.name,
+        role: payload.user.role,
+        permissions: payload.user.permissions,
+        companyId: payload.user.companyId,
+      }
+    : null,
+  company: payload?.company
+    ? {
+        id: payload.company.id,
+        name: payload.company.name,
+        paymentStatus: payload.company.paymentStatus,
+        subscriptionStatus: payload.company.subscriptionStatus,
+        subscriptionPlan: payload.company.subscriptionPlan,
+      }
+    : null,
+  token: payload?.token || null,
+  paymentPending: !!payload?.paymentPending,
+  plan: payload?.plan,
+});
+
+const safeSetAuth = (payload) => {
+  const sanitized = sanitizeAuthPayload(payload);
+  try {
+    localStorage.setItem("auth", JSON.stringify(sanitized));
+    return;
+  } catch (err) {
+    try {
+      const minimal = buildMinimalAuth(sanitized);
+      localStorage.removeItem("auth");
+      localStorage.setItem("auth", JSON.stringify(minimal));
+      return;
+    } catch (error) {
+      try {
+        const minimal = buildMinimalAuth(sanitized);
+        sessionStorage.setItem("auth", JSON.stringify(minimal));
+      } catch (e) {
+        // Ignore
+      }
+    }
+  }
+};
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [company, setCompany] = useState(null);
@@ -24,7 +93,7 @@ export function AuthProvider({ children }) {
   // Load from localStorage on mount
   useEffect(() => {
     const handleStorageChange = () => {
-      const stored = localStorage.getItem("auth");
+      const stored = localStorage.getItem("auth") || sessionStorage.getItem("auth");
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
@@ -89,13 +158,13 @@ export function AuthProvider({ children }) {
       setIsPaymentPending(true);
       // We don't set the token yet to prevent dashboard access
       
-      localStorage.setItem("auth", JSON.stringify({ 
-        user: data.user, 
-        company: data.company, 
+      safeSetAuth({
+        user: data.user,
+        company: data.company,
         token: null, // Ensure token is null until payment
         paymentPending: true,
-        plan 
-      }));
+        plan,
+      });
       return data;
     } catch (err) {
       setError(err.message);
@@ -140,12 +209,12 @@ export function AuthProvider({ children }) {
         setCompany(data.company);
         setIsPaymentPending(true);
         // Store pending payment info
-        localStorage.setItem("auth", JSON.stringify({
+        safeSetAuth({
           user: data.user,
           company: data.company,
           token: null,
-          paymentPending: true
-        }));
+          paymentPending: true,
+        });
         return data;
       }
       
@@ -153,7 +222,7 @@ export function AuthProvider({ children }) {
       setUser(data.user);
       setCompany(data.company);
       setIsPaymentPending(false);
-      localStorage.setItem("auth", JSON.stringify(data));
+      safeSetAuth(data);
       
       // Invalidate queries to refresh data after login
       try {
@@ -208,10 +277,10 @@ export function AuthProvider({ children }) {
           }
         }
         // Preserve token and other critical info
-        localStorage.setItem("auth", JSON.stringify({ 
-          ...current, 
-          user: sanitizedUser
-        }));
+        safeSetAuth({
+          ...current,
+          user: sanitizedUser,
+        });
       } catch (e) {
         console.error("Error updating localStorage auth:", e);
       }
