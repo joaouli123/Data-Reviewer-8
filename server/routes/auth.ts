@@ -638,7 +638,8 @@ export function registerAuthRoutes(app: Express) {
         plan: inv.plan,
         amount: inv.amount,
         status: inv.status,
-        ticket_url: inv.ticket_url
+        ticket_url: inv.ticket_url,
+        expiresAt: inv.expiresAt
       })));
     } catch (error) {
       console.error("Error fetching invoices:", error);

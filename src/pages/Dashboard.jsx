@@ -200,34 +200,25 @@ export default function DashboardPage() {
     const futureSaleCount = futureRevenueTransactions.length;
     const futurePurchaseCount = futureExpensesTransactions.length;
 
-    // Chart data - ONLY months with actual transactions
-    const monthsWithData = new Map();
-    allTransactions.forEach(t => {
-      const tDate = extractTxDate(t);
-      if (!tDate) return;
-      const monthKey = tDate.toISOString().slice(0, 7); // YYYY-MM
-      if (!monthsWithData.has(monthKey)) {
-        monthsWithData.set(monthKey, []);
-      }
-      monthsWithData.get(monthKey).push(t);
-    });
+    // Chart data - always last 6 months (fill zeros if no data)
+    const monthsToShow = Array.from({ length: 6 }, (_, i) => startOfMonth(subMonths(new Date(), 5 - i)));
+    const chartData = monthsToShow.map(monthStart => {
+      const monthEnd = endOfMonth(monthStart);
+      const monthTrans = allTransactions.filter(t => {
+        const tDate = extractTxDate(t);
+        if (!tDate) return false;
+        return tDate >= monthStart && tDate <= monthEnd;
+      });
 
-    // Sort months and show only those with data
-    const sortedMonths = Array.from(monthsWithData.keys()).sort();
-    const chartData = sortedMonths.map(monthKey => {
-      const monthTrans = monthsWithData.get(monthKey);
       const income = monthTrans
         .filter(t => isIncomeType(t.type))
         .reduce((acc, t) => acc + Math.abs((parseFloat(t.amount || 0) + parseFloat(t.interest || 0))), 0);
       const expenseRaw = monthTrans
         .filter(t => isExpenseType(t.type))
         .reduce((acc, t) => acc + ((parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0)), 0);
-      
-      const [year, month] = monthKey.split('-');
-      const date = new Date(parseInt(year), parseInt(month) - 1, 1);
-      
+
       return {
-        name: date.toLocaleString('pt-BR', { month: 'short', year: '2-digit' }).toUpperCase(),
+        name: monthStart.toLocaleString('pt-BR', { month: 'short', year: '2-digit' }).toUpperCase(),
         income,
         expense: Math.abs(expenseRaw)
       };

@@ -113,6 +113,9 @@ export default function ProfilePage() {
   const planValue = company?.subscriptionPlan === "pro" ? "997,00" : (company?.subscriptionPlan === "monthly" ? "215,00" : "0,00");
   const getInitials = (name) => name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'US';
   const displayName = [formData.firstName, formData.lastName].filter(Boolean).join(' ') || formData.name;
+  const nextDueDate = invoices.length > 0 && invoices[0]?.expiresAt
+    ? new Date(invoices[0].expiresAt)
+    : null;
 
   // Handlers
   const formatPhone = (value) => {
@@ -346,7 +349,7 @@ export default function ProfilePage() {
               <CardTitle className="flex items-center gap-2"><CreditCard className="w-5 h-5"/> Financeiro</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <div className="p-4 bg-muted rounded-lg">
                   <div className="text-sm text-muted-foreground">Plano</div>
                   <div className="font-bold capitalize">{currentSubscription}</div>
@@ -354,6 +357,12 @@ export default function ProfilePage() {
                 <div className="p-4 bg-muted rounded-lg">
                    <div className="text-sm text-muted-foreground">Valor</div>
                    <div className="font-bold">R$ {planValue}</div>
+                </div>
+                <div className="p-4 bg-muted rounded-lg">
+                   <div className="text-sm text-muted-foreground">Próximo vencimento</div>
+                   <div className="font-bold">
+                     {nextDueDate ? nextDueDate.toLocaleDateString('pt-BR') : '-'}
+                   </div>
                 </div>
                 <div className="p-4 bg-muted rounded-lg">
                    <div className="text-sm text-muted-foreground">Status</div>
@@ -379,17 +388,23 @@ export default function ProfilePage() {
 
               <div className="border rounded-md">
                  <table className="w-full text-sm">
-                    <thead className="bg-muted border-b">
-                       <tr><th className="p-3 text-left">Data</th><th className="p-3 text-left">Plano</th><th className="p-3 text-right">Valor</th></tr>
-                    </thead>
+                      <thead className="bg-muted border-b">
+                        <tr>
+                         <th className="p-3 text-left">Data</th>
+                         <th className="p-3 text-left">Plano</th>
+                         <th className="p-3 text-left">Vencimento</th>
+                         <th className="p-3 text-right">Valor</th>
+                        </tr>
+                      </thead>
                     <tbody>
                        {invoices.length > 0 ? invoices.map((inv, i) => (
                           <tr key={i} className="border-b last:border-0">
                              <td className="p-3">{inv.date ? new Date(inv.date).toLocaleDateString() : '-'}</td>
                              <td className="p-3">{planTranslation[inv.plan] || inv.plan}</td>
-                             <td className="p-3 text-right">R$ {parseFloat(inv.amount||0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                            <td className="p-3">{inv.expiresAt ? new Date(inv.expiresAt).toLocaleDateString('pt-BR') : '-'}</td>
+                            <td className="p-3 text-right">R$ {parseFloat(inv.amount||0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                           </tr>
-                       )) : <tr><td colSpan={3} className="p-4 text-center text-muted-foreground">Nenhuma fatura encontrada</td></tr>}
+                        )) : <tr><td colSpan={4} className="p-4 text-center text-muted-foreground">Nenhuma fatura encontrada</td></tr>}
                     </tbody>
                  </table>
               </div>
