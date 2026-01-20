@@ -21,6 +21,10 @@
 
 ## 4) Banco de dados
 - [ ] Backups automáticos e teste de restore.
+- [ ] Neon: verificar plano e janela de PITR (instant restore) no console.
+- [ ] Neon: definir janela de retenção do PITR (1–30 dias conforme plano).
+- [ ] Backup externo: agendar `pg_dump` diário usando **string sem pooling**.
+- [ ] Restore de teste mensal via `pg_restore` em projeto/branch separado.
 - [ ] Pool de conexões configurado.
 - [ ] Índices críticos revisados.
 
