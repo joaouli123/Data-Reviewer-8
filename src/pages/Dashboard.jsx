@@ -112,11 +112,11 @@ export default function DashboardPage() {
 
   // Fetch ALL transactions to show only periods with actual data
   const { data: allTxData = [], isLoading } = useQuery({
-    queryKey: ['/api/transactions', company?.id],
+    queryKey: ['/api/transactions', company?.id || user?.id],
     queryFn: () => Transaction.list(),
     staleTime: 0, // Invalida imediatamente para refletir novos dados
     refetchOnWindowFocus: true,
-    enabled: !!company?.id
+    enabled: !!user?.id
   });
 
   if (isLoading) {
@@ -130,13 +130,13 @@ export default function DashboardPage() {
 
   const allTransactions = Array.isArray(allTxData) ? allTxData : (allTxData?.data || []);
 
-  const extractDateStr = (t) => {
-    if (!t || !t.date) return null;
+  const extractTxDate = (t) => {
+    if (!t) return null;
+    const candidate = t.paymentDate || t.date || t.createdAt || t.created_at;
+    if (!candidate) return null;
     try {
-      if (typeof t.date === 'string') {
-        return t.date.split('T')[0];
-      }
-      return t.date.toISOString().split('T')[0];
+      const d = new Date(candidate);
+      return Number.isNaN(d.getTime()) ? null : d;
     } catch (e) {
       return null;
     }
@@ -151,14 +151,9 @@ export default function DashboardPage() {
     
     // Filter transactions by date range
     const filteredTransactions = allTransactions.filter(t => {
-      const tDateStr = extractDateStr(t);
-      if (!tDateStr) return false;
-      try {
-        const tDate = parseISO(tDateStr);
-        return tDate >= startDate && tDate <= endDate;
-      } catch (e) {
-        return false;
-      }
+      const tDate = extractTxDate(t);
+      if (!tDate) return false;
+      return tDate >= startDate && tDate <= endDate;
     });
 
     const totalRevenue = filteredTransactions
@@ -186,18 +181,16 @@ export default function DashboardPage() {
     const thirtyDaysFromNow = new Date(thirtyDaysFromNowStr + 'T23:59:59Z');
     
     const futureRevenueTransactions = allTransactions.filter(t => {
-      const tDateStr = extractDateStr(t);
-      if (!tDateStr) return false;
-      const tDate = parseISO(tDateStr);
+      const tDate = extractTxDate(t);
+      if (!tDate) return false;
       return isIncomeType(t.type) && tDate >= today && tDate <= thirtyDaysFromNow;
     });
     
     const futureRevenue = futureRevenueTransactions.reduce((sum, t) => sum + Math.abs((parseFloat(t.amount || 0) + parseFloat(t.interest || 0))), 0);
     
     const futureExpensesTransactions = allTransactions.filter(t => {
-      const tDateStr = extractDateStr(t);
-      if (!tDateStr) return false;
-      const tDate = parseISO(tDateStr);
+      const tDate = extractTxDate(t);
+      if (!tDate) return false;
       return isExpenseType(t.type) && tDate >= today && tDate <= thirtyDaysFromNow;
     });
     
@@ -210,9 +203,9 @@ export default function DashboardPage() {
     // Chart data - ONLY months with actual transactions
     const monthsWithData = new Map();
     allTransactions.forEach(t => {
-      const dateStr = extractDateStr(t);
-      if (!dateStr) return;
-      const monthKey = dateStr.slice(0, 7); // YYYY-MM
+      const tDate = extractTxDate(t);
+      if (!tDate) return;
+      const monthKey = tDate.toISOString().slice(0, 7); // YYYY-MM
       if (!monthsWithData.has(monthKey)) {
         monthsWithData.set(monthKey, []);
       }

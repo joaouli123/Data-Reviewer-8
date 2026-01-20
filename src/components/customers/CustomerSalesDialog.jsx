@@ -18,6 +18,19 @@ const parseLocalDate = (dateStr) => {
   return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
 };
 
+// Garante uma data para exibição/ordenação usando paymentDate -> date -> createdAt
+const extractTxDate = (t) => {
+  if (!t) return null;
+  const candidate = t.paymentDate || t.date || t.createdAt || t.created_at;
+  if (!candidate) return null;
+  try {
+    const d = new Date(candidate);
+    return isNaN(d.getTime()) ? null : d;
+  } catch (e) {
+    return null;
+  }
+};
+
 export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
   const { company } = useAuth();
   const queryClient = useQueryClient();
@@ -73,7 +86,14 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
       groups[groupKey].push(s);
     });
     return Object.values(groups).map(group => {
-      const sortedInstallments = group.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      const sortedInstallments = group.sort((a, b) => {
+        const da = extractTxDate(a);
+        const db = extractTxDate(b);
+        if (!da && !db) return 0;
+        if (!da) return 1;
+        if (!db) return -1;
+        return da.getTime() - db.getTime();
+      });
       const main = sortedInstallments[0];
       
       // Precision math for total amount
@@ -97,8 +117,12 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
         installments: sortedInstallments
       };
     }).sort((a, b) => {
-      const dateDiff = new Date(b.main.date).getTime() - new Date(a.main.date).getTime();
-      if (dateDiff !== 0) return dateDiff;
+      const da = extractTxDate(a.main);
+      const db = extractTxDate(b.main);
+      if (da && db) {
+        const dateDiff = db.getTime() - da.getTime();
+        if (dateDiff !== 0) return dateDiff;
+      }
       
       // Secondary sort by createdAt if available
       if (a.main.createdAt && b.main.createdAt) {
@@ -259,7 +283,10 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
                       <div>
                         <h4 className="font-semibold text-base text-slate-900">{group.main.description || 'Venda'}</h4>
                         <p className="text-sm text-slate-500 mt-0.5">
-                          {group.main.date ? format(parseLocalDate(group.main.date), "dd 'de' MMMM, yyyy", { locale: ptBR }) : '-'}
+                          {(() => {
+                            const dt = extractTxDate(group.main);
+                            return dt ? format(dt, "dd 'de' MMMM, yyyy", { locale: ptBR }) : '-';
+                          })()}
                           <span className="ml-2 text-slate-400">({group.installments.length} parcela{group.installments.length > 1 ? 's' : ''})</span>
                         </p>
                       </div>
@@ -288,7 +315,10 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
                               R$ {(parseFloat(installment.amount || 0) + parseFloat(installment.interest || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                             </p>
                             <p className="text-xs text-slate-500">
-                              Venc: {installment.date ? format(parseLocalDate(installment.date), "dd/MM/yyyy") : '-'}
+                              {(() => {
+                                const dt = extractTxDate(installment);
+                                return dt ? `Venc: ${format(dt, "dd/MM/yyyy")}` : 'Venc: -';
+                              })()}
                             </p>
                           </div>
                         </div>
