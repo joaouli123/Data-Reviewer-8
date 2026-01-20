@@ -83,7 +83,41 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
   React.useEffect(() => {
     if (open) {
       if (initialData) {
-        // ... (existing logic for initialData)
+        const toDate = (value) => {
+          if (!value) return null;
+          const d = new Date(value);
+          return Number.isNaN(d.getTime()) ? null : d;
+        };
+
+        const rawAmount = parseFloat(initialData.amount || 0);
+        const normalizedAmount = Math.abs(rawAmount).toFixed(2);
+        const inferredEntityType = initialData.customerId
+          ? 'customer'
+          : initialData.supplierId
+          ? 'supplier'
+          : 'none';
+
+        const baseDate = toDate(initialData.date) || new Date();
+        const paymentDate = toDate(initialData.paymentDate);
+        const inferredStatus = initialData.status
+          || (paymentDate ? 'pago' : 'pendente');
+
+        setFormData({
+          description: initialData.description || '',
+          amount: normalizedAmount,
+          type: initialData.type || (inferredEntityType === 'supplier' ? 'compra' : 'venda'),
+          categoryId: initialData.categoryId || '',
+          date: baseDate,
+          installments: initialData.installmentTotal || 1,
+          installment_amount: '',
+          status: inferredStatus,
+          paymentDate: paymentDate || (inferredStatus === 'pago' ? baseDate : null),
+          paymentMethod: initialData.paymentMethod || '',
+          entityType: inferredEntityType,
+          customerId: initialData.customerId || '',
+          supplierId: initialData.supplierId || ''
+        });
+        setCustomInstallments([]);
       } else {
         // Pre-select first appropriate category when opening new transaction form
         const filteredCats = categories.filter(cat => {
