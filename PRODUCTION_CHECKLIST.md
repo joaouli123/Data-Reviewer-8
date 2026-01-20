@@ -9,13 +9,13 @@
 - [ ] (Opcional) `TRUST_PROXY=true` atrás de proxy/edge.
 
 ## 2) Segurança
-- [ ] Rate limiting ativo (`RATE_LIMIT_WINDOW_MS`, `RATE_LIMIT_MAX`).
-- [ ] CORS com allowlist (sem `*`).
-- [ ] Headers de segurança (helmet) ativos.
-- [ ] Logs sem dados sensíveis.
+- [x] Rate limiting ativo (`RATE_LIMIT_WINDOW_MS`, `RATE_LIMIT_MAX`).
+- [x] CORS com allowlist (sem `*`).
+- [x] Headers de segurança (helmet) ativos.
+- [x] Logs sem dados sensíveis.
 
 ## 3) Observabilidade
-- [ ] Logs estruturados com nível (info/warn/error).
+- [x] Logs estruturados com nível (info/warn/error).
 - [ ] Monitoramento de uptime do endpoint `/api/health`.
 - [ ] Alertas para erros 5xx e latência alta.
 
@@ -24,7 +24,7 @@
 - [ ] Neon: verificar plano e janela de PITR (instant restore) no console.
 - [ ] Neon: definir janela de retenção do PITR (1–30 dias conforme plano).
 - [ ] Backup externo: agendar `pg_dump` diário usando **string sem pooling**.
-- [ ] Automatizar `pg_dump` via GitHub Actions + S3 (ver .github/workflows/neon-pgdump-backup.yml).
+- [x] Automatizar `pg_dump` via GitHub Actions + S3 (ver .github/workflows/neon-pgdump-backup.yml).
 - [ ] Restore de teste mensal via `pg_restore` em projeto/branch separado.
 - [ ] Railway: criar Volume e montar em `/data/backups`.
 - [ ] Railway: criar Cron para executar `scripts/backup-db.sh`.
@@ -35,7 +35,7 @@
 - [ ] Build de frontend otimizado (Vite build).
 - [ ] CDN para assets estáticos.
 - [ ] Cache de responses onde possível.
-- [ ] Cache de assets estáticos configurado (1 ano, exceto `index.html`).
+- [x] Cache de assets estáticos configurado (1 ano, exceto `index.html`).
 
 ## 6) Escala
 - [ ] Plano para replicar instâncias (stateless).
