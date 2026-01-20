@@ -1084,7 +1084,12 @@ export function registerAuthRoutes(app: Express) {
       }
 
       // Generate token and create session for auto-login
-      const authToken = generateToken(user.id, user.companyId || '');
+      const authToken = generateToken({
+        userId: user.id,
+        companyId: user.companyId || '',
+        role: user.role,
+        isSuperAdmin: user.isSuperAdmin,
+      });
       await createSession(user.id, user.companyId || '', authToken);
 
       // Create audit log
