@@ -5,6 +5,8 @@ import http from "http";
 import { fileURLToPath } from "url";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
+import compression from "compression";
+import { randomUUID } from "crypto";
 import { ensureCoreSchema } from "./schemaPatch";
 
 import { checkAndSendSubscriptionEmails } from "./api/subscription-cron";
@@ -109,6 +111,15 @@ app.use(async (_req, _res, next) => {
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cookieParser());
+app.use(compression());
+
+// Request ID
+app.use((req, res, next) => {
+  const requestId = randomUUID();
+  res.setHeader("X-Request-Id", requestId);
+  res.locals.requestId = requestId;
+  next();
+});
 
 // Basic request logging (structured)
 app.use((req, res, next) => {
@@ -183,6 +194,19 @@ process.on("SIGINT", () => shutdown("SIGINT"));
         res.sendFile(path.join(staticPath, "index.html"));
       });
     }
+
+    // Error handler (last)
+    app.use((err: any, req: express.Request, res: express.Response, _next: express.NextFunction) => {
+      console.error(JSON.stringify({
+        level: "error",
+        message: "request_error",
+        requestId: res.locals.requestId,
+        method: req.method,
+        path: req.originalUrl,
+        error: err?.message || String(err)
+      }));
+      res.status(500).json({ error: "Internal server error" });
+    });
 
     // Start server
     httpServer.listen(PORT, "0.0.0.0", () => {
