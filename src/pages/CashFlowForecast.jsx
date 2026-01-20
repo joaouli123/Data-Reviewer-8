@@ -13,8 +13,18 @@ import Pagination from '../components/Pagination';
 
 const parseLocalDate = (dateStr) => {
   if (!dateStr) return new Date();
-  const [year, month, day] = dateStr.split('T')[0].split('-');
-  return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  if (dateStr instanceof Date) return dateStr;
+  if (typeof dateStr === 'number') return new Date(dateStr);
+  if (typeof dateStr === 'string') {
+    const safe = dateStr.split('T')[0];
+    const parts = safe.split('-');
+    if (parts.length === 3) {
+      const [year, month, day] = parts;
+      return new Date(parseInt(year, 10), parseInt(month, 10) - 1, parseInt(day, 10));
+    }
+  }
+  const fallback = new Date(dateStr);
+  return Number.isNaN(fallback.getTime()) ? new Date() : fallback;
 };
 
 // Safe date extractor for transactions
