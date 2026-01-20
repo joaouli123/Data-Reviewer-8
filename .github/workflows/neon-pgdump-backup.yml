@@ -1,0 +1,50 @@
+name: Neon pg_dump Backup
+
+on:
+  schedule:
+    - cron: "0 3 * * *" # daily at 03:00 UTC
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update; sudo apt-get install -y postgresql-client
+
+      - name: Install AWS CLI
+        run: sudo apt-get install -y awscli
+
+      - name: Run pg_dump and upload to S3
+        env:
+          NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+          S3_BUCKET: ${{ secrets.S3_BUCKET }}
+          S3_PREFIX: ${{ secrets.S3_PREFIX }}
+        run: |
+          set -euo pipefail
+          if [ -z "${NEON_DATABASE_URL}" ]; then
+            echo "NEON_DATABASE_URL is required" >&2
+            exit 1
+          fi
+          if [ -z "${S3_BUCKET}" ]; then
+            echo "S3_BUCKET is required" >&2
+            exit 1
+          fi
+          DATE=$(date -u +"%Y-%m-%d_%H-%M-%S")
+          PREFIX=${S3_PREFIX:-neon-backups}
+          FILE="${PREFIX}/neon-backup-${DATE}.dump"
+          echo "Creating dump..."
+          pg_dump -Fc -v -d "${NEON_DATABASE_URL}" -f "neon-backup-${DATE}.dump"
+          echo "Uploading to s3://${S3_BUCKET}/${FILE}"
+          aws s3 cp "neon-backup-${DATE}.dump" "s3://${S3_BUCKET}/${FILE}"
+          echo "Done"
+
+      - name: Notes
+        run: |
+          echo "Configure S3 lifecycle rules for retention (recommended)."

@@ -24,6 +24,7 @@
 - [ ] Neon: verificar plano e janela de PITR (instant restore) no console.
 - [ ] Neon: definir janela de retenção do PITR (1–30 dias conforme plano).
 - [ ] Backup externo: agendar `pg_dump` diário usando **string sem pooling**.
+- [ ] Automatizar `pg_dump` via GitHub Actions + S3 (ver .github/workflows/neon-pgdump-backup.yml).
 - [ ] Restore de teste mensal via `pg_restore` em projeto/branch separado.
 - [ ] Pool de conexões configurado.
 - [ ] Índices críticos revisados.
