@@ -12,6 +12,7 @@ import { checkAndSendSubscriptionEmails } from "./api/subscription-cron";
 const app = express();
 const PORT = parseInt(process.env.PORT || "5000", 10);
 const isDev = process.env.NODE_ENV !== "production";
+const TRUST_PROXY = process.env.TRUST_PROXY === "true";
 const defaultAllowedOrigins = ["https://huacontrol.com.br", "https://www.huacontrol.com.br"];
 const allowedOrigins = new Set(
   (process.env.ALLOWED_ORIGINS || process.env.APP_URL || "")
@@ -21,6 +22,10 @@ const allowedOrigins = new Set(
 );
 if (allowedOrigins.size === 0) {
   defaultAllowedOrigins.forEach(origin => allowedOrigins.add(origin));
+}
+
+if (TRUST_PROXY) {
+  app.set("trust proxy", 1);
 }
 
 // Mock cron job - in production this would be a real cron job
@@ -111,6 +116,18 @@ const __dirname = path.dirname(__filename);
 
 // Create HTTP server
 const httpServer = http.createServer(app);
+
+const shutdown = (signal: string) => {
+  console.log(`[Server] Received ${signal}, shutting down...`);
+  httpServer.close(() => {
+    console.log("[Server] Closed out remaining connections");
+    process.exit(0);
+  });
+  setTimeout(() => process.exit(1), 10_000).unref();
+};
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
 
 (async () => {
   try {

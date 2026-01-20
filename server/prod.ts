@@ -7,8 +7,24 @@ import helmet from "helmet";
 
 const app = express();
 const PORT = parseInt(process.env.PORT || "5000", 10);
+const TRUST_PROXY = process.env.TRUST_PROXY === "true";
+const defaultAllowedOrigins = ["https://huacontrol.com.br", "https://www.huacontrol.com.br"];
+const allowedOrigins = new Set(
+  (process.env.ALLOWED_ORIGINS || process.env.APP_URL || "")
+    .split(",")
+    .map(origin => origin.trim())
+    .filter(Boolean)
+);
+if (allowedOrigins.size === 0) {
+  defaultAllowedOrigins.forEach(origin => allowedOrigins.add(origin));
+}
+
+if (TRUST_PROXY) {
+  app.set("trust proxy", 1);
+}
 
 console.log(`[Server] Starting in production mode on port ${PORT}`);
+console.log(`[Server] DATABASE_URL: ${process.env.DATABASE_URL ? 'SET' : 'NOT SET'}`);
 
 // Health check - FIRST (before any db-dependent routes)
 app.get("/api/health", (req, res) => {
@@ -21,9 +37,10 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false
 }));
 
-// Basic Rate Limiting
+// Basic Rate Limiting (global fallback)
 const rateLimitMap = new Map<string, { count: number; lastReset: number }>();
-const RATE_LIMIT_WINDOW = 1 * 60 * 1000;
+const RATE_LIMIT_WINDOW = Number(process.env.RATE_LIMIT_WINDOW_MS || 60_000);
+const RATE_LIMIT_MAX = Number(process.env.RATE_LIMIT_MAX || 600);
 
 app.use((req, res, next) => {
   const ip = req.ip || "unknown";
@@ -37,6 +54,31 @@ app.use((req, res, next) => {
     userData.count++;
   }
   rateLimitMap.set(ip, userData);
+
+  if (userData.count > RATE_LIMIT_MAX) {
+    res.setHeader("Retry-After", String(Math.ceil((userData.lastReset + RATE_LIMIT_WINDOW - now) / 1000)));
+    return res.status(429).json({ error: "Too many requests" });
+  }
+  next();
+});
+
+// CORS (allowlist)
+app.use((req, res, next) => {
+  const origin = req.headers.origin as string | undefined;
+
+  if (origin && allowedOrigins.has(origin)) {
+    res.header("Access-Control-Allow-Origin", origin);
+    res.header("Vary", "Origin");
+  }
+
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+
   next();
 });
 
@@ -51,6 +93,18 @@ const __dirname = path.dirname(__filename);
 
 // Create HTTP server
 const httpServer = http.createServer(app);
+
+const shutdown = (signal: string) => {
+  console.log(`[Server] Received ${signal}, shutting down...`);
+  httpServer.close(() => {
+    console.log("[Server] Closed out remaining connections");
+    process.exit(0);
+  });
+  setTimeout(() => process.exit(1), 10_000).unref();
+};
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
 
 (async () => {
   try {
