@@ -4,11 +4,14 @@ import { db } from "./db";
 import { users, companies, sessions, subscriptions, auditLogs } from "../shared/schema";
 import { eq, and } from "drizzle-orm";
 
-const JWT_SECRET = process.env.JWT_SECRET || "fallback-secret-for-dev-only";
+const isProd = process.env.NODE_ENV === "production";
+const JWT_SECRET = process.env.JWT_SECRET;
 
-if (!JWT_SECRET && process.env.NODE_ENV === "production") {
+if (!JWT_SECRET && isProd) {
   throw new Error("JWT_SECRET environment variable is required in production");
 }
+
+const JWT_SECRET_VALUE = JWT_SECRET || "fallback-secret-for-dev-only";
 
 const JWT_EXPIRY = "7d";
 const BCRYPT_ROUNDS = 12;
@@ -34,12 +37,12 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 }
 
 export function generateToken(payload: AuthPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRY });
+  return jwt.sign(payload, JWT_SECRET_VALUE, { expiresIn: JWT_EXPIRY });
 }
 
 export function verifyToken(token: string): TokenData | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as TokenData;
+    return jwt.verify(token, JWT_SECRET_VALUE) as TokenData;
   } catch (error) {
     return null;
   }

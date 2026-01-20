@@ -334,7 +334,6 @@ export default function TransactionsPage() {
             if (typeFilter === 'income' && !isIncomeType(t.type)) return false;
             if (typeFilter === 'expense' && !isExpenseType(t.type)) return false;
           }
-          if (!matchesType) return false;
 
           // 2. Filtrar por Status
           if (statusFilter === 'paid') {

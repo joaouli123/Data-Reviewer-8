@@ -351,18 +351,14 @@ export function registerAuthRoutes(app: Express) {
       if (!username || !password) return res.status(400).json({ error: "Missing username or password" });
       const rateLimitCheck = await checkRateLimit(ip);
       if (!rateLimitCheck.allowed) return res.status(429).json({ error: "Too many login attempts. Please try again later." });
-      console.log("Login attempt for:", username);
       let user = await findUserByUsername(username);
       if (!user) user = await findUserByEmail(username);
       if (!user) {
-        console.log("User not found:", username);
         await recordLoginAttempt(ip, username, false);
         return res.status(401).json({ error: "Credenciais inválidas" });
       }
-      console.log("User found:", user.username, "Role:", user.role, "isSuperAdmin:", user.isSuperAdmin);
       const isValid = await verifyPassword(password, user.password);
       if (!isValid) {
-        console.log("Invalid password for:", username);
         await recordLoginAttempt(ip, username, false);
         return res.status(401).json({ error: "Invalid credentials" });
       }
@@ -370,7 +366,6 @@ export function registerAuthRoutes(app: Express) {
       let company = null;
       if (user.companyId) {
         company = await findCompanyById(user.companyId as string);
-        console.log("Company found:", company?.name || "None", "PaymentStatus:", company?.paymentStatus || "N/A");
       }
       
       // Super admin can always bypass company check
