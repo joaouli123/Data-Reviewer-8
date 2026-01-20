@@ -87,6 +87,25 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cookieParser());
 
+// Basic request logging (structured)
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on("finish", () => {
+    const durationMs = Date.now() - start;
+    const status = res.statusCode;
+    const level = status >= 500 ? "error" : status >= 400 ? "warn" : "info";
+    console.log(JSON.stringify({
+      level,
+      message: "request",
+      method: req.method,
+      path: req.originalUrl,
+      status,
+      durationMs
+    }));
+  });
+  next();
+});
+
 // Get __dirname from import.meta.url
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -120,7 +139,15 @@ process.on("SIGINT", () => shutdown("SIGINT"));
     // Serve static files
     const staticPath = path.join(__dirname, "..", "dist", "public");
     console.log(`[Server] Serving static files from: ${staticPath}`);
-    app.use(express.static(staticPath));
+    app.use(express.static(staticPath, {
+      maxAge: "1y",
+      immutable: true,
+      setHeaders: (res, filePath) => {
+        if (filePath.endsWith("index.html")) {
+          res.setHeader("Cache-Control", "no-cache");
+        }
+      }
+    }));
     app.get("*", (_req, res) => {
       res.sendFile(path.join(staticPath, "index.html"));
     });

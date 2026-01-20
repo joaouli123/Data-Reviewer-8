@@ -40,6 +40,9 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev
 
+# Required for pg_dump backups
+RUN apk add --no-cache postgresql-client
+
 # Copy built files
 COPY --from=builder /app/dist ./dist
 

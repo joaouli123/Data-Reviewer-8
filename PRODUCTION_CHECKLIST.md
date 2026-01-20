@@ -26,6 +26,8 @@
 - [ ] Backup externo: agendar `pg_dump` diário usando **string sem pooling**.
 - [ ] Automatizar `pg_dump` via GitHub Actions + S3 (ver .github/workflows/neon-pgdump-backup.yml).
 - [ ] Restore de teste mensal via `pg_restore` em projeto/branch separado.
+- [ ] Railway: criar Volume e montar em `/data/backups`.
+- [ ] Railway: criar Cron para executar `scripts/backup-db.sh`.
 - [ ] Pool de conexões configurado.
 - [ ] Índices críticos revisados.
 
@@ -33,6 +35,7 @@
 - [ ] Build de frontend otimizado (Vite build).
 - [ ] CDN para assets estáticos.
 - [ ] Cache de responses onde possível.
+- [ ] Cache de assets estáticos configurado (1 ano, exceto `index.html`).
 
 ## 6) Escala
 - [ ] Plano para replicar instâncias (stateless).
