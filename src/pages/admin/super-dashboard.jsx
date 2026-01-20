@@ -1,10 +1,5 @@
-import { useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { apiRequest as queryApiRequest } from '@/lib/queryClient';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Mail, Send, Loader2 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -12,6 +7,7 @@ import {
   DollarSign, AlertTriangle, CheckCircle, XCircle,
   Crown, UserCheck, UserX
 } from 'lucide-react';
+import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 
 const apiRequest = async (url) => {
   const token = JSON.parse(localStorage.getItem('auth') || '{}').token;
@@ -95,17 +91,6 @@ function StatusCard({ title, items }) {
 }
 
 export default function SuperAdminDashboard() {
-  const [testEmail, setTestEmail] = useState('');
-  
-  const testEmailMutation = useMutation({
-    mutationFn: (email) => queryApiRequest('POST', '/api/admin/test-email', { email }),
-    onSuccess: () => {
-      toast.success('E-mail de teste enviado com sucesso!');
-      setTestEmail('');
-    },
-    onError: (err) => toast.error('Erro ao enviar e-mail: ' + err.message),
-  });
-
   const { data: metrics, isLoading, error } = useQuery({
     queryKey: ['/api/admin/metrics'],
     queryFn: () => apiRequest('/api/admin/metrics'),
@@ -135,7 +120,21 @@ export default function SuperAdminDashboard() {
     );
   }
 
-  const { companies, subscriptions, revenue, plans, paymentMethods, users, kpis } = metrics || {};
+  const { companies, subscriptions, revenue, users, kpis } = metrics || {};
+
+  const companyStatusData = [
+    { name: 'Ativas', value: companies?.active || 0 },
+    { name: 'Suspensas', value: companies?.suspended || 0 },
+    { name: 'Canceladas', value: companies?.cancelled || 0 },
+  ];
+
+  const subscriptionStatusData = [
+    { name: 'Ativas', value: subscriptions?.active || 0 },
+    { name: 'Expiradas', value: subscriptions?.expired || 0 },
+    { name: 'Bloqueadas', value: subscriptions?.blocked || 0 },
+  ];
+
+  const pieColors = ['#16a34a', '#f59e0b', '#ef4444'];
 
   return (
     <div className="space-y-8 p-4 md:p-8">
@@ -150,32 +149,6 @@ export default function SuperAdminDashboard() {
             Visao geral completa do SaaS HUACONTROL
           </p>
         </div>
-
-        <Card className="w-full md:w-96 shadow-sm border-primary/20">
-          <CardHeader className="pb-2 py-3 px-4">
-            <CardTitle className="text-xs font-semibold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
-              <Mail className="w-3.5 h-3.5" /> Testar E-mail de Boas-vindas
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-4 pb-3">
-            <div className="flex gap-2">
-              <Input 
-                placeholder="seu@email.com" 
-                value={testEmail} 
-                onChange={(e) => setTestEmail(e.target.value)}
-                className="h-9 text-sm"
-              />
-              <Button 
-                size="sm" 
-                onClick={() => testEmailMutation.mutate(testEmail)}
-                disabled={!testEmail || testEmailMutation.isPending}
-                className="shrink-0 h-9"
-              >
-                {testEmailMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Main KPIs */}
@@ -284,13 +257,6 @@ export default function SuperAdminDashboard() {
               badgeClass: 'bg-green-600'
             },
             { 
-              label: 'Vitalicias', 
-              value: subscriptions?.lifetime || 0, 
-              icon: Crown, 
-              iconColor: 'text-yellow-500',
-              variant: 'outline'
-            },
-            { 
               label: 'Expiradas', 
               value: subscriptions?.expired || 0, 
               icon: AlertTriangle, 
@@ -336,84 +302,44 @@ export default function SuperAdminDashboard() {
         />
       </div>
 
-      {/* Distribution Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
             <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              Distribuicao por Plano
+              Status das Empresas
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-gray-400" />
-                  <span className="text-sm">Basic</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">{plans?.basic || 0}</span>
-                  <Badge variant="secondary" className="text-xs">
-                    {subscriptions?.total > 0 
-                      ? ((plans?.basic || 0) / subscriptions.total * 100).toFixed(0) 
-                      : 0}%
-                  </Badge>
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-blue-500" />
-                  <span className="text-sm">Pro</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">{plans?.pro || 0}</span>
-                  <Badge variant="default" className="text-xs bg-blue-600">
-                    {subscriptions?.total > 0 
-                      ? ((plans?.pro || 0) / subscriptions.total * 100).toFixed(0) 
-                      : 0}%
-                  </Badge>
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-purple-500" />
-                  <span className="text-sm">Enterprise</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">{plans?.enterprise || 0}</span>
-                  <Badge className="text-xs bg-purple-600">
-                    {subscriptions?.total > 0 
-                      ? ((plans?.enterprise || 0) / subscriptions.total * 100).toFixed(0) 
-                      : 0}%
-                  </Badge>
-                </div>
-              </div>
-            </div>
+          <CardContent className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={companyStatusData} dataKey="value" nameKey="name" innerRadius={50} outerRadius={80} paddingAngle={3}>
+                  {companyStatusData.map((_, index) => (
+                    <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value) => [value, 'Empresas']} />
+              </PieChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
             <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              Formas de Pagamento
+              Status das Assinaturas
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {paymentMethods && Object.entries(paymentMethods).length > 0 ? (
-              Object.entries(paymentMethods)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 5)
-                .map(([method, count]) => (
-                  <div key={method} className="flex items-center justify-between">
-                    <span className="text-sm capitalize">{method.replace('_', ' ')}</span>
-                    <Badge variant="outline">{count}</Badge>
-                  </div>
-                ))
-            ) : (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                Nenhum dado de pagamento disponivel
-              </p>
-            )}
+          <CardContent className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={subscriptionStatusData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="name" tickLine={false} axisLine={false} />
+                <YAxis tickLine={false} axisLine={false} allowDecimals={false} />
+                <Tooltip formatter={(value) => [value, 'Assinaturas']} />
+                <Bar dataKey="value" fill="#2563eb" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>

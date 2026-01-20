@@ -183,11 +183,22 @@ export default function TransactionsPage() {
     }
   };
 
-  const handleEdit = (item) => {
-    // Ensure we have a copy with all data intact
+  const handleEdit = async (item) => {
+    // Open with current data, then try to load full transaction by id
     const transactionToEdit = { ...item };
     setEditingTransaction(transactionToEdit);
     setIsFormOpen(true);
+
+    if (item?.id) {
+      try {
+        const full = await Transaction.get(item.id);
+        if (full) {
+          setEditingTransaction(full);
+        }
+      } catch (e) {
+        // Keep current data if fetch fails
+      }
+    }
   };
 
   const handleDelete = (id) => {

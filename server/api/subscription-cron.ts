@@ -40,41 +40,50 @@ export async function checkAndSendSubscriptionEmails() {
       );
 
     for (const sub of expiringSoon) {
-      const [admin] = await db
+      if (!sub.expiresAt) {
+        continue;
+      }
+
+      const recipients = await db
         .select({ email: users.email, name: users.name })
         .from(users)
-        .where(and(eq(users.companyId, sub.companyId), eq(users.role, 'admin')))
-        .limit(1);
+        .where(and(eq(users.companyId, sub.companyId), eq(users.status, 'active')));
 
-      if (admin?.email) {
-        let newTicketUrl = sub.ticketUrl;
-        try {
-          newTicketUrl = await generateBoletoForCompany({
-            companyId: sub.companyId as string,
-            amount: sub.amount || "0",
-            plan: sub.plan,
-            expirationDate: sub.expiresAt ? new Date(sub.expiresAt) : undefined,
-          });
+      if (!recipients.length) {
+        continue;
+      }
 
-          if (newTicketUrl) {
-            await db.update(subscriptions)
-              .set({ ticket_url: newTicketUrl, updatedAt: new Date() })
-              .where(eq(subscriptions.id, sub.id));
-          }
-        } catch (genErr) {
-          console.error(`[Cron] Failed to generate boleto for ${sub.companyName}:`, genErr);
+      let newTicketUrl = sub.ticketUrl;
+      try {
+        newTicketUrl = await generateBoletoForCompany({
+          companyId: sub.companyId as string,
+          amount: sub.amount || "0",
+          plan: sub.plan,
+          expirationDate: new Date(sub.expiresAt),
+        });
+
+        if (newTicketUrl) {
+          await db.update(subscriptions)
+            .set({ ticket_url: newTicketUrl, updatedAt: new Date() })
+            .where(eq(subscriptions.id, sub.id));
         }
+      } catch (genErr) {
+        console.error(`[Cron] Failed to generate boleto for ${sub.companyName}:`, genErr);
+      }
 
-        console.log(`[Cron] Sending payment reminder email to ${admin.email} for company ${sub.companyName}`);
-        
+      for (const recipient of recipients) {
+        if (!recipient.email) continue;
+
+        console.log(`[Cron] Sending payment reminder email to ${recipient.email} for company ${sub.companyName}`);
+
         try {
           await resend.emails.send({
             from: 'Financeiro <contato@huacontrol.com.br>',
-            to: admin.email,
+            to: recipient.email,
             subject: `Lembrete de Vencimento - ${sub.companyName}`,
             html: `
               <div style="font-family: sans-serif; color: #333;">
-                <h2>Olá, ${admin.name || 'Administrador'}</h2>
+                <h2>Olá, ${recipient.name || 'Usuário'}</h2>
                 <p>Sua assinatura vence em 5 dias (${new Date(sub.expiresAt!).toLocaleDateString('pt-BR')}).</p>
                 <p>Valor: <strong>R$ ${parseFloat(sub.amount || "0").toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></p>
                 ${newTicketUrl ? `<p>Você pode acessar seu boleto no link abaixo:</p><p><a href="${newTicketUrl}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Acessar Boleto</a></p>` : ''}
@@ -85,7 +94,7 @@ export async function checkAndSendSubscriptionEmails() {
             `
           });
         } catch (emailError) {
-          console.error(`[Cron] Failed to send email to ${admin.email}:`, emailError);
+          console.error(`[Cron] Failed to send email to ${recipient.email}:`, emailError);
         }
       }
     }
