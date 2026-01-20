@@ -168,6 +168,17 @@ export default function ReportsPage() {
     return `${year}-${month}-${day}`;
   };
 
+  const extractTxDate = (t) => {
+    if (!t) return null;
+    const candidate = t.paymentDate || t.date || t.createdAt || t.created_at;
+    if (!candidate) return null;
+    const d = new Date(candidate);
+    return Number.isNaN(d.getTime()) ? null : d;
+  };
+
+  const isIncomeType = (type) => ['venda', 'income', 'receita', 'entrada', 'venda_prazo'].includes(type);
+  const isExpenseType = (type) => ['compra', 'expense', 'despesa', 'saida', 'compra_prazo'].includes(type);
+
   // Filter transactions based on period and category
   const getFilteredTransactions = () => {
     let filtered = [...transactions];
@@ -177,8 +188,9 @@ export default function ReportsPage() {
     const endStr = dateToString(dateRange.endDate);
     
     filtered = filtered.filter(t => {
-      if (!t.date) return false;
-      const tStr = dateToString(t.date);
+      const txDate = extractTxDate(t);
+      if (!txDate) return false;
+      const tStr = dateToString(txDate);
       return tStr >= startStr && tStr <= endStr;
     });
     
@@ -222,22 +234,22 @@ export default function ReportsPage() {
     try {
       // Calculate metrics for FILTERED period
       const totalRevenue = filteredTxns
-        .filter(t => t.type === 'venda' || t.type === 'income')
+        .filter(t => isIncomeType(t.type))
         .reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
       
       const totalExpense = filteredTxns
-        .filter(t => t.type === 'compra' || t.type === 'expense')
+        .filter(t => isExpenseType(t.type))
         .reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
 
       const profit = totalRevenue - totalExpense;
 
       // Create transaction summary from ALL history for better forecasting
       const allRevenue = allTransactions
-        .filter(t => t.type === 'venda' || t.type === 'income')
+        .filter(t => isIncomeType(t.type))
         .reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
       
       const allExpense = allTransactions
-        .filter(t => t.type === 'compra' || t.type === 'expense')
+        .filter(t => isExpenseType(t.type))
         .reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
 
       // Improved prompt with complete history context
@@ -434,8 +446,8 @@ RESPOSTA OBRIGATÓRIA EM JSON E EM PORTUGUÊS DO BRASIL.`;
               <ReportExporter 
                 reportData={{
                   summary: analysisResult ? {
-                    receita_total: filteredTransactions.filter(t => ['venda', 'venda_prazo', 'receita', 'income'].includes(t.type)).reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0),
-                    despesas_total: filteredTransactions.filter(t => ['compra', 'compra_prazo', 'despesa', 'expense'].includes(t.type)).reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0),
+                    receita_total: filteredTransactions.filter(t => isIncomeType(t.type)).reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0),
+                    despesas_total: filteredTransactions.filter(t => isExpenseType(t.type)).reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0),
                     periodo: dateRange.label
                   } : null,
                   transactions: transactionsWithCategories,
@@ -564,19 +576,19 @@ RESPOSTA OBRIGATÓRIA EM JSON E EM PORTUGUÊS DO BRASIL.`;
             aria-hidden="true"
           >
             <div id="report-chart-cashflow-print">
-              <CashFlowForecastChart transactions={transactions} analysisResult={analysisResult} />
+              <CashFlowForecastChart forecast={analysisResult?.cash_flow_forecast} />
             </div>
             <div id="report-chart-revenue-print">
-              <RevenueGrowthReport transactions={transactions} analysisResult={analysisResult} customers={customers} />
+              <RevenueGrowthReport transactions={filteredTransactions} analysisResult={analysisResult} customers={customers} />
             </div>
             <div id="report-chart-expenses-print">
-              <ExpensesBreakdown transactions={transactions} analysisResult={analysisResult} categories={categories} />
+              <ExpensesBreakdown transactions={filteredTransactions} analysisResult={analysisResult} categories={categories} />
             </div>
             <div id="report-chart-working-capital-print">
-              <WorkingCapitalAnalysis transactions={transactions} saleInstallments={saleInstallments} purchaseInstallments={purchaseInstallments} />
+              <WorkingCapitalAnalysis transactions={filteredTransactions} saleInstallments={saleInstallments} purchaseInstallments={purchaseInstallments} />
             </div>
             <div id="report-chart-debt-print">
-              <DebtAnalysis transactions={transactions} analysisResult={analysisResult} />
+              <DebtAnalysis transactions={filteredTransactions} analysisResult={analysisResult} />
             </div>
           </div>
 
@@ -653,10 +665,10 @@ RESPOSTA OBRIGATÓRIA EM JSON E EM PORTUGUÊS DO BRASIL.`;
               {(() => {
                 // Calculate metrics with fallbacks
                 const totalDebt = purchaseInstallments && purchaseInstallments.length > 0
-                  ? purchaseInstallments.filter(i => !i.paid).reduce((sum, i) => sum + parseFloat(i.amount || 0), 0)
-                  : transactions.filter(t => t.type === 'compra' && t.status === 'pendente').reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+                  ? purchaseInstallments.filter(i => !i.paid && !i.paidAt && i.status !== 'paid').reduce((sum, i) => sum + parseFloat(i.amount || 0), 0)
+                  : filteredTransactions.filter(t => isExpenseType(t.type) && (t.status === 'pendente' || t.status === 'pending')).reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
                 
-                const revenueData = transactions.filter(t => (t.type === 'venda' || t.type === 'income'));
+                const revenueData = filteredTransactions.filter(t => isIncomeType(t.type));
                 const avgMonthlyRevenue = revenueData.length > 0 
                   ? revenueData.reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0) / 3
                   : 1; // Default to 1 to avoid division by zero

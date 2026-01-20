@@ -4,25 +4,38 @@ import { FileText, TrendingUp, DollarSign, Calendar, Percent } from 'lucide-reac
 import { subMonths } from 'date-fns';
 
 export default function ExecutiveSummary({ summary, transactions, saleInstallments, purchaseInstallments, dateRange }) {
+  const extractTxDate = (t) => {
+    if (!t) return null;
+    const candidate = t.paymentDate || t.date || t.createdAt || t.created_at;
+    if (!candidate) return null;
+    const d = new Date(candidate);
+    return Number.isNaN(d.getTime()) ? null : d;
+  };
+
+  const isIncomeType = (type) => ['venda', 'income', 'receita', 'entrada', 'venda_prazo'].includes(type);
+  const isExpenseType = (type) => ['compra', 'expense', 'despesa', 'saida', 'compra_prazo'].includes(type);
+
   // Calculate KPIs
   const now = dateRange?.startDate ? new Date(dateRange.startDate) : new Date();
   const startOfAnchor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
   const lastMonth = subMonths(startOfAnchor, 1);
   const twoMonthsAgo = subMonths(startOfAnchor, 2);
 
-  const currentMonthTrans = transactions.filter(t => new Date(t.date) >= lastMonth);
-  const previousMonthTrans = transactions.filter(t => 
-    new Date(t.date) >= twoMonthsAgo && new Date(t.date) < lastMonth
-  );
+  const currentMonthTrans = transactions.filter(t => {
+    const txDate = extractTxDate(t);
+    return txDate ? txDate >= lastMonth : false;
+  });
+  const previousMonthTrans = transactions.filter(t => {
+    const txDate = extractTxDate(t);
+    return txDate ? txDate >= twoMonthsAgo && txDate < lastMonth : false;
+  });
 
-  const currentRevenue = currentMonthTrans.filter(t => t.type === 'venda' || t.type === 'income').reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
-  const previousRevenue = previousMonthTrans.filter(t => t.type === 'venda' || t.type === 'income').reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
+  const currentRevenue = currentMonthTrans.filter(t => isIncomeType(t.type)).reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
+  const previousRevenue = previousMonthTrans.filter(t => isIncomeType(t.type)).reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
   const revenueGrowth = previousRevenue > 0 ? ((currentRevenue - previousRevenue) / previousRevenue * 100) : 0;
 
-  const currentExpenses = currentMonthTrans.filter(t => {
-    if (t.type === 'compra' || t.type === 'expense') return true;
-    return false;
-  }).reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
+  const currentExpenses = currentMonthTrans.filter(t => isExpenseType(t.type))
+    .reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
   const netProfit = currentRevenue - currentExpenses;
   const profitMargin = currentRevenue > 0 ? (netProfit / currentRevenue * 100) : 0;
 

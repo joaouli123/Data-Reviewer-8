@@ -17,8 +17,8 @@ export default function DREAnalysis({ transactions = [], categories = [] }) {
   const dreData = useMemo(() => {
     const txList = Array.isArray(transactions) ? transactions : [];
     
-    const vendas = txList.filter(t => t.type === 'venda' || t.type === 'income');
-    const compras = txList.filter(t => t.type === 'compra' || t.type === 'expense');
+    const vendas = txList.filter(t => ['venda', 'income', 'receita', 'entrada', 'venda_prazo'].includes(t.type));
+    const compras = txList.filter(t => ['compra', 'expense', 'despesa', 'saida', 'compra_prazo'].includes(t.type));
 
     const vendaBruta = vendas.reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
     const custosDiretos = compras.reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);

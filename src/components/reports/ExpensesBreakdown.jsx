@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 const COLORS = ['#ef4444', '#f59e0b', '#f97316', '#ec4899', '#0065BA', '#0065BA', '#3b82f6'];
 
 export default function ExpensesBreakdown({ opportunities = [], transactions, categories = [] }) {
+  const isExpenseType = (type) => ['compra', 'expense', 'despesa', 'saida', 'compra_prazo'].includes(type);
+
   // Create a map of categoryId to category name for quick lookup
   const categoryMap = {};
   categories.forEach(cat => {
@@ -15,7 +17,7 @@ export default function ExpensesBreakdown({ opportunities = [], transactions, ca
 
   // Filter expense transactions from already-filtered data
   const expenseTransactions = Array.isArray(transactions)
-    ? transactions.filter(t => t.type === 'compra' || t.type === 'expense')
+    ? transactions.filter(t => isExpenseType(t.type))
     : [];
 
   // Calculate expenses by category

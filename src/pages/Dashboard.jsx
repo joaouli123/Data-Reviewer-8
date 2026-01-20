@@ -386,15 +386,10 @@ export default function DashboardPage() {
                         <div className="min-w-0">
                           <p className="font-medium text-foreground truncate text-xs">{t.description}</p>
                           <p className="text-xs text-muted-foreground">
-                            {t.date ? (() => {
-                              try {
-                                const d = typeof t.date === 'string' ? parseISO(t.date.split('T')[0] + 'T12:00:00Z') : new Date(t.date);
-                                if (isNaN(d.getTime())) return '---';
-                                return format(d, 'dd MMM', { locale: ptBR });
-                              } catch (e) {
-                                return '---';
-                              }
-                            })() : '---'}
+                            {(() => {
+                              const d = extractTxDate(t);
+                              return d ? format(d, 'dd MMM', { locale: ptBR }) : '---';
+                            })()}
                           </p>
                         </div>
                       </div>

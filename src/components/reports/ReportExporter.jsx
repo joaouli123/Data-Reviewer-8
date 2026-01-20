@@ -10,6 +10,16 @@ import { formatDateUTC3, formatDateTimeUTC3 } from '@/utils/formatters';
 export default function ReportExporter({ reportData, reportType = 'general', analysisResult }) {
   const [isExporting, setIsExporting] = useState(false);
 
+  const extractTxDate = (t) => {
+    if (!t) return null;
+    const candidate = t.paymentDate || t.date || t.createdAt || t.created_at;
+    if (!candidate) return null;
+    const d = new Date(candidate);
+    return Number.isNaN(d.getTime()) ? null : d;
+  };
+
+  const isIncomeType = (type) => ['venda', 'income', 'receita', 'entrada', 'venda_prazo'].includes(type);
+
   // === DESIGN SYSTEM PADRONIZADO ===
   const COLORS = {
     primary: [44, 62, 80],      // Azul escuro - headers principais
@@ -417,14 +427,17 @@ export default function ReportExporter({ reportData, reportType = 'general', ana
         
         addSectionHeader('HISTORICO DE TRANSACOES', COLORS.secondary);
 
-        const txnData = transactions.slice(0, 50).map(t => [
-          t.date ? new Date(t.date).toLocaleDateString('pt-BR') : '-',
-          (t.description || '-').substring(0, 28),
-          t.category || 'Outros',
-          t.paymentMethod || '-',
-          ['venda', 'venda_prazo', 'receita', 'income'].includes(t.type) ? 'Receita' : 'Despesa',
-          formatCurrency(t.amount || 0)
-        ]);
+        const txnData = transactions.slice(0, 50).map(t => {
+          const txDate = extractTxDate(t);
+          return [
+            txDate ? txDate.toLocaleDateString('pt-BR') : '-',
+            (t.description || '-').substring(0, 28),
+            t.category || 'Outros',
+            t.paymentMethod || '-',
+            isIncomeType(t.type) ? 'Receita' : 'Despesa',
+            formatCurrency(t.amount || 0)
+          ];
+        });
 
         addTable(
           ['Data', 'Descricao', 'Categoria', 'Pagamento', 'Tipo', 'Valor'],
@@ -579,12 +592,13 @@ export default function ReportExporter({ reportData, reportType = 'general', ana
       // Aba 5: Transacoes
       const txnData = [['Data', 'Descricao', 'Categoria', 'Pagamento', 'Tipo', 'Valor']];
       transactions.forEach(t => {
+        const txDate = extractTxDate(t);
         txnData.push([
-          t.date ? new Date(t.date).toLocaleDateString('pt-BR') : '',
+          txDate ? txDate.toLocaleDateString('pt-BR') : '',
           t.description || '',
           t.category || 'Outros',
           t.paymentMethod || '-',
-          ['venda', 'receita', 'income'].includes(t.type) ? 'Receita' : 'Despesa',
+          isIncomeType(t.type) ? 'Receita' : 'Despesa',
           parseFloat(t.amount || 0)
         ]);
       });

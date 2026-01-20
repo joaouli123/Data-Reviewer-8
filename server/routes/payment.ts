@@ -3,6 +3,8 @@ import { db } from "../db";
 import { eq, sql, and, desc } from "drizzle-orm";
 import { companies, subscriptions, users, User } from "../../shared/schema";
 import crypto from "crypto";
+import { z } from "zod";
+import { createSimpleRateLimiter } from "../middleware";
 
 const MERCADOPAGO_ACCESS_TOKEN = process.env.MERCADOPAGO_ACCESS_TOKEN;
 const MERCADOPAGO_WEBHOOK_SECRET = process.env.MERCADOPAGO_WEBHOOK_SECRET;
@@ -34,6 +36,38 @@ interface PaymentRequest {
 }
 
 export function registerPaymentRoutes(app: Express) {
+  const paymentRateLimiter = createSimpleRateLimiter({ windowMs: 60 * 1000, max: 20, keyPrefix: "payment" });
+  const paymentSchema = z.object({
+    companyId: z.string().min(1),
+    plan: z.string().min(1),
+    email: z.string().email().optional(),
+    total_amount: z.string().min(1),
+    payment_method_id: z.string().min(1),
+    token: z.string().optional(),
+    payer: z
+      .object({
+        email: z.string().email().optional(),
+        first_name: z.string().optional(),
+        last_name: z.string().optional(),
+        identification: z
+          .object({
+            type: z.string().min(1),
+            number: z.string().min(1),
+          })
+          .optional(),
+        address: z
+          .object({
+            zip_code: z.string().min(1).optional(),
+            street_name: z.string().min(1).optional(),
+            street_number: z.string().min(1).optional(),
+            neighborhood: z.string().min(1).optional(),
+            city: z.string().min(1).optional(),
+            federal_unit: z.string().min(1).optional(),
+          })
+          .optional(),
+      })
+      .optional(),
+  });
   app.get("/api/payment/test-token", async (_req: Request, res: Response) => {
     try {
       if (!MERCADOPAGO_ACCESS_TOKEN) {
@@ -60,9 +94,13 @@ export function registerPaymentRoutes(app: Express) {
   });
   
   // Process payment
-  app.post("/api/payment/process", async (req: Request, res: Response) => {
+  app.post("/api/payment/process", paymentRateLimiter, async (req: Request, res: Response) => {
     try {
-      const body = req.body as PaymentRequest;
+      const parsed = paymentSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Dados inválidos" });
+      }
+      const body = parsed.data as PaymentRequest;
       const { companyId, plan, email, total_amount, payment_method_id, token, payer } = body;
 
       if (!companyId) {
@@ -74,7 +112,7 @@ export function registerPaymentRoutes(app: Express) {
         return res.status(500).json({ error: "Payment gateway not configured" });
       }
 
-      console.log("[Payment] Processing payment:", { companyId, plan, payment_method_id, amount: total_amount, payer });
+      // Avoid logging sensitive payment details in production
 
       // Calculate expiration date based on plan
       const isLifetime = plan === 'pro';
@@ -212,8 +250,7 @@ export function registerPaymentRoutes(app: Express) {
           expirationDate.setHours(23, 59, 59, 999);
           boletoDueDate = expirationDate;
 
-          // Log resolved payer for debugging
-          console.log('[Payment] Resolved payer for boleto:', JSON.stringify(resolvedPayer, null, 2));
+          // Avoid logging sensitive payer data
 
           const missingFields = [] as string[];
           if (!resolvedPayer?.email) missingFields.push('email');
@@ -284,10 +321,6 @@ export function registerPaymentRoutes(app: Express) {
               }
             };
 
-            console.log(`[Payment] Attempting boleto with ${methodId}:`, JSON.stringify(boletoPayload, null, 2));
-
-            // Log payload antes do envio
-            console.log("[Payment][DEBUG] Enviando payload para Mercado Pago:", JSON.stringify(boletoPayload, null, 2));
             const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
               method: 'POST',
               headers: {
@@ -298,9 +331,6 @@ export function registerPaymentRoutes(app: Express) {
               body: JSON.stringify(boletoPayload),
             });
 
-            // Log status da resposta
-            console.log("[Payment][DEBUG] Status da resposta Mercado Pago:", mpResponse.status, mpResponse.statusText);
-
             const responseText = await mpResponse.text();
             let parsedResponse;
             try {
@@ -309,8 +339,6 @@ export function registerPaymentRoutes(app: Express) {
               parsedResponse = responseText;
             }
 
-            // Log resposta bruta
-            console.log("[Payment][DEBUG] Resposta bruta Mercado Pago:", responseText);
 
             if (mpResponse.ok) {
               paymentResponse = parsedResponse;

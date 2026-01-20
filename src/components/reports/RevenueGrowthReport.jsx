@@ -3,13 +3,23 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Lightbulb, TrendingUp, Users, DollarSign, Target } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { format, subMonths, parseISO } from 'date-fns';
+import { format, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export default function RevenueGrowthReport({ strategies, transactions, customers }) {
+  const extractTxDate = (t) => {
+    if (!t) return null;
+    const candidate = t.paymentDate || t.date || t.createdAt || t.created_at;
+    if (!candidate) return null;
+    const d = new Date(candidate);
+    return Number.isNaN(d.getTime()) ? null : d;
+  };
+
+  const isIncomeType = (type) => ['venda', 'income', 'receita', 'entrada', 'venda_prazo'].includes(type);
+
   // Filter only revenue transactions from the already-filtered data
   const revenueTransactions = Array.isArray(transactions) 
-    ? transactions.filter(t => t.type === 'venda' || t.type === 'income')
+    ? transactions.filter(t => isIncomeType(t.type))
     : [];
 
   // Calculate revenue trend (last 6 months)
@@ -21,8 +31,8 @@ export default function RevenueGrowthReport({ strategies, transactions, customer
     
     const monthRevenue = revenueTransactions
       .filter(t => {
-        if (!t.date) return false;
-        const txnDate = new Date(t.date);
+        const txnDate = extractTxDate(t);
+        if (!txnDate) return false;
         const txnMonthKey = format(txnDate, 'yyyy-MM');
         return txnMonthKey === monthKey;
       })

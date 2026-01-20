@@ -12,6 +12,16 @@ export default function CategoryInsights({ transactions, categories }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [insights, setInsights] = useState(null);
 
+  const extractTxDate = (t) => {
+    if (!t) return null;
+    const candidate = t.paymentDate || t.date || t.createdAt || t.created_at;
+    if (!candidate) return null;
+    const d = new Date(candidate);
+    return Number.isNaN(d.getTime()) ? null : d;
+  };
+
+  const isExpenseType = (type) => ['compra', 'expense', 'despesa', 'saida', 'compra_prazo'].includes(type);
+
   // Calcular dados para gráfico SEMPRE
   const calculateChartData = () => {
     const categoryMap = {};
@@ -21,8 +31,12 @@ export default function CategoryInsights({ transactions, categories }) {
 
     const threeMonthsAgo = subMonths(new Date(), 3);
     const recentTransactions = transactions
-      .filter(t => new Date(t.date) >= threeMonthsAgo)
+      .filter(t => {
+        const txDate = extractTxDate(t);
+        return txDate ? txDate >= threeMonthsAgo : false;
+      })
       .map(t => {
+        const txDate = extractTxDate(t);
         let categoryName = 'Outros';
         
         // Try to map by categoryId first
@@ -43,7 +57,7 @@ export default function CategoryInsights({ transactions, categories }) {
           amount: Math.abs(parseFloat(t.amount) || 0),
           type: t.type,
           category: categoryName,
-          date: t.date
+          date: txDate ? txDate.toISOString() : t.date
         };
       });
 
@@ -95,8 +109,12 @@ export default function CategoryInsights({ transactions, categories }) {
       // Prepare data for last 3 months
       const threeMonthsAgo = subMonths(new Date(), 3);
       const recentTransactions = transactions
-        .filter(t => new Date(t.date) >= threeMonthsAgo)
+        .filter(t => {
+          const txDate = extractTxDate(t);
+          return txDate ? txDate >= threeMonthsAgo : false;
+        })
         .map(t => {
+          const txDate = extractTxDate(t);
           let categoryName = 'Outros';
           
           // Try to map by categoryId first
@@ -117,7 +135,7 @@ export default function CategoryInsights({ transactions, categories }) {
             amount: t.amount,
             type: t.type,
             category: categoryName,
-            date: t.date
+            date: txDate ? txDate.toISOString() : t.date
           };
         });
 
@@ -144,7 +162,7 @@ export default function CategoryInsights({ transactions, categories }) {
       const prompt = `Analise os seguintes dados de transações dos últimos 3 meses agrupadas por categoria:
 
 ${Object.entries(categoryStats).map(([cat, data]) => 
-  `Categoria: ${cat} (${data.type === 'compra' || data.type === 'saida' ? 'Despesa' : 'Receita'})
+  `Categoria: ${cat} (${isExpenseType(data.type) ? 'Despesa' : 'Receita'})
   Total: R$ ${data.total.toFixed(2)}
   Número de transações: ${data.count}
   Média por transação: R$ ${(data.total / data.count).toFixed(2)}`

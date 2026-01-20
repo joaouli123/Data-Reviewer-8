@@ -21,6 +21,17 @@ export default function WhatIfAnalysis({ transactions, saleInstallments, purchas
     payableDelay: '0'
   });
 
+  const extractTxDate = (t) => {
+    if (!t) return null;
+    const candidate = t.paymentDate || t.date || t.createdAt || t.created_at;
+    if (!candidate) return null;
+    const d = new Date(candidate);
+    return Number.isNaN(d.getTime()) ? null : d;
+  };
+
+  const isIncomeType = (type) => ['venda', 'income', 'receita', 'entrada', 'venda_prazo'].includes(type);
+  const isExpenseType = (type) => ['compra', 'expense', 'despesa', 'saida', 'compra_prazo'].includes(type);
+
   // Reset scenarios when inputs change
   useEffect(() => {
     setScenarios(null);
@@ -33,15 +44,18 @@ export default function WhatIfAnalysis({ transactions, saleInstallments, purchas
 
     // Calculate average monthly revenue and expenses (last 3 months)
     const threeMonthsAgo = addMonths(now, -3);
-    const recentTransactions = transactions.filter(t => new Date(t.date) >= threeMonthsAgo);
+    const recentTransactions = transactions.filter(t => {
+      const txDate = extractTxDate(t);
+      return txDate ? txDate >= threeMonthsAgo : false;
+    });
     
     // Corrigido: usar tipos corretos 'venda' e 'compra'
     const totalRevenue = recentTransactions
-      .filter(t => t.type === 'venda' || t.type === 'income')
+      .filter(t => isIncomeType(t.type))
       .reduce((sum, t) => sum + Math.abs((parseFloat(t.amount || 0) + parseFloat(t.interest || 0))), 0);
     
     const totalExpense = recentTransactions
-      .filter(t => t.type === 'compra' || t.type === 'expense')
+      .filter(t => isExpenseType(t.type))
       .reduce((sum, t) => sum + Math.abs((parseFloat(t.amount || 0) + parseFloat(t.interest || 0))), 0);
 
     const avgRevenue = totalRevenue / 3 || 0;

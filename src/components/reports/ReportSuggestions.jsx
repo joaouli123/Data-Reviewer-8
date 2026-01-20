@@ -11,6 +11,17 @@ export default function ReportSuggestions({ transactions, saleInstallments, purc
   const [isGenerating, setIsGenerating] = useState(false);
   const [suggestions, setSuggestions] = useState(null);
 
+  const extractTxDate = (t) => {
+    if (!t) return null;
+    const candidate = t.paymentDate || t.date || t.createdAt || t.created_at;
+    if (!candidate) return null;
+    const d = new Date(candidate);
+    return Number.isNaN(d.getTime()) ? null : d;
+  };
+
+  const isIncomeType = (type) => ['venda', 'income', 'receita', 'entrada', 'venda_prazo'].includes(type);
+  const isExpenseType = (type) => ['compra', 'expense', 'despesa', 'saida', 'compra_prazo'].includes(type);
+
   const generateSuggestions = async () => {
     setIsGenerating(true);
     try {
@@ -18,9 +29,12 @@ export default function ReportSuggestions({ transactions, saleInstallments, purc
       const threeMonthsAgo = subMonths(now, 3);
       
       // Calculate key metrics
-      const recentTransactions = transactions.filter(t => new Date(t.date) >= threeMonthsAgo);
-      const revenue = recentTransactions.filter(t => t.type === 'venda' || t.type === 'income').reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
-      const expenses = recentTransactions.filter(t => t.type === 'compra' || t.type === 'expense').reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
+      const recentTransactions = transactions.filter(t => {
+        const txDate = extractTxDate(t);
+        return txDate ? txDate >= threeMonthsAgo : false;
+      });
+      const revenue = recentTransactions.filter(t => isIncomeType(t.type)).reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
+      const expenses = recentTransactions.filter(t => isExpenseType(t.type)).reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
       
       const pendingReceivables = saleInstallments.filter(i => !i.paid).reduce((sum, i) => {
         const amount = typeof i.amount === 'string' ? parseFloat(i.amount) : i.amount;

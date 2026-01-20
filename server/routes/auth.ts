@@ -1,5 +1,6 @@
 import { Express } from "express";
 import { eq, desc, and } from "drizzle-orm";
+import { z } from "zod";
 import { db } from "../db";
 import { users, companies, subscriptions, categories, invitations, passwordResets } from "../../shared/schema";
 import { 
@@ -23,6 +24,20 @@ import { generateBoletoForCompany } from "../utils/boleto";
 export function registerAuthRoutes(app: Express) {
   const signupRateLimiter = createSimpleRateLimiter({ windowMs: 10 * 60 * 1000, max: 5, keyPrefix: "signup" });
   const resetRateLimiter = createSimpleRateLimiter({ windowMs: 10 * 60 * 1000, max: 5, keyPrefix: "password-reset" });
+  const loginSchema = z.object({
+    username: z.string().min(1),
+    password: z.string().min(1)
+  });
+  const requestResetSchema = z.object({
+    email: z.string().email()
+  });
+  const resetPasswordSchema = z.object({
+    token: z.string().min(1),
+    password: z.string().min(6)
+  });
+  const changePasswordSchema = z.object({
+    newPassword: z.string().min(6)
+  });
 
   // Sign up
   app.post("/api/auth/signup", signupRateLimiter, async (req, res) => {
@@ -347,8 +362,9 @@ export function registerAuthRoutes(app: Express) {
   app.post("/api/auth/login", async (req, res) => {
     try {
       const ip = req.headers['x-forwarded-for']?.toString().split(',')[0] || req.socket.remoteAddress || 'unknown';
-      const { username, password } = req.body;
-      if (!username || !password) return res.status(400).json({ error: "Missing username or password" });
+      const parsed = loginSchema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ error: "Missing username or password" });
+      const { username, password } = parsed.data;
       const rateLimitCheck = await checkRateLimit(ip);
       if (!rateLimitCheck.allowed) return res.status(429).json({ error: "Too many login attempts. Please try again later." });
       let user = await findUserByUsername(username);
@@ -572,10 +588,9 @@ export function registerAuthRoutes(app: Express) {
   app.post("/api/auth/reset-password", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
-      const { newPassword } = req.body;
-      if (!newPassword || newPassword.length < 6) {
-        return res.status(400).json({ error: "Password must be at least 6 characters" });
-      }
+      const parsed = changePasswordSchema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ error: "Password must be at least 6 characters" });
+      const { newPassword } = parsed.data;
 
       const { hashPassword } = await import("../auth");
       const hashedPassword = await hashPassword(newPassword);
@@ -936,11 +951,9 @@ export function registerAuthRoutes(app: Express) {
         return res.status(429).json({ error: "Muitas tentativas. Tente novamente em 15 minutos." });
       }
       
-      const { email } = req.body;
-
-      if (!email) {
-        return res.status(400).json({ error: "Email é obrigatório" });
-      }
+      const parsed = requestResetSchema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ error: "Email é obrigatório" });
+      const { email } = parsed.data;
 
       // Find user by email
       const user = await findUserByEmail(email);
@@ -1023,15 +1036,11 @@ export function registerAuthRoutes(app: Express) {
   // Reset password with token
   app.post("/api/auth/reset-password", async (req, res) => {
     try {
-      const { token, password } = req.body;
-
-      if (!token || !password) {
+      const parsed = resetPasswordSchema.safeParse(req.body);
+      if (!parsed.success) {
         return res.status(400).json({ error: "Token e senha são obrigatórios" });
       }
-
-      if (password.length < 6) {
-        return res.status(400).json({ error: "Senha deve ter no mínimo 6 caracteres" });
-      }
+      const { token, password } = parsed.data;
 
       // Find valid token
       const [resetToken] = await db

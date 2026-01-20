@@ -12,6 +12,17 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState(null);
 
+  const extractTxDate = (t) => {
+    if (!t) return null;
+    const candidate = t.paymentDate || t.date || t.createdAt || t.created_at;
+    if (!candidate) return null;
+    const d = new Date(candidate);
+    return Number.isNaN(d.getTime()) ? null : d;
+  };
+
+  const isIncomeType = (type) => ['venda', 'income', 'receita', 'entrada', 'venda_prazo'].includes(type);
+  const isExpenseType = (type) => ['compra', 'expense', 'despesa', 'saida', 'compra_prazo'].includes(type);
+
   const calculateWorkingCapital = () => {
     const today = new Date();
     const thirtyDaysFromNow = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
@@ -41,9 +52,9 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
       ? transactions.reduce((sum, t) => {
           const amount = parseFloat(t.amount || 0);
           // If transaction is in the past, it counts towards current cash
-          const txnDate = new Date(t.date);
-          if (txnDate <= today) {
-            return sum + (t.type === 'venda' || t.type === 'income' ? amount : -amount);
+          const txnDate = extractTxDate(t);
+          if (txnDate && txnDate <= today) {
+            return sum + (isIncomeType(t.type) ? amount : isExpenseType(t.type) ? -amount : 0);
           }
           return sum;
         }, 0)
@@ -61,7 +72,7 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
     // Average monthly expenses (past 3 months)
     const pastExpenses = Array.isArray(transactions)
       ? transactions
-          .filter(t => t.type === 'compra' || t.type === 'expense')
+          .filter(t => isExpenseType(t.type))
           .reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0)
       : 0;
     

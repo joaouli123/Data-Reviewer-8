@@ -13,6 +13,9 @@ export default function DebtAnalysis({ transactions, purchases, purchaseInstallm
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState(null);
 
+  const isIncomeType = (type) => ['venda', 'income', 'receita', 'entrada', 'venda_prazo'].includes(type);
+  const isExpenseType = (type) => ['compra', 'expense', 'despesa', 'saida', 'compra_prazo'].includes(type);
+
   const calculateDebtMetrics = () => {
     // Create a map of categoryId to category name
     const categoryMap = {};
@@ -24,12 +27,12 @@ export default function DebtAnalysis({ transactions, purchases, purchaseInstallm
 
     // Use ONLY filtered transactions
     const compras = Array.isArray(transactions) 
-      ? transactions.filter(t => t.type === 'compra' || t.type === 'expense')
+      ? transactions.filter(t => isExpenseType(t.type))
       : [];
 
     // Real income from transactions
     const income = Array.isArray(transactions)
-      ? transactions.filter(t => t.type === 'venda' || t.type === 'income')
+      ? transactions.filter(t => isIncomeType(t.type))
       : [];
     
     const revenue = income.reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
