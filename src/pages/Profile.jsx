@@ -8,6 +8,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Upload, Save, Lock, CreditCard, User, Loader2, Download } from 'lucide-react';
+import { addMonths } from 'date-fns';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -113,9 +114,13 @@ export default function ProfilePage() {
   const planValue = company?.subscriptionPlan === "pro" ? "997,00" : (company?.subscriptionPlan === "monthly" ? "215,00" : "0,00");
   const getInitials = (name) => name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'US';
   const displayName = [formData.firstName, formData.lastName].filter(Boolean).join(' ') || formData.name;
-  const nextDueDate = invoices.length > 0 && invoices[0]?.expiresAt
-    ? new Date(invoices[0].expiresAt)
-    : null;
+  const nextDueDate = (() => {
+    if (!(invoices.length > 0 && invoices[0]?.expiresAt)) return null;
+    const base = new Date(invoices[0].expiresAt);
+    const now = new Date();
+    // Se o boleto mais recente já venceu, projeta para o mês seguinte
+    return base <= now ? addMonths(base, 1) : base;
+  })();
 
   // Handlers
   const formatPhone = (value) => {
