@@ -85,9 +85,10 @@ export default function CashFlowPeriodFilter({ onPeriodChange, minDate = null, m
   };
 
   const handleCustomApply = () => {
-    if (dateRange.from && dateRange.to) {
-      const start = dateRange.from;
-      const end = dateRange.to;
+    const safeRange = dateRange || { from: undefined, to: undefined };
+    if (safeRange.from && safeRange.to) {
+      const start = safeRange.from;
+      const end = safeRange.to;
       
       const label = `${format(start, 'dd/MM/yyyy')} - ${format(end, 'dd/MM/yyyy')}`;
       
@@ -153,8 +154,8 @@ export default function CashFlowPeriodFilter({ onPeriodChange, minDate = null, m
               <div className="space-y-4">
                 <p className="text-sm text-muted-foreground font-medium">Selecione o período desejado</p>
                 <div className="text-sm font-medium text-foreground">
-                  {dateRange.from ? (
-                    dateRange.to ? (
+                  {dateRange?.from ? (
+                    dateRange?.to ? (
                       <>
                         <span className="text-primary">{format(dateRange.from, 'dd/MM/yyyy')}</span>
                         {' até '}
@@ -174,7 +175,7 @@ export default function CashFlowPeriodFilter({ onPeriodChange, minDate = null, m
                   <CalendarComponent
                     mode="range"
                     selected={dateRange}
-                    onSelect={setDateRange}
+                    onSelect={(range) => setDateRange(range || { from: undefined, to: undefined })}
                     numberOfMonths={2}
                     locale={ptBR}
                     className="rounded-md border"
