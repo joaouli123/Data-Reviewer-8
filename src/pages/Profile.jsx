@@ -114,11 +114,17 @@ export default function ProfilePage() {
   const planValue = company?.subscriptionPlan === "pro" ? "997,00" : (company?.subscriptionPlan === "monthly" ? "215,00" : "0,00");
   const getInitials = (name) => name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'US';
   const displayName = [formData.firstName, formData.lastName].filter(Boolean).join(' ') || formData.name;
+  const primaryInvoice = (() => {
+    // Prioriza fatura pendente; se todas pagas, usa a mais recente
+    const pending = invoices.find(inv => inv.status !== 'paid' && inv.status !== 'approved');
+    return pending || invoices[0] || null;
+  })();
+
   const nextDueDate = (() => {
-    if (!(invoices.length > 0 && invoices[0]?.expiresAt)) return null;
-    const base = new Date(invoices[0].expiresAt);
+    if (!(primaryInvoice?.expiresAt)) return null;
+    const base = new Date(primaryInvoice.expiresAt);
     const now = new Date();
-    // Se o boleto mais recente já venceu, projeta para o mês seguinte
+    // Se a fatura corrente já venceu, projeta para o mês seguinte
     return base <= now ? addMonths(base, 1) : base;
   })();
 
@@ -377,14 +383,14 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {invoices.length > 0 && (
+              {primaryInvoice && (
                 <div className="mb-6 p-4 border border-blue-100 bg-blue-50 rounded-lg flex items-center justify-between">
                   <div>
                     <div className="font-semibold text-blue-900">Download do Boleto</div>
                     <div className="text-sm text-blue-700">Baixe o boleto da sua última fatura.</div>
                   </div>
                   <Button asChild variant="outline" className="border-blue-200 hover:bg-blue-100">
-                    <a href={invoices[0].ticket_url || '#'} target="_blank" rel="noopener noreferrer">
+                    <a href={primaryInvoice.ticket_url || '#'} target="_blank" rel="noopener noreferrer">
                       <Download className="w-4 h-4 mr-2" /> Baixar Boleto
                     </a>
                   </Button>
