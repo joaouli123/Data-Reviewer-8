@@ -10,7 +10,7 @@ const TermsOfUse = () => {
         <div className="container mx-auto max-w-4xl prose dark:prose-invert">
           <h1 className="text-4xl font-black text-slate-900 mb-8">Termos de Uso</h1>
           <div className="space-y-6 text-slate-600 leading-relaxed">
-            <p>Bem-vindo à HuaConsultoria. Ao acessar e usar este sistema, você concorda com os seguintes termos e condições.</p>
+            <p>Bem-vindo à HUA Control. Ao acessar e usar este sistema, você concorda com os seguintes termos e condições.</p>
             
             <h2 className="text-2xl font-bold text-slate-800 mt-10">1. Aceitação dos Termos</h2>
             <p>Ao utilizar nossos serviços, você confirma que leu, compreendeu e aceita estar vinculado por estes termos. Se você não concordar com qualquer parte destes termos, não deverá utilizar o sistema.</p>
@@ -25,7 +25,7 @@ const TermsOfUse = () => {
             <p>O plano vitalício garante acesso permanente às funcionalidades atuais e atualizações futuras do sistema. Reembolsos podem ser solicitados dentro do prazo legal de 7 dias após a compra.</p>
 
             <h2 className="text-2xl font-bold text-slate-800 mt-10">5. Limitação de Responsabilidade</h2>
-            <p>A HuaConsultoria fornece ferramentas de auxílio à gestão, mas não se responsabiliza por decisões de negócio tomadas com base nas informações do sistema ou por eventuais perdas financeiras.</p>
+            <p>A HUA Control fornece ferramentas de auxílio à gestão, mas não se responsabiliza por decisões de negócio tomadas com base nas informações do sistema ou por eventuais perdas financeiras.</p>
           </div>
         </div>
       </main>

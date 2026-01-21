@@ -40,7 +40,7 @@ const FAQ: React.FC = () => {
     },
     {
       question: "2. Preciso instalar algum programa?",
-      answer: "Não. O software da HUA Consultoria é 100% online (SaaS). Você acessa pelo navegador de qualquer dispositivo, garantindo que suas finanças estejam na palma da mão em qualquer lugar do mundo."
+      answer: "Não. O software da HUA Control é 100% online (SaaS). Você acessa pelo navegador de qualquer dispositivo, garantindo que suas finanças estejam na palma da mão em qualquer lugar do mundo."
     },
     {
       question: "3. Meus dados financeiros estão realmente seguros?",

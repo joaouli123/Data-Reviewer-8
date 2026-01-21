@@ -10,7 +10,7 @@ const PrivacyPolicy = () => {
         <div className="container mx-auto max-w-4xl prose dark:prose-invert">
           <h1 className="text-4xl font-black text-slate-900 mb-8">Política de Privacidade</h1>
           <div className="space-y-6 text-slate-600 leading-relaxed">
-            <p>A sua privacidade é importante para nós. É política da HuaConsultoria respeitar a sua privacidade em relação a qualquer informação sua que possamos coletar no site.</p>
+            <p>A sua privacidade é importante para nós. É política da HUA Control respeitar a sua privacidade em relação a qualquer informação sua que possamos coletar no site.</p>
             
             <h2 className="text-2xl font-bold text-slate-800 mt-10">1. Coleta de Informações</h2>
             <p>Solicitamos informações pessoais apenas quando realmente precisamos delas para lhe fornecer um serviço. Fazemo-lo por meios justos e legais, com o seu conhecimento e consentimento.</p>

@@ -32,7 +32,7 @@ const Hero: React.FC = () => {
           <div className="relative rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden border-4 border-white shadow-2xl bg-slate-900 aspect-video flex items-center justify-center">
             <img 
               src="https://images.unsplash.com/photo-1551288049-bbbda536339a?q=80&w=2070&auto=format&fit=crop" 
-              alt="HUA Consultoria Dashboard" 
+              alt="HUA Control Dashboard" 
               className="w-full h-full object-cover brightness-[0.7] group-hover:scale-105 transition-transform duration-1000"
             />
             <div className="absolute inset-0 flex items-center justify-center">
