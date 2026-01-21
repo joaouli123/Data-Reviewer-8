@@ -14,14 +14,22 @@ import { apiRequest } from '@/lib/queryClient';
 
 const parseLocalDate = (dateStr) => {
   if (!dateStr) return new Date();
-  const [year, month, day] = dateStr.split('T')[0].split('-');
-  return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  if (dateStr instanceof Date) return dateStr;
+  if (typeof dateStr === 'number') return new Date(dateStr);
+  if (typeof dateStr === 'string') {
+    const [year, month, day] = dateStr.split('T')[0].split('-');
+    if (year && month && day) {
+      return new Date(parseInt(year, 10), parseInt(month, 10) - 1, parseInt(day, 10));
+    }
+  }
+  const fallback = new Date(dateStr);
+  return Number.isNaN(fallback.getTime()) ? new Date() : fallback;
 };
 
-// Garante uma data para exibição/ordenação usando paymentDate -> date -> createdAt
+// Garante uma data para exibição/ordenação usando date -> paymentDate -> createdAt
 const extractTxDate = (t) => {
   if (!t) return null;
-  const candidate = t.paymentDate || t.date || t.createdAt || t.created_at;
+  const candidate = t.date || t.due_date || t.paymentDate || t.createdAt || t.created_at;
   if (!candidate) return null;
   try {
     const d = new Date(candidate);
