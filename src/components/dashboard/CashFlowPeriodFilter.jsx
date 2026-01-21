@@ -180,11 +180,13 @@ export default function CashFlowPeriodFilter({ onPeriodChange, minDate = null, m
                     locale={ptBR}
                     className="rounded-md border"
                     classNames={{
-                      day: "text-slate-700 hover:text-white data-[state=hover]:text-white aria-selected:text-white",
-                      day_selected: "bg-primary text-white font-semibold",
+                      day: "h-9 w-9 p-0 font-medium text-slate-700 hover:bg-primary/80 hover:text-white focus-visible:ring-2 focus-visible:ring-primary",
+                      day_selected: "bg-primary text-white font-semibold hover:bg-primary hover:text-white",
                       day_range_start: "bg-primary text-white font-semibold rounded-l-md",
                       day_range_end: "bg-primary text-white font-semibold rounded-r-md",
                       day_range_middle: "bg-primary/15 text-primary-700 dark:text-primary-200",
+                      day_outside: "text-slate-400 opacity-60 hover:bg-primary/30 hover:text-white",
+                      day_today: "border border-primary/40 text-primary font-semibold",
                     }}
                   />
                 </div>
