@@ -88,6 +88,10 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
     });
     return Object.values(groups).map(group => {
       const sortedInstallments = group.sort((a, b) => {
+        const na = Number(a.installmentNumber) || 0;
+        const nb = Number(b.installmentNumber) || 0;
+        if (na && nb && na !== nb) return na - nb;
+
         const da = extractTxDate(a);
         const db = extractTxDate(b);
         const ta = da ? da.getTime() : 0;

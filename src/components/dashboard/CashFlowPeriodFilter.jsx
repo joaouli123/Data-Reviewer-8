@@ -174,16 +174,17 @@ export default function CashFlowPeriodFilter({ onPeriodChange, minDate = null, m
                 <div className="overflow-x-auto">
                   <CalendarComponent
                     mode="range"
-                    selected={dateRange}
+                    selected={(dateRange?.from || dateRange?.to) ? dateRange : undefined}
                     onSelect={(range) => setDateRange(range || { from: undefined, to: undefined })}
                     numberOfMonths={2}
                     locale={ptBR}
                     className="rounded-md border"
                     classNames={{
-                      day_selected: "bg-primary text-white font-bold",
-                      day_range_start: "bg-primary text-white font-bold rounded-l-md",
-                      day_range_end: "bg-primary text-white font-bold rounded-r-md",
-                      day_range_middle: "bg-blue-100 dark:bg-blue-900/30 text-foreground aria-selected:bg-blue-100 dark:aria-selected:bg-blue-900/30"
+                      day: "text-slate-700 hover:text-white data-[state=hover]:text-white aria-selected:text-white",
+                      day_selected: "bg-primary text-white font-semibold",
+                      day_range_start: "bg-primary text-white font-semibold rounded-l-md",
+                      day_range_end: "bg-primary text-white font-semibold rounded-r-md",
+                      day_range_middle: "bg-primary/15 text-primary-700 dark:text-primary-200",
                     }}
                   />
                 </div>

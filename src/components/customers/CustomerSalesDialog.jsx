@@ -95,6 +95,10 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
     });
     return Object.values(groups).map(group => {
       const sortedInstallments = group.sort((a, b) => {
+        const na = Number(a.installmentNumber) || 0;
+        const nb = Number(b.installmentNumber) || 0;
+        if (na && nb && na !== nb) return na - nb;
+
         const da = extractTxDate(a);
         const db = extractTxDate(b);
         if (!da && !db) return 0;
