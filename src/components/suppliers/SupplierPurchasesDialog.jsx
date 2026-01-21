@@ -100,6 +100,14 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
       // Get base description without installment number
       const baseDescription = (main.description || '').replace(/\s*\(\d+\/\d+\)\s*$/, '').trim() || 'Compra';
 
+      const dates = sortedInstallments
+        .map(installment => extractTxDate(installment))
+        .filter(Boolean);
+      const baseDate = dates[0] || extractTxDate(main) || null;
+      const sameDay = baseDate
+        ? dates.every(d => format(d, 'yyyy-MM-dd') === format(baseDate, 'yyyy-MM-dd'))
+        : false;
+
       return {
         main: {
           ...main,
@@ -108,7 +116,9 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
           isPaid,
           installmentTotal: sortedInstallments.length
         },
-        installments: sortedInstallments
+        installments: sortedInstallments,
+        baseDate,
+        sameDay
       };
     }).sort((a, b) => {
       const db = extractTxDate(b.main);
@@ -287,7 +297,10 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                       <div>
                         <h4 className="font-semibold text-base text-slate-900">{group.main.description || 'Compra'}</h4>
                         <p className="text-sm text-slate-500 mt-0.5">
-                          {group.main.date ? format(parseLocalDate(group.main.date), "dd 'de' MMMM, yyyy", { locale: ptBR }) : '-'}
+                          {(() => {
+                            const dt = extractTxDate(group.main);
+                            return dt ? format(dt, "dd 'de' MMMM, yyyy", { locale: ptBR }) : '-';
+                          })()}
                           <span className="ml-2 text-slate-400">({group.installments.length} parcela{group.installments.length > 1 ? 's' : ''})</span>
                         </p>
                       </div>
@@ -317,7 +330,11 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                             </p>
                             <p className="text-xs text-slate-500">
                               {(() => {
-                                const dt = extractTxDate(installment);
+                                const dt = (() => {
+                                  if (!group.sameDay || !group.baseDate) return extractTxDate(installment);
+                                  const offset = Math.max(0, (Number(installment.installmentNumber) || idx + 1) - 1);
+                                  return addMonths(group.baseDate, offset);
+                                })();
                                 return dt ? `Venc: ${format(dt, "dd/MM/yyyy", { locale: ptBR })}` : 'Venc: -';
                               })()}
                             </p>

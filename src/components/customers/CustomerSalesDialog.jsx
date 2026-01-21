@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, addMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CheckCircle2, Clock, X, ChevronDown, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
@@ -114,6 +114,14 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
       // Get base description without installment number
       const baseDescription = (main.description || '').replace(/\s*\(\d+\/\d+\)\s*$/, '').trim() || 'Venda';
       
+      const dates = sortedInstallments
+        .map(installment => extractTxDate(installment))
+        .filter(Boolean);
+      const baseDate = dates[0] || extractTxDate(main) || null;
+      const sameDay = baseDate
+        ? dates.every(d => format(d, 'yyyy-MM-dd') === format(baseDate, 'yyyy-MM-dd'))
+        : false;
+
       return {
         main: {
           ...main,
@@ -122,7 +130,9 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
           isPaid,
           installmentTotal: sortedInstallments.length
         },
-        installments: sortedInstallments
+        installments: sortedInstallments,
+        baseDate,
+        sameDay
       };
     }).sort((a, b) => {
       const da = extractTxDate(a.main);
@@ -324,7 +334,11 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
                             </p>
                             <p className="text-xs text-slate-500">
                               {(() => {
-                                const dt = extractTxDate(installment);
+                                const dt = (() => {
+                                  if (!group.sameDay || !group.baseDate) return extractTxDate(installment);
+                                  const offset = Math.max(0, (Number(installment.installmentNumber) || idx + 1) - 1);
+                                  return addMonths(group.baseDate, offset);
+                                })();
                                 return dt ? `Venc: ${format(dt, "dd/MM/yyyy")}` : 'Venc: -';
                               })()}
                             </p>

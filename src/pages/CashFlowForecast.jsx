@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarIcon, TrendingUp, TrendingDown, Wallet, ChevronDown, ChevronRight } from 'lucide-react';
-import { format, parseISO, isWithinInterval, startOfMonth, endOfMonth, eachMonthOfInterval, startOfDay, endOfDay, subDays, eachDayOfInterval } from 'date-fns';
+import { format, parseISO, isWithinInterval, startOfMonth, endOfMonth, eachMonthOfInterval, startOfDay, endOfDay, subDays, eachDayOfInterval, addMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import CashFlowPeriodFilter from '../components/dashboard/CashFlowPeriodFilter';
@@ -200,6 +200,37 @@ export default function CashFlowForecastPage() {
   const minDate = calculatedMin;
   const maxDate = calculatedMax;
 
+  const getGroupDateMap = () => {
+    const map = new Map();
+    const grouped = {};
+    transactions.forEach(t => {
+      if (!t.installmentGroup) return;
+      if (!grouped[t.installmentGroup]) grouped[t.installmentGroup] = [];
+      grouped[t.installmentGroup].push(t);
+    });
+    Object.entries(grouped).forEach(([groupId, list]) => {
+      const dates = list
+        .map(t => getTxDate(t))
+        .filter(Boolean);
+      if (dates.length === 0) return;
+      const base = dates[0];
+      const sameDay = dates.every(d => format(d, 'yyyy-MM-dd') === format(base, 'yyyy-MM-dd'));
+      map.set(groupId, { baseDate: base, sameDay });
+    });
+    return map;
+  };
+
+  const groupDateMap = getGroupDateMap();
+
+  const getEffectiveTxDate = (t) => {
+    const baseDate = getTxDate(t);
+    if (!t?.installmentGroup || !t?.installmentNumber) return baseDate;
+    const groupInfo = groupDateMap.get(t.installmentGroup);
+    if (!groupInfo || !groupInfo.sameDay || !groupInfo.baseDate) return baseDate;
+    const offset = Math.max(0, (Number(t.installmentNumber) || 1) - 1);
+    return addMonths(groupInfo.baseDate, offset);
+  };
+
   // Update date range when data changes
   React.useEffect(() => {
     const { minDate, maxDate } = getDateRange();
@@ -243,7 +274,7 @@ export default function CashFlowForecastPage() {
         const expenseDetails = [];
         // Mixed data by transaction date
         transactions.forEach(t => {
-          const tDate = getTxDate(t);
+          const tDate = getEffectiveTxDate(t);
           if (!tDate) return;
           if (!isWithinInterval(tDate, { start: dStart, end: dEnd })) return;
 
@@ -300,7 +331,7 @@ export default function CashFlowForecastPage() {
 
       // Mixed data by transaction date
       transactions.forEach(t => {
-        const tDate = getTxDate(t);
+        const tDate = getEffectiveTxDate(t);
         if (!tDate) return;
         if (!isWithinInterval(tDate, { start: monthStart, end: monthEnd })) return;
 
@@ -392,7 +423,7 @@ export default function CashFlowForecastPage() {
   // Calculate opening balance (all transactions before start date)
   const openingBalance = transactions
     .filter(t => {
-      const tDate = getTxDate(t);
+      const tDate = getEffectiveTxDate(t);
       if (!tDate) return false;
       return tDate < startOfDay(dateRange.startDate);
     })
