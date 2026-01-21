@@ -35,20 +35,36 @@ const FAQItem: React.FC<FAQItemProps> = ({ question, answer }) => {
 const FAQ: React.FC = () => {
   const faqs = [
     {
-      question: "1. O plano vitalício é vitalício mesmo?",
-      answer: "Sim. Ao adquirir hoje, você garante que nunca mais será cobrado mensalmente. Esta é uma oferta estratégica de lançamento para capitalizar o desenvolvimento do software. Uma vez comprado, você é dono da licença para sempre."
+      question: "O que é o HUACONTROL?",
+      answer: "O HUACONTROL é um ERP financeiro completo com inteligência artificial, criado para dar controle, previsibilidade e apoio estratégico às decisões financeiras da empresa."
     },
     {
-      question: "2. Preciso instalar algum programa?",
-      answer: "Não. O software da HUA Control é 100% online (SaaS). Você acessa pelo navegador de qualquer dispositivo, garantindo que suas finanças estejam na palma da mão em qualquer lugar do mundo."
+      question: "Por que o HUACONTROL é diferente dos demais ERPs do mercado?",
+      answer: "Enquanto ERPs tradicionais focam apenas em registro e operação, o HUACONTROL vai além. Ele atua como plataforma de inteligência financeira, usando IA para analisar dados, antecipar riscos e apoiar decisões, entregando visão clara do presente e do futuro do caixa."
     },
     {
-      question: "3. Meus dados financeiros estão realmente seguros?",
-      answer: "Utilizamos a mesma infraestrutura de segurança das maiores fintechs mundiais. Além disso, nosso sistema de Audit Logs registra quem fez cada alteração, garantindo total transparência e segurança para o dono do negócio."
+      question: "Para que tipo de empresa o HUACONTROL é indicado?",
+      answer: "Para empresas em crescimento, empresários, CFOs e diretores financeiros que precisam profissionalizar a gestão e tomar decisões baseadas em dados confiáveis."
     },
     {
-      question: "4. Como funciona o suporte após a compra?",
-      answer: "No plano mensal, o suporte é via ticket com resposta em 24h. No plano Vitalício, você recebe acesso ao nosso canal exclusivo no WhatsApp, com atendimento prioritário e consultores especializados em gestão."
+      question: "Como a inteligência artificial é utilizada na prática?",
+      answer: "A IA analisa continuamente fluxo de caixa, DRE, capital de giro e endividamento, gerando insights, alertas e análises objetivas para apoiar decisões estratégicas."
+    },
+    {
+      question: "O HUACONTROL substitui a equipe financeira ou o contador?",
+      answer: "Não. O HUACONTROL apoia pessoas, não substitui. Ele organiza e interpreta os dados para que gestores e equipes atuem de forma mais estratégica."
+    },
+    {
+      question: "O sistema é seguro?",
+      answer: "Sim. O HUACONTROL foi desenvolvido para ambiente corporativo, com controle de acessos e foco em segurança e confiabilidade das informações financeiras."
+    },
+    {
+      question: "Quanto tempo leva para começar a usar?",
+      answer: "A implantação é simples e orientada. Em pouco tempo, a empresa já tem dados organizados, visão gerencial e análises financeiras disponíveis."
+    },
+    {
+      question: "Como contratar ou conhecer o HUACONTROL?",
+      answer: "Você pode solicitar uma apresentação do sistema, onde mostramos na prática como o HUACONTROL entrega controle e decisões inteligentes. 👉 Solicite uma apresentação do HUACONTROL."
     }
   ];
 
