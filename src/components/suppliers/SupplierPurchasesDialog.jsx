@@ -107,6 +107,10 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
       const sameDay = baseDate
         ? dates.every(d => format(d, 'yyyy-MM-dd') === format(baseDate, 'yyyy-MM-dd'))
         : false;
+      const singleMonth = baseDate
+        ? dates.every(d => format(d, 'yyyy-MM') === format(baseDate, 'yyyy-MM'))
+        : false;
+      const shouldOffset = !!baseDate && (sameDay || singleMonth);
 
       return {
         main: {
@@ -118,7 +122,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
         },
         installments: sortedInstallments,
         baseDate,
-        sameDay
+        shouldOffset
       };
     }).sort((a, b) => {
       const db = extractTxDate(b.main);
@@ -331,7 +335,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                             <p className="text-xs text-slate-500">
                               {(() => {
                                 const dt = (() => {
-                                  if (!group.sameDay || !group.baseDate) return extractTxDate(installment);
+                                  if (!group.shouldOffset || !group.baseDate) return extractTxDate(installment);
                                   const offset = Math.max(0, (Number(installment.installmentNumber) || idx + 1) - 1);
                                   return addMonths(group.baseDate, offset);
                                 })();

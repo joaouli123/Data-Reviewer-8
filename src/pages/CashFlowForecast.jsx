@@ -215,7 +215,9 @@ export default function CashFlowForecastPage() {
       if (dates.length === 0) return;
       const base = dates[0];
       const sameDay = dates.every(d => format(d, 'yyyy-MM-dd') === format(base, 'yyyy-MM-dd'));
-      map.set(groupId, { baseDate: base, sameDay });
+      const singleMonth = dates.every(d => format(d, 'yyyy-MM') === format(base, 'yyyy-MM'));
+      const forceOffset = sameDay || singleMonth;
+      map.set(groupId, { baseDate: base, forceOffset });
     });
     return map;
   };
@@ -226,7 +228,7 @@ export default function CashFlowForecastPage() {
     const baseDate = getTxDate(t);
     if (!t?.installmentGroup || !t?.installmentNumber) return baseDate;
     const groupInfo = groupDateMap.get(t.installmentGroup);
-    if (!groupInfo || !groupInfo.sameDay || !groupInfo.baseDate) return baseDate;
+    if (!groupInfo || !groupInfo.forceOffset || !groupInfo.baseDate) return baseDate;
     const offset = Math.max(0, (Number(t.installmentNumber) || 1) - 1);
     return addMonths(groupInfo.baseDate, offset);
   };

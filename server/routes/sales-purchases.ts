@@ -20,6 +20,37 @@ function parseLocalDate(value: string): Date {
   return new Date(year, month - 1, day, 0, 0, 0, 0);
 }
 
+// Calcula uma data segura para a parcela, espalhando por meses se todas vierem iguais
+function computeInstallmentDate(baseDateStr: string, customInstallments: any[] | undefined, index: number) {
+  const baseDate = parseLocalDate(baseDateStr);
+
+  if (customInstallments && customInstallments.length > 0) {
+    const first = parseLocalDate(customInstallments[0].due_date || customInstallments[0].date || baseDateStr);
+    const sameMonth = customInstallments.every(inst => {
+      const d = parseLocalDate(inst.due_date || inst.date || baseDateStr);
+      return d.getFullYear() === first.getFullYear() && d.getMonth() === first.getMonth();
+    });
+
+    // Se tem data específica na parcela, usa; senão recua para base
+    let dueDate = customInstallments[index]
+      ? parseLocalDate(customInstallments[index].due_date || customInstallments[index].date || baseDateStr)
+      : parseLocalDate(baseDateStr);
+
+    if (sameMonth) {
+      // Espalha pelas competências usando o índice
+      const spread = new Date(first);
+      spread.setMonth(first.getMonth() + index);
+      return spread;
+    }
+
+    return dueDate;
+  }
+
+  const spread = new Date(baseDate);
+  spread.setMonth(baseDate.getMonth() + index);
+  return spread;
+}
+
 export function registerSalesPurchasesRoutes(app: Express) {
   const saleSchema = z.object({
     customerId: z.union([z.string(), z.number()]),
@@ -116,12 +147,7 @@ export function registerSalesPurchasesRoutes(app: Express) {
         const isLast = i === count - 1;
         const currentAmount = isLast ? lastInstallmentAmount : amountPerInstallment.toFixed(2);
 
-        let dueDate = parseLocalDate(saleDate);
-        if (customInstallments && customInstallments[i]) {
-          dueDate = parseLocalDate(customInstallments[i].due_date || customInstallments[i].date);
-        } else {
-          dueDate.setMonth(dueDate.getMonth() + i);
-        }
+        const dueDate = computeInstallmentDate(saleDate, customInstallments, i);
 
         return storage.createTransaction(req.user.companyId, {
           companyId: req.user.companyId,
@@ -189,12 +215,7 @@ export function registerSalesPurchasesRoutes(app: Express) {
         const isLast = i === count - 1;
         const currentAmount = isLast ? lastInstallmentAmount : amountPerInstallment.toFixed(2);
 
-        let dueDate = parseLocalDate(purchaseDate);
-        if (customInstallments && customInstallments[i]) {
-          dueDate = parseLocalDate(customInstallments[i].date || customInstallments[i].due_date);
-        } else {
-          dueDate.setMonth(dueDate.getMonth() + i);
-        }
+        const dueDate = computeInstallmentDate(purchaseDate, customInstallments, i);
 
         return storage.createTransaction(req.user.companyId, {
           companyId: req.user.companyId,
