@@ -5,6 +5,9 @@ html { font-family: 'Inter', sans-serif; }
 @tailwind components;
 @tailwind utilities;
 
+/* Base styles for react-day-picker (layout, spacing) */
+@import "react-day-picker/dist/style.css";
+
 @layer base {
   html {
     scroll-behavior: smooth;
