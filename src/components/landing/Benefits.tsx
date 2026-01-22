@@ -104,9 +104,9 @@ const Benefits: React.FC = () => {
             </div>
             <div className="hidden lg:block relative">
               <img 
-                src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=800" 
+                src="/desktop.png" 
                 className="rounded-3xl border-4 border-blue-400 shadow-2xl" 
-                alt="FinControl Software Preview"
+                alt="HUACONTROL Dashboard Preview"
               />
             </div>
           </div>
