@@ -88,7 +88,7 @@ const Footer: React.FC = () => {
               Assuma o controle do seu financeiro. Conheça como a inteligência artificial pode apoiar sua gestão financeira.
             </p>
             <a 
-              href="https://wa.me/5554996231432?text=Olá,%20gostaria%20de%20saber%20o%20valor!"
+              href="https://wa.me/5554996231432?text=Olá,%20gostaria%20saber%20mais%20informações%20sobre%20o%20sistema."
               target="_blank"
               rel="noopener noreferrer"
               className="w-full bg-blue-500 hover:bg-blue-600 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-3 transition-all shadow-lg active:scale-95 uppercase"

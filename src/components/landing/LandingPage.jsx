@@ -15,7 +15,7 @@ import Footer from './Footer';
 
 const WhatsAppFAB = () => (
   <a
-    href="https://wa.me/5554996231432?text=Olá,%20gostaria%20de%20saber%20o%20valor!"
+    href="https://wa.me/5554996231432?text=Olá,%20gostaria%20saber%20mais%20informações%20sobre%20o%20sistema."
     target="_blank"
     rel="noopener noreferrer"
     className="fixed bottom-6 right-6 z-50 group transition-transform hover:scale-110 active:scale-95"
