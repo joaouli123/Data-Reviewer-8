@@ -53,7 +53,7 @@ const Header: React.FC = () => {
             Entrar
           </Link>
           <a 
-            href="https://wa.me/5554996231432?text=Olá,%20gostaria%20de%20saber%20o%20valor!"
+            href="https://wa.me/5554996231432?text=Olá,%20gostaria%20saber%20mais%20informações%20sobre%20o%20sistema."
             target="_blank"
             rel="noopener noreferrer"
             className="hidden sm:inline-flex bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl text-sm font-bold transition-all shadow-lg hover:shadow-xl active:scale-95"
@@ -104,7 +104,7 @@ const Header: React.FC = () => {
               Entrar
             </Link>
             <a 
-              href="https://wa.me/5554996231432?text=Olá,%20gostaria%20de%20saber%20o%20valor!"
+              href="https://wa.me/5554996231432?text=Olá,%20gostaria%20saber%20mais%20informações%20sobre%20o%20sistema."
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => setIsMenuOpen(false)}

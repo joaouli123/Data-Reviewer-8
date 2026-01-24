@@ -94,7 +94,7 @@ const Benefits: React.FC = () => {
                 ))}
               </div>
               <a 
-                href="https://wa.me/5554996231432?text=Olá,%20gostaria%20de%20saber%20o%20valor!"
+                href="https://wa.me/5554996231432?text=Olá,%20gostaria%20saber%20mais%20informações%20sobre%20o%20sistema."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center bg-white text-blue-600 px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-xl hover:bg-blue-50 active:scale-95"
