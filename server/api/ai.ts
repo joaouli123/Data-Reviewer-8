@@ -9,25 +9,40 @@ export async function analyzeWithAI(prompt: string, responseJsonSchema: any = nu
   if (!ai) throw new Error('API_KEY_NOT_CONFIGURED');
 
   try {
-    const promptWithInstruction = `${prompt}
+    // Verificar se é análise financeira (tem campos específicos de CFO) ou precificação
+    const isCFOAnalysis = prompt.includes('executive_summary') || 
+                          prompt.includes('expense_reduction') || 
+                          prompt.includes('revenue_growth');
+    
+    let finalPrompt = prompt;
+    
+    // Só adicionar instruções de CFO se for análise financeira
+    if (isCFOAnalysis) {
+      finalPrompt = `${prompt}
 
 Você é um CFO Sênior. Você DEVE retornar um JSON válido e estruturado. 
 O campo 'executive_summary' é OBRIGATÓRIO, deve estar em Português (BR) e deve conter pelo menos 3 parágrafos de análise profunda e estratégica sobre os dados fornecidos. 
 O campo 'expense_reduction_opportunities' deve ser um array com pelo menos 3 sugestões reais baseadas nos dados, ou tendências do setor caso os dados sejam poucos.
 O campo 'revenue_growth_suggestions' deve ser um array com pelo menos 3 estratégias de crescimento.
 Não use placeholders como "Nenhuma oportunidade identificada". Se os dados forem escassos, use sua expertise para sugerir melhorias baseadas em melhores práticas de gestão financeira para PMEs.`;
+    } else {
+      // Para precificação e outras análises, apenas garantir JSON
+      finalPrompt = `${prompt}
+
+IMPORTANTE: Responda APENAS com um JSON válido, sem texto adicional antes ou depois. Todos os campos devem estar em português do Brasil.`;
+    }
 
     const response = await ai.models.generateContent({
       model: "gemini-2.0-flash-exp", 
       config: {
         responseMimeType: responseJsonSchema ? "application/json" : "text/plain",
-        temperature: 0.1,
-        maxOutputTokens: 2048,
+        temperature: 0.2,
+        maxOutputTokens: 4096,
       },
       contents: [
         {
           role: "user",
-          parts: [{ text: promptWithInstruction }]
+          parts: [{ text: finalPrompt }]
         }
       ]
     });
@@ -39,7 +54,7 @@ Não use placeholders como "Nenhuma oportunidade identificada". Se os dados fore
       throw new Error("IA retornou resposta vazia");
     }
 
-    console.log("[AI Debug] Resposta bruta recebida:", responseText);
+    console.log("[AI Debug] Resposta bruta recebida:", responseText.substring(0, 500));
 
     if (responseJsonSchema) {
       // Limpeza robusta do JSON
@@ -49,7 +64,7 @@ Não use placeholders como "Nenhuma oportunidade identificada". Se os dados fore
         console.log("[AI Debug] JSON parseado com sucesso");
         return parsed;
       } catch (e) {
-        console.error("[AI Debug] Erro Parse JSON:", cleanText);
+        console.error("[AI Debug] Erro Parse JSON:", cleanText.substring(0, 200));
         const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           console.log("[AI Debug] JSON extraído via Regex com sucesso");
