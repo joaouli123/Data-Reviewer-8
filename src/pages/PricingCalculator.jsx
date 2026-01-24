@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Calculator, TrendingUp, DollarSign, Percent, Sparkles, Loader2, Shield } from 'lucide-react';
+import { Calculator, TrendingUp, DollarSign, Percent, Sparkles, Loader2, Shield, Users, ArrowUp, ArrowDown, Minus } from 'lucide-react';
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { toast } from 'sonner';
 import PredictivePricingAnalysis from '../components/pricing/PredictivePricingAnalysis';
@@ -44,6 +44,30 @@ export default function PricingCalculatorPage() {
   });
   const [results, setResults] = useState(null);
   const [aiSuggestion, setAiSuggestion] = useState(null);
+
+  // Função para parsear concorrentes do texto
+  const parseCompetitors = (text) => {
+    if (!text || !text.trim()) return [];
+    
+    const competitors = [];
+    // Padrões: "Nome 150" ou "Nome: R$ 150" ou "Nome R$150" ou "Nome: 150"
+    const patterns = [
+      /([a-zA-ZÀ-ÿ\s]+?)\s*[:\-]?\s*R?\$?\s*(\d+(?:[.,]\d+)?)/gi,
+    ];
+    
+    for (const pattern of patterns) {
+      let match;
+      while ((match = pattern.exec(text)) !== null) {
+        const name = match[1].trim();
+        const price = parseFloat(match[2].replace(',', '.'));
+        if (name && !isNaN(price) && price > 0) {
+          competitors.push({ name, price });
+        }
+      }
+    }
+    
+    return competitors;
+  };
 
   const calculatePrice = () => {
     if (!formData.productName.trim()) {
@@ -370,6 +394,110 @@ Responda APENAS com JSON válido.`;
                     <p className="text-sm text-slate-600">
                       Vendas necessárias para cobrir custos operacionais
                     </p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Comparação com Concorrentes */}
+              {formData.marketComparison && parseCompetitors(formData.marketComparison).length > 0 && (
+                <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-white">
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2 text-amber-700">
+                      <Users className="w-4 h-4" />
+                      Comparação com Concorrentes
+                    </CardTitle>
+                    <CardDescription>
+                      Seu preço vs. concorrentes informados
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {/* Seu preço destacado */}
+                    <div className="p-3 bg-primary/10 rounded-lg border-2 border-primary">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-bold text-primary">SEU PREÇO</p>
+                          <p className="text-xs text-slate-500">{formData.productName}</p>
+                        </div>
+                        <p className="text-xl font-bold text-primary">
+                          {formatCurrency(results.suggestedPrice)}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Lista de concorrentes */}
+                    {parseCompetitors(formData.marketComparison)
+                      .sort((a, b) => a.price - b.price)
+                      .map((competitor, idx) => {
+                        const diff = results.suggestedPrice - competitor.price;
+                        const diffPercent = ((diff / competitor.price) * 100).toFixed(0);
+                        const isHigher = diff > 0;
+                        const isEqual = Math.abs(diff) < 1;
+                        
+                        return (
+                          <div key={idx} className="flex items-center justify-between p-3 bg-white rounded-lg border border-slate-200">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold ${
+                                isEqual ? 'bg-slate-400' : isHigher ? 'bg-rose-500' : 'bg-emerald-500'
+                              }`}>
+                                {isEqual ? <Minus className="w-4 h-4" /> : isHigher ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />}
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-slate-900">{competitor.name}</p>
+                                <p className={`text-xs ${isEqual ? 'text-slate-500' : isHigher ? 'text-rose-600' : 'text-emerald-600'}`}>
+                                  {isEqual ? 'Mesmo preço' : isHigher ? `Você está ${Math.abs(diffPercent)}% mais caro` : `Você está ${Math.abs(diffPercent)}% mais barato`}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-lg font-bold text-slate-700">
+                                {formatCurrency(competitor.price)}
+                              </p>
+                              {!isEqual && (
+                                <p className={`text-xs font-medium ${isHigher ? 'text-rose-600' : 'text-emerald-600'}`}>
+                                  {isHigher ? '+' : ''}{formatCurrency(diff)}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                    {/* Resumo */}
+                    {(() => {
+                      const competitors = parseCompetitors(formData.marketComparison);
+                      const avgPrice = competitors.reduce((sum, c) => sum + c.price, 0) / competitors.length;
+                      const minPrice = Math.min(...competitors.map(c => c.price));
+                      const maxPrice = Math.max(...competitors.map(c => c.price));
+                      
+                      return (
+                        <div className="mt-4 p-3 bg-slate-100 rounded-lg">
+                          <p className="text-xs text-slate-600 mb-2">Resumo do mercado:</p>
+                          <div className="grid grid-cols-3 gap-2 text-center">
+                            <div>
+                              <p className="text-xs text-slate-500">Menor</p>
+                              <p className="text-sm font-bold text-emerald-600">{formatCurrency(minPrice)}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-slate-500">Média</p>
+                              <p className="text-sm font-bold text-amber-600">{formatCurrency(avgPrice)}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-slate-500">Maior</p>
+                              <p className="text-sm font-bold text-rose-600">{formatCurrency(maxPrice)}</p>
+                            </div>
+                          </div>
+                          <div className="mt-2 pt-2 border-t border-slate-200">
+                            <p className="text-xs text-center text-slate-600">
+                              {results.suggestedPrice < avgPrice 
+                                ? `✅ Seu preço está ${((avgPrice - results.suggestedPrice) / avgPrice * 100).toFixed(0)}% abaixo da média`
+                                : results.suggestedPrice > avgPrice
+                                ? `⚠️ Seu preço está ${((results.suggestedPrice - avgPrice) / avgPrice * 100).toFixed(0)}% acima da média`
+                                : '✅ Seu preço está na média do mercado'}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </CardContent>
                 </Card>
               )}
