@@ -260,27 +260,27 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Compras - {supplier.name}</DialogTitle>
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="text-lg">Compras - {supplier.name}</DialogTitle>
         </DialogHeader>
 
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="p-4 bg-slate-50 rounded-lg border">
-            <p className="text-xs text-slate-500 mb-1">Total em Compras</p>
-            <p className="text-xl font-bold text-slate-900">
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          <div className="p-3 bg-slate-50 rounded-lg border">
+            <p className="text-xs text-slate-500 mb-0.5">Total em Compras</p>
+            <p className="text-base font-bold text-slate-900">
               R$ {Math.abs(purchases.reduce((acc, p) => acc + parseFloat(p.amount || 0), 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </p>
           </div>
-          <div className="p-4 bg-rose-50 rounded-lg border border-rose-100">
-            <p className="text-xs text-rose-600 mb-1">Pago</p>
-            <p className="text-xl font-bold text-rose-700">
+          <div className="p-3 bg-rose-50 rounded-lg border border-rose-100">
+            <p className="text-xs text-rose-600 mb-0.5">Pago</p>
+            <p className="text-base font-bold text-rose-700">
               R$ {Math.abs(getTotalPaid()).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </p>
           </div>
-          <div className="p-4 bg-amber-50 rounded-lg border border-amber-100">
-            <p className="text-xs text-amber-600 mb-1">Pendente</p>
-            <p className="text-xl font-bold text-amber-700">
+          <div className="p-3 bg-amber-50 rounded-lg border border-amber-100">
+            <p className="text-xs text-amber-600 mb-0.5">Pendente</p>
+            <p className="text-base font-bold text-amber-700">
               R$ {Math.abs(getTotalPending()).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </p>
           </div>
@@ -408,18 +408,18 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                               </Button>
                             </>
                           ) : (
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1">
                               <Button
                                 size="sm"
                                 onClick={() => {
                                   setSelectedTransaction(installment);
                                   setPaymentEditOpen(true);
                                 }}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4"
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-3 h-8 text-xs"
                                 disabled={confirmPaymentMutation.isPending}
                                 data-testid={`button-confirm-payment-${installment.id}`}
                               >
-                                Confirmar Pagamento
+                                Pagar
                               </Button>
                               <Button
                                 size="icon"
@@ -430,7 +430,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                                   }
                                 }}
                                 disabled={deletePurchaseMutation.isPending}
-                                className="text-slate-400 hover:text-red-600"
+                                className="text-slate-400 hover:text-red-600 h-8 w-8"
                                 data-testid={`button-delete-purchase-${installment.id}`}
                               >
                                 <Trash2 className="w-4 h-4" />

@@ -254,27 +254,27 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Vendas - {customer?.name}</DialogTitle>
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="text-lg">Vendas - {customer?.name}</DialogTitle>
         </DialogHeader>
 
-        <div className="grid grid-cols-3 gap-4 my-4">
-          <div className="p-4 rounded-lg bg-slate-50 border">
-            <p className="text-xs text-slate-500 mb-1">Total em Vendas</p>
-            <p className="text-lg font-bold text-slate-900">
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          <div className="p-3 rounded-lg bg-slate-50 border">
+            <p className="text-xs text-slate-500 mb-0.5">Total em Vendas</p>
+            <p className="text-base font-bold text-slate-900">
               R$ {sales.reduce((acc, s) => acc + parseFloat(s.amount || 0), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </p>
           </div>
-          <div className="p-4 rounded-lg bg-emerald-50 border border-emerald-100">
-            <p className="text-xs text-emerald-600 mb-1">Recebido</p>
-            <p className="text-lg font-bold text-emerald-700">
+          <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-100">
+            <p className="text-xs text-emerald-600 mb-0.5">Recebido</p>
+            <p className="text-base font-bold text-emerald-700">
               R$ {getTotalReceived().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </p>
           </div>
-          <div className="p-4 rounded-lg bg-amber-50 border border-amber-100">
-            <p className="text-xs text-amber-600 mb-1">A Receber</p>
-            <p className="text-lg font-bold text-amber-700">
+          <div className="p-3 rounded-lg bg-amber-50 border border-amber-100">
+            <p className="text-xs text-amber-600 mb-0.5">A Receber</p>
+            <p className="text-base font-bold text-amber-700">
               R$ {getTotalPending().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </p>
           </div>
@@ -404,11 +404,11 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
                                 setSelectedTransaction(installment);
                                 setPaymentEditOpen(true);
                               }}
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4"
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-3 h-8 text-xs"
                               disabled={confirmPaymentMutation.isPending}
                               data-testid={`button-confirm-payment-${installment.id}`}
                             >
-                              Confirmar Recebimento
+                              Receber
                             </Button>
                           )}
                         </div>

@@ -150,10 +150,10 @@ export default function CashFlowPeriodFilter({ onPeriodChange, minDate = null, m
                 Personalizado
               </div>
             </PopoverTrigger>
-            <PopoverContent className="w-auto max-w-4xl p-4" side="bottom" align="start" sideOffset={5}>
-              <div className="space-y-4">
-                <p className="text-sm text-muted-foreground font-medium">Selecione o período desejado</p>
-                <div className="text-sm font-medium text-foreground">
+            <PopoverContent className="w-auto p-3" side="bottom" align="start" sideOffset={5}>
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground font-medium">Selecione o período</p>
+                <div className="text-xs font-medium text-foreground bg-slate-50 p-2 rounded">
                   {dateRange?.from ? (
                     dateRange?.to ? (
                       <>
@@ -171,16 +171,16 @@ export default function CashFlowPeriodFilter({ onPeriodChange, minDate = null, m
                     'Clique na data inicial'
                   )}
                 </div>
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto max-h-[320px]">
                   <CalendarComponent
                     mode="range"
                     selected={(dateRange?.from || dateRange?.to) ? dateRange : undefined}
                     onSelect={(range) => setDateRange(range || { from: undefined, to: undefined })}
-                    numberOfMonths={2}
+                    numberOfMonths={1}
                     locale={ptBR}
                     className="rounded-md border"
                     classNames={{
-                      day: "h-9 w-9 p-0 font-medium text-slate-700 hover:bg-primary/80 hover:text-white focus-visible:ring-2 focus-visible:ring-primary",
+                      day: "h-8 w-8 p-0 text-sm font-medium text-slate-700 hover:bg-primary/80 hover:text-white focus-visible:ring-2 focus-visible:ring-primary",
                       day_selected: "bg-primary text-white font-semibold hover:bg-primary hover:text-white",
                       day_range_start: "bg-primary text-white font-semibold rounded-l-md",
                       day_range_end: "bg-primary text-white font-semibold rounded-r-md",
@@ -194,9 +194,10 @@ export default function CashFlowPeriodFilter({ onPeriodChange, minDate = null, m
                   onClick={handleCustomApply}
                   disabled={!dateRange.from || !dateRange.to}
                   className="w-full"
+                  size="sm"
                   data-testid="button-apply-cashflow-custom"
                 >
-                  Aplicar
+                  Aplicar Período
                 </Button>
               </div>
             </PopoverContent>

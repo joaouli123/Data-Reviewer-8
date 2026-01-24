@@ -269,6 +269,7 @@ export default function CashFlowForecastPage() {
         const dStart = startOfDay(day);
         const dEnd = endOfDay(day);
         const todayEnd = endOfDay(new Date());
+        const isHistorical = dEnd < new Date();
 
         let revenue = 0;
         let expense = 0;

@@ -90,14 +90,33 @@ export default function PricingCalculatorPage() {
 
     setIsAnalyzing(true);
     try {
-      const prompt = `Como especialista em precificação, analise:
-Produto: ${formData.productName}
-Custo Total: ${formatCurrency(results.totalCost)}
-Preço Sugerido: ${formatCurrency(results.suggestedPrice)}
-Margem Desejada: ${formData.desiredMargin}%
-${formData.marketComparison ? `Preços de Mercado: ${formData.marketComparison}` : ''}
+      const hasMarketComparison = formData.marketComparison && formData.marketComparison.trim().length > 0;
+      
+      const prompt = `Você é um especialista em precificação e estratégia de mercado. Analise os dados abaixo e forneça recomendações estratégicas.
 
-Forneça recomendações estratégicas de precificação.`;
+DADOS DO PRODUTO:
+- Nome: ${formData.productName}
+- Custo Total: R$ ${results.totalCost.toFixed(2)}
+- Preço Sugerido (baseado na margem): R$ ${results.suggestedPrice.toFixed(2)}
+- Margem Desejada: ${formData.desiredMargin}%
+- Lucro por Unidade: R$ ${results.profitAmount.toFixed(2)}
+${hasMarketComparison ? `
+ANÁLISE COMPETITIVA (PREÇOS DOS CONCORRENTES):
+${formData.marketComparison}
+
+Compare o preço sugerido com os concorrentes informados e analise:
+1. Como o produto se posiciona em relação à concorrência
+2. Se há oportunidade de cobrar mais ou necessidade de reduzir
+3. Estratégias específicas para competir nesse mercado` : ''}
+
+REQUISITOS DA RESPOSTA (JSON em português):
+1. recommended_strategy: Estratégia principal recomendada (texto detalhado de 2-3 frases)
+2. optimal_price_range: Faixa de preço ideal com min e max (números)
+3. positioning: Como o produto deve se posicionar no mercado ${hasMarketComparison ? '(considerando os concorrentes)' : ''}
+4. market_insights: Insights sobre o mercado e precificação ${hasMarketComparison ? '(análise comparativa com concorrentes)' : ''}
+5. pricing_tactics: Array com 3-5 táticas de precificação específicas${hasMarketComparison ? ' para competir' : ''}
+
+Responda APENAS com JSON válido.`;
 
       const response = await InvokeLLM(prompt, {
         properties: {
@@ -118,10 +137,24 @@ Forneça recomendações estratégicas de precificação.`;
         }
       });
 
-      setAiSuggestion(response);
+      if (!response || Object.keys(response).length === 0) {
+        throw new Error('Resposta da IA vazia');
+      }
+
+      // Normalizar resposta (pode vir em português ou inglês)
+      const normalized = {
+        recommended_strategy: response.recommended_strategy || response.estrategia_recomendada || '',
+        optimal_price_range: response.optimal_price_range || response.faixa_preco_ideal || { min: results.suggestedPrice * 0.9, max: results.suggestedPrice * 1.1 },
+        positioning: response.positioning || response.posicionamento || '',
+        market_insights: response.market_insights || response.insights_mercado || response.analise_mercado || '',
+        pricing_tactics: response.pricing_tactics || response.taticas_precificacao || response.taticas || []
+      };
+
+      setAiSuggestion(normalized);
       toast.success('Análise concluída!', { duration: 5000 });
     } catch (error) {
-      toast.error('Erro ao gerar sugestão', { duration: 5000 });
+      console.error('Erro na análise de IA:', error);
+      toast.error('Erro ao gerar sugestão: ' + (error.message || 'Tente novamente'), { duration: 5000 });
     } finally {
       setIsAnalyzing(false);
     }
@@ -213,15 +246,42 @@ Forneça recomendações estratégicas de precificação.`;
                 value={formData.marketComparison}
                 onChange={(e) => setFormData({ ...formData, marketComparison: e.target.value })}
               />
+              <p className="text-xs text-slate-500">
+                Informe preços de concorrentes para análise comparativa
+              </p>
             </div>
 
-            <Button
-              onClick={calculatePrice}
-              className="w-full"
-            >
-              <Calculator className="w-4 h-4 mr-2" />
-              Calcular Preço
-            </Button>
+            <div className="flex flex-col gap-2">
+              <Button
+                onClick={calculatePrice}
+                className="w-full"
+              >
+                <Calculator className="w-4 h-4 mr-2" />
+                Calcular Preço
+              </Button>
+              
+              {results && (
+                <Button
+                  onClick={getAISuggestion}
+                  variant="outline"
+                  className="w-full border-blue-200 text-blue-700 hover:bg-blue-50"
+                  disabled={isAnalyzing}
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Analisando...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Analisar com IA
+                      {formData.marketComparison && ' (com concorrentes)'}
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
           </CardContent>
         </Card>
 
