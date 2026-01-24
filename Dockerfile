@@ -10,6 +10,7 @@ COPY index.html ./
 COPY src ./src
 COPY shared ./shared
 COPY server ./server
+COPY public ./public
 COPY vite.config.js ./
 COPY tailwind.config.js ./
 COPY postcss.config.js ./
