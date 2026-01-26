@@ -314,12 +314,15 @@ export default function TransactionsPage() {
         }
         
         const amount = (parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0);
+        // Considerar taxa de cartão para receitas
+        const cardFee = t.hasCardFee && isIncomeType(t.type) ? (Math.abs(parseFloat(t.amount) || 0) * (parseFloat(t.cardFee) || 0)) / 100 : 0;
+        const netAmount = isIncomeType(t.type) ? amount - cardFee : amount;
 
         if (tDate < startTime) {
-          if (isIncomeType(t.type)) openingBalance += amount;
-          else if (isExpenseType(t.type)) openingBalance -= amount;
+          if (isIncomeType(t.type)) openingBalance += netAmount;
+          else if (isExpenseType(t.type)) openingBalance -= Math.abs(amount);
         } else if (tDate >= startTime && tDate <= endTime) {
-          if (isIncomeType(t.type)) periodIncome += amount;
+          if (isIncomeType(t.type)) periodIncome += netAmount;
           else if (isExpenseType(t.type)) periodExpense += Math.abs(amount);
         }
       });
@@ -586,7 +589,16 @@ export default function TransactionsPage() {
                                     </Badge>
                                 </TableCell>
                                 <TableCell className={`text-right font-bold ${['venda', 'venda_prazo', 'receita', 'income'].includes(t.type) ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                    {['venda', 'venda_prazo', 'receita', 'income'].includes(t.type) ? '+' : '-'} R$ {Math.abs(parseFloat(t.amount || 0) + parseFloat(t.interest || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                    <div className="flex flex-col items-end">
+                                        <span>
+                                            {['venda', 'venda_prazo', 'receita', 'income'].includes(t.type) ? '+' : '-'} R$ {Math.abs(parseFloat(t.amount || 0) + parseFloat(t.interest || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                        </span>
+                                        {t.hasCardFee && parseFloat(t.cardFee) > 0 && (
+                                            <span className="text-[10px] text-amber-600 font-normal">
+                                                Taxa: {parseFloat(t.cardFee).toFixed(2)}% (-R$ {((Math.abs(parseFloat(t.amount || 0)) * parseFloat(t.cardFee)) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 })})
+                                            </span>
+                                        )}
+                                    </div>
                                 </TableCell>
                                 <TableCell className="text-center" data-testid={`status-reconciliation-${t.id}`}>
                                     <div className="flex items-center justify-center gap-1">

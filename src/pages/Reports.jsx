@@ -22,6 +22,7 @@ import ReportSuggestions from '../components/reports/ReportSuggestions';
 import WhatIfAnalysis from '../components/reports/WhatIfAnalysis';
 import DebtImpactSimulator from '../components/reports/DebtImpactSimulator';
 import DREAnalysis from '../components/reports/DREAnalysis';
+import DREComparison from '../components/dashboard/DREComparison';
 import ReportExporter from '../components/reports/ReportExporter';
 import AnalysisLoading from '../components/reports/AnalysisLoading';
 import { useAuth } from '@/contexts/AuthContext';
@@ -235,7 +236,11 @@ export default function ReportsPage() {
       // Calculate metrics for FILTERED period
       const totalRevenue = filteredTxns
         .filter(t => isIncomeType(t.type))
-        .reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
+        .reduce((sum, t) => {
+          const amount = Math.abs(parseFloat(t.amount || 0));
+          const cardFee = t.hasCardFee ? (amount * (parseFloat(t.cardFee) || 0)) / 100 : 0;
+          return sum + amount - cardFee;
+        }, 0);
       
       const totalExpense = filteredTxns
         .filter(t => isExpenseType(t.type))
@@ -246,7 +251,11 @@ export default function ReportsPage() {
       // Create transaction summary from ALL history for better forecasting
       const allRevenue = allTransactions
         .filter(t => isIncomeType(t.type))
-        .reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
+        .reduce((sum, t) => {
+          const amount = Math.abs(parseFloat(t.amount || 0));
+          const cardFee = t.hasCardFee ? (amount * (parseFloat(t.cardFee) || 0)) / 100 : 0;
+          return sum + amount - cardFee;
+        }, 0);
       
       const allExpense = allTransactions
         .filter(t => isExpenseType(t.type))
@@ -612,7 +621,16 @@ RESPOSTA OBRIGATÓRIA EM JSON E EM PORTUGUÊS DO BRASIL.`;
 
             <TabsContent value="dre" className="space-y-6 mt-6">
               <div id="report-dre">
-                <DREAnalysis transactions={filteredTransactions} categories={categories} />
+                {/* DRE Comparativo - Análise Financeira dos últimos 12 meses */}
+                <DREComparison 
+                  transactions={transactions} 
+                  companyName={company?.name}
+                />
+                
+                {/* DRE Detalhado por categoria */}
+                <div className="mt-8">
+                  <DREAnalysis transactions={filteredTransactions} categories={categories} />
+                </div>
               </div>
             </TabsContent>
 

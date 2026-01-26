@@ -289,6 +289,8 @@ export const transactions = pgTable("transactions", {
   amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
   paidAmount: decimal("paid_amount", { precision: 15, scale: 2 }),
   interest: decimal("interest", { precision: 15, scale: 2 }).default("0"),
+  cardFee: decimal("card_fee", { precision: 15, scale: 2 }).default("0"), // Taxa de cartão (débito/crédito)
+  hasCardFee: boolean("has_card_fee").default(false), // Flag para indicar se tem taxa de cartão
   paymentDate: timestamp("payment_date"),
   description: text("description"),
   date: timestamp("date").notNull(),

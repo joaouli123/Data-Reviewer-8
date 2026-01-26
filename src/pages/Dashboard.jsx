@@ -161,7 +161,9 @@ export default function DashboardPage() {
       .reduce((acc, curr) => {
         const amount = parseFloat(curr.amount) || 0;
         const interest = parseFloat(curr.interest) || 0;
-        return acc + Math.abs(amount + interest);
+        // Calcular taxa de cartão se aplicável
+        const cardFee = curr.hasCardFee ? (Math.abs(amount) * (parseFloat(curr.cardFee) || 0)) / 100 : 0;
+        return acc + Math.abs(amount) + interest - cardFee;
       }, 0);
     
     const totalExpenses = filteredTransactions
@@ -186,7 +188,12 @@ export default function DashboardPage() {
       return isIncomeType(t.type) && tDate >= today && tDate <= thirtyDaysFromNow;
     });
     
-    const futureRevenue = futureRevenueTransactions.reduce((sum, t) => sum + Math.abs((parseFloat(t.amount || 0) + parseFloat(t.interest || 0))), 0);
+    const futureRevenue = futureRevenueTransactions.reduce((sum, t) => {
+      const amount = Math.abs(parseFloat(t.amount || 0));
+      const interest = parseFloat(t.interest || 0);
+      const cardFee = t.hasCardFee ? (amount * (parseFloat(t.cardFee) || 0)) / 100 : 0;
+      return sum + amount + interest - cardFee;
+    }, 0);
     
     const futureExpensesTransactions = allTransactions.filter(t => {
       const tDate = extractTxDate(t);
@@ -212,7 +219,12 @@ export default function DashboardPage() {
 
       const income = monthTrans
         .filter(t => isIncomeType(t.type))
-        .reduce((acc, t) => acc + Math.abs((parseFloat(t.amount || 0) + parseFloat(t.interest || 0))), 0);
+        .reduce((acc, t) => {
+          const amount = Math.abs(parseFloat(t.amount || 0));
+          const interest = parseFloat(t.interest || 0);
+          const cardFee = t.hasCardFee ? (amount * (parseFloat(t.cardFee) || 0)) / 100 : 0;
+          return acc + amount + interest - cardFee;
+        }, 0);
       const expenseRaw = monthTrans
         .filter(t => isExpenseType(t.type))
         .reduce((acc, t) => acc + ((parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0)), 0);

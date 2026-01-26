@@ -287,13 +287,18 @@ export default function CashFlowForecastPage() {
           if (tDate <= todayEnd ? !isPaid : !isPending) return;
 
           const amount = (parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0);
+          // Considerar taxa de cartão para receitas
+          const cardFee = t.hasCardFee ? (Math.abs(parseFloat(t.amount) || 0) * (parseFloat(t.cardFee) || 0)) / 100 : 0;
+          
           if (t.type === 'venda' || t.type === 'income' || t.type === 'entrada') {
-            revenue += amount;
+            const netRevenue = amount - cardFee;
+            revenue += netRevenue;
             revenueDetails.push({
               description: tDate <= todayEnd ? t.description : `${t.description} (Agendado)`,
-              amount,
+              amount: netRevenue,
               date: tDate,
-              category: t.type
+              category: t.type,
+              cardFee: cardFee > 0 ? cardFee : undefined
             });
           } else if (t.type === 'compra' || t.type === 'expense' || t.type === 'saida') {
             expense += amount;
@@ -344,13 +349,18 @@ export default function CashFlowForecastPage() {
         if (tDate <= todayEnd ? !isPaid : !isPending) return;
 
         const amount = (parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0);
+        // Considerar taxa de cartão para receitas
+        const cardFee = t.hasCardFee ? (Math.abs(parseFloat(t.amount) || 0) * (parseFloat(t.cardFee) || 0)) / 100 : 0;
+        
         if (t.type === 'venda' || t.type === 'income' || t.type === 'entrada') {
-          revenue += amount;
+          const netRevenue = amount - cardFee;
+          revenue += netRevenue;
           revenueDetails.push({
             description: tDate <= todayEnd ? t.description : `${t.description} (Agendado)`,
-            amount: amount,
+            amount: netRevenue,
             date: tDate,
-            category: t.type
+            category: t.type,
+            cardFee: cardFee > 0 ? cardFee : undefined
           });
         } else if (t.type === 'compra' || t.type === 'expense' || t.type === 'saida') {
           expense += amount;
@@ -434,7 +444,14 @@ export default function CashFlowForecastPage() {
       const isPaid = t.status === 'pago' || t.status === 'completed' || t.status === 'parcial';
       if (!isPaid) return acc;
       const amount = (parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0);
-      return acc + ((t.type === 'venda' || t.type === 'income' || t.type === 'entrada') ? amount : -amount);
+      // Considerar taxa de cartão para receitas
+      const cardFee = t.hasCardFee && (t.type === 'venda' || t.type === 'income' || t.type === 'entrada') 
+        ? (Math.abs(parseFloat(t.amount) || 0) * (parseFloat(t.cardFee) || 0)) / 100 
+        : 0;
+      const netAmount = (t.type === 'venda' || t.type === 'income' || t.type === 'entrada') 
+        ? amount - cardFee 
+        : -amount;
+      return acc + netAmount;
     }, 0);
 
   // Calculate cumulative balance
