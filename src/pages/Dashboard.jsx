@@ -357,7 +357,7 @@ export default function DashboardPage() {
       </div>
 
       {/* DRE Comparativo */}
-      <DREComparison transactions={transactions} companyName={company?.name} />
+      <DREComparison transactions={allTransactions} companyName={company?.name} />
 
       {/* Gráfico de Receita e Transações Recentes - Side by Side */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
