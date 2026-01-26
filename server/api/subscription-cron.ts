@@ -85,7 +85,7 @@ export async function checkAndSendSubscriptionEmails() {
               <div style="font-family: sans-serif; color: #333;">
                 <h2>Olá, ${recipient.name || 'Usuário'}</h2>
                 <p>Sua assinatura vence em 5 dias (${new Date(sub.expiresAt!).toLocaleDateString('pt-BR')}).</p>
-                <p>Valor: <strong>R$ ${parseFloat(sub.amount || "0").toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></p>
+                <p>Valor: <strong>R$ ${parseFloat(sub.amount || "0").toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></p>
                 ${newTicketUrl ? `<p>Você pode acessar seu boleto no link abaixo:</p><p><a href="${newTicketUrl}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Acessar Boleto</a></p>` : ''}
                 <p>Evite o bloqueio do sistema mantendo seu pagamento em dia.</p>
                 <br/>
@@ -169,7 +169,7 @@ export async function checkAndSendSubscriptionEmails() {
                 <p>Seu acesso ao sistema foi suspenso devido ao não pagamento da assinatura vencida em ${new Date(sub.expiresAt!).toLocaleDateString('pt-BR')}.</p>
                 <p>Para reativar sua conta, realize o pagamento do boleto abaixo.</p>
                 <p>Novo Vencimento: <strong>${dueDateStr}</strong></p>
-                <p>Valor: <strong>R$ ${parseFloat(sub.amount || "0").toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></p>
+                <p>Valor: <strong>R$ ${parseFloat(sub.amount || "0").toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></p>
                 ${newTicketUrl ? `<p><a href="${newTicketUrl}" style="background-color: #d9534f; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Boleto Atualizado</a></p>` : ''}
                 <p>Após a confirmação do pagamento, seu acesso será liberado automaticamente.</p>
                 <br/>
@@ -243,7 +243,7 @@ export async function checkAndSendSubscriptionEmails() {
                 <p>É um prazer ter a <strong>${company.name}</strong> conosco.</p>
                 <p>Para liberar seu acesso total ao sistema, realize o pagamento do primeiro boleto.</p>
                 <p><strong>Plano:</strong> ${planLabel}</p>
-                <p><strong>Valor:</strong> R$ ${parseFloat(amount || "0").toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                <p><strong>Valor:</strong> R$ ${parseFloat(amount || "0").toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                 ${sub?.ticket_url ? `<p><a href="${sub.ticket_url}" style="background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Acessar Boleto</a></p>` : `<p>Emita seu boleto no checkout: <a href="${checkoutUrl}">${checkoutUrl}</a></p>`}
                 <p>Seu acesso será liberado automaticamente após a confirmação do pagamento.</p>
                 <p>Compensação bancária do boleto: até 1 dia útil.</p>

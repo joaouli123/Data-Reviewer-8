@@ -469,7 +469,7 @@ export default function TransactionsPage() {
             <CardContent className="p-4 flex items-center justify-between">
                 <div>
                     <p className="text-sm font-medium text-slate-500">Saldo Inicial</p>
-                    <h3 className="text-xl font-bold text-slate-700">R$ {balances.opening.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
+                    <h3 className="text-xl font-bold text-slate-700">R$ {balances.opening.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
                 </div>
                 <div className="p-2 bg-slate-100 rounded-lg text-slate-600">
                     <Wallet className="w-5 h-5" />
@@ -480,7 +480,7 @@ export default function TransactionsPage() {
             <CardContent className="p-4 flex items-center justify-between">
                 <div>
                     <p className="text-sm font-medium text-emerald-600">Entradas</p>
-                    <h3 className="text-xl font-bold text-emerald-600">+ R$ {balances.income.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
+                    <h3 className="text-xl font-bold text-emerald-600">+ R$ {balances.income.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
                 </div>
                 <div className="p-2 bg-emerald-100 rounded-lg text-emerald-600">
                     <TrendingUp className="w-5 h-5" />
@@ -491,7 +491,7 @@ export default function TransactionsPage() {
             <CardContent className="p-4 flex items-center justify-between">
                 <div>
                     <p className="text-sm font-medium text-rose-600">Saídas</p>
-                    <h3 className="text-xl font-bold text-rose-600">- R$ {balances.expense.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
+                    <h3 className="text-xl font-bold text-rose-600">- R$ {balances.expense.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
                 </div>
                 <div className="p-2 bg-rose-100 rounded-lg text-rose-600">
                     <TrendingDown className="w-5 h-5" />
@@ -502,7 +502,7 @@ export default function TransactionsPage() {
             <CardContent className="p-4 flex items-center justify-between">
                 <div>
                     <p className="text-sm font-medium text-white/80">Saldo Final</p>
-                    <h3 className="text-xl font-bold text-white">R$ {balances.closing.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
+                    <h3 className="text-xl font-bold text-white">R$ {balances.closing.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
                 </div>
                 <div className={`p-2 rounded-lg text-white ${balances.closing >= 0 ? 'bg-emerald-700' : 'bg-rose-700'}`}>
                     <Wallet className="w-5 h-5" />
@@ -591,7 +591,7 @@ export default function TransactionsPage() {
                                 <TableCell className={`text-right font-bold ${['venda', 'venda_prazo', 'receita', 'income'].includes(t.type) ? 'text-emerald-600' : 'text-rose-600'}`}>
                                     <div className="flex flex-col items-end">
                                         <span>
-                                            {['venda', 'venda_prazo', 'receita', 'income'].includes(t.type) ? '+' : '-'} R$ {Math.abs(parseFloat(t.amount || 0) + parseFloat(t.interest || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                            {['venda', 'venda_prazo', 'receita', 'income'].includes(t.type) ? '+' : '-'} R$ {Math.abs(parseFloat(t.amount || 0) + parseFloat(t.interest || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                         </span>
                                         {t.hasCardFee && parseFloat(t.cardFee) > 0 && (
                                             <span className="text-[10px] text-amber-600 font-normal">

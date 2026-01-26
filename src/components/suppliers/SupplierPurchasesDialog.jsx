@@ -271,19 +271,19 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
           <div className="p-3 bg-slate-50 rounded-lg border">
             <p className="text-xs text-slate-500 mb-0.5">Total em Compras</p>
             <p className="text-base font-bold text-slate-900">
-              R$ {Math.abs(purchases.reduce((acc, p) => acc + parseFloat(p.amount || 0), 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              R$ {Math.abs(purchases.reduce((acc, p) => acc + parseFloat(p.amount || 0), 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
           <div className="p-3 bg-rose-50 rounded-lg border border-rose-100">
             <p className="text-xs text-rose-600 mb-0.5">Pago</p>
             <p className="text-base font-bold text-rose-700">
-              R$ {Math.abs(getTotalPaid()).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              R$ {Math.abs(getTotalPaid()).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
           <div className="p-3 bg-amber-50 rounded-lg border border-amber-100">
             <p className="text-xs text-amber-600 mb-0.5">Pendente</p>
             <p className="text-base font-bold text-amber-700">
-              R$ {Math.abs(getTotalPending()).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              R$ {Math.abs(getTotalPending()).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
         </div>
@@ -317,7 +317,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                     </div>
                     <div className="text-right flex-shrink-0">
                       <p className="text-lg font-bold text-slate-900">
-                        R$ {Math.abs(group.main.totalAmount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        R$ {Math.abs(group.main.totalAmount).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
                       <Badge className={`${group.main.isPaid ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-amber-50 text-amber-600 border-amber-200'} shadow-none font-medium text-xs`}>
                         {group.main.isPaid ? 'Pago' : 'Parcial'}
@@ -336,7 +336,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                           </div>
                           <div>
                             <p className="font-semibold text-slate-900">
-                              R$ {Math.abs(parseFloat(installment.amount || 0) + parseFloat(installment.interest || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                              R$ {Math.abs(parseFloat(installment.amount || 0) + parseFloat(installment.interest || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </p>
                             <p className="text-xs text-slate-500">
                               {(() => {
@@ -362,7 +362,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                                 {(installment.paidAmount || installment.amount) && (
                                   <div className="flex flex-col items-end gap-0.5">
                                     <p className="text-xs text-slate-500">
-                                      Pago: R$ {Math.abs(parseFloat(installment.paidAmount || installment.amount || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                      Pago: R$ {Math.abs(parseFloat(installment.paidAmount || installment.amount || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </p>
                                     {installment.paymentMethod && (
                                       <p className="text-xs text-slate-400">
@@ -373,7 +373,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                                 )}
                                 {parseFloat(installment.interest || 0) > 0 && (
                                   <p className="text-xs text-amber-600">
-                                    Juros: R$ {Math.abs(parseFloat(installment.interest)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                    Juros: R$ {Math.abs(parseFloat(installment.interest)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                   </p>
                                 )}
                               </div>

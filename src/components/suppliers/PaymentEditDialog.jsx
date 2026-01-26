@@ -79,7 +79,7 @@ export default function PaymentEditDialog({ isOpen, onClose, transaction, onConf
           <div className="p-2 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-blue-600 flex-shrink-0" />
             <p className="text-sm text-blue-800 font-medium">
-              Valor Original: R$ {originalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              Valor Original: R$ {originalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
 
@@ -201,26 +201,26 @@ export default function PaymentEditDialog({ isOpen, onClose, transaction, onConf
           <div className="p-2 bg-slate-50 rounded-lg border border-slate-200">
             <div className="flex justify-between text-xs">
               <span className="text-slate-600">Valor Pago:</span>
-              <span className="font-medium">R$ {paidAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+              <span className="font-medium">R$ {paidAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
             <div className="flex justify-between text-xs mt-1">
               <span className="text-slate-600">Juros:</span>
-              <span className="font-medium">R$ {interest.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+              <span className="font-medium">R$ {interest.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
             <div className="border-t border-slate-200 pt-1 mt-1 flex justify-between text-sm font-bold">
               <span>Total:</span>
               <span className={difference !== 0 ? 'text-amber-600' : 'text-slate-900'}>
-                R$ {total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                R$ {total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             </div>
             {difference > 0 && (
               <p className="text-xs text-amber-600 mt-1">
-                +R$ {difference.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} acréscimo
+                +R$ {difference.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} acréscimo
               </p>
             )}
             {difference < 0 && (
               <p className="text-xs text-red-600 mt-1">
-                -R$ {Math.abs(difference).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} falta
+                -R$ {Math.abs(difference).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} falta
               </p>
             )}
           </div>

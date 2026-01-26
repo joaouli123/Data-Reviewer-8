@@ -39,7 +39,7 @@ export default function RevenueChart({ data }) {
           }}
           formatter={(value, name) => {
             const label = name === 'income' ? 'Receita' : 'Despesa';
-            return [`R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, label];
+            return [`R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, label];
           }}
         />
         <Area 

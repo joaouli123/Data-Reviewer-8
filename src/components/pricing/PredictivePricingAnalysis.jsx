@@ -230,7 +230,7 @@ RESPOSTA OBRIGATÓRIA EM JSON.`;
                       Volume Esperado: {predictions.optimal_price_point.expected_volume || 'N/A'}
                     </p>
                     <p className="text-sm font-semibold text-emerald-700">
-                      Receita Projetada: R$ {(predictions.optimal_price_point.expected_revenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      Receita Projetada: R$ {(predictions.optimal_price_point.expected_revenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                   </div>
                   {predictions.optimal_price_point.reasoning && (

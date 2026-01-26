@@ -302,19 +302,19 @@ RESPOSTA OBRIGATÓRIA EM JSON E EM PORTUGUÊS DO BRASIL.`;
               <div className="p-4 bg-white rounded-lg border">
                 <p className="text-sm text-slate-600 mb-1">Pagamento Mensal</p>
                 <p className="text-2xl font-bold text-slate-900">
-                  R$ {simulation.inputs.monthlyPayment.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  R$ {simulation.inputs.monthlyPayment.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
               </div>
               <div className="p-4 bg-white rounded-lg border">
                 <p className="text-sm text-slate-600 mb-1">Total com Juros</p>
                 <p className="text-2xl font-bold text-slate-900">
-                  R$ {simulation.inputs.totalPayment.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  R$ {simulation.inputs.totalPayment.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
               </div>
               <div className="p-4 bg-white rounded-lg border">
                 <p className="text-sm text-slate-600 mb-1">Total em Juros</p>
                 <p className="text-2xl font-bold text-rose-600">
-                  R$ {simulation.inputs.totalInterest.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  R$ {simulation.inputs.totalInterest.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
               </div>
             </div>
@@ -362,7 +362,7 @@ RESPOSTA OBRIGATÓRIA EM JSON E EM PORTUGUÊS DO BRASIL.`;
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="month" />
                       <YAxis tickFormatter={(value) => `R$${(value/1000).toFixed(0)}k`} />
-                      <Tooltip formatter={(value) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} />
+                      <Tooltip formatter={(value) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} />
                       <Legend />
                       <Line type="monotone" dataKey="currentDebt" stroke="#64748b" name="Dívida Atual" strokeWidth={2} />
                       <Line type="monotone" dataKey="projectedDebt" stroke="#ef4444" name="Dívida Projetada" strokeWidth={2} />

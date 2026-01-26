@@ -293,7 +293,7 @@ Identifique:
                   <XAxis dataKey="name" angle={-45} textAnchor="end" height={120} tick={{ fontSize: 11 }} />
                   <YAxis />
                   <Tooltip 
-                    formatter={(value) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                    formatter={(value) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                     contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px' }}
                   />
                   <Bar dataKey="value" fill="#3b82f6" radius={[8, 8, 0, 0]} />
@@ -304,7 +304,7 @@ Identifique:
               {chartData.slice(0, 3).map((cat, idx) => (
                 <div key={idx} className="p-3 bg-slate-50 rounded-lg border">
                   <p className="text-sm font-semibold text-slate-700">{cat.name}</p>
-                  <p className="text-lg font-bold text-primary">R$ {cat.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                  <p className="text-lg font-bold text-primary">R$ {cat.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                   <p className="text-xs text-slate-500">{cat.count} transações</p>
                 </div>
               ))}

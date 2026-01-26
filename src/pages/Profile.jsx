@@ -413,7 +413,7 @@ export default function ProfilePage() {
                              <td className="p-3">{inv.date ? new Date(inv.date).toLocaleDateString() : '-'}</td>
                              <td className="p-3">{planTranslation[inv.plan] || inv.plan}</td>
                             <td className="p-3">{inv.expiresAt ? new Date(inv.expiresAt).toLocaleDateString('pt-BR') : '-'}</td>
-                            <td className="p-3 text-right">R$ {parseFloat(inv.amount||0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                            <td className="p-3 text-right">R$ {parseFloat(inv.amount||0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                           </tr>
                         )) : <tr><td colSpan={4} className="p-4 text-center text-muted-foreground">Nenhuma fatura encontrada</td></tr>}
                     </tbody>

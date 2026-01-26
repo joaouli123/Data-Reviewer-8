@@ -163,7 +163,7 @@ export function registerAdminRoutes(app: Express) {
           html: `
             <p>Olá, ${companyAdmin?.name || 'Administrador'}</p>
             <p>Um novo boleto foi gerado para sua assinatura com vencimento em ${parsedDueDate.toLocaleDateString('pt-BR')}.</p>
-            <p>Valor: R$ ${parseFloat(subscription.amount || "0").toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+            <p>Valor: R$ ${parseFloat(subscription.amount || "0").toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             <p>Acesse seu boleto aqui: <a href="${newTicketUrl}">${newTicketUrl}</a></p>
           `
         });
@@ -244,7 +244,7 @@ export function registerAdminRoutes(app: Express) {
             <p>Sua conta na HuaControl foi criada com sucesso.</p>
             <p>Para começar a usar o sistema, é necessário realizar o pagamento da sua assinatura.</p>
             <p><strong>Plano:</strong> ${planLabel}</p>
-            <p><strong>Valor:</strong> R$ ${parseFloat(amount || "0").toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+            <p><strong>Valor:</strong> R$ ${parseFloat(amount || "0").toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             <p>Para emitir o boleto, acesse o checkout:</p>
             <p><a href="${checkoutUrl}">${checkoutUrl}</a></p>
             <p>Após a confirmação do pagamento, seu acesso será liberado automaticamente.</p>

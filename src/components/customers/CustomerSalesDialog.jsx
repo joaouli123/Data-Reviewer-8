@@ -265,19 +265,19 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
           <div className="p-3 rounded-lg bg-slate-50 border">
             <p className="text-xs text-slate-500 mb-0.5">Total em Vendas</p>
             <p className="text-base font-bold text-slate-900">
-              R$ {sales.reduce((acc, s) => acc + parseFloat(s.amount || 0), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              R$ {sales.reduce((acc, s) => acc + parseFloat(s.amount || 0), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
           <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-100">
             <p className="text-xs text-emerald-600 mb-0.5">Recebido</p>
             <p className="text-base font-bold text-emerald-700">
-              R$ {getTotalReceived().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              R$ {getTotalReceived().toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
           <div className="p-3 rounded-lg bg-amber-50 border border-amber-100">
             <p className="text-xs text-amber-600 mb-0.5">A Receber</p>
             <p className="text-base font-bold text-amber-700">
-              R$ {getTotalPending().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              R$ {getTotalPending().toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
         </div>
@@ -321,7 +321,7 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
                     </div>
                     <div className="text-right flex-shrink-0">
                       <p className="text-lg font-bold text-slate-900">
-                        R$ {group.main.totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        R$ {group.main.totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
                       <Badge className={`${group.main.isPaid ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-amber-50 text-amber-600 border-amber-200'} shadow-none font-medium text-xs`}>
                         {group.main.isPaid ? 'Pago' : 'Parcial'}
@@ -340,7 +340,7 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
                           </div>
                           <div>
                             <p className="font-semibold text-slate-900">
-                              R$ {(parseFloat(installment.amount || 0) + parseFloat(installment.interest || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                              R$ {(parseFloat(installment.amount || 0) + parseFloat(installment.interest || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </p>
                             <p className="text-xs text-slate-500">
                               {(() => {
@@ -366,7 +366,7 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
                                 {(installment.paidAmount || installment.amount) && (
                                   <div className="flex flex-col items-end gap-0.5">
                                     <p className="text-xs text-slate-500">
-                                      Recebido: R$ {parseFloat(installment.paidAmount || installment.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                      Recebido: R$ {parseFloat(installment.paidAmount || installment.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </p>
                                     {installment.paymentMethod && (
                                       <p className="text-xs text-slate-400">
@@ -377,7 +377,7 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
                                 )}
                                 {parseFloat(installment.interest || 0) > 0 && (
                                   <p className="text-xs text-amber-600">
-                                    Juros: R$ {parseFloat(installment.interest).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                    Juros: R$ {parseFloat(installment.interest).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                   </p>
                                 )}
                               </div>

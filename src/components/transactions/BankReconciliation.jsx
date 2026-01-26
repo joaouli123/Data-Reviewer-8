@@ -225,7 +225,7 @@ export default function BankReconciliation({ open, onOpenChange }) {
                           <div className="flex items-center gap-3 text-xs text-slate-600">
                             <span>{format(new Date(item.date), "dd/MM/yyyy", { locale: ptBR })}</span>
                             <span className="font-semibold">
-                              R$ {Math.abs(parseFloat(item.amount)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                              R$ {Math.abs(parseFloat(item.amount)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </span>
                           </div>
                         </div>
@@ -258,7 +258,7 @@ export default function BankReconciliation({ open, onOpenChange }) {
                                 <div>
                                   <p className="font-medium">{t.description}</p>
                                   <p className="text-xs text-slate-500">
-                                    {format(new Date(t.date), "dd/MM/yyyy")} - R$ {Math.abs(parseFloat(t.amount)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                    {format(new Date(t.date), "dd/MM/yyyy")} - R$ {Math.abs(parseFloat(t.amount)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                   </p>
                                 </div>
                                 <Button size="sm" variant="ghost" className="text-emerald-600" onClick={() => matchMutation.mutate({ bankItemId: item.id, transactionId: t.id })}>
@@ -281,7 +281,7 @@ export default function BankReconciliation({ open, onOpenChange }) {
                   <div className="flex-1">
                     <p className="text-sm font-medium text-slate-900">{item.description}</p>
                     <p className="text-xs text-slate-600">
-                      {format(new Date(item.date), "dd/MM/yyyy")} - R$ {Math.abs(parseFloat(item.amount)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      {format(new Date(item.date), "dd/MM/yyyy")} - R$ {Math.abs(parseFloat(item.amount)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">

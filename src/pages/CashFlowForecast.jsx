@@ -60,7 +60,7 @@ const CustomTooltip = ({ active, payload, label }) => {
         {payload.map((entry, index) => (
           <p key={index} style={{ color: entry.color }} className="text-sm font-medium">
             <span className="inline-block min-w-fit">{entry.name}:</span>
-            <span className="ml-2">R$ {entry.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+            <span className="ml-2">R$ {entry.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
           </p>
         ))}
       </div>
@@ -505,7 +505,7 @@ export default function CashFlowForecastPage() {
             <div>
               <p className="text-sm text-slate-500">Saldo Inicial</p>
               <p className="text-2xl font-bold text-slate-700">
-                R$ {openingBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                R$ {openingBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             </div>
             <Wallet className="w-8 h-8 text-slate-400" />
@@ -517,7 +517,7 @@ export default function CashFlowForecastPage() {
             <div>
               <p className="text-sm text-emerald-600">Total Receitas</p>
               <p className="text-2xl font-bold text-emerald-600">
-                + R$ {totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                + R$ {totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             </div>
             <TrendingUp className="w-8 h-8 text-emerald-400" />
@@ -529,7 +529,7 @@ export default function CashFlowForecastPage() {
             <div>
               <p className="text-sm text-rose-600">Total Despesas</p>
               <p className="text-2xl font-bold text-rose-600">
-                - R$ {totalExpense.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                - R$ {totalExpense.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             </div>
             <TrendingDown className="w-8 h-8 text-rose-400" />
@@ -541,7 +541,7 @@ export default function CashFlowForecastPage() {
             <div>
               <p className="text-sm text-white/80">Saldo Final</p>
               <p className="text-2xl font-bold text-white">
-                R$ {finalBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                R$ {finalBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             </div>
             <Wallet className={`w-8 h-8 ${finalBalance >= 0 ? 'text-emerald-200' : 'text-rose-200'}`} />
@@ -648,16 +648,16 @@ export default function CashFlowForecastPage() {
                         </div>
                       </td>
                       <td className="py-3 px-4 text-right text-emerald-600 font-semibold">
-                        R$ {item.receita.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        R$ {item.receita.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                       <td className="py-3 px-4 text-right text-rose-600 font-semibold">
-                        R$ {item.despesa.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        R$ {item.despesa.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                       <td className={`py-3 px-4 text-right font-bold ${item.saldo >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                        {item.saldo >= 0 ? '+' : ''} R$ {item.saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        {item.saldo >= 0 ? '+' : ''} R$ {item.saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                       <td className={`py-3 px-4 text-right font-bold ${item.saldoAcumulado >= 0 ? 'text-slate-900' : 'text-rose-600'}`}>
-                        R$ {item.saldoAcumulado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        R$ {item.saldoAcumulado.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                       <td className="py-3 pr-6 text-center">
                         <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
@@ -689,7 +689,7 @@ export default function CashFlowForecastPage() {
                                           </p>
                                         </div>
                                         <p className="text-sm font-bold text-emerald-600 ml-3">
-                                          R$ {detail.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                          R$ {detail.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                         </p>
                                       </div>
                                     </div>
@@ -718,7 +718,7 @@ export default function CashFlowForecastPage() {
                                           </p>
                                         </div>
                                         <p className="text-sm font-bold text-rose-600 ml-3">
-                                          R$ {detail.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                          R$ {detail.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                         </p>
                                       </div>
                                     </div>

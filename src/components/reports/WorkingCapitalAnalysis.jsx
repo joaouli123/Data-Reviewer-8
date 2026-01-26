@@ -245,13 +245,13 @@ Responda em JSON seguindo rigorosamente os nomes das chaves acima.`;
               <div>
                 <p className="text-sm font-medium mb-1">Capital de Giro Atual</p>
                 <p className="text-3xl font-bold">
-                  R$ {wc.workingCapital.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  R$ {wc.workingCapital.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
               </div>
               <div>
                 <p className="text-sm font-medium mb-1">Recomendado</p>
                 <p className="text-3xl font-bold">
-                  R$ {wc.recommendedWorkingCapital.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  R$ {wc.recommendedWorkingCapital.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
               </div>
             </div>
@@ -265,7 +265,7 @@ Responda em JSON seguindo rigorosamente os nomes das chaves acima.`;
                 <p className="text-sm font-medium text-teal-700">Recebimentos (30d)</p>
               </div>
               <p className="text-2xl font-bold text-teal-700">
-                R$ {wc.currentReceivables.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                R$ {wc.currentReceivables.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             </div>
 
@@ -275,7 +275,7 @@ Responda em JSON seguindo rigorosamente os nomes das chaves acima.`;
                 <p className="text-sm font-medium text-red-600">Pagamentos (30d)</p>
               </div>
               <p className="text-2xl font-bold text-red-600">
-                R$ {wc.currentPayables.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                R$ {wc.currentPayables.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             </div>
 
@@ -285,7 +285,7 @@ Responda em JSON seguindo rigorosamente os nomes das chaves acima.`;
                 <p className="text-sm font-medium text-blue-700">Despesa Mensal Média</p>
               </div>
               <p className="text-2xl font-bold text-blue-700">
-                R$ {wc.avgMonthlyExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                R$ {wc.avgMonthlyExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             </div>
           </div>
@@ -297,7 +297,7 @@ Responda em JSON seguindo rigorosamente os nomes das chaves acima.`;
               <div>
                 <p className="font-semibold text-red-700 mb-1">Déficit de Capital de Giro</p>
                 <p className="text-sm text-red-600 mb-2">
-                  Você precisa de <strong>R$ {wc.deficit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> adicionais 
+                  Você precisa de <strong>R$ {wc.deficit.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong> adicionais 
                   para manter 2 meses de despesas operacionais em caixa.
                 </p>
                 <p className="text-xs text-red-600">
@@ -313,7 +313,7 @@ Responda em JSON seguindo rigorosamente os nomes das chaves acima.`;
               <div>
                 <p className="font-semibold text-teal-700 mb-1">Superávit de Capital de Giro</p>
                 <p className="text-sm text-teal-700">
-                  Você tem <strong>R$ {wc.surplus.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> além do recomendado.
+                  Você tem <strong>R$ {wc.surplus.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong> além do recomendado.
                   Considere investir esse valor para maior rentabilidade.
                 </p>
               </div>

@@ -334,7 +334,7 @@ RESPOSTA OBRIGATÓRIA EM JSON E EM PORTUGUÊS DO BRASIL.`;
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
                     <YAxis tickFormatter={(value) => `R$${(value/1000).toFixed(0)}k`} />
-                    <Tooltip formatter={(value) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} />
+                    <Tooltip formatter={(value) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} />
                     <Legend />
                     <Line 
                       type="monotone" 
@@ -373,25 +373,25 @@ RESPOSTA OBRIGATÓRIA EM JSON E EM PORTUGUÊS DO BRASIL.`;
                     <div className="p-2 bg-slate-50 rounded border text-xs">
                       <p className="text-slate-600">Base</p>
                       <p className="font-bold text-slate-900">
-                        R$ {(scenarios.baseline[scenarios.baseline.length - 1]?.cumulativeBalance || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        R$ {(scenarios.baseline[scenarios.baseline.length - 1]?.cumulativeBalance || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
                     </div>
                     <div className="p-2 bg-indigo-50 rounded border text-xs">
                       <p className="text-indigo-600">Com Alterações</p>
                       <p className="font-bold text-indigo-900">
-                        R$ {(scenarios.withChanges[scenarios.withChanges.length - 1]?.cumulativeBalance || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        R$ {(scenarios.withChanges[scenarios.withChanges.length - 1]?.cumulativeBalance || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
                     </div>
                     <div className="p-2 bg-emerald-50 rounded border text-xs">
                       <p className="text-emerald-600">Otimista</p>
                       <p className="font-bold text-emerald-900">
-                        R$ {(scenarios.optimistic[scenarios.optimistic.length - 1]?.cumulativeBalance || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        R$ {(scenarios.optimistic[scenarios.optimistic.length - 1]?.cumulativeBalance || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
                     </div>
                     <div className="p-2 bg-rose-50 rounded border text-xs">
                       <p className="text-rose-600">Pessimista</p>
                       <p className="font-bold text-rose-900">
-                        R$ {(scenarios.pessimistic[scenarios.pessimistic.length - 1]?.cumulativeBalance || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        R$ {(scenarios.pessimistic[scenarios.pessimistic.length - 1]?.cumulativeBalance || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
                     </div>
                   </div>

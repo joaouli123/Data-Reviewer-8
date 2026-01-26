@@ -85,7 +85,7 @@ export default function CashFlowForecastChart({ forecast }) {
                 border: '1px solid #e2e8f0',
                 boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' 
               }}
-              formatter={(value) => [`R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, '']}
+              formatter={(value) => [`R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, '']}
             />
             <Legend 
               wrapperStyle={{ paddingTop: '20px' }}
@@ -114,7 +114,7 @@ export default function CashFlowForecastChart({ forecast }) {
                   <span className="font-semibold text-slate-700">{item.month}</span>
                   <span className={`font-bold ${lucro >= 0 ? 'text-teal-700' : 'text-red-600'}`}>
                     {lucro >= 0 ? '+' : ''}
-                    R$ {lucro.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    R$ {lucro.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
                 <p className="text-xs text-slate-600 italic">{item.reasoning}</p>

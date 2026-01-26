@@ -313,7 +313,7 @@ function SubscriptionListContent() {
             </div>
             {mailSub && (
               <div className="text-sm text-muted-foreground bg-muted p-3 rounded-md">
-                Enviando boleto de <strong>R$ {parseFloat(mailSub.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> para a empresa <strong>{mailSub.companyName}</strong>.
+                Enviando boleto de <strong>R$ {parseFloat(mailSub.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong> para a empresa <strong>{mailSub.companyName}</strong>.
               </div>
             )}
           </div>

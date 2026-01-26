@@ -143,7 +143,7 @@ export default function RevenueGrowthReport({ strategies, transactions, customer
                 tickFormatter={(value) => `R$${(value/1000).toFixed(0)}k`}
               />
               <Tooltip 
-                formatter={(value) => [`R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 'Receita']}
+                formatter={(value) => [`R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 'Receita']}
                 contentStyle={{ 
                   backgroundColor: '#fff', 
                   borderRadius: '8px', 
@@ -180,7 +180,7 @@ export default function RevenueGrowthReport({ strategies, transactions, customer
                     <span className="font-medium text-slate-900">{customer?.name || 'Cliente'}</span>
                   </div>
                   <span className="font-bold text-emerald-600">
-                    R$ {revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    R$ {revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
               );

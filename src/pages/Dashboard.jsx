@@ -263,7 +263,7 @@ export default function DashboardPage() {
           {metrics.openingBalance !== 0 && (
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-2">
               Saldo Inicial: <span className={metrics.openingBalance >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'} style={{fontWeight: 'bold'}}>
-                R$ {metrics.openingBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                R$ {metrics.openingBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             </p>
           )}
@@ -290,7 +290,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPIWidget
           title="Receita total"
-          value={`R$ ${metrics.totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+          value={`R$ ${metrics.totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           icon={TrendingUp}
           trend="up"
           trendValue="Vendas"
@@ -299,7 +299,7 @@ export default function DashboardPage() {
         
         <KPIWidget
           title="Despesa total"
-          value={`R$ ${metrics.totalExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+          value={`R$ ${metrics.totalExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           icon={DollarSign}
           trend="down"
           trendValue="Compras"
@@ -308,7 +308,7 @@ export default function DashboardPage() {
 
         <KPIWidget
           title="Contas a receber"
-          value={`R$ ${metrics.futureRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+          value={`R$ ${metrics.futureRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           icon={Clock}
           trendValue={`${metrics.futureRevenueCount} parcelas`}
           trend="up"
@@ -317,7 +317,7 @@ export default function DashboardPage() {
 
         <KPIWidget
           title="Contas a pagar"
-          value={`R$ ${metrics.futureExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+          value={`R$ ${metrics.futureExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           icon={Clock}
           trendValue={`${metrics.futureExpensesCount} parcelas`}
           trend="down"
@@ -336,21 +336,21 @@ export default function DashboardPage() {
           <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
             <p className="text-xs font-medium text-emerald-700 dark:text-emerald-400 mb-1">Receitas previstas</p>
             <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
-              R$ {metrics.futureRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              R$ {metrics.futureRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
 
           <div className="bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 rounded-lg p-4">
             <p className="text-xs font-medium text-rose-700 dark:text-rose-400 mb-1">Despesas previstas</p>
             <p className="text-2xl font-bold text-rose-700 dark:text-rose-300">
-              R$ {metrics.futureExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              R$ {metrics.futureExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
 
           <div className="bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800 rounded-lg p-4">
             <p className="text-xs font-medium text-sky-700 dark:text-sky-400 mb-1">Saldo projetado</p>
             <p className={`text-2xl font-bold ${metrics.futureRevenue - metrics.futureExpenses >= 0 ? 'text-sky-700 dark:text-sky-300' : 'text-slate-700 dark:text-slate-300'}`}>
-              {metrics.futureRevenue - metrics.futureExpenses >= 0 ? '+' : ''} R$ {(metrics.futureRevenue - metrics.futureExpenses).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              {metrics.futureRevenue - metrics.futureExpenses >= 0 ? '+' : ''} R$ {(metrics.futureRevenue - metrics.futureExpenses).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
         </div>
@@ -415,7 +415,7 @@ export default function DashboardPage() {
                         }`}
                       >
                         {['venda', 'venda_prazo', 'receita', 'income'].includes(t.type) ? '+' : '-'} R${' '}
-                        {Math.abs(parseFloat(t.amount || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        {Math.abs(parseFloat(t.amount || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                     </div>
                   ))}

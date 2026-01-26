@@ -88,7 +88,7 @@ export default function ExpensesBreakdown({ opportunities = [], transactions, ca
                   ))}
                 </Pie>
                 <Tooltip 
-                  formatter={(value) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                  formatter={(value) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                   contentStyle={{ 
                     backgroundColor: '#fff', 
                     borderRadius: '8px', 
@@ -111,7 +111,7 @@ export default function ExpensesBreakdown({ opportunities = [], transactions, ca
                   </div>
                   <div className="text-right">
                     <span className="font-semibold text-slate-900">
-                      R$ {item.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      R$ {item.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                     <span className="text-xs text-slate-500 ml-2">
                       ({((item.value / totalExpenses) * 100).toFixed(1)}%)

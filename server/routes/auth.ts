@@ -267,7 +267,7 @@ export function registerAuthRoutes(app: Express) {
               <p>Sua conta na HuaControl foi criada com sucesso.</p>
               <p>Para começar a usar o sistema, é necessário realizar o pagamento da sua assinatura.</p>
               <p><strong>Plano:</strong> ${planLabel}</p>
-              <p><strong>Valor:</strong> R$ ${parseFloat(amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+              <p><strong>Valor:</strong> R$ ${parseFloat(amount).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
               ${boletoUrl
                 ? `<p>Seu boleto já está disponível:</p><p><a href="${boletoUrl}">${boletoUrl}</a></p>`
                 : `<p>Para emitir o boleto, acesse o checkout:</p><p><a href="${checkoutUrl}">${checkoutUrl}</a></p>`
