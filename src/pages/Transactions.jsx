@@ -595,7 +595,7 @@ export default function TransactionsPage() {
                                         </span>
                                         {t.hasCardFee && parseFloat(t.cardFee) > 0 && (
                                             <span className="text-[10px] text-amber-600 font-normal">
-                                                Taxa: {parseFloat(t.cardFee).toFixed(2)}% (-R$ {((Math.abs(parseFloat(t.amount || 0)) * parseFloat(t.cardFee)) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 })})
+                                                Taxa: {parseFloat(t.cardFee).toFixed(2)}% (-R$ {((Math.abs(parseFloat(t.amount || 0)) * parseFloat(t.cardFee)) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
                                             </span>
                                         )}
                                     </div>

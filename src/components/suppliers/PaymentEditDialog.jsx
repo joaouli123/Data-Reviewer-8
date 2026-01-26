@@ -189,8 +189,8 @@ export default function PaymentEditDialog({ isOpen, onClose, transaction, onConf
                   </div>
                   {cardFee && paidAmount > 0 && (
                     <div className="text-xs text-amber-600">
-                      <p>Taxa: R$ {cardFeeAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-                      <p>Líquido: R$ {netAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                      <p>Taxa: R$ {cardFeeAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                      <p>Líquido: R$ {netAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                     </div>
                   )}
                 </div>
