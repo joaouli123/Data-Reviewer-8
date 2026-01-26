@@ -14,6 +14,8 @@ export default function PaymentEditDialog({ isOpen, onClose, transaction, onConf
   const [interest, setInterest] = useState(0);
   const [paymentDate, setPaymentDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [paymentMethod, setPaymentMethod] = useState('');
+  const [hasCardFee, setHasCardFee] = useState(false);
+  const [cardFee, setCardFee] = useState('');
 
   // Reset values when transaction changes or dialog opens
   useEffect(() => {
@@ -22,11 +24,15 @@ export default function PaymentEditDialog({ isOpen, onClose, transaction, onConf
       setInterest(transaction.interest ? parseFloat(transaction.interest) : 0);
       setPaymentDate(transaction.paymentDate ? format(new Date(transaction.paymentDate), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'));
       setPaymentMethod(transaction.paymentMethod || '');
+      setHasCardFee(transaction.hasCardFee || false);
+      setCardFee(transaction.cardFee ? transaction.cardFee.toString() : '');
     }
   }, [transaction]);
 
   const originalAmount = parseFloat(transaction?.amount || 0);
+  const cardFeeAmount = hasCardFee && cardFee ? (paidAmount * parseFloat(cardFee)) / 100 : 0;
   const total = paidAmount + interest;
+  const netAmount = paidAmount - cardFeeAmount;
   const difference = total - originalAmount;
 
   const handleConfirm = () => {
@@ -46,15 +52,21 @@ export default function PaymentEditDialog({ isOpen, onClose, transaction, onConf
       paidAmount: paidAmount.toString(),
       interest: interest.toString(),
       paymentDate: paymentDate,
-      paymentMethod: paymentMethod
+      paymentMethod: paymentMethod,
+      hasCardFee: hasCardFee,
+      cardFee: hasCardFee ? cardFee : '0'
     });
   };
 
   const handleCancel = () => {
     setPaidAmount(parseFloat(transaction?.paidAmount || transaction?.amount || 0));
     setInterest(parseFloat(transaction?.interest || 0));
+    setHasCardFee(false);
+    setCardFee('');
     onClose();
   };
+
+  const isCardPayment = ['Cartão de Crédito', 'Cartão de Débito', 'Cartão Crédito', 'Cartão Débito'].includes(paymentMethod);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -120,7 +132,14 @@ export default function PaymentEditDialog({ isOpen, onClose, transaction, onConf
               <Label className="text-xs">Forma Pagamento</Label>
               <Select 
                 value={paymentMethod} 
-                onValueChange={setPaymentMethod}
+                onValueChange={(v) => {
+                  setPaymentMethod(v);
+                  const isCard = ['Cartão de Crédito', 'Cartão de Débito', 'Cartão Crédito', 'Cartão Débito'].includes(v);
+                  if (!isCard) {
+                    setHasCardFee(false);
+                    setCardFee('');
+                  }
+                }}
               >
                 <SelectTrigger className="w-full h-9">
                   <SelectValue placeholder="Selecione..." />
@@ -137,6 +156,47 @@ export default function PaymentEditDialog({ isOpen, onClose, transaction, onConf
               </Select>
             </div>
           </div>
+
+          {/* Campo de Taxa de Cartão */}
+          {isCardPayment && (
+            <div className="space-y-2 p-2 rounded-lg bg-amber-50 border border-amber-200">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs text-amber-800">Taxa de Cartão?</Label>
+                <input 
+                  type="checkbox"
+                  checked={hasCardFee}
+                  onChange={(e) => {
+                    setHasCardFee(e.target.checked);
+                    if (!e.target.checked) setCardFee('');
+                  }}
+                  className="h-4 w-4 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
+                />
+              </div>
+              {hasCardFee && (
+                <div className="space-y-1">
+                  <div className="flex gap-2 items-center">
+                    <Input 
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="100"
+                      placeholder="0.00"
+                      value={cardFee}
+                      onChange={(e) => setCardFee(e.target.value)}
+                      className="flex-1 h-8 text-sm"
+                    />
+                    <span className="text-xs font-medium text-amber-700">%</span>
+                  </div>
+                  {cardFee && paidAmount > 0 && (
+                    <div className="text-xs text-amber-600">
+                      <p>Taxa: R$ {cardFeeAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                      <p>Líquido: R$ {netAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="p-2 bg-slate-50 rounded-lg border border-slate-200">
             <div className="flex justify-between text-xs">

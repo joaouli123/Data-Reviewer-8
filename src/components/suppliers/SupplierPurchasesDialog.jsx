@@ -170,7 +170,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
   };
 
   const confirmPaymentMutation = useMutation({
-    mutationFn: async ({ purchaseId, paidAmount, interest, paymentDate, paymentMethod }) => {
+    mutationFn: async ({ purchaseId, paidAmount, interest, paymentDate, paymentMethod, hasCardFee, cardFee }) => {
 
       // Get the transaction first to check the amount
       const currentTransaction = await apiRequest('GET', `/api/transactions/${purchaseId}`);
@@ -200,7 +200,9 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
           paidAmount: paidAmount ? paidAmount.toString() : totalAmount.toString(),
           interest: interest ? interest.toString() : '0',
           paymentDate: formattedPaymentDate,
-          paymentMethod: paymentMethod
+          paymentMethod: paymentMethod,
+          hasCardFee: hasCardFee || false,
+          cardFee: hasCardFee ? (parseFloat(cardFee) || 0).toString() : '0'
         });
 
       return transaction;
@@ -464,7 +466,9 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
               paidAmount: data.paidAmount,
               interest: data.interest,
               paymentDate: data.paymentDate,
-              paymentMethod: data.paymentMethod
+              paymentMethod: data.paymentMethod,
+              hasCardFee: data.hasCardFee,
+              cardFee: data.cardFee
             });
           }}
           isLoading={confirmPaymentMutation.isPending}

@@ -25,7 +25,9 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
     installment_amount: '',
     status: 'pago',
     paymentDate: format(new Date(), 'yyyy-MM-dd'),
-    paymentMethod: ''
+    paymentMethod: '',
+    hasCardFee: false,
+    cardFee: ''
   });
   const [customInstallments, setCustomInstallments] = useState([]);
   const [isCreateCategoryModalOpen, setIsCreateCategoryModalOpen] = useState(false);
@@ -49,7 +51,9 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
         installment_amount: '',
         status: 'pago',
         paymentDate: format(new Date(), 'yyyy-MM-dd'),
-        paymentMethod: ''
+        paymentMethod: '',
+        hasCardFee: false,
+        cardFee: ''
       });
       setCustomInstallments([]);
     }
@@ -90,6 +94,8 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
         categoryId: categories.find(c => c.name === data.category)?.id,
         paymentMethod: data.paymentMethod,
         installmentCount: parseInt(data.installments) || 1,
+        hasCardFee: data.hasCardFee || false,
+        cardFee: data.hasCardFee ? (parseFloat(data.cardFee) || 0) : 0,
         // SEGURANÇA: Limpa também as parcelas customizadas
         customInstallments: data.customInstallments?.map(inst => ({
           ...inst,
@@ -117,7 +123,9 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
         installment_amount: '',
         status: 'pago',
         paymentDate: format(new Date(), 'yyyy-MM-dd'),
-        paymentMethod: ''
+        paymentMethod: '',
+        hasCardFee: false,
+        cardFee: ''
       });
       setCustomInstallments([]);
 
@@ -167,6 +175,8 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
       installments: Number(formData.installments),
       installment_amount: formData.installment_amount,
       paymentMethod: formData.paymentMethod,
+      hasCardFee: formData.hasCardFee,
+      cardFee: formData.cardFee,
       customInstallments: customInstallments.length > 0 ? customInstallments : null
     });
   };
@@ -236,11 +246,14 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
               value={formData.paymentMethod} 
               onValueChange={(v) => {
                 const canInstall = ['Cartão de Crédito', 'Boleto', 'Crediário'].includes(v);
+                const isCardPayment = ['Cartão de Crédito', 'Cartão de Débito'].includes(v);
                 setFormData(prev => ({
                   ...prev, 
                   paymentMethod: v,
                   status: (v === 'Pix' || v === 'Dinheiro' || v === 'Cartão de Débito') ? 'pago' : prev.status,
-                  installments: canInstall ? prev.installments : '1'
+                  installments: canInstall ? prev.installments : '1',
+                  hasCardFee: isCardPayment ? prev.hasCardFee : false,
+                  cardFee: isCardPayment ? prev.cardFee : ''
                 }));
               }}
             >
@@ -259,6 +272,55 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
               </SelectContent>
             </Select>
           </div>
+
+          {/* Campo de Taxa de Cartão - só aparece para Débito e Crédito */}
+          {['Cartão de Crédito', 'Cartão de Débito'].includes(formData.paymentMethod) && (
+            <div className="space-y-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700">
+              <div className="flex items-center justify-between">
+                <Label className="cursor-pointer text-amber-800 dark:text-amber-200">
+                  Aplicar taxa de cartão?
+                </Label>
+                <Switch 
+                  checked={formData.hasCardFee}
+                  onCheckedChange={(checked) => {
+                    setFormData(prev => ({
+                      ...prev, 
+                      hasCardFee: checked,
+                      cardFee: checked ? prev.cardFee : ''
+                    }));
+                  }}
+                />
+              </div>
+              
+              {formData.hasCardFee && (
+                <div className="space-y-2">
+                  <Label className="text-xs text-amber-700 dark:text-amber-300">
+                    Taxa (%) - Ex: 2.99 para 2,99%
+                  </Label>
+                  <div className="flex gap-2 items-center">
+                    <Input 
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="100"
+                      placeholder="0.00"
+                      value={formData.cardFee}
+                      onChange={(e) => setFormData(prev => ({...prev, cardFee: e.target.value}))}
+                      className="flex-1"
+                    />
+                    <span className="text-sm font-medium text-amber-700 dark:text-amber-300">%</span>
+                  </div>
+                  {formData.total_amount && formData.cardFee && (
+                    <p className="text-xs text-amber-600 dark:text-amber-400">
+                      Valor da taxa: R$ {((parseCurrency(formData.total_amount) * parseFloat(formData.cardFee)) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      {' • '}
+                      Valor líquido: R$ {(parseCurrency(formData.total_amount) - ((parseCurrency(formData.total_amount) * parseFloat(formData.cardFee)) / 100)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900 border border-emerald-200 dark:border-emerald-700">
             <Label className="cursor-pointer">Pago à Vista</Label>

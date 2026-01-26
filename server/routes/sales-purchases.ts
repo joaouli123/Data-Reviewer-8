@@ -61,6 +61,8 @@ export function registerSalesPurchasesRoutes(app: Express) {
     description: z.string().optional(),
     categoryId: z.union([z.string(), z.number()]).optional().nullable(),
     paymentMethod: z.string().optional(),
+    hasCardFee: z.boolean().optional(),
+    cardFee: z.union([z.string(), z.number()]).optional(),
     customInstallments: z.array(
       z.object({
         date: z.string().optional(),
@@ -79,6 +81,8 @@ export function registerSalesPurchasesRoutes(app: Express) {
     description: z.string().optional(),
     categoryId: z.union([z.string(), z.number()]).optional().nullable(),
     paymentMethod: z.string().optional(),
+    hasCardFee: z.boolean().optional(),
+    cardFee: z.union([z.string(), z.number()]).optional(),
     customInstallments: z.array(
       z.object({
         date: z.string().optional(),
@@ -115,7 +119,7 @@ export function registerSalesPurchasesRoutes(app: Express) {
         return res.status(400).json({ error: "Dados inválidos" });
       }
 
-      const { customerId, saleDate, totalAmount, installmentCount, status, description, categoryId, paymentMethod, customInstallments } = parsed.data;
+      const { customerId, saleDate, totalAmount, installmentCount, status, description, categoryId, paymentMethod, customInstallments, hasCardFee, cardFee } = parsed.data;
 
       const cleanTotal = parseMoney(totalAmount);
 
@@ -162,7 +166,9 @@ export function registerSalesPurchasesRoutes(app: Express) {
           installmentNumber: i + 1,
           installmentTotal: count,
           installmentGroup: installmentGroupId,
-          shift: 'default'
+          shift: 'default',
+          hasCardFee: hasCardFee || false,
+          cardFee: hasCardFee ? (parseFloat(String(cardFee)) || 0).toFixed(2) : '0'
         } as any);
       });
 
@@ -183,7 +189,7 @@ export function registerSalesPurchasesRoutes(app: Express) {
         return res.status(400).json({ error: "Dados inválidos" });
       }
 
-      const { supplierId, purchaseDate, totalAmount, installmentCount, status, description, categoryId, paymentMethod, customInstallments } = parsed.data;
+      const { supplierId, purchaseDate, totalAmount, installmentCount, status, description, categoryId, paymentMethod, customInstallments, hasCardFee, cardFee } = parsed.data;
 
       const cleanTotal = parseMoney(totalAmount);
 
@@ -230,7 +236,9 @@ export function registerSalesPurchasesRoutes(app: Express) {
           installmentNumber: i + 1,
           installmentTotal: count,
           installmentGroup: installmentGroupId,
-          shift: 'Normal'
+          shift: 'Normal',
+          hasCardFee: hasCardFee || false,
+          cardFee: hasCardFee ? (parseFloat(String(cardFee)) || 0).toFixed(2) : '0'
         } as any);
       });
 
