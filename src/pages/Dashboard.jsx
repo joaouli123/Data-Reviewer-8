@@ -9,6 +9,7 @@ import { subMonths, startOfMonth, endOfMonth, format, isAfter, isBefore, subDays
 import { ptBR } from 'date-fns/locale';
 import KPIWidget from '../components/dashboard/KPIWidget';
 import RevenueChart from '../components/dashboard/RevenueChart';
+import DREComparison from '../components/dashboard/DREComparison';
 import QuickActionsFAB from '../components/dashboard/QuickActionsFAB';
 import PeriodFilter from '../components/dashboard/PeriodFilter';
 import TransactionForm from '../components/transactions/TransactionForm';
@@ -354,6 +355,9 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* DRE Comparativo */}
+      <DREComparison transactions={transactions} companyName={company?.name} />
 
       {/* Gráfico de Receita e Transações Recentes - Side by Side */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

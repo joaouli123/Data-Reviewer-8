@@ -22,7 +22,6 @@ import ReportSuggestions from '../components/reports/ReportSuggestions';
 import WhatIfAnalysis from '../components/reports/WhatIfAnalysis';
 import DebtImpactSimulator from '../components/reports/DebtImpactSimulator';
 import DREAnalysis from '../components/reports/DREAnalysis';
-import DREComparison from '../components/dashboard/DREComparison';
 import ReportExporter from '../components/reports/ReportExporter';
 import AnalysisLoading from '../components/reports/AnalysisLoading';
 import { useAuth } from '@/contexts/AuthContext';
@@ -621,16 +620,8 @@ RESPOSTA OBRIGATÓRIA EM JSON E EM PORTUGUÊS DO BRASIL.`;
 
             <TabsContent value="dre" className="space-y-6 mt-6">
               <div id="report-dre">
-                {/* DRE Comparativo - Análise Financeira dos últimos 12 meses */}
-                <DREComparison 
-                  transactions={transactions} 
-                  companyName={company?.name}
-                />
-                
                 {/* DRE Detalhado por categoria */}
-                <div className="mt-8">
-                  <DREAnalysis transactions={filteredTransactions} categories={categories} />
-                </div>
+                <DREAnalysis transactions={filteredTransactions} categories={categories} />
               </div>
             </TabsContent>
 
