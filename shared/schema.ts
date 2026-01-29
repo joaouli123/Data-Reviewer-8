@@ -447,7 +447,18 @@ export const insertCategorySchema = createInsertSchema(categories).omit({
   companyId: true,
 }) as any;
 
-export const insertTransactionSchema = createInsertSchema(transactions).omit({
+export const insertTransactionSchema = createInsertSchema(transactions, {
+  // Permitir Date ou string para campos timestamp
+  date: z.union([z.date(), z.string()]).transform((val) => {
+    if (val instanceof Date) return val;
+    return new Date(val);
+  }),
+  paymentDate: z.union([z.date(), z.string(), z.null()]).optional().transform((val) => {
+    if (!val) return null;
+    if (val instanceof Date) return val;
+    return new Date(val);
+  }),
+}).omit({
   id: true,
   companyId: true,
 }) as any;
