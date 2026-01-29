@@ -73,65 +73,71 @@ export default function FutureTransactionsDialog({
 
           {/* Tabela de transações */}
           {sortedTransactions.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[120px]">Vencimento</TableHead>
-                  <TableHead className="min-w-[200px]">Descrição</TableHead>
-                  <TableHead className="w-[120px] text-right">Valor</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sortedTransactions.map((t, idx) => {
-                  const txDate = extractDate(t);
-                  const amount = Math.abs(parseFloat(t.amount || 0));
-                  const interest = parseFloat(t.interest || 0);
-                  const cardFee = t.hasCardFee ? (amount * (parseFloat(t.cardFee) || 0)) / 100 : 0;
-                  const netAmount = amount + interest - (isIncome ? cardFee : 0);
-                  
-                  return (
-                    <TableRow key={t.id || idx}>
-                      <TableCell className="font-medium whitespace-nowrap">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                          <span>{txDate ? format(txDate, "dd/MM/yyyy", { locale: ptBR }) : '-'}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium text-sm">
-                            {t.description}
-                            {t.installmentNumber && t.installmentTotal && (
-                              <span className="text-muted-foreground font-normal"> - {String(t.installmentNumber).padStart(2, '0')}/{String(t.installmentTotal).padStart(2, '0')}</span>
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+              <Table>
+                <TableHeader className="bg-slate-50">
+                  <TableRow>
+                    <TableHead className="pl-6 text-left w-[140px]">Vencimento</TableHead>
+                    <TableHead className="text-left">Descrição</TableHead>
+                    <TableHead className="text-right pr-6 w-[140px]">Valor</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {sortedTransactions.map((t, idx) => {
+                    const txDate = extractDate(t);
+                    const amount = Math.abs(parseFloat(t.amount || 0));
+                    const interest = parseFloat(t.interest || 0);
+                    const cardFee = t.hasCardFee ? (amount * (parseFloat(t.cardFee) || 0)) / 100 : 0;
+                    const netAmount = amount + interest - (isIncome ? cardFee : 0);
+                    
+                    return (
+                      <TableRow key={t.id || idx} className="hover:bg-slate-50/50">
+                        <TableCell className="font-medium text-slate-600 pl-6 whitespace-nowrap text-left">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                            <span>{txDate ? format(txDate, "dd/MM/yyyy", { locale: ptBR }) : '-'}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-left align-middle">
+                          <div>
+                            <p className="font-medium text-slate-900 text-sm">
+                              {t.description}
+                              {t.installmentNumber && t.installmentTotal && (
+                                <span className="ml-2 text-xs text-slate-500 font-normal">
+                                  ({String(t.installmentNumber).padStart(2, '0')}/{String(t.installmentTotal).padStart(2, '0')})
+                                </span>
+                              )}
+                            </p>
+                            {t.customerName && (
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                                <User className="w-3 h-3" />
+                                {t.customerName}
+                              </div>
                             )}
-                          </p>
-                          {t.customerName && (
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                              <User className="w-3 h-3" />
-                              {t.customerName}
-                            </div>
-                          )}
-                          {t.supplierName && (
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                              <Building className="w-3 h-3" />
-                              {t.supplierName}
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className={`text-right font-semibold ${isIncome ? 'text-emerald-600' : 'text-rose-600'}`}>
-                        R$ {netAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        {cardFee > 0 && (
-                          <p className="text-xs text-muted-foreground font-normal">
-                            (taxa: R$ {cardFee.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
-                          </p>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                            {t.supplierName && (
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                                <Building className="w-3 h-3" />
+                                {t.supplierName}
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className={`text-right pr-6 font-bold ${isIncome ? 'text-emerald-600' : 'text-rose-600'}`}>
+                          <div className="flex flex-col items-end">
+                            <span>R$ {netAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                            {cardFee > 0 && (
+                              <span className="text-[10px] text-amber-600 font-normal">
+                                Taxa: R$ {cardFee.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
               <p>Nenhuma transação pendente encontrada</p>
