@@ -183,11 +183,10 @@ export default function DashboardPage() {
 
     const netProfit = totalRevenue - totalExpenses;
 
-    // Future Cash Flow (próximos 30 dias) - APENAS transações PENDENTES
+    // Contas a receber/pagar (período selecionado) - APENAS transações PENDENTES
     // Usar data local (sem timezone UTC) para evitar problemas de comparação
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-    const thirtyDaysFromNow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 30, 23, 59, 59, 999);
+    const periodStart = new Date(dateRange.startDate.getFullYear(), dateRange.startDate.getMonth(), dateRange.startDate.getDate(), 0, 0, 0, 0);
+    const periodEnd = new Date(dateRange.endDate.getFullYear(), dateRange.endDate.getMonth(), dateRange.endDate.getDate(), 23, 59, 59, 999);
     
     // Helper para verificar se transação está pendente
     const isPendingStatus = (status) => {
@@ -218,7 +217,7 @@ export default function DashboardPage() {
       // Filtra apenas receitas PENDENTES com vencimento nos próximos 30 dias
       const isIncome = isIncomeType(t.type);
       const isPending = isPendingStatus(t.status);
-      const isInRange = tDate >= today && tDate <= thirtyDaysFromNow;
+      const isInRange = tDate >= periodStart && tDate <= periodEnd;
       
       return isIncome && isPending && isInRange;
     });
@@ -236,7 +235,7 @@ export default function DashboardPage() {
       // Filtra apenas despesas PENDENTES com vencimento nos próximos 30 dias
       const isExpense = isExpenseType(t.type);
       const isPending = isPendingStatus(t.status);
-      const isInRange = tDate >= today && tDate <= thirtyDaysFromNow;
+      const isInRange = tDate >= periodStart && tDate <= periodEnd;
       return isExpense && isPending && isInRange;
     });
     
@@ -371,7 +370,7 @@ export default function DashboardPage() {
       <div className="bg-white dark:bg-slate-900 rounded-lg p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
         <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
           <Wallet className="w-4 h-4 text-primary" />
-          Fluxo de Caixa Futuro (Próximos 30 dias)
+          Fluxo de Caixa Futuro (Período selecionado)
         </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -488,7 +487,7 @@ export default function DashboardPage() {
       <FutureTransactionsDialog
         open={showReceivablesDialog}
         onOpenChange={setShowReceivablesDialog}
-        title="Contas a Receber (Próximos 30 dias)"
+        title="Contas a Receber (Período selecionado)"
         transactions={metrics.futureRevenueTransactions || []}
         type="income"
       />
@@ -497,7 +496,7 @@ export default function DashboardPage() {
       <FutureTransactionsDialog
         open={showPayablesDialog}
         onOpenChange={setShowPayablesDialog}
-        title="Contas a Pagar (Próximos 30 dias)"
+        title="Contas a Pagar (Período selecionado)"
         transactions={metrics.futureExpensesTransactions || []}
         type="expense"
       />
