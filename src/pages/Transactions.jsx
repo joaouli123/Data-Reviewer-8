@@ -137,7 +137,10 @@ export default function TransactionsPage() {
   // Re-invalidate transactions on mount just in case
   React.useEffect(() => {
     if (company?.id) {
+      // Limpa e refaz o fetch para não exibir cache depois de exclusões manuais
+      queryClient.removeQueries({ queryKey: ['/api/transactions'], exact: false });
       queryClient.invalidateQueries({ queryKey: ['/api/transactions', company.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'], exact: false });
     }
   }, [company?.id, queryClient]);
 
