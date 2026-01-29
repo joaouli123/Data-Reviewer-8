@@ -14,12 +14,35 @@ const PERMISSIONS = {
   IMPORT_BANK: 'import_bank'
 };
 
-// Evita shift de data por timezone (YYYY-MM-DD)
-const parseLocalDate = (value: string) => {
+// Evita shift de data por timezone e aceita YYYY-MM-DD ou DD/MM/YYYY
+const parseLocalDate = (value: string | Date) => {
   if (!value) return new Date();
-  const [year, month, day] = value.split('-').map(Number);
-  if (!year || !month || !day) return new Date(value);
-  return new Date(year, month - 1, day, 0, 0, 0, 0);
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? new Date() : value;
+  }
+
+  const str = String(value).trim();
+
+  const ymdMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (ymdMatch) {
+    const year = Number(ymdMatch[1]);
+    const month = Number(ymdMatch[2]);
+    const day = Number(ymdMatch[3]);
+    const d = new Date(year, month - 1, day, 0, 0, 0, 0);
+    return Number.isNaN(d.getTime()) ? new Date() : d;
+  }
+
+  const dmyMatch = str.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  if (dmyMatch) {
+    const day = Number(dmyMatch[1]);
+    const month = Number(dmyMatch[2]);
+    const year = Number(dmyMatch[3]);
+    const d = new Date(year, month - 1, day, 0, 0, 0, 0);
+    return Number.isNaN(d.getTime()) ? new Date() : d;
+  }
+
+  const parsed = new Date(str);
+  return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
 };
 
 // Helper to check permissions
@@ -270,8 +293,14 @@ export function registerTransactionRoutes(app: Express) {
       // Buscar todas as transações
       const allTransactions = await storage.getTransactions(req.user.companyId);
       
-      // Filtrar as que têm date null
-      const transactionsToFix = allTransactions.filter((t: any) => !t.date || t.date === null);
+      const isInvalidDate = (value: any) => {
+        if (!value) return true;
+        const d = new Date(value);
+        return Number.isNaN(d.getTime());
+      };
+
+      // Filtrar as que têm date null ou inválido
+      const transactionsToFix = allTransactions.filter((t: any) => isInvalidDate(t.date));
       
       console.log(`[Fix] Encontradas ${transactionsToFix.length} transações sem data de ${allTransactions.length} total`);
       
@@ -284,14 +313,15 @@ export function registerTransactionRoutes(app: Express) {
         });
       }
       
-      // Atualizar cada uma usando createdAt como fallback
+      // Atualizar cada uma usando paymentDate > createdAt como fallback
       let fixed = 0;
       const errors: string[] = [];
       
       for (const t of transactionsToFix as any[]) {
         try {
-          // Usar createdAt como data base, ou data atual se não existir
-          const newDate = t.createdAt ? new Date(t.createdAt) : new Date();
+          // Usar paymentDate/createdAt como data base, ou data atual se não existir
+          const fallbackSource = t.paymentDate || t.createdAt || new Date().toISOString();
+          const newDate = parseLocalDate(fallbackSource);
           console.log(`[Fix] Corrigindo transação ${t.id}: ${t.description} -> data: ${newDate.toISOString()}`);
           
           await storage.updateTransaction(req.user.companyId, t.id, { date: newDate });

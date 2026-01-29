@@ -12,12 +12,35 @@ function parseMoney(value: any): number {
   return parseFloat(cleanValue) || 0;
 }
 
-// Evita shift de data por timezone (YYYY-MM-DD)
-function parseLocalDate(value: string): Date {
+// Evita shift de data por timezone e aceita YYYY-MM-DD ou DD/MM/YYYY
+function parseLocalDate(value: string | Date): Date {
   if (!value) return new Date();
-  const [year, month, day] = value.split('-').map(Number);
-  if (!year || !month || !day) return new Date(value);
-  return new Date(year, month - 1, day, 0, 0, 0, 0);
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? new Date() : value;
+  }
+
+  const str = String(value).trim();
+
+  const ymdMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (ymdMatch) {
+    const year = Number(ymdMatch[1]);
+    const month = Number(ymdMatch[2]);
+    const day = Number(ymdMatch[3]);
+    const d = new Date(year, month - 1, day, 0, 0, 0, 0);
+    return Number.isNaN(d.getTime()) ? new Date() : d;
+  }
+
+  const dmyMatch = str.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  if (dmyMatch) {
+    const day = Number(dmyMatch[1]);
+    const month = Number(dmyMatch[2]);
+    const year = Number(dmyMatch[3]);
+    const d = new Date(year, month - 1, day, 0, 0, 0, 0);
+    return Number.isNaN(d.getTime()) ? new Date() : d;
+  }
+
+  const parsed = new Date(str);
+  return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
 }
 
 // Calcula uma data segura para a parcela, espalhando por meses se todas vierem iguais
