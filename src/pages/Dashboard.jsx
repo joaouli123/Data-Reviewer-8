@@ -43,7 +43,6 @@ export default function DashboardPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [showReceivablesDialog, setShowReceivablesDialog] = useState(false);
   const [showPayablesDialog, setShowPayablesDialog] = useState(false);
-  const [isFixingDates, setIsFixingDates] = useState(false);
   const { company, user } = useAuth();
   const queryClient = useQueryClient();
   const { PERMISSIONS } = { PERMISSIONS: { CREATE_TRANSACTIONS: 'create_transactions' } }; // Simplified for now or import properly
@@ -52,21 +51,6 @@ export default function DashboardPage() {
     if (user?.role === 'admin' || user?.isSuperAdmin) return true;
     return !!user?.permissions?.[permission];
   };
-  
-  // Função para corrigir transações sem data
-  const fixNullDates = async () => {
-    setIsFixingDates(true);
-    try {
-      const result = await apiRequest('POST', '/api/transactions/fix-null-dates');
-      toast.success(result.message || 'Datas corrigidas!');
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
-    } catch (error) {
-      toast.error('Erro ao corrigir datas: ' + (error.message || 'Erro desconhecido'));
-    } finally {
-      setIsFixingDates(false);
-    }
-  };
-
   useEffect(() => {
     // Confetti effect on first access after payment
     if (user && company?.paymentStatus === 'approved') {
@@ -149,16 +133,6 @@ export default function DashboardPage() {
 
   const allTransactions = Array.isArray(allTxData) ? allTxData : (allTxData?.data || []);
   
-  // DEBUG CRÍTICO - mostrar todas as transações
-  console.log('[Dashboard DEBUG] allTxData raw:', allTxData);
-  console.log('[Dashboard DEBUG] allTransactions array:', allTransactions);
-  console.log('[Dashboard DEBUG] Total de transações:', allTransactions.length);
-  if (allTransactions.length > 0) {
-    console.log('[Dashboard DEBUG] Primeira transação:', allTransactions[0]);
-    console.log('[Dashboard DEBUG] Tipos únicos:', [...new Set(allTransactions.map(t => t.type))]);
-    console.log('[Dashboard DEBUG] Status únicos:', [...new Set(allTransactions.map(t => t.status))]);
-  }
-
   const extractTxDate = (t) => {
     if (!t) return null;
     const candidate = t.paymentDate || t.date || t.createdAt || t.created_at;
@@ -242,29 +216,9 @@ export default function DashboardPage() {
       const isPending = isPendingStatus(t.status);
       const isInRange = tDate >= today && tDate <= thirtyDaysFromNow;
       
-      // DEBUG: Log para cada transação de receita
-      if (isIncome) {
-        console.log('[Dashboard] Transação receita:', {
-          id: t.id,
-          description: t.description,
-          type: t.type,
-          status: t.status,
-          date: t.date,
-          isIncome,
-          isPending,
-          isInRange,
-          tDate: tDate?.toLocaleDateString(),
-          today: today.toLocaleDateString(),
-          thirtyDays: thirtyDaysFromNow.toLocaleDateString()
-        });
-      }
-      
       return isIncome && isPending && isInRange;
     });
-    
-    console.log('[Dashboard] Total transações:', allTransactions.length);
-    console.log('[Dashboard] Receitas pendentes filtradas:', futureRevenueTransactions.length);
-    
+
     const futureRevenue = futureRevenueTransactions.reduce((sum, t) => {
       const amount = Math.abs(parseFloat(t.amount || 0));
       const interest = parseFloat(t.interest || 0);
@@ -363,17 +317,6 @@ export default function DashboardPage() {
             >
               <Plus className="w-4 h-4" />
               Nova Transação
-            </Button>
-          )}
-          {/* Botão temporário para corrigir datas - REMOVER DEPOIS */}
-          {user?.role === 'admin' && (
-            <Button 
-              onClick={fixNullDates}
-              disabled={isFixingDates}
-              variant="outline"
-              className="gap-2 w-full sm:w-auto border-orange-500 text-orange-600 hover:bg-orange-50"
-            >
-              {isFixingDates ? 'Corrigindo...' : '🔧 Corrigir Datas'}
             </Button>
           )}
         </div>

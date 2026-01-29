@@ -47,7 +47,7 @@ IMPORTANTE: Responda APENAS com um JSON válido, sem texto adicional antes ou de
       ]
     });
 
-    const responseText = response.text;
+    const responseText = typeof response.text === 'function' ? await response.text() : response.text;
 
     if (!responseText) {
       console.error("[AI Debug] Resposta vazia do modelo");

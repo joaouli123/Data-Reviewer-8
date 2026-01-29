@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { TrendingUp, TrendingDown, Calendar, User, Building } from 'lucide-react';
+import { TrendingUp, TrendingDown, User, Building } from 'lucide-react';
 
 export default function FutureTransactionsDialog({ 
   open, 
@@ -13,6 +13,12 @@ export default function FutureTransactionsDialog({
   type = 'income' // 'income' ou 'expense'
 }) {
   const isIncome = type === 'income';
+  const [page, setPage] = useState(1);
+  const pageSize = 15;
+
+  useEffect(() => {
+    if (open) setPage(1);
+  }, [open, transactions]);
   
   // Helper para extrair data de VENCIMENTO (usa date primeiro, pois é a data de vencimento)
   const extractDate = (t) => {
@@ -24,13 +30,19 @@ export default function FutureTransactionsDialog({
   };
 
   // Ordenar por data de vencimento
-  const sortedTransactions = [...transactions]
-    .filter(t => extractDate(t) !== null) // Remove transações sem data válida
-    .sort((a, b) => {
-      const dateA = extractDate(a);
-      const dateB = extractDate(b);
-      return dateA - dateB;
-    });
+  const sortedTransactions = useMemo(() => {
+    return [...transactions]
+      .filter(t => extractDate(t) !== null) // Remove transações sem data válida
+      .sort((a, b) => {
+        const dateA = extractDate(a);
+        const dateB = extractDate(b);
+        return dateA - dateB;
+      });
+  }, [transactions]);
+
+  const totalPages = Math.max(1, Math.ceil(sortedTransactions.length / pageSize));
+  const startIndex = (page - 1) * pageSize;
+  const paginatedTransactions = sortedTransactions.slice(startIndex, startIndex + pageSize);
 
   const total = sortedTransactions.reduce((sum, t) => {
     const amount = Math.abs(parseFloat(t.amount || 0));
@@ -83,7 +95,7 @@ export default function FutureTransactionsDialog({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sortedTransactions.map((t, idx) => {
+                  {paginatedTransactions.map((t, idx) => {
                     const txDate = extractDate(t);
                     const amount = Math.abs(parseFloat(t.amount || 0));
                     const interest = parseFloat(t.interest || 0);
@@ -93,10 +105,7 @@ export default function FutureTransactionsDialog({
                     return (
                       <TableRow key={t.id || idx} className="hover:bg-slate-50/50">
                         <TableCell className="font-medium text-slate-600 pl-6 whitespace-nowrap text-left">
-                          <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                            <span>{txDate ? format(txDate, "dd/MM/yyyy", { locale: ptBR }) : '-'}</span>
-                          </div>
+                          {txDate ? format(txDate, "dd/MM/yyyy", { locale: ptBR }) : '-'}
                         </TableCell>
                         <TableCell className="text-left align-middle">
                           <div>
@@ -137,6 +146,30 @@ export default function FutureTransactionsDialog({
                   })}
                 </TableBody>
               </Table>
+              <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 bg-slate-50">
+                <span className="text-xs text-muted-foreground">
+                  Mostrando {sortedTransactions.length === 0 ? 0 : startIndex + 1}–{Math.min(startIndex + pageSize, sortedTransactions.length)} de {sortedTransactions.length}
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="px-3 py-1 text-xs border rounded-md hover:bg-slate-100 disabled:opacity-50"
+                  >
+                    Anterior
+                  </button>
+                  <span className="text-xs text-muted-foreground">
+                    Página {page} de {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages || sortedTransactions.length === 0}
+                    className="px-3 py-1 text-xs border rounded-md hover:bg-slate-100 disabled:opacity-50"
+                  >
+                    Próxima
+                  </button>
+                </div>
+              </div>
             </div>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
