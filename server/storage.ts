@@ -12,6 +12,15 @@ function sanitizeMoney(value: any): string {
   return String(value).replace(/\./g, '').replace(',', '.');
 }
 
+function normalizeDate(value: any): Date {
+  if (!value) return new Date();
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? new Date() : value;
+  }
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? new Date() : d;
+}
+
 export class DatabaseStorage {
 
   // --- MÉTODOS DE VENDAS E COMPRAS ---
@@ -111,12 +120,24 @@ export class DatabaseStorage {
   }
 
   async createTransaction(companyId: any, data: any) {
-    const [transaction] = await db.insert(transactions).values({ ...data, companyId }).returning();
+    const safeData = { ...data };
+    safeData.date = normalizeDate(safeData.date);
+    if (safeData.paymentDate) {
+      safeData.paymentDate = normalizeDate(safeData.paymentDate);
+    }
+    const [transaction] = await db.insert(transactions).values({ ...safeData, companyId }).returning();
     return transaction;
   }
 
   async updateTransaction(companyId: any, id: any, data: any) {
-    const [updated] = await db.update(transactions).set(data).where(and(eq(transactions.companyId, companyId), eq(transactions.id, id))).returning();
+    const safeData = { ...data };
+    if (safeData.date) {
+      safeData.date = normalizeDate(safeData.date);
+    }
+    if (safeData.paymentDate) {
+      safeData.paymentDate = normalizeDate(safeData.paymentDate);
+    }
+    const [updated] = await db.update(transactions).set(safeData).where(and(eq(transactions.companyId, companyId), eq(transactions.id, id))).returning();
     return updated;
   }
 

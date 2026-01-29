@@ -3,7 +3,7 @@ import { storage } from "../storage";
 import { users } from "../../shared/schema";
 import { authMiddleware, AuthenticatedRequest } from "../middleware";
 import { db } from "../db";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 // Define PERMISSIONS object since it might not be exported from schema or to be safe
 const PERMISSIONS = {
@@ -149,7 +149,7 @@ export function registerTransactionRoutes(app: Express) {
       }
       
       // Preparar dados para inserção (sem usar Zod schema)
-      const data = {
+      let data = {
         customerId: body.customerId || null,
         supplierId: body.supplierId || null,
         categoryId: body.categoryId || null,
@@ -170,6 +170,10 @@ export function registerTransactionRoutes(app: Express) {
         paymentMethod: body.paymentMethod || null,
         isReconciled: Boolean(body.isReconciled),
       };
+
+      if (!(data.date instanceof Date) || Number.isNaN(data.date.getTime())) {
+        data = { ...data, date: new Date() };
+      }
       
       console.log("[Transactions] Data para inserção:", JSON.stringify({ 
         date: data.date, 
@@ -290,56 +294,20 @@ export function registerTransactionRoutes(app: Express) {
       
       console.log(`[Fix] Iniciando correção de datas nulas para company: ${req.user.companyId}`);
       
-      // Buscar todas as transações
-      const allTransactions = await storage.getTransactions(req.user.companyId);
-      
-      const isInvalidDate = (value: any) => {
-        if (!value) return true;
-        const d = new Date(value);
-        return Number.isNaN(d.getTime());
-      };
+      const updateResult = await db.execute(sql`
+        update transactions
+        set date = coalesce(payment_date, created_at, now())
+        where company_id = ${req.user.companyId}
+          and date is null
+      `);
 
-      // Filtrar as que têm date null ou inválido
-      const transactionsToFix = allTransactions.filter((t: any) => isInvalidDate(t.date));
-      
-      console.log(`[Fix] Encontradas ${transactionsToFix.length} transações sem data de ${allTransactions.length} total`);
-      
-      if (transactionsToFix.length === 0) {
-        return res.json({ 
-          success: true, 
-          message: "Nenhuma transação precisa de correção",
-          totalWithNullDate: 0,
-          fixed: 0
-        });
-      }
-      
-      // Atualizar cada uma usando paymentDate > createdAt como fallback
-      let fixed = 0;
-      const errors: string[] = [];
-      
-      for (const t of transactionsToFix as any[]) {
-        try {
-          // Usar paymentDate/createdAt como data base, ou data atual se não existir
-          const fallbackSource = t.paymentDate || t.createdAt || new Date().toISOString();
-          const newDate = parseLocalDate(fallbackSource);
-          console.log(`[Fix] Corrigindo transação ${t.id}: ${t.description} -> data: ${newDate.toISOString()}`);
-          
-          await storage.updateTransaction(req.user.companyId, t.id, { date: newDate });
-          fixed++;
-        } catch (err: any) {
-          console.error(`[Fix] Erro ao corrigir transação ${t.id}:`, err);
-          errors.push(`${t.id}: ${err.message}`);
-        }
-      }
-      
-      console.log(`[Fix] Concluído: ${fixed} corrigidas, ${errors.length} erros`);
-      
-      res.json({ 
-        success: true, 
-        message: `${fixed} transações corrigidas`,
-        totalWithNullDate: transactionsToFix.length,
-        fixed,
-        errors: errors.length > 0 ? errors : undefined
+      const updatedCount = Number((updateResult as any)?.rowCount ?? 0);
+
+      res.json({
+        success: true,
+        message: `${updatedCount} transações corrigidas`,
+        totalWithNullDate: updatedCount,
+        fixed: updatedCount,
       });
     } catch (error: any) {
       console.error("[Fix] Error fixing null dates", error);
