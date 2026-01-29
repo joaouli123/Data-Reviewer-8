@@ -294,20 +294,36 @@ export function registerTransactionRoutes(app: Express) {
       
       console.log(`[Fix] Iniciando correção de datas nulas para company: ${req.user.companyId}`);
       
-      const updateResult = await db.execute(sql`
+      const beforeResult = await db.execute(sql`
+        select count(*)::int as count
+        from transactions
+        where company_id = ${req.user.companyId}
+          and date is null
+      `);
+      const beforeCount = Number((beforeResult as any)?.rows?.[0]?.count ?? 0);
+
+      await db.execute(sql`
         update transactions
         set date = coalesce(payment_date, created_at, now())
         where company_id = ${req.user.companyId}
           and date is null
       `);
 
-      const updatedCount = Number((updateResult as any)?.rowCount ?? 0);
+      const afterResult = await db.execute(sql`
+        select count(*)::int as count
+        from transactions
+        where company_id = ${req.user.companyId}
+          and date is null
+      `);
+      const afterCount = Number((afterResult as any)?.rows?.[0]?.count ?? 0);
+      const updatedCount = Math.max(0, beforeCount - afterCount);
 
       res.json({
         success: true,
         message: `${updatedCount} transações corrigidas`,
-        totalWithNullDate: updatedCount,
+        totalWithNullDate: beforeCount,
         fixed: updatedCount,
+        remainingNullDates: afterCount,
       });
     } catch (error: any) {
       console.error("[Fix] Error fixing null dates", error);

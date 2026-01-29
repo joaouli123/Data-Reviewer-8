@@ -116,7 +116,12 @@ export class DatabaseStorage {
 
   async getTransactions(companyId: any) {
     if (!companyId) return [];
-    return await db.select().from(transactions).where(eq(transactions.companyId, companyId)).orderBy(desc(transactions.date));
+    const rows = await db.select().from(transactions).where(eq(transactions.companyId, companyId)).orderBy(desc(transactions.date));
+    return rows.map((t: any) => {
+      const fallback = t.paymentDate || t.createdAt || t.created_at;
+      const date = t.date ? normalizeDate(t.date) : normalizeDate(fallback);
+      return { ...t, date };
+    });
   }
 
   async createTransaction(companyId: any, data: any) {
