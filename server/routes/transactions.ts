@@ -86,9 +86,24 @@ export function registerTransactionRoutes(app: Express) {
       }
       
       const body = { ...req.body };
-      if (body.date && typeof body.date === 'string') {
+      
+      // DEBUG: Log dos dados recebidos
+      console.log("[Transactions] Dados recebidos:", { 
+        date: body.date, 
+        paymentDate: body.paymentDate,
+        status: body.status,
+        type: body.type 
+      });
+      
+      // Garantir que date sempre exista
+      if (!body.date) {
+        body.date = new Date();
+        console.log("[Transactions] Date não fornecido, usando data atual");
+      } else if (typeof body.date === 'string') {
         body.date = parseLocalDate(body.date);
+        console.log("[Transactions] Date parseado:", body.date);
       }
+      
       if (body.paymentDate && typeof body.paymentDate === 'string') {
         body.paymentDate = parseLocalDate(body.paymentDate);
       }
@@ -99,7 +114,11 @@ export function registerTransactionRoutes(app: Express) {
       }
       
       const data = insertTransactionSchema.parse(body);
+      console.log("[Transactions] Data após validação:", { date: data.date, status: data.status });
+      
       const transaction = await storage.createTransaction(req.user.companyId, data);
+      console.log("[Transactions] Transação criada:", { id: transaction.id, date: transaction.date });
+      
       res.status(201).json(transaction);
     } catch (error: any) {
       console.error("[Transactions] create error", error);

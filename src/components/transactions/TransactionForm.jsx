@@ -342,8 +342,13 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
           payload.supplierId = formData.supplierId;
         }
 
+        // DEBUG: Log do payload sendo enviado
+        console.log('[TransactionForm] Payload parcela', i + 1, ':', payload);
+        
         transactions.push(payload);
       }
+      
+      console.log('[TransactionForm] Enviando', transactions.length, 'parcelas');
       onSubmit(transactions);
       
       // Invalidate queries to update UI in real-time
