@@ -506,6 +506,7 @@ export default function DashboardPage() {
         title="Contas a Receber (Período selecionado)"
         transactions={metrics.futureRevenueTransactions || []}
         type="income"
+        periodLabel={dateRange?.label || 'Período selecionado'}
       />
 
       {/* Dialog de Contas a Pagar */}
@@ -515,6 +516,7 @@ export default function DashboardPage() {
         title="Contas a Pagar (Período selecionado)"
         transactions={metrics.futureExpensesTransactions || []}
         type="expense"
+        periodLabel={dateRange?.label || 'Período selecionado'}
       />
     </div>
   );

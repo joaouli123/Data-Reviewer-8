@@ -10,7 +10,8 @@ export default function FutureTransactionsDialog({
   onOpenChange, 
   title, 
   transactions = [], 
-  type = 'income' // 'income' ou 'expense'
+  type = 'income', // 'income' ou 'expense'
+  periodLabel = 'Período selecionado'
 }) {
   const isIncome = type === 'income';
   const [page, setPage] = useState(1);
@@ -86,7 +87,7 @@ export default function FutureTransactionsDialog({
                   Total de {sortedTransactions.length} transações
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Pendentes nos próximos 30 dias
+                  Pendentes no período: {periodLabel}
                 </p>
               </div>
               <p className={`text-2xl font-bold ${isIncome ? 'text-emerald-700' : 'text-rose-700'}`}>

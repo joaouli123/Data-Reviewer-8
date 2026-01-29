@@ -38,10 +38,11 @@ const isExpenseType = (type) => EXPENSE_TYPES.includes(type);
 const extractTxDate = (t) => {
   if (!t) return null;
   const status = String(t.status || '').toLowerCase();
-  const isPaid = status === 'pago' || status === 'completed' || status === 'parcial';
-  const candidate = isPaid
-    ? (t.paymentDate || t.date || t.createdAt || t.created_at)
-    : (t.date || t.paymentDate || t.createdAt || t.created_at);
+  const hasPaymentDate = !!(t.paymentDate || t.payment_date);
+  const isPaid = status === 'pago' || status === 'completed' || status === 'parcial' || status === 'paid' || status === 'approved' || status === 'aprovado' || hasPaymentDate;
+  const candidate = hasPaymentDate
+    ? (t.paymentDate || t.payment_date || t.date || t.createdAt || t.created_at)
+    : (isPaid ? (t.paymentDate || t.date || t.createdAt || t.created_at) : (t.date || t.paymentDate || t.createdAt || t.created_at));
   if (!candidate) return null;
   try {
     const d = new Date(candidate);
@@ -303,7 +304,8 @@ export default function TransactionsPage() {
         
         // APENAS transações pagas ou completadas devem ser contabilizadas no saldo
         const statusValue = String(t.status || '').toLowerCase();
-        const isPaid = ['pago', 'completed', 'parcial', 'paid', 'approved', 'aprovado'].includes(statusValue);
+        const hasPaymentDate = !!(t.paymentDate || t.payment_date);
+        const isPaid = ['pago', 'completed', 'parcial', 'paid', 'approved', 'aprovado'].includes(statusValue) || hasPaymentDate;
         if (!isPaid) return;
 
         const relevantDate = extractTxDate(t);
