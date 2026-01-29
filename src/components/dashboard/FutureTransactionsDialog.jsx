@@ -14,12 +14,22 @@ export default function FutureTransactionsDialog({
 }) {
   const isIncome = type === 'income';
   
+  // Helper para extrair data da transação
+  const extractDate = (t) => {
+    const candidate = t.paymentDate || t.payment_date || t.date;
+    if (!candidate) return null;
+    const d = new Date(candidate);
+    return isNaN(d.getTime()) ? null : d;
+  };
+
   // Ordenar por data de vencimento
-  const sortedTransactions = [...transactions].sort((a, b) => {
-    const dateA = new Date(a.paymentDate || a.date);
-    const dateB = new Date(b.paymentDate || b.date);
-    return dateA - dateB;
-  });
+  const sortedTransactions = [...transactions]
+    .filter(t => extractDate(t) !== null) // Remove transações sem data válida
+    .sort((a, b) => {
+      const dateA = extractDate(a);
+      const dateB = extractDate(b);
+      return dateA - dateB;
+    });
 
   const total = sortedTransactions.reduce((sum, t) => {
     const amount = Math.abs(parseFloat(t.amount || 0));
@@ -72,7 +82,7 @@ export default function FutureTransactionsDialog({
               </TableHeader>
               <TableBody>
                 {sortedTransactions.map((t, idx) => {
-                  const txDate = new Date(t.paymentDate || t.date);
+                  const txDate = extractDate(t);
                   const amount = Math.abs(parseFloat(t.amount || 0));
                   const interest = parseFloat(t.interest || 0);
                   const cardFee = t.hasCardFee ? (amount * (parseFloat(t.cardFee) || 0)) / 100 : 0;
@@ -83,7 +93,7 @@ export default function FutureTransactionsDialog({
                       <TableCell className="font-medium whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           <Calendar className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                          <span>{format(txDate, "dd/MM/yyyy", { locale: ptBR })}</span>
+                          <span>{txDate ? format(txDate, "dd/MM/yyyy", { locale: ptBR }) : '-'}</span>
                         </div>
                       </TableCell>
                       <TableCell>
