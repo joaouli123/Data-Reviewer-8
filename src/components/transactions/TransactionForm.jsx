@@ -303,36 +303,27 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
     // Handle installments
     const installmentCount = formData.installments || 1;
     if (installmentCount > 1) {
-      // Create multiple transactions for installments
-      const installmentGroupId = `group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      // Preenche customInstallments se estiver vazio ou incompleto
+      let filledCustomInstallments = customInstallments.slice();
+      if (filledCustomInstallments.length < installmentCount) {
+        const baseDate = new Date(formData.date);
+        for (let i = filledCustomInstallments.length; i < installmentCount; i++) {
+          const dueDate = new Date(baseDate.getFullYear(), baseDate.getMonth() + i, baseDate.getDate());
+          filledCustomInstallments.push({
+            amount: (parseFloat(amount) / installmentCount).toFixed(2),
+            due_date: formatDateOnly(dueDate)
+          });
+        }
+      }
 
+      const installmentGroupId = `group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       const transactions = [];
       for (let i = 0; i < installmentCount; i++) {
-        let dueDateISO;
-
-        // ALWAYS use customInstallments if they exist (user may have edited dates)
-        if (customInstallments.length > 0 && customInstallments[i]?.due_date) {
-          // due_date is already in YYYY-MM-DD format, just use it directly
-          dueDateISO = customInstallments[i].due_date;
-        } else if (customInstallments.length > i) {
-          // If customInstallments exist but due_date is missing, calculate it
-          const baseDate = new Date(formData.date);
-          const dueDate = new Date(baseDate.getFullYear(), baseDate.getMonth() + i, baseDate.getDate());
-          dueDateISO = formatDateOnly(dueDate);
-        } else {
-          // Fallback: calculate from transaction date
-          const baseDate = new Date(formData.date);
-          const dueDate = new Date(baseDate.getFullYear(), baseDate.getMonth() + i, baseDate.getDate());
-          dueDateISO = formatDateOnly(dueDate);
-        }
-
-        const installmentAmount = customInstallments.length > i 
-          ? parseFloat(customInstallments[i].amount) 
-          : parseFloat(amount) / installmentCount;
-
+        const dueDateISO = filledCustomInstallments[i].due_date;
+        const installmentAmount = filledCustomInstallments[i].amount;
         const payload = {
           categoryId: formData.categoryId,
-          amount: installmentAmount.toFixed(2),
+          amount: parseFloat(installmentAmount).toFixed(2),
           date: dueDateISO,
           paymentDate: paymentDateISO,
           shift: 'turno1',
@@ -346,25 +337,15 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
           hasCardFee: formData.hasCardFee,
           cardFee: formData.hasCardFee ? (parseFloat(formData.cardFee) || 0).toFixed(2) : '0'
         };
-
-        // Only add customer/supplier if selected
         if (formData.entityType === 'customer' && formData.customerId) {
           payload.customerId = formData.customerId;
         }
         if (formData.entityType === 'supplier' && formData.supplierId) {
           payload.supplierId = formData.supplierId;
         }
-
-        // DEBUG: Log do payload sendo enviado
-        console.log('[TransactionForm] Payload parcela', i + 1, ':', payload);
-        
         transactions.push(payload);
       }
-      
-      console.log('[TransactionForm] Enviando', transactions.length, 'parcelas');
       onSubmit(transactions);
-      
-      // Invalidate queries to update UI in real-time
       queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/cash-flow'] });
       if (formData.customerId) {
