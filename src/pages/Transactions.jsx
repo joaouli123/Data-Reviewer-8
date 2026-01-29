@@ -34,6 +34,21 @@ const EXPENSE_TYPES = ['compra', 'expense', 'compra_prazo', 'despesa', 'saida'];
 const isIncomeType = (type) => INCOME_TYPES.includes(type);
 const isExpenseType = (type) => EXPENSE_TYPES.includes(type);
 
+// Converte strings yyyy-mm-dd para data local, evitando shift de fuso
+const parseLocalDateString = (raw) => {
+  const str = String(raw || '').trim();
+  const ymd = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (ymd) {
+    const year = Number(ymd[1]);
+    const month = Number(ymd[2]);
+    const day = Number(ymd[3]);
+    const d = new Date(year, month - 1, day, 12, 0, 0, 0);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  const d = new Date(str);
+  return Number.isNaN(d.getTime()) ? null : d;
+};
+
 // Retorna uma data válida a partir dos campos conhecidos ou null
 const extractTxDate = (t) => {
   if (!t) return null;
@@ -45,8 +60,7 @@ const extractTxDate = (t) => {
     : (isPaid ? (t.paymentDate || t.date || t.createdAt || t.created_at) : (t.date || t.paymentDate || t.createdAt || t.created_at));
   if (!candidate) return null;
   try {
-    const d = new Date(candidate);
-    return isNaN(d.getTime()) ? null : d;
+    return parseLocalDateString(candidate);
   } catch (e) {
     return null;
   }
@@ -296,6 +310,7 @@ export default function TransactionsPage() {
       let periodIncome = 0;
       let periodExpense = 0;
       
+      // Usa limites locais para evitar deslocamentos por timezone
       const startTime = startOfDay(dateRange.startDate).getTime();
       const endTime = endOfDay(dateRange.endDate).getTime();
 
@@ -380,22 +395,22 @@ export default function TransactionsPage() {
           if (!matchesPaymentMethod) return false;
 
           // 6. Filtrar por Data (UTC Midday approach)
-          const isPaid = t.status === 'pago' || t.status === 'completed';
-          const relevantDate = isPaid && t.paymentDate ? extractTxDate(t) : extractTxDate(t);
+          const isPaid = t.status === 'pago' || t.status === 'completed' || t.status === 'parcial' || t.status === 'paid' || t.status === 'approved' || t.status === 'aprovado';
+          const relevantDate = extractTxDate(t);
           if (!relevantDate) return true; // Sem data, deixa visível
 
           let tDate;
           try {
-            // Normalizar para meio-dia UTC para evitar problemas de fuso horário
-            tDate = Date.UTC(relevantDate.getUTCFullYear(), relevantDate.getUTCMonth(), relevantDate.getUTCDate(), 12, 0, 0);
+            // Normalizar para meio-dia UTC baseado em data local para consistência
+            tDate = Date.UTC(relevantDate.getFullYear(), relevantDate.getMonth(), relevantDate.getDate(), 12, 0, 0);
           } catch (e) {
             return true;
           }
           
           const start = new Date(dateRange.startDate);
           const end = new Date(dateRange.endDate);
-          const startTime = Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate(), 0, 0, 0);
-          const endTime = Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate(), 23, 59, 59);
+          const startTime = Date.UTC(start.getFullYear(), start.getMonth(), start.getDate(), 0, 0, 0);
+          const endTime = Date.UTC(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59);
 
           return tDate >= startTime && tDate <= endTime;
         })
