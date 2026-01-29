@@ -8,6 +8,7 @@ import helmet from "helmet";
 import compression from "compression";
 import { randomUUID } from "crypto";
 import { ensureCoreSchema } from "./schemaPatch";
+import { createSimpleRateLimiter } from "./middleware";
 
 import { checkAndSendSubscriptionEmails } from "./api/subscription-cron";
 
@@ -30,11 +31,13 @@ if (TRUST_PROXY) {
   app.set("trust proxy", 1);
 }
 
-// Mock cron job - in production this would be a real cron job
-// Run once on startup and then every 24 hours
-if (process.env.DATABASE_URL) {
+// Cron job is optional; enable only on a single worker
+const CRON_ENABLED = process.env.CRON_ENABLED === "true";
+if (process.env.DATABASE_URL && CRON_ENABLED) {
   checkAndSendSubscriptionEmails();
   setInterval(checkAndSendSubscriptionEmails, 24 * 60 * 60 * 1000);
+} else if (process.env.DATABASE_URL) {
+  console.log("[Server] CRON_ENABLED is false - subscription cron disabled");
 }
 
 console.log(`[Server] Starting in ${isDev ? 'development' : 'production'} mode`);
@@ -73,39 +76,9 @@ app.use((req, res, next) => {
 });
 
 // Basic Rate Limiting (global fallback)
-const rateLimitMap = new Map<string, { count: number; lastReset: number }>();
 const RATE_LIMIT_WINDOW = Number(process.env.RATE_LIMIT_WINDOW_MS || 60_000);
 const RATE_LIMIT_MAX = Number(process.env.RATE_LIMIT_MAX || 600);
-
-app.use((req, res, next) => {
-  const ip = req.ip || "unknown";
-  const now = Date.now();
-  const userData = rateLimitMap.get(ip) || { count: 0, lastReset: now };
-
-  if (now - userData.lastReset > RATE_LIMIT_WINDOW) {
-    userData.count = 1;
-    userData.lastReset = now;
-  } else {
-    userData.count++;
-  }
-
-  rateLimitMap.set(ip, userData);
-
-  if (userData.count > RATE_LIMIT_MAX) {
-    res.setHeader("Retry-After", String(Math.ceil((userData.lastReset + RATE_LIMIT_WINDOW - now) / 1000)));
-    return res.status(429).json({ error: "Too many requests" });
-  }
-
-  next();
-});
-
-// Retry schema patch in case the startup attempt failed (e.g., cold start)
-app.use(async (_req, _res, next) => {
-  if (process.env.DATABASE_URL) {
-    await ensureCoreSchema();
-  }
-  next();
-});
+app.use(createSimpleRateLimiter({ windowMs: RATE_LIMIT_WINDOW, max: RATE_LIMIT_MAX, keyPrefix: "global" }));
 
 // Middleware
 app.use(express.json({ limit: '50mb' }));

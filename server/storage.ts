@@ -124,6 +124,76 @@ export class DatabaseStorage {
     });
   }
 
+  async getTransactionsPaginated(
+    companyId: string,
+    filters: { customerId?: string; supplierId?: string; type?: string; limit: number; offset: number }
+  ) {
+    if (!companyId) return [];
+    const conditions = [eq(transactions.companyId, companyId)];
+
+    if (filters.customerId) {
+      conditions.push(eq(transactions.customerId, filters.customerId as any));
+    }
+    if (filters.supplierId) {
+      conditions.push(eq(transactions.supplierId, filters.supplierId as any));
+    }
+    if (filters.type) {
+      if (filters.type === "venda") {
+        conditions.push(sql`${transactions.type} IN ('venda', 'income')` as any);
+      } else if (filters.type === "compra") {
+        conditions.push(sql`${transactions.type} IN ('compra', 'expense')` as any);
+      } else {
+        conditions.push(eq(transactions.type, filters.type as any));
+      }
+    }
+
+    const rows = await db
+      .select()
+      .from(transactions)
+      .where(and(...conditions))
+      .orderBy(desc(transactions.date))
+      .limit(filters.limit)
+      .offset(filters.offset);
+
+    return rows.map((t: any) => {
+      const fallback = t.paymentDate || t.createdAt || t.created_at;
+      const date = t.date ? normalizeDate(t.date) : normalizeDate(fallback);
+      return { ...t, date };
+    });
+  }
+
+  async countTransactions(
+    companyId: string,
+    filters: { customerId?: string; supplierId?: string; type?: string }
+  ) {
+    if (!companyId) return 0;
+    const conditions = [eq(transactions.companyId, companyId)];
+
+    if (filters.customerId) {
+      conditions.push(eq(transactions.customerId, filters.customerId as any));
+    }
+    if (filters.supplierId) {
+      conditions.push(eq(transactions.supplierId, filters.supplierId as any));
+    }
+    if (filters.type) {
+      if (filters.type === "venda") {
+        conditions.push(sql`${transactions.type} IN ('venda', 'income')` as any);
+      } else if (filters.type === "compra") {
+        conditions.push(sql`${transactions.type} IN ('compra', 'expense')` as any);
+      } else {
+        conditions.push(eq(transactions.type, filters.type as any));
+      }
+    }
+
+    const result = await db.execute(sql`
+      select count(*)::int as count
+      from transactions
+      where ${and(...conditions)}
+    `);
+
+    return Number((result as any)?.rows?.[0]?.count ?? 0);
+  }
+
   async createTransaction(companyId: any, data: any) {
     const safeData = { ...data };
     safeData.date = normalizeDate(safeData.date);

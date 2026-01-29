@@ -4,7 +4,7 @@ import { eq, sql, and, desc } from "drizzle-orm";
 import { companies, subscriptions, users, User } from "../../shared/schema";
 import crypto from "crypto";
 import { z } from "zod";
-import { createSimpleRateLimiter } from "../middleware";
+import { authMiddleware, createSimpleRateLimiter, requireSuperAdmin } from "../middleware";
 
 const MERCADOPAGO_ACCESS_TOKEN = process.env.MERCADOPAGO_ACCESS_TOKEN;
 const MERCADOPAGO_WEBHOOK_SECRET = process.env.MERCADOPAGO_WEBHOOK_SECRET;
@@ -68,7 +68,7 @@ export function registerPaymentRoutes(app: Express) {
       })
       .optional(),
   });
-  app.get("/api/payment/test-token", async (_req: Request, res: Response) => {
+  app.get("/api/payment/test-token", authMiddleware, requireSuperAdmin, async (_req: Request, res: Response) => {
     try {
       if (!MERCADOPAGO_ACCESS_TOKEN) {
         return res.status(500).json({ error: "MERCADOPAGO_ACCESS_TOKEN not configured" });

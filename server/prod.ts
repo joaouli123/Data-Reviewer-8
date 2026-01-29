@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import compression from "compression";
 import { randomUUID } from "crypto";
+import { createSimpleRateLimiter } from "./middleware";
 
 const app = express();
 const PORT = parseInt(process.env.PORT || "5000", 10);
@@ -40,29 +41,9 @@ app.use(helmet({
 }));
 
 // Basic Rate Limiting (global fallback)
-const rateLimitMap = new Map<string, { count: number; lastReset: number }>();
 const RATE_LIMIT_WINDOW = Number(process.env.RATE_LIMIT_WINDOW_MS || 60_000);
 const RATE_LIMIT_MAX = Number(process.env.RATE_LIMIT_MAX || 600);
-
-app.use((req, res, next) => {
-  const ip = req.ip || "unknown";
-  const now = Date.now();
-  const userData = rateLimitMap.get(ip) || { count: 0, lastReset: now };
-
-  if (now - userData.lastReset > RATE_LIMIT_WINDOW) {
-    userData.count = 1;
-    userData.lastReset = now;
-  } else {
-    userData.count++;
-  }
-  rateLimitMap.set(ip, userData);
-
-  if (userData.count > RATE_LIMIT_MAX) {
-    res.setHeader("Retry-After", String(Math.ceil((userData.lastReset + RATE_LIMIT_WINDOW - now) / 1000)));
-    return res.status(429).json({ error: "Too many requests" });
-  }
-  next();
-});
+app.use(createSimpleRateLimiter({ windowMs: RATE_LIMIT_WINDOW, max: RATE_LIMIT_MAX, keyPrefix: "global" }));
 
 // CORS (allowlist)
 app.use((req, res, next) => {

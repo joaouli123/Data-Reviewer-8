@@ -4,6 +4,7 @@ import { findUserById, findCompanyById, checkSubscriptionStatus, createAuditLog 
 import { db } from "./db";
 import { loginAttempts } from "../shared/schema";
 import { eq, and, gte, desc } from "drizzle-orm";
+import { redis } from "./redis";
 
 export interface AuthenticatedRequest extends Request {
   user?: {
@@ -27,14 +28,61 @@ type SimpleRateLimitEntry = {
 };
 
 const simpleRateLimitStore = new Map<string, SimpleRateLimitEntry>();
+const CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
+let cleanupTimerStarted = false;
 
 export function createSimpleRateLimiter(options: { windowMs: number; max: number; keyPrefix?: string }) {
   const { windowMs, max, keyPrefix = "default" } = options;
+
+  if (!cleanupTimerStarted) {
+    cleanupTimerStarted = true;
+    setInterval(() => {
+      const now = Date.now();
+      for (const [key, entry] of simpleRateLimitStore.entries()) {
+        if (now > entry.resetAt) {
+          simpleRateLimitStore.delete(key);
+        }
+      }
+    }, CLEANUP_INTERVAL_MS).unref();
+  }
 
   return (req: Request, res: Response, next: NextFunction) => {
     const ip = (req.headers["x-forwarded-for"]?.toString().split(",")[0] || req.socket.remoteAddress || "unknown").trim();
     const now = Date.now();
     const key = `${keyPrefix}:${ip}`;
+    if (redis) {
+      const windowSeconds = Math.ceil(windowMs / 1000);
+      redis
+        .multi()
+        .incr(key)
+        .pttl(key)
+        .exec()
+        .then(async (result) => {
+          const count = Number(result?.[0]?.[1] || 0);
+          let ttl = Number(result?.[1]?.[1] || -1);
+          if (count === 1 || ttl < 0) {
+            await redis.pexpire(key, windowMs);
+            ttl = windowMs;
+          }
+
+          if (count > max) {
+            const retryAfter = Math.ceil(ttl / 1000);
+            res.setHeader("Retry-After", String(Math.max(1, retryAfter)));
+            res.setHeader("X-RateLimit-Remaining", "0");
+            res.setHeader("X-RateLimit-Reset", String(Math.ceil((now + ttl) / 1000)));
+            return res.status(429).json({ error: "Too many requests" });
+          }
+
+          res.setHeader("X-RateLimit-Remaining", String(Math.max(0, max - count)));
+          res.setHeader("X-RateLimit-Reset", String(Math.ceil((now + ttl) / 1000)));
+          return next();
+        })
+        .catch(() => {
+          return next();
+        });
+      return;
+    }
+
     const entry = simpleRateLimitStore.get(key);
 
     if (!entry || now > entry.resetAt) {

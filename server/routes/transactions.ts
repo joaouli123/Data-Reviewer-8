@@ -71,10 +71,30 @@ export function registerTransactionRoutes(app: Express) {
         return res.status(403).json({ error: "Você não tem permissão para visualizar transações" });
       }
 
-      const { customerId, supplierId, type } = req.query;
-      
+      const { customerId, supplierId, type, limit, offset } = req.query;
+      const parsedLimit = limit ? Math.min(Number(limit), 500) : null;
+      const parsedOffset = offset ? Math.max(Number(offset), 0) : 0;
+
+      if (parsedLimit) {
+        const [data, total] = await Promise.all([
+          storage.getTransactionsPaginated(req.user.companyId, {
+            customerId: customerId ? String(customerId) : undefined,
+            supplierId: supplierId ? String(supplierId) : undefined,
+            type: type ? String(type) : undefined,
+            limit: parsedLimit,
+            offset: parsedOffset,
+          }),
+          storage.countTransactions(req.user.companyId, {
+            customerId: customerId ? String(customerId) : undefined,
+            supplierId: supplierId ? String(supplierId) : undefined,
+            type: type ? String(type) : undefined,
+          }),
+        ]);
+        return res.json({ data, total, limit: parsedLimit, offset: parsedOffset });
+      }
+
       let transactions = await storage.getTransactions(req.user.companyId);
-      
+
       if (customerId) {
         transactions = transactions.filter(t => String(t.customerId) === String(customerId));
       }
@@ -110,22 +130,11 @@ export function registerTransactionRoutes(app: Express) {
       
       const body = { ...req.body };
       
-      // DEBUG: Log dos dados recebidos
-      console.log("[Transactions] Dados recebidos:", JSON.stringify({ 
-        date: body.date, 
-        paymentDate: body.paymentDate,
-        status: body.status,
-        type: body.type,
-        amount: body.amount
-      }));
-      
       // Garantir que date sempre exista e seja um Date object
       if (!body.date) {
         body.date = new Date();
-        console.log("[Transactions] Date não fornecido, usando data atual");
       } else if (typeof body.date === 'string') {
         body.date = parseLocalDate(body.date);
-        console.log("[Transactions] Date parseado:", body.date, "isDate:", body.date instanceof Date);
       }
       
       // Garantir paymentDate seja Date ou null
@@ -175,15 +184,7 @@ export function registerTransactionRoutes(app: Express) {
         data = { ...data, date: new Date() };
       }
       
-      console.log("[Transactions] Data para inserção:", JSON.stringify({ 
-        date: data.date, 
-        dateType: typeof data.date,
-        isDate: data.date instanceof Date 
-      }));
-      
       const transaction = await storage.createTransaction(req.user.companyId, data);
-      console.log("[Transactions] Transação criada:", { id: transaction.id, date: transaction.date });
-      
       res.status(201).json(transaction);
     } catch (error: any) {
       console.error("[Transactions] create error", error);
