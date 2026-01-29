@@ -133,6 +133,16 @@ export default function DashboardPage() {
   }
 
   const allTransactions = Array.isArray(allTxData) ? allTxData : (allTxData?.data || []);
+  
+  // DEBUG CRÍTICO - mostrar todas as transações
+  console.log('[Dashboard DEBUG] allTxData raw:', allTxData);
+  console.log('[Dashboard DEBUG] allTransactions array:', allTransactions);
+  console.log('[Dashboard DEBUG] Total de transações:', allTransactions.length);
+  if (allTransactions.length > 0) {
+    console.log('[Dashboard DEBUG] Primeira transação:', allTransactions[0]);
+    console.log('[Dashboard DEBUG] Tipos únicos:', [...new Set(allTransactions.map(t => t.type))]);
+    console.log('[Dashboard DEBUG] Status únicos:', [...new Set(allTransactions.map(t => t.status))]);
+  }
 
   const extractTxDate = (t) => {
     if (!t) return null;
