@@ -3,7 +3,7 @@ import { GoogleGenAI } from "@google/genai";
 const API_KEY = process.env.GOOGLE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || process.env.VITE_GOOGLE_GEMINI_API_KEY || "";
 
 // Inicialização diferente (conforme o texto que você mandou)
-const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;
+const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY, apiVersion: "v1alpha" }) : null;
 
 export async function analyzeWithAI(prompt: string, responseJsonSchema: any = null) {
   if (!ai) throw new Error('API_KEY_NOT_CONFIGURED');
@@ -33,7 +33,7 @@ IMPORTANTE: Responda APENAS com um JSON válido, sem texto adicional antes ou de
     }
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.0-flash", 
+      model: "gemini-3-flash-preview", 
       config: {
         responseMimeType: responseJsonSchema ? "application/json" : "text/plain",
         temperature: 0.2,
