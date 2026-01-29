@@ -189,10 +189,11 @@ export default function DashboardPage() {
     const periodEnd = new Date(dateRange.endDate.getFullYear(), dateRange.endDate.getMonth(), dateRange.endDate.getDate(), 23, 59, 59, 999);
     
     // Helper para verificar se transação está pendente
-    const isPendingStatus = (status) => {
-      if (!status) return true; // Se não tem status, considera pendente
-      const s = String(status).toLowerCase();
-      return s === 'pendente' || s === 'agendado' || s === 'pending' || s === 'scheduled';
+    const isPendingTransaction = (t) => {
+      const s = String(t?.status || '').toLowerCase();
+      if (['pendente', 'agendado', 'pending', 'scheduled'].includes(s)) return true;
+      if (['pago', 'completed', 'parcial', 'paid', 'approved', 'aprovado'].includes(s)) return false;
+      return !t?.paymentDate; // fallback: sem status, considera pendente apenas se não tem pagamento
     };
     
     // Helper para extrair data de VENCIMENTO (normaliza para local date)
@@ -231,7 +232,7 @@ export default function DashboardPage() {
       if (!tDate) return false;
       // Filtra apenas receitas PENDENTES com vencimento nos próximos 30 dias
       const isIncome = isIncomeType(t.type);
-      const isPending = isPendingStatus(t.status);
+      const isPending = isPendingTransaction(t);
       const isInRange = tDate >= periodStart && tDate <= periodEnd;
       
       return isIncome && isPending && isInRange;
@@ -249,7 +250,7 @@ export default function DashboardPage() {
       if (!tDate) return false;
       // Filtra apenas despesas PENDENTES com vencimento nos próximos 30 dias
       const isExpense = isExpenseType(t.type);
-      const isPending = isPendingStatus(t.status);
+      const isPending = isPendingTransaction(t);
       const isInRange = tDate >= periodStart && tDate <= periodEnd;
       return isExpense && isPending && isInRange;
     });
