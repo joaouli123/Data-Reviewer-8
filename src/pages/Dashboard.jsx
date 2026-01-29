@@ -216,8 +216,29 @@ export default function DashboardPage() {
       const isIncome = isIncomeType(t.type);
       const isPending = isPendingStatus(t.status);
       const isInRange = tDate >= today && tDate <= thirtyDaysFromNow;
+      
+      // DEBUG: Log para cada transação de receita
+      if (isIncome) {
+        console.log('[Dashboard] Transação receita:', {
+          id: t.id,
+          description: t.description,
+          type: t.type,
+          status: t.status,
+          date: t.date,
+          isIncome,
+          isPending,
+          isInRange,
+          tDate: tDate?.toLocaleDateString(),
+          today: today.toLocaleDateString(),
+          thirtyDays: thirtyDaysFromNow.toLocaleDateString()
+        });
+      }
+      
       return isIncome && isPending && isInRange;
     });
+    
+    console.log('[Dashboard] Total transações:', allTransactions.length);
+    console.log('[Dashboard] Receitas pendentes filtradas:', futureRevenueTransactions.length);
     
     const futureRevenue = futureRevenueTransactions.reduce((sum, t) => {
       const amount = Math.abs(parseFloat(t.amount || 0));
