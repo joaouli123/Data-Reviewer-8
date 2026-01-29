@@ -265,26 +265,51 @@ export function registerTransactionRoutes(app: Express) {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       if (!req.user.companyId) return res.status(400).json({ error: "Company ID missing" });
       
+      console.log(`[Fix] Iniciando correção de datas nulas para company: ${req.user.companyId}`);
+      
       // Buscar todas as transações
       const allTransactions = await storage.getTransactions(req.user.companyId);
       
       // Filtrar as que têm date null
-      const transactionsToFix = allTransactions.filter((t: any) => !t.date);
+      const transactionsToFix = allTransactions.filter((t: any) => !t.date || t.date === null);
       
-      console.log(`[Fix] Encontradas ${transactionsToFix.length} transações sem data`);
+      console.log(`[Fix] Encontradas ${transactionsToFix.length} transações sem data de ${allTransactions.length} total`);
+      
+      if (transactionsToFix.length === 0) {
+        return res.json({ 
+          success: true, 
+          message: "Nenhuma transação precisa de correção",
+          totalWithNullDate: 0,
+          fixed: 0
+        });
+      }
       
       // Atualizar cada uma usando createdAt como fallback
       let fixed = 0;
+      const errors: string[] = [];
+      
       for (const t of transactionsToFix as any[]) {
-        const newDate = t.createdAt || new Date();
-        await storage.updateTransaction(req.user.companyId, t.id, { date: newDate });
-        fixed++;
+        try {
+          // Usar createdAt como data base, ou data atual se não existir
+          const newDate = t.createdAt ? new Date(t.createdAt) : new Date();
+          console.log(`[Fix] Corrigindo transação ${t.id}: ${t.description} -> data: ${newDate.toISOString()}`);
+          
+          await storage.updateTransaction(req.user.companyId, t.id, { date: newDate });
+          fixed++;
+        } catch (err: any) {
+          console.error(`[Fix] Erro ao corrigir transação ${t.id}:`, err);
+          errors.push(`${t.id}: ${err.message}`);
+        }
       }
+      
+      console.log(`[Fix] Concluído: ${fixed} corrigidas, ${errors.length} erros`);
       
       res.json({ 
         success: true, 
         message: `${fixed} transações corrigidas`,
-        totalWithNullDate: transactionsToFix.length
+        totalWithNullDate: transactionsToFix.length,
+        fixed,
+        errors: errors.length > 0 ? errors : undefined
       });
     } catch (error: any) {
       console.error("[Fix] Error fixing null dates", error);
