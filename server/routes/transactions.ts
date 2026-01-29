@@ -220,4 +220,37 @@ export function registerTransactionRoutes(app: Express) {
       res.status(400).json({ error: error.message || "Erro ao atualizar datas do grupo" });
     }
   });
+  
+  // Endpoint temporário para corrigir transações sem data
+  app.post("/api/transactions/fix-null-dates", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      if (!req.user.companyId) return res.status(400).json({ error: "Company ID missing" });
+      
+      // Buscar todas as transações
+      const allTransactions = await storage.getTransactions(req.user.companyId);
+      
+      // Filtrar as que têm date null
+      const transactionsToFix = allTransactions.filter((t: any) => !t.date);
+      
+      console.log(`[Fix] Encontradas ${transactionsToFix.length} transações sem data`);
+      
+      // Atualizar cada uma usando createdAt como fallback
+      let fixed = 0;
+      for (const t of transactionsToFix as any[]) {
+        const newDate = t.createdAt || new Date();
+        await storage.updateTransaction(req.user.companyId, t.id, { date: newDate });
+        fixed++;
+      }
+      
+      res.json({ 
+        success: true, 
+        message: `${fixed} transações corrigidas`,
+        totalWithNullDate: transactionsToFix.length
+      });
+    } catch (error: any) {
+      console.error("[Fix] Error fixing null dates", error);
+      res.status(500).json({ error: error.message || "Erro ao corrigir datas" });
+    }
+  });
 }
