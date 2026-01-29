@@ -253,10 +253,10 @@ export default function CashFlowForecastPage() {
       </div>
     );
   }
-
-  const calculateCashFlow = () => {
-    if (!dateRange || !dateRange.startDate || !dateRange.endDate) return [];
-
+                                              <p className="text-xs text-slate-500 mt-1">
+                                                {format(parseLocalDate(detail.date), "dd/MM/yyyy")}
+                                                {detail.category && ` • ${formatTypeLabel(detail.category)}`}
+                                              </p>
     const start = startOfDay(dateRange.startDate);
     const end = endOfDay(dateRange.endDate);
     
@@ -685,7 +685,7 @@ export default function CashFlowForecastPage() {
                                           <p className="text-sm font-medium text-slate-900">{detail.description}</p>
                                           <p className="text-xs text-slate-500 mt-1">
                                             {format(parseLocalDate(detail.date), "dd/MM/yyyy")}
-                                            {detail.category && ` • ${detail.category}`}
+                                            {detail.category && ` • ${formatTypeLabel(detail.category)}`}
                                           </p>
                                         </div>
                                         <p className="text-sm font-bold text-emerald-600 ml-3">
