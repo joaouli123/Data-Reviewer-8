@@ -192,17 +192,15 @@ export default function TransactionsPage() {
 
   const handleSubmit = (data) => {
     if (editingTransaction) {
-      updateMutation.mutate({ id: editingTransaction.id, data });
-    } else {
-      // Handle array of transactions (for installments)
-      if (Array.isArray(data)) {
-        data.forEach(transaction => {
-          createMutation.mutate(transaction);
-        });
-      } else {
-        createMutation.mutate(data);
-      }
+      return updateMutation.mutateAsync({ id: editingTransaction.id, data });
     }
+
+    // Handle array of transactions (for installments)
+    if (Array.isArray(data)) {
+      return Promise.all(data.map((transaction) => createMutation.mutateAsync(transaction)));
+    }
+
+    return createMutation.mutateAsync(data);
   };
 
   const handleEdit = async (item) => {

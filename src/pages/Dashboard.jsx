@@ -85,10 +85,9 @@ export default function DashboardPage() {
   });
 
   const handleSubmit = (data) => {
-    
     if (Array.isArray(data)) {
       // Para parcelado: criar todas as parcelas sequencialmente
-      Promise.all(
+      return Promise.all(
         data.map(item => {
           return apiRequest('POST', '/api/transactions', item);
         })
@@ -101,15 +100,14 @@ export default function DashboardPage() {
       });
     } else {
       // Para transação única
-      createMutation.mutate(data, {
-        onSuccess: () => {
+      return createMutation.mutateAsync(data)
+        .then(() => {
           setIsFormOpen(false);
           toast.success('Transação criada com sucesso!');
-        },
-        onError: (error) => {
+        })
+        .catch((error) => {
           toast.error(error.message || 'Erro ao salvar transação. Tente novamente.');
-        }
-      });
+        });
     }
   };
 
@@ -223,9 +221,54 @@ export default function DashboardPage() {
         return null;
       }
     };
-    
-    const futureRevenueTransactions = allTransactions.filter(t => {
+
+    // Detecta grupos de parcelas com datas idênticas (erro de cadastro) e espalha por meses
+    const installmentGroupInfo = new Map();
+    allTransactions.forEach((t) => {
+      if (!t?.installmentGroup || !t?.installmentTotal || Number(t.installmentTotal) < 2) return;
       const tDate = extractDueDate(t);
+      if (!tDate) return;
+      const key = t.installmentGroup;
+      const entry = installmentGroupInfo.get(key) || { dates: [], baseDate: null, spread: false };
+      entry.dates.push(tDate);
+      if (!entry.baseDate || tDate < entry.baseDate) entry.baseDate = tDate;
+      installmentGroupInfo.set(key, entry);
+    });
+
+    installmentGroupInfo.forEach((entry, key) => {
+      if (entry.dates.length < 2 || !entry.baseDate) return;
+      const first = entry.dates[0];
+      const sameDay = entry.dates.every(
+        (d) => d.getFullYear() === first.getFullYear()
+          && d.getMonth() === first.getMonth()
+          && d.getDate() === first.getDate()
+      );
+      entry.spread = sameDay;
+      installmentGroupInfo.set(key, entry);
+    });
+
+    const getEffectiveDueDate = (t) => {
+      const baseDate = extractDueDate(t);
+      if (!baseDate) return null;
+      const groupKey = t?.installmentGroup;
+      const entry = groupKey ? installmentGroupInfo.get(groupKey) : null;
+      const installmentNumber = Number(t?.installmentNumber || 0);
+      if (!entry || !entry.spread || !entry.baseDate || installmentNumber < 1) return baseDate;
+      return new Date(
+        entry.baseDate.getFullYear(),
+        entry.baseDate.getMonth() + (installmentNumber - 1),
+        entry.baseDate.getDate(),
+        12,
+        0,
+        0,
+        0
+      );
+    };
+    
+    const futureRevenueTransactions = allTransactions
+      .map((t) => ({ ...t, effectiveDate: getEffectiveDueDate(t) }))
+      .filter(t => {
+      const tDate = t.effectiveDate;
       if (!tDate) return false;
       // Filtra apenas receitas PENDENTES com vencimento nos próximos 30 dias
       const isIncome = isIncomeType(t.type);
@@ -242,8 +285,10 @@ export default function DashboardPage() {
       return sum + amount + interest - cardFee;
     }, 0);
     
-    const futureExpensesTransactions = allTransactions.filter(t => {
-      const tDate = extractDueDate(t);
+    const futureExpensesTransactions = allTransactions
+      .map((t) => ({ ...t, effectiveDate: getEffectiveDueDate(t) }))
+      .filter(t => {
+      const tDate = t.effectiveDate;
       if (!tDate) return false;
       // Filtra apenas despesas PENDENTES com vencimento nos próximos 30 dias
       const isExpense = isExpenseType(t.type);

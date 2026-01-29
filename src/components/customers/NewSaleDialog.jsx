@@ -139,6 +139,7 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (createSaleMutation.isPending) return;
 
     const rawTotal = parseCurrency(formData.total_amount);
 
@@ -531,8 +532,8 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700">
-              Registrar Venda
+            <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700" disabled={createSaleMutation.isPending}>
+              {createSaleMutation.isPending ? 'Salvando...' : 'Registrar Venda'}
             </Button>
           </div>
         </form>

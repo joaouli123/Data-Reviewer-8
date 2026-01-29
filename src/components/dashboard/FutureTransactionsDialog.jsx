@@ -21,10 +21,10 @@ export default function FutureTransactionsDialog({
     if (open) setPage(1);
   }, [open, transactions]);
   
-  // Helper para extrair data de VENCIMENTO (usa date primeiro, pois é a data de vencimento)
+  // Helper para extrair data de VENCIMENTO (usa effectiveDate quando disponível)
   const extractDate = (t) => {
     // Para transações pendentes, date é a data de vencimento
-    const candidate = t.date || t.paymentDate || t.payment_date;
+    const candidate = t.effectiveDate || t.effective_date || t.date || t.paymentDate || t.payment_date;
     if (!candidate) return null;
     if (candidate instanceof Date) {
       return isNaN(candidate.getTime()) ? null : candidate;

@@ -26,6 +26,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
   const [isCreateCategoryModalOpen, setIsCreateCategoryModalOpen] = useState(false);
   const [isSuggestingCategory, setIsSuggestingCategory] = useState(false);
   const [customInstallments, setCustomInstallments] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Use ROLES instead of direct strings to be safer
   const canEdit = user?.role === ROLES.ADMIN || user?.isSuperAdmin || (initialData ? user?.permissions?.edit_transactions : user?.permissions?.create_transactions);
@@ -237,6 +238,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
     if (!formData.description.trim()) {
         toast.error('Digite uma descrição', { duration: 5000 });
         return;
@@ -345,7 +347,13 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
         }
         transactions.push(payload);
       }
-      onSubmit(transactions);
+      setIsSubmitting(true);
+      try {
+        const result = onSubmit(transactions);
+        Promise.resolve(result).finally(() => setIsSubmitting(false));
+      } catch (error) {
+        setIsSubmitting(false);
+      }
       queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/cash-flow'] });
       if (formData.customerId) {
@@ -382,7 +390,13 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
         console.warn('Supplier selected but no supplierId provided');
       }
 
-      onSubmit(payload);
+      setIsSubmitting(true);
+      try {
+        const result = onSubmit(payload);
+        Promise.resolve(result).finally(() => setIsSubmitting(false));
+      } catch (error) {
+        setIsSubmitting(false);
+      }
       
       // Invalidate queries to update UI in real-time
       queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
@@ -779,8 +793,8 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
             </Popover>
           </div>
 
-          <Button type="submit" className="w-full bg-primary hover:bg-primary/90">
-            {initialData ? 'Atualizar Transação' : 'Criar Transação'}
+          <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isSubmitting}>
+            {isSubmitting ? 'Salvando...' : (initialData ? 'Atualizar Transação' : 'Criar Transação')}
           </Button>
           </form>
         )}
