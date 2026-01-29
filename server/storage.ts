@@ -124,6 +124,34 @@ export class DatabaseStorage {
     await db.delete(transactions).where(and(eq(transactions.companyId, companyId), eq(transactions.id, id)));
   }
 
+  // Busca transações por grupo (parcelas)
+  async getTransactionsByGroup(companyId: any, installmentGroup: string) {
+    if (!companyId || !installmentGroup) return [];
+    return await db.select()
+      .from(transactions)
+      .where(and(
+        eq(transactions.companyId, companyId),
+        eq(transactions.installmentGroup, installmentGroup)
+      ))
+      .orderBy(transactions.installmentNumber);
+  }
+
+  // Atualiza múltiplas transações de um grupo
+  async updateTransactionsInGroup(companyId: any, installmentGroup: string, updates: Array<{ id: string; date: Date }>) {
+    const results = [];
+    for (const update of updates) {
+      const [updated] = await db.update(transactions)
+        .set({ date: update.date })
+        .where(and(
+          eq(transactions.companyId, companyId),
+          eq(transactions.id, update.id)
+        ))
+        .returning();
+      if (updated) results.push(updated);
+    }
+    return results;
+  }
+
   async getCustomers(companyId: any) {
     if (!companyId) return [];
     const allCustomers = await db.select().from(customers).where(eq(customers.companyId, companyId));

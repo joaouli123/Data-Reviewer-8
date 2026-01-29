@@ -13,6 +13,7 @@ import DREComparison from '../components/dashboard/DREComparison';
 import QuickActionsFAB from '../components/dashboard/QuickActionsFAB';
 import PeriodFilter from '../components/dashboard/PeriodFilter';
 import TransactionForm from '../components/transactions/TransactionForm';
+import FutureTransactionsDialog from '../components/dashboard/FutureTransactionsDialog';
 import { apiRequest } from '@/lib/queryClient';
 import { Transaction, Installment } from '@/api/entities';
 import { PurchaseInstallment } from '@/api/entities';
@@ -40,6 +41,8 @@ export default function DashboardPage() {
 
   const [dateRange, setDateRange] = useState(getInitialDateRange());
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [showReceivablesDialog, setShowReceivablesDialog] = useState(false);
+  const [showPayablesDialog, setShowPayablesDialog] = useState(false);
   const { company, user } = useAuth();
   const queryClient = useQueryClient();
   const { PERMISSIONS } = { PERMISSIONS: { CREATE_TRANSACTIONS: 'create_transactions' } }; // Simplified for now or import properly
@@ -177,16 +180,22 @@ export default function DashboardPage() {
 
     const netProfit = totalRevenue - totalExpenses;
 
-    // Future Cash Flow (próximos 30 dias)
+    // Future Cash Flow (próximos 30 dias) - APENAS transações PENDENTES
     const todayStr = new Date().toISOString().split('T')[0];
     const today = new Date(todayStr + 'T00:00:00Z');
     const thirtyDaysFromNowStr = new Date(new Date().setDate(new Date().getDate() + 30)).toISOString().split('T')[0];
     const thirtyDaysFromNow = new Date(thirtyDaysFromNowStr + 'T23:59:59Z');
     
+    // Helper para verificar se transação está pendente
+    const isPendingStatus = (status) => {
+      return status === 'pendente' || status === 'agendado' || status === 'pending';
+    };
+    
     const futureRevenueTransactions = allTransactions.filter(t => {
       const tDate = extractTxDate(t);
       if (!tDate) return false;
-      return isIncomeType(t.type) && tDate >= today && tDate <= thirtyDaysFromNow;
+      // Filtra apenas receitas PENDENTES com vencimento nos próximos 30 dias
+      return isIncomeType(t.type) && isPendingStatus(t.status) && tDate >= today && tDate <= thirtyDaysFromNow;
     });
     
     const futureRevenue = futureRevenueTransactions.reduce((sum, t) => {
@@ -199,7 +208,8 @@ export default function DashboardPage() {
     const futureExpensesTransactions = allTransactions.filter(t => {
       const tDate = extractTxDate(t);
       if (!tDate) return false;
-      return isExpenseType(t.type) && tDate >= today && tDate <= thirtyDaysFromNow;
+      // Filtra apenas despesas PENDENTES com vencimento nos próximos 30 dias
+      return isExpenseType(t.type) && isPendingStatus(t.status) && tDate >= today && tDate <= thirtyDaysFromNow;
     });
     
     const futureExpenses = futureExpensesTransactions.reduce((sum, t) => sum + Math.abs((parseFloat(t.amount || 0) + parseFloat(t.interest || 0))), 0);
@@ -246,6 +256,8 @@ export default function DashboardPage() {
       futureExpenses,
       futureRevenueCount: futureSaleCount,
       futureExpensesCount: futurePurchaseCount,
+      futureRevenueTransactions,
+      futureExpensesTransactions,
       chartData,
       filteredTransactions
     };
@@ -313,6 +325,7 @@ export default function DashboardPage() {
           trendValue={`${metrics.futureRevenueCount} parcelas`}
           trend="up"
           className="text-emerald-600"
+          onClick={() => setShowReceivablesDialog(true)}
         />
 
         <KPIWidget
@@ -322,6 +335,7 @@ export default function DashboardPage() {
           trendValue={`${metrics.futureExpensesCount} parcelas`}
           trend="down"
           className="text-rose-600"
+          onClick={() => setShowPayablesDialog(true)}
         />
       </div>
 
@@ -440,6 +454,24 @@ export default function DashboardPage() {
         open={isFormOpen} 
         onOpenChange={setIsFormOpen} 
         onSubmit={handleSubmit}
+      />
+
+      {/* Dialog de Contas a Receber */}
+      <FutureTransactionsDialog
+        open={showReceivablesDialog}
+        onOpenChange={setShowReceivablesDialog}
+        title="Contas a Receber (Próximos 30 dias)"
+        transactions={metrics.futureRevenueTransactions || []}
+        type="income"
+      />
+
+      {/* Dialog de Contas a Pagar */}
+      <FutureTransactionsDialog
+        open={showPayablesDialog}
+        onOpenChange={setShowPayablesDialog}
+        title="Contas a Pagar (Próximos 30 dias)"
+        transactions={metrics.futureExpensesTransactions || []}
+        type="expense"
       />
     </div>
   );

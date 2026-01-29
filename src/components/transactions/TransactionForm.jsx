@@ -194,6 +194,24 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
   const updateCustomInstallment = (index, field, value) => {
     const updated = [...customInstallments];
     updated[index] = { ...updated[index], [field]: value };
+    
+    // Se alterou a data da PRIMEIRA parcela, recalcular todas as outras
+    if (field === 'due_date' && index === 0 && customInstallments.length > 1) {
+      const newBaseDate = new Date(value + 'T12:00:00');
+      const dayOfMonth = newBaseDate.getDate();
+      const monthIdx = newBaseDate.getMonth();
+      const yearVal = newBaseDate.getFullYear();
+      
+      for (let i = 1; i < updated.length; i++) {
+        const installmentDate = new Date(yearVal, monthIdx + i, dayOfMonth);
+        const year = installmentDate.getFullYear();
+        const month = String(installmentDate.getMonth() + 1).padStart(2, '0');
+        const day = String(installmentDate.getDate()).padStart(2, '0');
+        updated[i] = { ...updated[i], due_date: `${year}-${month}-${day}` };
+      }
+      toast.info('Datas das parcelas atualizadas automaticamente', { duration: 3000 });
+    }
+    
     setCustomInstallments(updated);
   };
 

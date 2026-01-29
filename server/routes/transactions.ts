@@ -148,4 +148,57 @@ export function registerTransactionRoutes(app: Express) {
       res.status(400).json({ error: error.message || "Failed to update transaction" });
     }
   });
+
+  // Endpoint para atualizar datas de todas as parcelas de um grupo
+  // Quando a data da primeira parcela é alterada, recalcula as demais
+  app.patch("/api/transactions/group/:installmentGroup/dates", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      if (!req.user.companyId) return res.status(400).json({ error: "Company ID missing" });
+      
+      if (!await checkPermission(req, PERMISSIONS.EDIT_TRANSACTIONS)) {
+        return res.status(403).json({ error: "Você não tem permissão para editar transações" });
+      }
+
+      const { installmentGroup } = req.params;
+      const { newFirstDate } = req.body;
+
+      if (!installmentGroup || !newFirstDate) {
+        return res.status(400).json({ error: "Grupo e nova data são obrigatórios" });
+      }
+
+      // Buscar todas as parcelas do grupo
+      const groupTransactions = await storage.getTransactionsByGroup(req.user.companyId, installmentGroup);
+      
+      if (groupTransactions.length === 0) {
+        return res.status(404).json({ error: "Grupo de parcelas não encontrado" });
+      }
+
+      // Ordenar por número da parcela
+      groupTransactions.sort((a: any, b: any) => (a.installmentNumber || 1) - (b.installmentNumber || 1));
+
+      // Calcular as novas datas baseadas na primeira parcela
+      const baseDate = parseLocalDate(newFirstDate);
+      const updates: Array<{ id: string; date: Date }> = [];
+
+      for (let i = 0; i < groupTransactions.length; i++) {
+        const t = groupTransactions[i] as any;
+        // Nova data = data base + i meses
+        const newDate = new Date(baseDate.getFullYear(), baseDate.getMonth() + i, baseDate.getDate());
+        updates.push({ id: t.id, date: newDate });
+      }
+
+      // Atualizar todas as transações
+      const updatedTransactions = await storage.updateTransactionsInGroup(req.user.companyId, installmentGroup, updates);
+      
+      res.json({ 
+        success: true, 
+        message: `${updatedTransactions.length} parcelas atualizadas`,
+        transactions: updatedTransactions 
+      });
+    } catch (error: any) {
+      console.error("[Transactions] update group dates error", error);
+      res.status(400).json({ error: error.message || "Erro ao atualizar datas do grupo" });
+    }
+  });
 }
