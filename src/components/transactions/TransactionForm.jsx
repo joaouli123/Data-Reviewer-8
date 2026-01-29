@@ -126,20 +126,12 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
       return;
     }
 
-    // Pre-select first appropriate category when opening new transaction form
-    const filteredCats = categories.filter(cat => {
-      if (formData.entityType === 'customer') return cat.type === 'entrada';
-      if (formData.entityType === 'supplier') return cat.type === 'saida';
-      return true;
-    });
-    const defaultCategoryId = filteredCats.length > 0 ? filteredCats[0].id : '';
-
     setFormData(prev => ({
       ...prev,
       description: '',
       amount: '',
       type: prev.entityType === 'customer' ? 'venda' : (prev.entityType === 'supplier' ? 'compra' : 'venda'),
-      categoryId: defaultCategoryId,
+      categoryId: '',
       date: new Date(),
       installments: 1,
       installment_amount: '',
@@ -152,7 +144,25 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
       cardFee: ''
     }));
     setCustomInstallments([]);
-  }, [initialData, open, categories]);
+  }, [initialData, open]);
+
+  React.useEffect(() => {
+    if (!open || initialData) return;
+    if (formData.categoryId) return;
+
+    const filteredCats = categories.filter(cat => {
+      if (formData.entityType === 'customer') return cat.type === 'entrada' || cat.type === 'income';
+      if (formData.entityType === 'supplier') return cat.type === 'saida' || cat.type === 'expense';
+      return true;
+    });
+    const defaultCategoryId = filteredCats.length > 0 ? filteredCats[0].id : '';
+    if (!defaultCategoryId) return;
+
+    setFormData(prev => ({
+      ...prev,
+      categoryId: defaultCategoryId
+    }));
+  }, [open, initialData, categories, formData.entityType, formData.categoryId]);
 
   const handleInstallmentsChange = (value) => {
     const numValue = value === '' ? 1 : parseInt(value);
