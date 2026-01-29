@@ -772,18 +772,25 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
                   variant={"outline"}
                   className={cn(
                     "w-full justify-start text-left font-normal",
-                    !formData.date && "text-muted-foreground"
+                    !(formData.status === 'pago' ? formData.paymentDate : formData.date) && "text-muted-foreground"
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {formData.date ? format(formData.date, "PPP", { locale: ptBR }) : <span>Selecione uma data</span>}
+                  {formData.status === 'pago'
+                    ? (formData.paymentDate ? format(formData.paymentDate, "PPP", { locale: ptBR }) : <span>Selecione uma data</span>)
+                    : (formData.date ? format(formData.date, "PPP", { locale: ptBR }) : <span>Selecione uma data</span>)}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
                 <Calendar
                   mode="single"
-                  selected={formData.date}
-                  onSelect={(date) => setFormData({...formData, date: date || new Date()})}
+                  selected={formData.status === 'pago' ? formData.paymentDate : formData.date}
+                  onSelect={(date) => setFormData({
+                    ...formData,
+                    ...(formData.status === 'pago'
+                      ? { paymentDate: date || new Date() }
+                      : { date: date || new Date() })
+                  })}
                   initialFocus
                   locale={ptBR}
                 />
