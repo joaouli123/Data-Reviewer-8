@@ -156,7 +156,16 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
 
   const handleInstallmentsChange = (value) => {
     const numValue = value === '' ? 1 : parseInt(value);
-    setFormData({ ...formData, installments: numValue, installment_amount: '' });
+    
+    // Se parcelado (mais de 1), automaticamente marca como pendente
+    const newStatus = numValue > 1 ? 'pendente' : formData.status;
+    
+    setFormData({ 
+      ...formData, 
+      installments: numValue, 
+      installment_amount: '',
+      status: newStatus 
+    });
 
     if (numValue > 1) {
       const totalAmount = parseFloat(formData.amount) || 0;
@@ -585,10 +594,13 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
               onValueChange={(v) => {
                 const canInstall = ['Cartão de Crédito', 'Boleto', 'Crediário'].includes(v);
                 const isCardPayment = ['Cartão de Crédito', 'Cartão de Débito'].includes(v);
+                const isPaidImmediately = ['Pix', 'Dinheiro', 'Cartão de Débito'].includes(v);
+                // Cartão de crédito e boleto são pendentes por padrão
+                const newStatus = isPaidImmediately ? 'pago' : (['Cartão de Crédito', 'Boleto', 'Crediário'].includes(v) ? 'pendente' : prev.status);
                 setFormData(prev => ({
                   ...prev, 
                   paymentMethod: v,
-                  status: (v === 'Pix' || v === 'Dinheiro' || v === 'Cartão de Débito') ? 'pago' : prev.status,
+                  status: isPaidImmediately ? 'pago' : (['Cartão de Crédito', 'Boleto', 'Crediário'].includes(v) ? 'pendente' : prev.status),
                   installments: canInstall ? prev.installments : 1,
                   hasCardFee: isCardPayment ? prev.hasCardFee : false,
                   cardFee: isCardPayment ? prev.cardFee : ''
