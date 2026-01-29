@@ -1,9 +1,9 @@
 import { Express } from "express";
 import { storage } from "../storage";
-import { users } from "../../shared/schema";
+import { users, transactions } from "../../shared/schema";
 import { authMiddleware, AuthenticatedRequest } from "../middleware";
 import { db } from "../db";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and } from "drizzle-orm";
 
 // Define PERMISSIONS object since it might not be exported from schema or to be safe
 const PERMISSIONS = {
@@ -62,6 +62,30 @@ const checkPermission = async (req: AuthenticatedRequest, permission: string) =>
 };
 
 export function registerTransactionRoutes(app: Express) {
+  app.get("/api/transactions/:id", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      if (!req.user.companyId) return res.status(400).json({ error: "Company ID missing" });
+
+      if (!await checkPermission(req, PERMISSIONS.VIEW_TRANSACTIONS)) {
+        return res.status(403).json({ error: "Você não tem permissão para visualizar transações" });
+      }
+
+      const [transaction] = await db
+        .select()
+        .from(transactions)
+        .where(and(eq(transactions.companyId, req.user.companyId), eq(transactions.id, req.params.id)))
+        .limit(1);
+
+      if (!transaction) return res.status(404).json({ error: "Transação não encontrada" });
+
+      res.json(transaction);
+    } catch (error) {
+      console.error("[Transactions] get error", error);
+      res.status(500).json({ error: "Failed to fetch transaction" });
+    }
+  });
+
   app.get("/api/transactions", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });

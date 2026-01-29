@@ -196,7 +196,7 @@ export default function TransactionsPage() {
     if (item?.id) {
       try {
         const full = await Transaction.get(item.id);
-        if (full) {
+        if (full && typeof full === 'object' && full.id) {
           setEditingTransaction(full);
         }
       } catch (e) {
