@@ -202,7 +202,22 @@ export default function DashboardPage() {
       const candidate = t.date || t.paymentDate;
       if (!candidate) return null;
       try {
-        const d = new Date(candidate);
+        if (candidate instanceof Date) {
+          if (Number.isNaN(candidate.getTime())) return null;
+          return new Date(candidate.getFullYear(), candidate.getMonth(), candidate.getDate(), 12, 0, 0, 0);
+        }
+
+        const raw = String(candidate).trim();
+        const ymdMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (ymdMatch) {
+          const year = Number(ymdMatch[1]);
+          const month = Number(ymdMatch[2]);
+          const day = Number(ymdMatch[3]);
+          const d = new Date(year, month - 1, day, 12, 0, 0, 0);
+          return Number.isNaN(d.getTime()) ? null : d;
+        }
+
+        const d = new Date(raw);
         if (Number.isNaN(d.getTime())) return null;
         // Normalizar para data local (ignorar timezone)
         return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12, 0, 0, 0);

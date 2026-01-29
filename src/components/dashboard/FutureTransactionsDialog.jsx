@@ -25,7 +25,19 @@ export default function FutureTransactionsDialog({
     // Para transações pendentes, date é a data de vencimento
     const candidate = t.date || t.paymentDate || t.payment_date;
     if (!candidate) return null;
-    const d = new Date(candidate);
+    if (candidate instanceof Date) {
+      return isNaN(candidate.getTime()) ? null : candidate;
+    }
+    const raw = String(candidate).trim();
+    const ymdMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (ymdMatch) {
+      const year = Number(ymdMatch[1]);
+      const month = Number(ymdMatch[2]);
+      const day = Number(ymdMatch[3]);
+      const d = new Date(year, month - 1, day, 12, 0, 0, 0);
+      return isNaN(d.getTime()) ? null : d;
+    }
+    const d = new Date(raw);
     return isNaN(d.getTime()) ? null : d;
   };
 
