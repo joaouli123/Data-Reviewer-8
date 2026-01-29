@@ -65,9 +65,9 @@ export default function FutureTransactionsDialog({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[100px]">Vencimento</TableHead>
-                  <TableHead>Descrição</TableHead>
-                  <TableHead className="text-right">Valor</TableHead>
+                  <TableHead className="w-[120px]">Vencimento</TableHead>
+                  <TableHead className="min-w-[200px]">Descrição</TableHead>
+                  <TableHead className="w-[120px] text-right">Valor</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -80,10 +80,10 @@ export default function FutureTransactionsDialog({
                   
                   return (
                     <TableRow key={t.id || idx}>
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3 text-muted-foreground" />
-                          {format(txDate, "dd/MM/yyyy", { locale: ptBR })}
+                      <TableCell className="font-medium whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          <span>{format(txDate, "dd/MM/yyyy", { locale: ptBR })}</span>
                         </div>
                       </TableCell>
                       <TableCell>
