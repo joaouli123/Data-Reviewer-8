@@ -253,10 +253,16 @@ export default function CashFlowForecastPage() {
       </div>
     );
   }
-                                              <p className="text-xs text-slate-500 mt-1">
-                                                {format(parseLocalDate(detail.date), "dd/MM/yyyy")}
-                                                {detail.category && ` • ${formatTypeLabel(detail.category)}`}
-                                              </p>
+  const formatTypeLabel = (value) => {
+    if (!value) return '';
+    const normalized = String(value).toLowerCase();
+    if (['income', 'entrada', 'venda', 'venda_prazo', 'receita'].includes(normalized)) return 'Receita';
+    if (['expense', 'saida', 'compra', 'compra_prazo', 'despesa'].includes(normalized)) return 'Despesa';
+    return value;
+  };
+
+  const calculateCashFlow = () => {
+    if (!dateRange || !dateRange.startDate || !dateRange.endDate) return [];
     const start = startOfDay(dateRange.startDate);
     const end = endOfDay(dateRange.endDate);
     
@@ -714,7 +720,7 @@ export default function CashFlowForecastPage() {
                                           <p className="text-sm font-medium text-slate-900">{detail.description}</p>
                                           <p className="text-xs text-slate-500 mt-1">
                                             {format(parseLocalDate(detail.date), "dd/MM/yyyy")}
-                                            {detail.category && ` • ${detail.category}`}
+                                            {detail.category && ` • ${formatTypeLabel(detail.category)}`}
                                           </p>
                                         </div>
                                         <p className="text-sm font-bold text-rose-600 ml-3">
