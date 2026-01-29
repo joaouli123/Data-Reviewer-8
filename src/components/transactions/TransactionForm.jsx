@@ -256,6 +256,11 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
         return;
     }
 
+    // DEBUG: Log do status atual
+    console.log('[TransactionForm] Status sendo enviado:', formData.status);
+    console.log('[TransactionForm] Forma de pagamento:', formData.paymentMethod);
+    console.log('[TransactionForm] Parcelas:', formData.installments);
+
     // Get selected category to determine if value should be negative
     const selectedCategory = categories.find(c => c.id === formData.categoryId);
     const numericAmount = parseFloat(formData.amount);
@@ -595,16 +600,26 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
                 const canInstall = ['Cartão de Crédito', 'Boleto', 'Crediário'].includes(v);
                 const isCardPayment = ['Cartão de Crédito', 'Cartão de Débito'].includes(v);
                 const isPaidImmediately = ['Pix', 'Dinheiro', 'Cartão de Débito'].includes(v);
-                // Cartão de crédito e boleto são pendentes por padrão
-                const newStatus = isPaidImmediately ? 'pago' : (['Cartão de Crédito', 'Boleto', 'Crediário'].includes(v) ? 'pendente' : prev.status);
-                setFormData(prev => ({
-                  ...prev, 
-                  paymentMethod: v,
-                  status: isPaidImmediately ? 'pago' : (['Cartão de Crédito', 'Boleto', 'Crediário'].includes(v) ? 'pendente' : prev.status),
-                  installments: canInstall ? prev.installments : 1,
-                  hasCardFee: isCardPayment ? prev.hasCardFee : false,
-                  cardFee: isCardPayment ? prev.cardFee : ''
-                }));
+                const isPendingPayment = ['Cartão de Crédito', 'Boleto', 'Crediário'].includes(v);
+                
+                setFormData(prev => {
+                  // Determina o novo status
+                  let newStatus = prev.status;
+                  if (isPaidImmediately) {
+                    newStatus = 'pago';
+                  } else if (isPendingPayment) {
+                    newStatus = 'pendente';
+                  }
+                  
+                  return {
+                    ...prev, 
+                    paymentMethod: v,
+                    status: newStatus,
+                    installments: canInstall ? prev.installments : 1,
+                    hasCardFee: isCardPayment ? prev.hasCardFee : false,
+                    cardFee: isCardPayment ? prev.cardFee : ''
+                  };
+                });
               }}
             >
               <SelectTrigger className="w-full" required>
