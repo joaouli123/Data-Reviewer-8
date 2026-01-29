@@ -1,7 +1,6 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { TrendingUp, TrendingDown, Calendar, User, Building } from 'lucide-react';
@@ -89,12 +88,12 @@ export default function FutureTransactionsDialog({
                       </TableCell>
                       <TableCell>
                         <div>
-                          <p className="font-medium text-sm">{t.description}</p>
-                          {t.installmentNumber && t.installmentTotal && (
-                            <Badge variant="outline" className="text-xs mt-1">
-                              Parcela {t.installmentNumber}/{t.installmentTotal}
-                            </Badge>
-                          )}
+                          <p className="font-medium text-sm">
+                            {t.description}
+                            {t.installmentNumber && t.installmentTotal && (
+                              <span className="text-muted-foreground font-normal"> - {String(t.installmentNumber).padStart(2, '0')}/{String(t.installmentTotal).padStart(2, '0')}</span>
+                            )}
+                          </p>
                           {t.customerName && (
                             <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
                               <User className="w-3 h-3" />
