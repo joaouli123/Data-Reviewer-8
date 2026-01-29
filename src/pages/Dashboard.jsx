@@ -196,18 +196,16 @@ export default function DashboardPage() {
       return !t?.paymentDate; // fallback: sem status, considera pendente apenas se não tem pagamento
     };
     
-    // Helper para extrair data de VENCIMENTO (normaliza para local date)
+    // Helper para extrair data de VENCIMENTO (sempre usar t.date para parcelas)
     const extractDueDate = (t) => {
       if (!t) return null;
-      // Para transações pendentes, usar date (vencimento), não paymentDate
-      const candidate = t.date || t.paymentDate;
+      const candidate = t.date;
       if (!candidate) return null;
       try {
         if (candidate instanceof Date) {
           if (Number.isNaN(candidate.getTime())) return null;
           return new Date(candidate.getFullYear(), candidate.getMonth(), candidate.getDate(), 12, 0, 0, 0);
         }
-
         const raw = String(candidate).trim();
         const ymdMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
         if (ymdMatch) {
@@ -217,7 +215,6 @@ export default function DashboardPage() {
           const d = new Date(year, month - 1, day, 12, 0, 0, 0);
           return Number.isNaN(d.getTime()) ? null : d;
         }
-
         const d = new Date(raw);
         if (Number.isNaN(d.getTime())) return null;
         // Normalizar para data local (ignorar timezone)
