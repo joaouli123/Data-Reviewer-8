@@ -164,7 +164,8 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
       ...formData, 
       installments: numValue, 
       installment_amount: '',
-      status: newStatus 
+      status: newStatus,
+      paymentDate: newStatus === 'pendente' ? null : formData.paymentDate
     });
 
     if (numValue > 1) {
@@ -285,7 +286,9 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
 
     let isoDate = formatDateOnly(formData.date);
 
-    let paymentDateISO = formatDateOnly(formData.paymentDate);
+    let paymentDateISO = formData.status === 'pago'
+      ? formatDateOnly(formData.paymentDate || formData.date)
+      : null;
 
     // Handle installments
     const installmentCount = formData.installments || 1;
@@ -620,6 +623,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
                     ...prev, 
                     paymentMethod: v,
                     status: newStatus,
+                    paymentDate: newStatus === 'pago' ? (prev.paymentDate || new Date()) : null,
                     installments: canInstall ? prev.installments : 1,
                     hasCardFee: isCardPayment ? prev.hasCardFee : false,
                     cardFee: isCardPayment ? prev.cardFee : ''

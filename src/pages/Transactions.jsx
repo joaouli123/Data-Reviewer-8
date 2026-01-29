@@ -37,7 +37,11 @@ const isExpenseType = (type) => EXPENSE_TYPES.includes(type);
 // Retorna uma data válida a partir dos campos conhecidos ou null
 const extractTxDate = (t) => {
   if (!t) return null;
-  const candidate = t.paymentDate || t.date || t.createdAt || t.created_at;
+  const status = String(t.status || '').toLowerCase();
+  const isPaid = status === 'pago' || status === 'completed' || status === 'parcial';
+  const candidate = isPaid
+    ? (t.paymentDate || t.date || t.createdAt || t.created_at)
+    : (t.date || t.paymentDate || t.createdAt || t.created_at);
   if (!candidate) return null;
   try {
     const d = new Date(candidate);

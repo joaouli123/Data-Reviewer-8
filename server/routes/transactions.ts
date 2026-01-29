@@ -129,6 +129,9 @@ export function registerTransactionRoutes(app: Express) {
       }
       
       const body = { ...req.body };
+
+      const statusValue = String(body.status || '').toLowerCase();
+      const isPendingStatus = ['pendente', 'agendado', 'pending', 'scheduled'].includes(statusValue);
       
       // Garantir que date sempre exista e seja um Date object
       if (!body.date) {
@@ -138,7 +141,9 @@ export function registerTransactionRoutes(app: Express) {
       }
       
       // Garantir paymentDate seja Date ou null
-      if (body.paymentDate && typeof body.paymentDate === 'string') {
+      if (isPendingStatus) {
+        body.paymentDate = null;
+      } else if (body.paymentDate && typeof body.paymentDate === 'string') {
         body.paymentDate = parseLocalDate(body.paymentDate);
       } else if (!body.paymentDate) {
         body.paymentDate = null;
@@ -219,10 +224,14 @@ export function registerTransactionRoutes(app: Express) {
       }
 
       const body = { ...req.body };
+      const statusValue = String(body.status || '').toLowerCase();
+      const isPendingStatus = ['pendente', 'agendado', 'pending', 'scheduled'].includes(statusValue);
       if (body.date && typeof body.date === 'string') {
         body.date = parseLocalDate(body.date);
       }
-      if (body.paymentDate && typeof body.paymentDate === 'string') {
+      if (isPendingStatus) {
+        body.paymentDate = null;
+      } else if (body.paymentDate && typeof body.paymentDate === 'string') {
         body.paymentDate = parseLocalDate(body.paymentDate);
       }
       
