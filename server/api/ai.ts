@@ -1,6 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 
-const API_KEY = process.env.VITE_GOOGLE_GEMINI_API_KEY || "";
+const API_KEY = process.env.GOOGLE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || process.env.VITE_GOOGLE_GEMINI_API_KEY || "";
 
 // Inicialização diferente (conforme o texto que você mandou)
 const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;
@@ -47,7 +47,19 @@ IMPORTANTE: Responda APENAS com um JSON válido, sem texto adicional antes ou de
       ]
     });
 
-    const responseText = typeof response.text === 'function' ? await response.text() : response.text;
+    let responseText = '';
+
+    if (typeof response.text === 'function') {
+      responseText = await response.text();
+    } else if (typeof response.text === 'string') {
+      responseText = response.text;
+    } else {
+      // Fallback para estrutura de resposta do SDK
+      const candidateText = response?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (typeof candidateText === 'string') {
+        responseText = candidateText;
+      }
+    }
 
     if (!responseText) {
       console.error("[AI Debug] Resposta vazia do modelo");
