@@ -295,16 +295,14 @@ export default function TransactionsPage() {
       let periodIncome = 0;
       let periodExpense = 0;
       
-      const start = new Date(dateRange.startDate);
-      const end = new Date(dateRange.endDate);
-      const startTime = Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate(), 0, 0, 0);
-      const endTime = Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate(), 23, 59, 59);
+      const startTime = startOfDay(dateRange.startDate).getTime();
+      const endTime = endOfDay(dateRange.endDate).getTime();
 
       txArray.forEach(t => {
         if (!t) return;
         
         // APENAS transações pagas ou completadas devem ser contabilizadas no saldo
-        const isPaid = t.status === 'pago' || t.status === 'completed';
+        const isPaid = t.status === 'pago' || t.status === 'completed' || t.status === 'parcial';
         if (!isPaid) return;
 
         const relevantDate = extractTxDate(t);
@@ -312,7 +310,7 @@ export default function TransactionsPage() {
         
         let tDate;
         try {
-          tDate = Date.UTC(relevantDate.getUTCFullYear(), relevantDate.getUTCMonth(), relevantDate.getUTCDate(), 12, 0, 0);
+          tDate = startOfDay(relevantDate).getTime();
         } catch (e) {
           return;
         }
