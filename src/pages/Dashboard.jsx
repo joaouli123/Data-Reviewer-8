@@ -188,11 +188,27 @@ export default function DashboardPage() {
     
     // Helper para verificar se transação está pendente
     const isPendingStatus = (status) => {
-      return status === 'pendente' || status === 'agendado' || status === 'pending';
+      if (!status) return true; // Se não tem status, considera pendente
+      const s = status.toLowerCase();
+      return s === 'pendente' || s === 'agendado' || s === 'pending' || s === 'scheduled';
+    };
+    
+    // Helper para extrair data de VENCIMENTO (para fluxo futuro usa date, não paymentDate)
+    const extractDueDate = (t) => {
+      if (!t) return null;
+      // Para transações pendentes, usar date (vencimento), não paymentDate
+      const candidate = t.date || t.paymentDate;
+      if (!candidate) return null;
+      try {
+        const d = new Date(candidate);
+        return Number.isNaN(d.getTime()) ? null : d;
+      } catch (e) {
+        return null;
+      }
     };
     
     const futureRevenueTransactions = allTransactions.filter(t => {
-      const tDate = extractTxDate(t);
+      const tDate = extractDueDate(t);
       if (!tDate) return false;
       // Filtra apenas receitas PENDENTES com vencimento nos próximos 30 dias
       return isIncomeType(t.type) && isPendingStatus(t.status) && tDate >= today && tDate <= thirtyDaysFromNow;
@@ -206,7 +222,7 @@ export default function DashboardPage() {
     }, 0);
     
     const futureExpensesTransactions = allTransactions.filter(t => {
-      const tDate = extractTxDate(t);
+      const tDate = extractDueDate(t);
       if (!tDate) return false;
       // Filtra apenas despesas PENDENTES com vencimento nos próximos 30 dias
       return isExpenseType(t.type) && isPendingStatus(t.status) && tDate >= today && tDate <= thirtyDaysFromNow;

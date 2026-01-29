@@ -14,9 +14,10 @@ export default function FutureTransactionsDialog({
 }) {
   const isIncome = type === 'income';
   
-  // Helper para extrair data da transação
+  // Helper para extrair data de VENCIMENTO (usa date primeiro, pois é a data de vencimento)
   const extractDate = (t) => {
-    const candidate = t.paymentDate || t.payment_date || t.date;
+    // Para transações pendentes, date é a data de vencimento
+    const candidate = t.date || t.paymentDate || t.payment_date;
     if (!candidate) return null;
     const d = new Date(candidate);
     return isNaN(d.getTime()) ? null : d;
