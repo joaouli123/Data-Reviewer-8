@@ -302,7 +302,8 @@ export default function TransactionsPage() {
         if (!t) return;
         
         // APENAS transações pagas ou completadas devem ser contabilizadas no saldo
-        const isPaid = t.status === 'pago' || t.status === 'completed' || t.status === 'parcial';
+        const statusValue = String(t.status || '').toLowerCase();
+        const isPaid = ['pago', 'completed', 'parcial', 'paid', 'approved', 'aprovado'].includes(statusValue);
         if (!isPaid) return;
 
         const relevantDate = extractTxDate(t);
