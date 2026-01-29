@@ -33,7 +33,7 @@ IMPORTANTE: Responda APENAS com um JSON válido, sem texto adicional antes ou de
     }
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash", 
+      model: "gemini-3.0-flash", 
       config: {
         responseMimeType: responseJsonSchema ? "application/json" : "text/plain",
         temperature: 0.2,
