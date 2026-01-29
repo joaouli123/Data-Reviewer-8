@@ -181,19 +181,19 @@ export default function DashboardPage() {
     const netProfit = totalRevenue - totalExpenses;
 
     // Future Cash Flow (próximos 30 dias) - APENAS transações PENDENTES
-    const todayStr = new Date().toISOString().split('T')[0];
-    const today = new Date(todayStr + 'T00:00:00Z');
-    const thirtyDaysFromNowStr = new Date(new Date().setDate(new Date().getDate() + 30)).toISOString().split('T')[0];
-    const thirtyDaysFromNow = new Date(thirtyDaysFromNowStr + 'T23:59:59Z');
+    // Usar data local (sem timezone UTC) para evitar problemas de comparação
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    const thirtyDaysFromNow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 30, 23, 59, 59, 999);
     
     // Helper para verificar se transação está pendente
     const isPendingStatus = (status) => {
       if (!status) return true; // Se não tem status, considera pendente
-      const s = status.toLowerCase();
+      const s = String(status).toLowerCase();
       return s === 'pendente' || s === 'agendado' || s === 'pending' || s === 'scheduled';
     };
     
-    // Helper para extrair data de VENCIMENTO (para fluxo futuro usa date, não paymentDate)
+    // Helper para extrair data de VENCIMENTO (normaliza para local date)
     const extractDueDate = (t) => {
       if (!t) return null;
       // Para transações pendentes, usar date (vencimento), não paymentDate
@@ -201,7 +201,9 @@ export default function DashboardPage() {
       if (!candidate) return null;
       try {
         const d = new Date(candidate);
-        return Number.isNaN(d.getTime()) ? null : d;
+        if (Number.isNaN(d.getTime())) return null;
+        // Normalizar para data local (ignorar timezone)
+        return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12, 0, 0, 0);
       } catch (e) {
         return null;
       }
@@ -211,7 +213,10 @@ export default function DashboardPage() {
       const tDate = extractDueDate(t);
       if (!tDate) return false;
       // Filtra apenas receitas PENDENTES com vencimento nos próximos 30 dias
-      return isIncomeType(t.type) && isPendingStatus(t.status) && tDate >= today && tDate <= thirtyDaysFromNow;
+      const isIncome = isIncomeType(t.type);
+      const isPending = isPendingStatus(t.status);
+      const isInRange = tDate >= today && tDate <= thirtyDaysFromNow;
+      return isIncome && isPending && isInRange;
     });
     
     const futureRevenue = futureRevenueTransactions.reduce((sum, t) => {
@@ -225,7 +230,10 @@ export default function DashboardPage() {
       const tDate = extractDueDate(t);
       if (!tDate) return false;
       // Filtra apenas despesas PENDENTES com vencimento nos próximos 30 dias
-      return isExpenseType(t.type) && isPendingStatus(t.status) && tDate >= today && tDate <= thirtyDaysFromNow;
+      const isExpense = isExpenseType(t.type);
+      const isPending = isPendingStatus(t.status);
+      const isInRange = tDate >= today && tDate <= thirtyDaysFromNow;
+      return isExpense && isPending && isInRange;
     });
     
     const futureExpenses = futureExpensesTransactions.reduce((sum, t) => sum + Math.abs((parseFloat(t.amount || 0) + parseFloat(t.interest || 0))), 0);
