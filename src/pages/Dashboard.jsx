@@ -43,6 +43,7 @@ export default function DashboardPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [showReceivablesDialog, setShowReceivablesDialog] = useState(false);
   const [showPayablesDialog, setShowPayablesDialog] = useState(false);
+  const [isFixingDates, setIsFixingDates] = useState(false);
   const { company, user } = useAuth();
   const queryClient = useQueryClient();
   const { PERMISSIONS } = { PERMISSIONS: { CREATE_TRANSACTIONS: 'create_transactions' } }; // Simplified for now or import properly
@@ -50,6 +51,20 @@ export default function DashboardPage() {
   const hasPermission = (permission) => {
     if (user?.role === 'admin' || user?.isSuperAdmin) return true;
     return !!user?.permissions?.[permission];
+  };
+  
+  // Função para corrigir transações sem data
+  const fixNullDates = async () => {
+    setIsFixingDates(true);
+    try {
+      const result = await apiRequest('POST', '/api/transactions/fix-null-dates');
+      toast.success(result.message || 'Datas corrigidas!');
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+    } catch (error) {
+      toast.error('Erro ao corrigir datas: ' + (error.message || 'Erro desconhecido'));
+    } finally {
+      setIsFixingDates(false);
+    }
   };
 
   useEffect(() => {
@@ -348,6 +363,17 @@ export default function DashboardPage() {
             >
               <Plus className="w-4 h-4" />
               Nova Transação
+            </Button>
+          )}
+          {/* Botão temporário para corrigir datas - REMOVER DEPOIS */}
+          {user?.role === 'admin' && (
+            <Button 
+              onClick={fixNullDates}
+              disabled={isFixingDates}
+              variant="outline"
+              className="gap-2 w-full sm:w-auto border-orange-500 text-orange-600 hover:bg-orange-50"
+            >
+              {isFixingDates ? 'Corrigindo...' : '🔧 Corrigir Datas'}
             </Button>
           )}
         </div>
