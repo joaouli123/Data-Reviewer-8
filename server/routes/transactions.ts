@@ -1,6 +1,6 @@
 import { Express } from "express";
 import { storage } from "../storage";
-import { insertTransactionSchema, users } from "../../shared/schema";
+import { users } from "../../shared/schema";
 import { authMiddleware, AuthenticatedRequest } from "../middleware";
 import { db } from "../db";
 import { eq } from "drizzle-orm";
@@ -88,33 +88,71 @@ export function registerTransactionRoutes(app: Express) {
       const body = { ...req.body };
       
       // DEBUG: Log dos dados recebidos
-      console.log("[Transactions] Dados recebidos:", { 
+      console.log("[Transactions] Dados recebidos:", JSON.stringify({ 
         date: body.date, 
         paymentDate: body.paymentDate,
         status: body.status,
-        type: body.type 
-      });
+        type: body.type,
+        amount: body.amount
+      }));
       
-      // Garantir que date sempre exista
+      // Garantir que date sempre exista e seja um Date object
       if (!body.date) {
         body.date = new Date();
         console.log("[Transactions] Date não fornecido, usando data atual");
       } else if (typeof body.date === 'string') {
         body.date = parseLocalDate(body.date);
-        console.log("[Transactions] Date parseado:", body.date);
+        console.log("[Transactions] Date parseado:", body.date, "isDate:", body.date instanceof Date);
       }
       
+      // Garantir paymentDate seja Date ou null
       if (body.paymentDate && typeof body.paymentDate === 'string') {
         body.paymentDate = parseLocalDate(body.paymentDate);
+      } else if (!body.paymentDate) {
+        body.paymentDate = null;
       }
       
-      // Ensure amount is handled as string for decimal validation if it comes as number
+      // Ensure amount is handled as string for decimal
       if (typeof body.amount === 'number') {
         body.amount = body.amount.toFixed(2);
       }
       
-      const data = insertTransactionSchema.parse(body);
-      console.log("[Transactions] Data após validação:", { date: data.date, status: data.status });
+      // Validação manual básica
+      if (!body.type) {
+        return res.status(400).json({ error: "Type is required" });
+      }
+      if (!body.amount) {
+        return res.status(400).json({ error: "Amount is required" });
+      }
+      
+      // Preparar dados para inserção (sem usar Zod schema)
+      const data = {
+        customerId: body.customerId || null,
+        supplierId: body.supplierId || null,
+        categoryId: body.categoryId || null,
+        type: body.type,
+        amount: String(body.amount),
+        paidAmount: body.paidAmount ? String(body.paidAmount) : null,
+        interest: body.interest ? String(body.interest) : "0",
+        cardFee: body.cardFee ? String(body.cardFee) : "0",
+        hasCardFee: Boolean(body.hasCardFee),
+        paymentDate: body.paymentDate,
+        description: body.description || null,
+        date: body.date, // Já é um Date object
+        shift: body.shift || "Geral",
+        status: body.status || "pendente",
+        installmentGroup: body.installmentGroup || null,
+        installmentNumber: body.installmentNumber ? Number(body.installmentNumber) : null,
+        installmentTotal: body.installmentTotal ? Number(body.installmentTotal) : null,
+        paymentMethod: body.paymentMethod || null,
+        isReconciled: Boolean(body.isReconciled),
+      };
+      
+      console.log("[Transactions] Data para inserção:", JSON.stringify({ 
+        date: data.date, 
+        dateType: typeof data.date,
+        isDate: data.date instanceof Date 
+      }));
       
       const transaction = await storage.createTransaction(req.user.companyId, data);
       console.log("[Transactions] Transação criada:", { id: transaction.id, date: transaction.date });
