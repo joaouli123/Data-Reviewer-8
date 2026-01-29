@@ -447,21 +447,37 @@ export const insertCategorySchema = createInsertSchema(categories).omit({
   companyId: true,
 }) as any;
 
-export const insertTransactionSchema = createInsertSchema(transactions, {
-  // Permitir Date ou string para campos timestamp
+// Schema customizado para transações - aceita Date ou string para campos de data
+const dateSchema = z.union([z.date(), z.string(), z.null()]).transform((val) => {
+  if (!val) return null;
+  if (val instanceof Date) return val;
+  return new Date(val);
+});
+
+export const insertTransactionSchema = z.object({
+  customerId: z.string().nullable().optional(),
+  supplierId: z.string().nullable().optional(),
+  categoryId: z.string().nullable().optional(),
+  type: z.string(),
+  amount: z.union([z.string(), z.number()]).transform(v => String(v)),
+  paidAmount: z.union([z.string(), z.number()]).nullable().optional().transform(v => v != null ? String(v) : null),
+  interest: z.union([z.string(), z.number()]).nullable().optional().transform(v => v != null ? String(v) : "0"),
+  cardFee: z.union([z.string(), z.number()]).nullable().optional().transform(v => v != null ? String(v) : "0"),
+  hasCardFee: z.boolean().optional().default(false),
+  paymentDate: dateSchema.optional(),
+  description: z.string().nullable().optional(),
   date: z.union([z.date(), z.string()]).transform((val) => {
     if (val instanceof Date) return val;
     return new Date(val);
   }),
-  paymentDate: z.union([z.date(), z.string(), z.null()]).optional().transform((val) => {
-    if (!val) return null;
-    if (val instanceof Date) return val;
-    return new Date(val);
-  }),
-}).omit({
-  id: true,
-  companyId: true,
-}) as any;
+  shift: z.string().optional().default("Geral"),
+  status: z.string().optional().default("pendente"),
+  installmentGroup: z.string().nullable().optional(),
+  installmentNumber: z.number().int().nullable().optional(),
+  installmentTotal: z.number().int().nullable().optional(),
+  paymentMethod: z.string().nullable().optional(),
+  isReconciled: z.boolean().optional().default(false),
+});
 
 export const insertBankStatementItemSchema = createInsertSchema(bankStatementItems).omit({
   id: true,
