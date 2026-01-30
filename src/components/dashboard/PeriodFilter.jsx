@@ -189,10 +189,10 @@ export default function PeriodFilter({
               </div>
             </PopoverTrigger>
             <PopoverContent
-              className={`w-auto p-3 ${mode === 'months' ? 'max-w-[720px]' : 'max-w-[360px]'}`}
+              className={`w-auto p-3 ${mode === 'months' ? 'max-w-[600px]' : 'max-w-[320px]'}`}
               side="bottom"
-              align="start"
-              sideOffset={5}
+              align="center"
+              sideOffset={8}
             >
               <div className="space-y-4">
                 <p className="text-sm text-muted-foreground font-medium">Selecione o período desejado</p>

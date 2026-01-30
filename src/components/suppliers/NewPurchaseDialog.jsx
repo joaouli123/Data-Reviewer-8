@@ -144,8 +144,8 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
       const total = parseCurrency(formData.total_amount);
 
       const defaultAmount = parseFloat((total / numInstallments).toFixed(2));
-      // Primeira parcela: por padrão +30 dias
-      const baseDate = addDays(new Date(formData.purchase_date + 'T12:00:00'), 30);
+      // Primeira parcela: SEMPRE +30 dias a partir de HOJE
+      const baseDate = addDays(new Date(), 30);
 
       const newCustomInstallments = Array.from({ length: numInstallments }, (_, i) => ({
         amount: defaultAmount || '',
@@ -364,21 +364,23 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
               <Input
                 type="text"
                 inputMode="numeric"
+                pattern="[0-9]*"
                 placeholder="1"
                 value={installmentsInput}
                 onChange={(e) => handleInstallmentsChange(e.target.value)}
                 onBlur={() => {
                   const cleaned = String(installmentsInput).replace(/[^0-9]/g, '');
-                  if (!cleaned) {
+                  if (!cleaned || cleaned === '0') {
                     setInstallmentsInput('1');
                     handleInstallmentsChange('1');
                     return;
                   }
                   const parsed = Math.max(1, Math.min(60, parseInt(cleaned, 10) || 1));
                   setInstallmentsInput(String(parsed));
-                  handleInstallmentsChange(String(parsed));
                 }}
+                className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
+              <p className="text-xs text-muted-foreground">Digite o número de parcelas (use Delete/Backspace para apagar)</p>
             </div>
           )}
 

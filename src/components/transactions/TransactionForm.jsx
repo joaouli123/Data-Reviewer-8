@@ -202,14 +202,11 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
     const safeValue = Math.max(1, Math.min(60, Number(numValue) || 1));
     const newStatus = safeValue > 1 ? 'pendente' : formData.status;
 
-    // Regra: ao parcelar, a 1ª parcela deve ser por padrão em +30 dias
+    // Regra: ao parcelar (>1), a 1ª parcela SEMPRE começa em +30 dias (nova transação)
     let nextDueDate = formData.date;
     if (safeValue > 1 && !initialData) {
-      const current = formData.date ? new Date(formData.date) : new Date();
-      const isToday = startOfDay(current).getTime() === startOfDay(new Date()).getTime();
-      if (!formData.date || isToday) {
-        nextDueDate = addDays(new Date(), 30);
-      }
+      // Sempre +30 dias para parcelamento novo
+      nextDueDate = addDays(new Date(), 30);
     }
 
     setFormData(prev => ({
@@ -778,22 +775,36 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
               <Input 
                 type="text"
                 inputMode="numeric"
+                pattern="[0-9]*"
                 placeholder="1"
                 value={installmentsInput}
-                onChange={(e) => handleInstallmentsChange(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setInstallmentsInput(val);
+                  const cleaned = val.replace(/[^0-9]/g, '');
+                  if (cleaned) {
+                    const parsed = Math.max(1, Math.min(60, Number(cleaned) || 1));
+                    applyInstallments(parsed);
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Delete' || e.key === 'Backspace') {
+                    // Permite limpar normalmente
+                  }
+                }}
                 onBlur={() => {
                   const cleaned = String(installmentsInput).replace(/[^0-9]/g, '');
-                  if (!cleaned) {
+                  if (!cleaned || cleaned === '0') {
                     setInstallmentsInput('1');
                     applyInstallments(1);
-                    return;
+                  } else {
+                    const parsed = Math.max(1, Math.min(60, Number(cleaned)));
+                    setInstallmentsInput(String(parsed));
                   }
-                  const parsed = Math.max(1, Math.min(60, Number(cleaned) || 1));
-                  setInstallmentsInput(String(parsed));
-                  applyInstallments(parsed);
                 }}
+                className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
-              <p className="text-xs text-muted-foreground">Dica: você pode apagar e digitar o número normalmente.</p>
+              <p className="text-xs text-muted-foreground">Digite o número de parcelas (use Delete/Backspace para apagar)</p>
             </div>
           )}
 
