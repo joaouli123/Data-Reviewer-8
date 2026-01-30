@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -14,8 +14,31 @@ export default function Login() {
   const [showResetForm, setShowResetForm] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [sendingReset, setSendingReset] = useState(false);
-  const { login } = useAuth();
+  const { login, user, company, paymentPending, token, loading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
+
+  // Se já estiver logado e tentar acessar /login, redireciona direto
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) return;
+
+    if (paymentPending || company?.paymentStatus !== 'approved') {
+      setLocation('/payment-pending');
+      return;
+    }
+
+    if (user?.isSuperAdmin) {
+      setLocation('/admin');
+      return;
+    }
+
+    if (token || company?.paymentStatus === 'approved') {
+      setLocation('/dashboard');
+    }
+  }, [authLoading, user, company?.paymentStatus, paymentPending, token, setLocation]);
+
+  if (authLoading) return null;
+  if (user) return null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();

@@ -188,7 +188,12 @@ export default function PeriodFilter({
                 Personalizado
               </div>
             </PopoverTrigger>
-            <PopoverContent className="w-auto max-w-4xl p-4" side="bottom" align="start" sideOffset={5}>
+            <PopoverContent
+              className={`w-auto p-3 ${mode === 'months' ? 'max-w-[720px]' : 'max-w-[360px]'}`}
+              side="bottom"
+              align="start"
+              sideOffset={5}
+            >
               <div className="space-y-4">
                 <p className="text-sm text-muted-foreground font-medium">Selecione o período desejado</p>
                 <div className="text-sm font-medium text-foreground">
@@ -214,7 +219,7 @@ export default function PeriodFilter({
                     mode="range"
                     selected={(dateRange?.from || dateRange?.to) ? dateRange : undefined}
                     onSelect={(range) => setDateRange(range || { from: undefined, to: undefined })}
-                    numberOfMonths={2}
+                    numberOfMonths={mode === 'months' ? 2 : 1}
                     locale={ptBR}
                     className="rounded-md border"
                     classNames={{

@@ -5,12 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, parseISO, addMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CheckCircle2, Clock, X, ChevronDown, ChevronRight } from 'lucide-react';
+import { CheckCircle2, Clock, X, ChevronDown, ChevronRight, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import PaymentEditDialog from '../suppliers/PaymentEditDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { Transaction } from '@/api/entities';
 import { apiRequest } from '@/lib/queryClient';
+import TransactionForm from '../transactions/TransactionForm';
 
 const parseLocalDate = (dateStr) => {
   if (!dateStr) return new Date();
@@ -45,6 +46,8 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
   const [paymentEditOpen, setPaymentEditOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [expandedGroups, setExpandedGroups] = useState({});
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState(null);
 
   const toggleGroup = (groupId) => {
     setExpandedGroups(prev => ({
@@ -254,6 +257,23 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
     }
   });
 
+  const updateTransactionMutation = useMutation({
+    mutationFn: async (payload) => {
+      if (!editingTransaction?.id) throw new Error('Transação inválida');
+      return apiRequest('PATCH', `/api/transactions/${editingTransaction.id}`, payload);
+    },
+    onSuccess: () => {
+      toast.success('Parcela atualizada!', { duration: 4000 });
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      queryClient.refetchQueries({ queryKey: ['/api/transactions', { customerId: customer?.id }] });
+      setEditOpen(false);
+      setEditingTransaction(null);
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Erro ao atualizar parcela', { duration: 5000 });
+    }
+  });
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
@@ -387,6 +407,19 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
                               <Button
                                 size="icon"
                                 variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingTransaction(installment);
+                                  setEditOpen(true);
+                                }}
+                                className="text-slate-400 hover:text-slate-700"
+                                data-testid={`button-edit-installment-${installment.id}`}
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
                                 onClick={() => {
                                   if (confirm('Tem certeza que deseja cancelar este recebimento?')) {
                                     cancelPaymentMutation.mutate(installment.id);
@@ -400,18 +433,33 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
                               </Button>
                             </>
                           ) : (
-                            <Button
-                              size="sm"
-                              onClick={() => {
-                                setSelectedTransaction(installment);
-                                setPaymentEditOpen(true);
-                              }}
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-3 h-8 text-xs"
-                              disabled={confirmPaymentMutation.isPending}
-                              data-testid={`button-confirm-payment-${installment.id}`}
-                            >
-                              Receber
-                            </Button>
+                            <>
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedTransaction(installment);
+                                  setPaymentEditOpen(true);
+                                }}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-3 h-8 text-xs"
+                                disabled={confirmPaymentMutation.isPending}
+                                data-testid={`button-confirm-payment-${installment.id}`}
+                              >
+                                Receber
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingTransaction(installment);
+                                  setEditOpen(true);
+                                }}
+                                className="text-slate-400 hover:text-slate-700 h-8 w-8"
+                                data-testid={`button-edit-installment-${installment.id}`}
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                            </>
                           )}
                         </div>
                       </div>
@@ -449,6 +497,16 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
           isLoading={confirmPaymentMutation.isPending}
           title="Confirmar Recebimento"
           amountLabel="Valor Recebido"
+        />
+
+        <TransactionForm
+          open={editOpen}
+          onOpenChange={(next) => {
+            setEditOpen(next);
+            if (!next) setEditingTransaction(null);
+          }}
+          initialData={editingTransaction}
+          onSubmit={(payload) => updateTransactionMutation.mutateAsync(payload)}
         />
       </DialogContent>
     </Dialog>

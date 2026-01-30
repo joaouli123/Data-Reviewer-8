@@ -11,7 +11,7 @@ export default function FutureTransactionsDialog({
   title, 
   transactions = [], 
   type = 'income', // 'income' ou 'expense'
-  periodLabel = 'Período selecionado'
+  periodLabel = 'Próximos 30 dias'
 }) {
   const isIncome = type === 'income';
   const [page, setPage] = useState(1);

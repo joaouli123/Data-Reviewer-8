@@ -6,7 +6,7 @@ import { CurrencyInput, formatCurrency, parseCurrency } from "@/components/ui/cu
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { format, addMonths } from 'date-fns';
+import { format, addMonths, addDays } from 'date-fns';
 import { toast } from 'sonner';
 import { Plus } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
@@ -29,6 +29,7 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
     hasCardFee: false,
     cardFee: ''
   });
+  const [installmentsInput, setInstallmentsInput] = useState('1');
   const [customInstallments, setCustomInstallments] = useState([]);
   const [isCreateCategoryModalOpen, setIsCreateCategoryModalOpen] = useState(false);
 
@@ -55,9 +56,14 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
         hasCardFee: false,
         cardFee: ''
       });
+      setInstallmentsInput('1');
       setCustomInstallments([]);
     }
   }, [open, customer]);
+
+  React.useEffect(() => {
+    setInstallmentsInput(String(formData.installments || '1'));
+  }, [formData.installments]);
 
   const queryClient = useQueryClient();
 
@@ -183,10 +189,19 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
   };
 
   const handleInstallmentsChange = (value) => {
-    const numValue = value === '' ? '1' : value;
-    setFormData({ ...formData, installments: numValue, installment_amount: '' });
+    setInstallmentsInput(value);
+    const cleaned = String(value).replace(/[^0-9]/g, '');
+    setFormData({ ...formData, installments: cleaned, installment_amount: '' });
 
-    const numInstallments = parseInt(numValue);
+    if (!cleaned) {
+      setCustomInstallments([]);
+      return;
+    }
+
+    const numInstallments = Math.max(1, Math.min(60, parseInt(cleaned, 10) || 1));
+    if (String(numInstallments) !== cleaned) {
+      setFormData(prev => ({ ...prev, installments: String(numInstallments) }));
+    }
     if (numInstallments > 1) {
       const totalAmount = parseCurrency(formData.total_amount);
 
@@ -195,7 +210,8 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
         ? parseFloat((totalAmount / numInstallments).toFixed(2)) 
         : '';
 
-      const baseDate = new Date(formData.sale_date + 'T12:00:00Z');
+      // Primeira parcela: por padrão +30 dias
+      const baseDate = addDays(new Date(formData.sale_date + 'T12:00:00'), 30);
       const newCustomInstallments = Array.from({ length: numInstallments }, (_, i) => ({
         amount: defaultAmount, 
         due_date: format(addMonths(baseDate, i), 'yyyy-MM-dd')
@@ -353,6 +369,7 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
                   installments: checked ? '1' : formData.installments
                 });
                 if (checked) {
+                  setInstallmentsInput('1');
                   setCustomInstallments([]);
                 }
               }}
@@ -378,10 +395,22 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
             <div className="space-y-2">
               <Label>Número de Parcelas</Label>
               <Input
-                type="number"
-                min="1"
-                value={formData.installments}
+                type="text"
+                inputMode="numeric"
+                placeholder="1"
+                value={installmentsInput}
                 onChange={(e) => handleInstallmentsChange(e.target.value)}
+                onBlur={() => {
+                  const cleaned = String(installmentsInput).replace(/[^0-9]/g, '');
+                  if (!cleaned) {
+                    setInstallmentsInput('1');
+                    handleInstallmentsChange('1');
+                    return;
+                  }
+                  const parsed = Math.max(1, Math.min(60, parseInt(cleaned, 10) || 1));
+                  setInstallmentsInput(String(parsed));
+                  handleInstallmentsChange(String(parsed));
+                }}
               />
             </div>
           )}
@@ -429,6 +458,12 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
                         type="date"
                         value={inst.due_date}
                         onChange={(e) => updateCustomInstallment(idx, 'due_date', e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Delete' || e.key === 'Backspace') {
+                            e.preventDefault();
+                            updateCustomInstallment(idx, 'due_date', '');
+                          }
+                        }}
                         className="h-8 text-sm w-full px-2"
                       />
                     </div>

@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format, addMonths } from "date-fns";
+import { format, addMonths, addDays, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarIcon, Plus, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -21,6 +21,39 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { apiRequest } from '@/lib/queryClient';
 
+const parseLocalDateString = (value) => {
+  if (!value) return null;
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+  if (typeof value === 'number') {
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+
+  const str = String(value).trim();
+  if (!str) return null;
+
+  const ymdMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (ymdMatch) {
+    const year = Number(ymdMatch[1]);
+    const month = Number(ymdMatch[2]);
+    const day = Number(ymdMatch[3]);
+    const d = new Date(year, month - 1, day, 12, 0, 0, 0);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+
+  const dmyMatch = str.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  if (dmyMatch) {
+    const day = Number(dmyMatch[1]);
+    const month = Number(dmyMatch[2]);
+    const year = Number(dmyMatch[3]);
+    const d = new Date(year, month - 1, day, 12, 0, 0, 0);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+
+  const parsed = new Date(str);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
 export default function TransactionForm({ open, onOpenChange, onSubmit, initialData = null }) {
   const { company, user } = useAuth();
   const queryClient = useQueryClient();
@@ -28,6 +61,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
   const [isSuggestingCategory, setIsSuggestingCategory] = useState(false);
   const [customInstallments, setCustomInstallments] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [installmentsInput, setInstallmentsInput] = useState('1');
 
   const updateInstallmentDatesMutation = useMutation({
     mutationFn: ({ installmentGroup, newFirstDate }) => apiRequest('PATCH', `/api/transactions/group/${installmentGroup}/dates`, { newFirstDate }),
@@ -101,8 +135,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
 
     const toDate = (value) => {
       if (!value) return null;
-      const d = new Date(value);
-      return Number.isNaN(d.getTime()) ? null : d;
+      return parseLocalDateString(value);
     };
 
     if (initialData) {
@@ -125,7 +158,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
         type: initialData.type || (inferredEntityType === 'supplier' ? 'compra' : 'venda'),
         categoryId: initialData.categoryId || '',
         date: baseDate,
-        installments: initialData.installmentTotal || 1,
+        installments: 1,
         installment_amount: '',
         status: inferredStatus,
         paymentDate: paymentDate || (inferredStatus === 'pago' ? baseDate : null),
@@ -136,6 +169,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
         hasCardFee: initialData.hasCardFee || false,
         cardFee: initialData.cardFee || ''
       });
+      setInstallmentsInput('1');
       setCustomInstallments([]);
       return;
     }
@@ -144,52 +178,61 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
       ...prev,
       description: '',
       amount: '',
-      type: prev.entityType === 'customer' ? 'venda' : (prev.entityType === 'supplier' ? 'compra' : 'venda'),
-      categoryId: '',
-      date: new Date(),
-      installments: 1,
-      installment_amount: '',
-      status: 'pago',
-      paymentDate: new Date(),
-      entityType: prev.entityType || 'none',
-      customerId: prev.customerId || '',
-      supplierId: prev.supplierId || '',
-      hasCardFee: false,
-      cardFee: ''
-    }));
-    setCustomInstallments([]);
-  }, [initialData, open]);
+    const applyInstallments = (numValue) => {
+      const safeValue = Math.max(1, Math.min(60, Number(numValue) || 1));
+      const newStatus = safeValue > 1 ? 'pendente' : formData.status;
 
-  React.useEffect(() => {
-    if (!open || initialData) return;
-    if (formData.categoryId) return;
+      // Regra: ao parcelar, a 1ª parcela deve ser por padrão em +30 dias
+      let nextDueDate = formData.date;
+      if (safeValue > 1 && !initialData) {
+        const current = formData.date ? new Date(formData.date) : new Date();
+        const isToday = startOfDay(current).getTime() === startOfDay(new Date()).getTime();
+        if (!formData.date || isToday) {
+          nextDueDate = addDays(new Date(), 30);
+        }
+      }
 
-    const filteredCats = categories.filter(cat => {
-      if (formData.entityType === 'customer') return cat.type === 'entrada' || cat.type === 'income';
-      if (formData.entityType === 'supplier') return cat.type === 'saida' || cat.type === 'expense';
-      return true;
-    });
-    const defaultCategoryId = filteredCats.length > 0 ? filteredCats[0].id : '';
-    if (!defaultCategoryId) return;
+      setFormData(prev => ({
+        ...prev,
+        date: nextDueDate,
+        installments: safeValue,
+        installment_amount: '',
+        status: newStatus,
+        paymentDate: newStatus === 'pendente' ? null : prev.paymentDate,
+      }));
 
-    setFormData(prev => ({
-      ...prev,
-      categoryId: defaultCategoryId
-    }));
-  }, [open, initialData, categories, formData.entityType, formData.categoryId]);
+      if (safeValue > 1) {
+        const totalAmount = parseCurrency(formData.amount);
+        const defaultAmount = totalAmount > 0 ? (totalAmount / safeValue).toFixed(2) : '0.00';
+        const baseDate = nextDueDate ? new Date(nextDueDate) : new Date();
+        const dayOfMonth = baseDate.getDate();
+        const monthIdx = baseDate.getMonth();
+        const yearVal = baseDate.getFullYear();
 
-  const handleInstallmentsChange = (value) => {
-    const numValue = value === '' ? 1 : parseInt(value);
-    
-    // Se parcelado (mais de 1), automaticamente marca como pendente
-    const newStatus = numValue > 1 ? 'pendente' : formData.status;
-    
-    setFormData({ 
-      ...formData, 
-      installments: numValue, 
-      installment_amount: '',
-      status: newStatus,
-      paymentDate: newStatus === 'pendente' ? null : formData.paymentDate
+        const newCustomInstallments = Array.from({ length: safeValue }, (_, i) => {
+          const installmentDate = new Date(yearVal, monthIdx + i, dayOfMonth);
+          const year = installmentDate.getFullYear();
+          const month = String(installmentDate.getMonth() + 1).padStart(2, '0');
+          const day = String(installmentDate.getDate()).padStart(2, '0');
+          return {
+            amount: defaultAmount,
+            due_date: `${year}-${month}-${day}`,
+          };
+        });
+        setCustomInstallments(newCustomInstallments);
+      } else {
+        setCustomInstallments([]);
+      }
+    };
+
+    const handleInstallmentsChange = (raw) => {
+      setInstallmentsInput(raw);
+      const cleaned = String(raw).replace(/[^0-9]/g, '');
+      if (!cleaned) return;
+      const parsed = Number(cleaned);
+      if (!Number.isFinite(parsed)) return;
+      applyInstallments(parsed);
+    };
     });
 
     if (numValue > 1) {
@@ -261,77 +304,73 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
   const handleSubmit = (e) => {
     e.preventDefault();
     if (isSubmitting) return;
-    if (!formData.description.trim()) {
-        toast.error('Digite uma descrição', { duration: 5000 });
-        return;
-    }
 
-    // Requer data conforme o status
-    const requiredDate = formData.status === 'pago' ? formData.paymentDate : formData.date;
-    if (!requiredDate) {
-      toast.error('Selecione uma data', { duration: 5000 });
+    if (!formData.description.trim()) {
+      toast.error('Digite uma descrição', { duration: 5000 });
       return;
     }
-    if (!formData.amount || Number(formData.amount) <= 0) {
-        toast.error('Digite um valor válido', { duration: 5000 });
-        return;
+
+    const numericAmount = parseCurrency(formData.amount);
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+      toast.error('Digite um valor válido', { duration: 5000 });
+      return;
     }
+
     if (!formData.categoryId) {
-        toast.error('Selecione uma categoria', { duration: 5000 });
-        return;
-    }
-    if (formData.entityType === 'none') {
-        toast.error('Escolha entre Cliente ou Fornecedor', { duration: 5000 });
-        return;
-    }
-    if (formData.entityType === 'customer' && !formData.customerId) {
-        toast.error('Selecione um cliente', { duration: 5000 });
-        return;
-    }
-    if (formData.entityType === 'supplier' && !formData.supplierId) {
-        toast.error('Selecione um fornecedor', { duration: 5000 });
-        return;
+      toast.error('Selecione uma categoria', { duration: 5000 });
+      return;
     }
 
     if (!formData.paymentMethod) {
-        toast.error('Selecione a forma de pagamento', { duration: 5000 });
+      toast.error('Selecione a forma de pagamento', { duration: 5000 });
+      return;
+    }
+
+    if (formData.status === 'pago') {
+      if (!formData.paymentDate) {
+        toast.error('Selecione a data do pagamento', { duration: 5000 });
         return;
-    }
-
-    // DEBUG: Log do status atual
-    console.log('[TransactionForm] Status sendo enviado:', formData.status);
-    console.log('[TransactionForm] Forma de pagamento:', formData.paymentMethod);
-    console.log('[TransactionForm] Parcelas:', formData.installments);
-
-    // Get selected category to determine if value should be negative
-    const selectedCategory = categories.find(c => c.id === formData.categoryId);
-    const numericAmount = parseFloat(formData.amount);
-    let amount = numericAmount.toFixed(2);
-
-    // If category is "saida" (expense), make amount negative
-    if (selectedCategory && selectedCategory.type === 'saida') {
-      amount = (-Math.abs(numericAmount)).toFixed(2);
+      }
     } else {
-      amount = Math.abs(numericAmount).toFixed(2);
+      if (!formData.date) {
+        toast.error('Selecione uma data de vencimento', { duration: 5000 });
+        return;
+      }
     }
 
-    let isoDate = formatDateOnly(formData.date);
+    const selectedCategory = categories.find(c => c.id === formData.categoryId);
+    const isExpense = selectedCategory && (selectedCategory.type === 'saida' || selectedCategory.type === 'expense');
+    const signedAmount = isExpense
+      ? (-Math.abs(numericAmount)).toFixed(2)
+      : Math.abs(numericAmount).toFixed(2);
 
-    let paymentDateISO = formData.status === 'pago'
+    const effectiveTxDate = formData.status === 'pago'
+      ? (formData.paymentDate || formData.date)
+      : formData.date;
+
+    const isoDate = formatDateOnly(effectiveTxDate);
+
+    const paymentDateISO = formData.status === 'pago'
       ? formatDateOnly(formData.paymentDate || formData.date)
       : null;
 
+    if (!isoDate) {
+      toast.error('Selecione uma data válida', { duration: 5000 });
+      return;
+    }
+
     // Handle installments
-    const installmentCount = formData.installments || 1;
+    const installmentCount = Number(formData.installments || 1);
     if (installmentCount > 1) {
       // Preenche customInstallments se estiver vazio ou incompleto
       let filledCustomInstallments = customInstallments.slice();
       if (filledCustomInstallments.length < installmentCount) {
         const baseDate = new Date(formData.date);
+        const defaultInstallmentAmount = (Math.abs(parseFloat(signedAmount)) / installmentCount).toFixed(2);
         for (let i = filledCustomInstallments.length; i < installmentCount; i++) {
           const dueDate = new Date(baseDate.getFullYear(), baseDate.getMonth() + i, baseDate.getDate());
           filledCustomInstallments.push({
-            amount: (parseFloat(amount) / installmentCount).toFixed(2),
+            amount: defaultInstallmentAmount,
             due_date: formatDateOnly(dueDate)
           });
         }
@@ -341,10 +380,14 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
       const transactions = [];
       for (let i = 0; i < installmentCount; i++) {
         const dueDateISO = filledCustomInstallments[i].due_date;
-        const installmentAmount = filledCustomInstallments[i].amount;
+        const rawInstallmentAmount = parseCurrency(filledCustomInstallments[i].amount);
+        const signedInstallmentAmount = isExpense
+          ? -Math.abs(rawInstallmentAmount)
+          : Math.abs(rawInstallmentAmount);
+
         const payload = {
           categoryId: formData.categoryId,
-          amount: parseFloat(installmentAmount).toFixed(2),
+          amount: Number.isFinite(signedInstallmentAmount) ? signedInstallmentAmount.toFixed(2) : '0.00',
           date: dueDateISO,
           paymentDate: paymentDateISO,
           shift: 'turno1',
@@ -366,6 +409,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
         }
         transactions.push(payload);
       }
+
       setIsSubmitting(true);
       try {
         const result = onSubmit(transactions);
@@ -381,51 +425,51 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
       if (formData.supplierId) {
         queryClient.invalidateQueries({ queryKey: ['/api/suppliers', company?.id] });
       }
-    } else {
-      const payload = {
-        categoryId: formData.categoryId,
-        amount: amount,
-        date: isoDate,
-        paymentDate: paymentDateISO,
-        shift: 'Geral',
-        type: formData.type,
-        description: formData.description,
-        status: formData.status,
-        paymentMethod: formData.paymentMethod,
-        hasCardFee: formData.hasCardFee,
-        cardFee: formData.hasCardFee ? (parseFloat(formData.cardFee) || 0).toFixed(2) : '0'
-      };
+      return;
+    }
 
-      // Only add customer/supplier if selected and has value
-      if (formData.entityType === 'customer' && formData.customerId) {
-        payload.customerId = formData.customerId;
-      } else if (formData.entityType === 'customer') {
-        console.warn('Customer selected but no customerId provided');
-      }
+    const payload = {
+      categoryId: formData.categoryId,
+      amount: signedAmount,
+      date: isoDate,
+      paymentDate: paymentDateISO,
+      shift: 'Geral',
+      type: formData.type,
+      description: formData.description,
+      status: formData.status,
+      paymentMethod: formData.paymentMethod,
+      hasCardFee: formData.hasCardFee,
+      cardFee: formData.hasCardFee ? (parseFloat(formData.cardFee) || 0).toFixed(2) : '0'
+    };
 
-      if (formData.entityType === 'supplier' && formData.supplierId) {
-        payload.supplierId = formData.supplierId;
-      } else if (formData.entityType === 'supplier') {
-        console.warn('Supplier selected but no supplierId provided');
-      }
+    if (formData.entityType === 'customer' && formData.customerId) {
+      payload.customerId = formData.customerId;
+    } else if (formData.entityType === 'customer') {
+      console.warn('Customer selected but no customerId provided');
+    }
 
-      setIsSubmitting(true);
-      try {
-        const result = onSubmit(payload);
-        Promise.resolve(result).finally(() => setIsSubmitting(false));
-      } catch (error) {
-        setIsSubmitting(false);
-      }
-      
-      // Invalidate queries to update UI in real-time
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/cash-flow'] });
-      if (formData.customerId) {
-        queryClient.invalidateQueries({ queryKey: ['/api/customers', company?.id] });
-      }
-      if (formData.supplierId) {
-        queryClient.invalidateQueries({ queryKey: ['/api/suppliers', company?.id] });
-      }
+    if (formData.entityType === 'supplier' && formData.supplierId) {
+      payload.supplierId = formData.supplierId;
+    } else if (formData.entityType === 'supplier') {
+      console.warn('Supplier selected but no supplierId provided');
+    }
+
+    setIsSubmitting(true);
+    try {
+      const result = onSubmit(payload);
+      Promise.resolve(result).finally(() => setIsSubmitting(false));
+    } catch (error) {
+      setIsSubmitting(false);
+    }
+    
+    // Invalidate queries to update UI in real-time
+    queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/cash-flow'] });
+    if (formData.customerId) {
+      queryClient.invalidateQueries({ queryKey: ['/api/customers', company?.id] });
+    }
+    if (formData.supplierId) {
+      queryClient.invalidateQueries({ queryKey: ['/api/suppliers', company?.id] });
     }
   };
 
@@ -633,6 +677,10 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
                 const isCardPayment = ['Cartão de Crédito', 'Cartão de Débito'].includes(v);
                 const isPaidImmediately = ['Pix', 'Dinheiro', 'Cartão de Débito'].includes(v);
                 const isPendingPayment = ['Cartão de Crédito', 'Boleto', 'Crediário'].includes(v);
+
+                  if (!canInstall) {
+                    setInstallmentsInput('1');
+                  }
                 
                 setFormData(prev => {
                   // Determina o novo status
@@ -731,6 +779,7 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
                   installments: checked ? 1 : formData.installments
                 });
                 if (checked) {
+                  setInstallmentsInput('1');
                   setCustomInstallments([]);
                 }
               }}
@@ -741,12 +790,24 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
             <div className="space-y-2">
               <Label>Número de Parcelas</Label>
               <Input 
-                type="number" 
-                min="1" 
-                max="60"
-                value={formData.installments}
+                type="text"
+                inputMode="numeric"
+                placeholder="1"
+                value={installmentsInput}
                 onChange={(e) => handleInstallmentsChange(e.target.value)}
+                onBlur={() => {
+                  const cleaned = String(installmentsInput).replace(/[^0-9]/g, '');
+                  if (!cleaned) {
+                    setInstallmentsInput('1');
+                    applyInstallments(1);
+                    return;
+                  }
+                  const parsed = Math.max(1, Math.min(60, Number(cleaned) || 1));
+                  setInstallmentsInput(String(parsed));
+                  applyInstallments(parsed);
+                }}
               />
+              <p className="text-xs text-muted-foreground">Dica: você pode apagar e digitar o número normalmente.</p>
             </div>
           )}
 

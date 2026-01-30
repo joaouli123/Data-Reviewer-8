@@ -7,7 +7,7 @@ import { CurrencyInput, formatCurrency, parseCurrency } from "@/components/ui/cu
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from 'sonner';
-import { format, addMonths } from 'date-fns';
+import { format, addMonths, addDays } from 'date-fns';
 import { Plus } from 'lucide-react';
 import CreateCategoryModal from '../transactions/CreateCategoryModal';
 import { apiRequest } from '@/lib/queryClient';
@@ -23,7 +23,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
     total_amount: '',
     category: '',
     purchase_date: format(new Date(), 'yyyy-MM-dd'),
-    installments: 1,
+    installments: '1',
     installment_amount: '',
     status: 'pago',
     paymentDate: format(new Date(), 'yyyy-MM-dd'),
@@ -31,6 +31,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
     hasCardFee: false,
     cardFee: ''
   });
+  const [installmentsInput, setInstallmentsInput] = useState('1');
 
   const [customInstallments, setCustomInstallments] = useState([]);
   const [isCreateCategoryModalOpen, setIsCreateCategoryModalOpen] = useState(false);
@@ -50,7 +51,7 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
         total_amount: '',
         category: '',
         purchase_date: format(new Date(), 'yyyy-MM-dd'),
-        installments: 1,
+        installments: '1',
         installment_amount: '',
         status: 'pago',
         paymentDate: format(new Date(), 'yyyy-MM-dd'),
@@ -58,9 +59,14 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
         hasCardFee: false,
         cardFee: ''
       });
+      setInstallmentsInput('1');
       setCustomInstallments([]);
     }
   }, [open, supplier]);
+
+  React.useEffect(() => {
+    setInstallmentsInput(String(formData.installments || '1'));
+  }, [formData.installments]);
 
   const { data: categories } = useQuery({
     queryKey: ['/api/categories', company?.id],
@@ -119,17 +125,27 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
   });
 
   const handleInstallmentsChange = (value) => {
-    const numValue = value === '' ? '1' : value;
-    const numInstallments = parseInt(numValue);
+    setInstallmentsInput(value);
+    const cleaned = String(value).replace(/[^0-9]/g, '');
+    setFormData(prev => ({ ...prev, installments: cleaned }));
 
-    setFormData(prev => ({ ...prev, installments: numValue }));
+    if (!cleaned) {
+      setCustomInstallments([]);
+      return;
+    }
+
+    const numInstallments = Math.max(1, Math.min(60, parseInt(cleaned, 10) || 1));
+    if (String(numInstallments) !== cleaned) {
+      setFormData(prev => ({ ...prev, installments: String(numInstallments) }));
+    }
 
     if (numInstallments > 1) {
       // CORREÇÃO: Usando a função helper segura
       const total = parseCurrency(formData.total_amount);
 
       const defaultAmount = parseFloat((total / numInstallments).toFixed(2));
-      const baseDate = new Date(formData.purchase_date + 'T12:00:00Z');
+      // Primeira parcela: por padrão +30 dias
+      const baseDate = addDays(new Date(formData.purchase_date + 'T12:00:00'), 30);
 
       const newCustomInstallments = Array.from({ length: numInstallments }, (_, i) => ({
         amount: defaultAmount || '',
@@ -317,9 +333,12 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
                   ...formData, 
                   status: checked ? 'pago' : 'pendente',
                   paymentDate: checked ? format(new Date(), 'yyyy-MM-dd') : null,
-                  installments: checked ? 1 : formData.installments
+                  installments: checked ? '1' : formData.installments
                 });
-                if (checked) setCustomInstallments([]);
+                if (checked) {
+                  setInstallmentsInput('1');
+                  setCustomInstallments([]);
+                }
               }}
               disabled={['Pix', 'Dinheiro', 'Cartão de Débito'].includes(formData.paymentMethod)}
             />
@@ -343,10 +362,22 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
             <div className="space-y-2">
               <Label>Número de Parcelas</Label>
               <Input
-                type="number"
-                min="1"
-                value={formData.installments}
+                type="text"
+                inputMode="numeric"
+                placeholder="1"
+                value={installmentsInput}
                 onChange={(e) => handleInstallmentsChange(e.target.value)}
+                onBlur={() => {
+                  const cleaned = String(installmentsInput).replace(/[^0-9]/g, '');
+                  if (!cleaned) {
+                    setInstallmentsInput('1');
+                    handleInstallmentsChange('1');
+                    return;
+                  }
+                  const parsed = Math.max(1, Math.min(60, parseInt(cleaned, 10) || 1));
+                  setInstallmentsInput(String(parsed));
+                  handleInstallmentsChange(String(parsed));
+                }}
               />
             </div>
           )}

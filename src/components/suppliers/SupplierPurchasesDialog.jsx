@@ -8,9 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { format, parseISO, addMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
-import { CheckCircle2, Calendar, Clock, X, ChevronDown, ChevronRight, Trash2 } from 'lucide-react';
+import { CheckCircle2, Calendar, Clock, X, ChevronDown, ChevronRight, Trash2, Pencil } from 'lucide-react';
 import PaymentEditDialog from './PaymentEditDialog';
 import { apiRequest } from '@/lib/queryClient';
+import TransactionForm from '../transactions/TransactionForm';
 
 const parseLocalDate = (dateStr) => {
   if (!dateStr) return new Date();
@@ -45,6 +46,8 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
   const [paymentEditOpen, setPaymentEditOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [expandedGroups, setExpandedGroups] = useState({});
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState(null);
 
   const toggleGroup = (groupId) => {
     setExpandedGroups(prev => ({
@@ -258,6 +261,23 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
     }
   });
 
+  const updateTransactionMutation = useMutation({
+    mutationFn: async (payload) => {
+      if (!editingTransaction?.id) throw new Error('Transação inválida');
+      return apiRequest('PATCH', `/api/transactions/${editingTransaction.id}`, payload);
+    },
+    onSuccess: () => {
+      toast.success('Parcela atualizada!');
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      queryClient.refetchQueries({ queryKey: ['/api/transactions', { supplierId: supplier?.id }] });
+      setEditOpen(false);
+      setEditingTransaction(null);
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Erro ao atualizar parcela');
+    }
+  });
+
   if (!supplier) return null;
 
   return (
@@ -383,6 +403,19 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                               <Button
                                 size="icon"
                                 variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingTransaction(installment);
+                                  setEditOpen(true);
+                                }}
+                                className="text-slate-400 hover:text-slate-700"
+                                data-testid={`button-edit-installment-${installment.id}`}
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
                                 onClick={() => {
                                   if (confirm('Tem certeza que deseja cancelar este pagamento?')) {
                                     cancelPaymentMutation.mutate(installment.id);
@@ -422,6 +455,19 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                                 data-testid={`button-confirm-payment-${installment.id}`}
                               >
                                 Pagar
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingTransaction(installment);
+                                  setEditOpen(true);
+                                }}
+                                className="text-slate-400 hover:text-slate-700 h-8 w-8"
+                                data-testid={`button-edit-installment-${installment.id}`}
+                              >
+                                <Pencil className="w-4 h-4" />
                               </Button>
                               <Button
                                 size="icon"
@@ -474,6 +520,16 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
           isLoading={confirmPaymentMutation.isPending}
           title="Confirmar Pagamento"
           amountLabel="Valor Pago"
+        />
+
+        <TransactionForm
+          open={editOpen}
+          onOpenChange={(next) => {
+            setEditOpen(next);
+            if (!next) setEditingTransaction(null);
+          }}
+          initialData={editingTransaction}
+          onSubmit={(payload) => updateTransactionMutation.mutateAsync(payload)}
         />
       </DialogContent>
     </Dialog>

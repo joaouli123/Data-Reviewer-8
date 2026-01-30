@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { DollarSign, TrendingUp, Wallet, Users, Plus, ChevronRight, CheckCircle2, Clock, Check } from 'lucide-react';
-import { subMonths, startOfMonth, endOfMonth, format, isAfter, isBefore, subDays, startOfDay, endOfDay, parseISO } from 'date-fns';
+import { subMonths, startOfMonth, endOfMonth, format, isAfter, isBefore, subDays, startOfDay, endOfDay, parseISO, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import KPIWidget from '../components/dashboard/KPIWidget';
 import RevenueChart from '../components/dashboard/RevenueChart';
@@ -237,10 +237,12 @@ export default function DashboardPage() {
 
     const netProfit = totalRevenue - totalExpenses;
 
-    // Contas a receber/pagar (período selecionado) - APENAS transações PENDENTES
+    // Contas a receber/pagar (sempre próximos 30 dias) - APENAS transações PENDENTES
     // Usar data local (sem timezone UTC) para evitar problemas de comparação
-    const periodStart = new Date(dateRange.startDate.getFullYear(), dateRange.startDate.getMonth(), dateRange.startDate.getDate(), 0, 0, 0, 0);
-    const periodEnd = new Date(dateRange.endDate.getFullYear(), dateRange.endDate.getMonth(), dateRange.endDate.getDate(), 23, 59, 59, 999);
+    const futureStartBase = startOfDay(new Date());
+    const futureEndBase = endOfDay(addDays(new Date(), 30));
+    const periodStart = new Date(futureStartBase.getFullYear(), futureStartBase.getMonth(), futureStartBase.getDate(), 0, 0, 0, 0);
+    const periodEnd = new Date(futureEndBase.getFullYear(), futureEndBase.getMonth(), futureEndBase.getDate(), 23, 59, 59, 999);
     
     // Helper para verificar se transação está pendente
     const isPendingTransaction = (t) => {
@@ -500,7 +502,7 @@ export default function DashboardPage() {
       <div className="bg-white dark:bg-slate-900 rounded-lg p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
         <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
           <Wallet className="w-4 h-4 text-primary" />
-          Fluxo de Caixa Futuro (Período selecionado)
+          Fluxo de Caixa Futuro (Próximos 30 dias)
         </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -617,20 +619,20 @@ export default function DashboardPage() {
       <FutureTransactionsDialog
         open={showReceivablesDialog}
         onOpenChange={setShowReceivablesDialog}
-        title="Contas a Receber (Período selecionado)"
+        title="Contas a Receber (Próximos 30 dias)"
         transactions={metrics.futureRevenueTransactions || []}
         type="income"
-        periodLabel={dateRange?.label || 'Período selecionado'}
+        periodLabel={'Próximos 30 dias'}
       />
 
       {/* Dialog de Contas a Pagar */}
       <FutureTransactionsDialog
         open={showPayablesDialog}
         onOpenChange={setShowPayablesDialog}
-        title="Contas a Pagar (Período selecionado)"
+        title="Contas a Pagar (Próximos 30 dias)"
         transactions={metrics.futureExpensesTransactions || []}
         type="expense"
-        periodLabel={dateRange?.label || 'Período selecionado'}
+        periodLabel={'Próximos 30 dias'}
       />
     </div>
   );
