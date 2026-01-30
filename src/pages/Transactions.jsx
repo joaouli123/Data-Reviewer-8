@@ -50,14 +50,10 @@ const parseLocalDateString = (raw) => {
 };
 
 // Retorna uma data válida a partir dos campos conhecidos ou null
+// Prioriza a data da transação (vencimento) para filtros e saldos
 const extractTxDate = (t) => {
   if (!t) return null;
-  const status = String(t.status || '').toLowerCase();
-  const hasPaymentDate = !!(t.paymentDate || t.payment_date);
-  const isPaid = status === 'pago' || status === 'completed' || status === 'parcial' || status === 'paid' || status === 'approved' || status === 'aprovado' || hasPaymentDate;
-  const candidate = hasPaymentDate
-    ? (t.paymentDate || t.payment_date || t.date || t.createdAt || t.created_at)
-    : (isPaid ? (t.paymentDate || t.date || t.createdAt || t.created_at) : (t.date || t.paymentDate || t.createdAt || t.created_at));
+  const candidate = t.date || t.paymentDate || t.payment_date || t.createdAt || t.created_at;
   if (!candidate) return null;
   try {
     return parseLocalDateString(candidate);
@@ -372,10 +368,12 @@ export default function TransactionsPage() {
 
           // 2. Filtrar por Status
           if (statusFilter === 'paid') {
-            const isPaidOrPartial = t.status === 'pago' || t.status === 'completed' || t.status === 'parcial';
+            const statusValue = String(t.status || '').toLowerCase();
+            const isPaidOrPartial = ['pago', 'completed', 'parcial', 'paid', 'approved', 'aprovado'].includes(statusValue) || !!(t.paymentDate || t.payment_date);
             if (!isPaidOrPartial) return false;
           } else if (statusFilter === 'pending') {
-            const isPending = t.status === 'pendente';
+            const statusValue = String(t.status || '').toLowerCase();
+            const isPending = ['pendente', 'agendado', 'pending', 'scheduled'].includes(statusValue);
             if (!isPending) return false;
           }
           
@@ -395,33 +393,30 @@ export default function TransactionsPage() {
           const matchesPaymentMethod = paymentMethodFilter === 'all' || t.paymentMethod === paymentMethodFilter;
           if (!matchesPaymentMethod) return false;
 
-          // 6. Filtrar por Data (UTC Midday approach)
-          const isPaid = t.status === 'pago' || t.status === 'completed' || t.status === 'parcial' || t.status === 'paid' || t.status === 'approved' || t.status === 'aprovado';
+          // 6. Filtrar por Data (sempre local para evitar trazer dia anterior)
           const relevantDate = extractTxDate(t);
           if (!relevantDate) return true; // Sem data, deixa visível
 
-          let tDate;
+          let tTime;
           try {
-            // Normalizar para meio-dia UTC baseado em data local para consistência
-            tDate = Date.UTC(relevantDate.getFullYear(), relevantDate.getMonth(), relevantDate.getDate(), 12, 0, 0);
+            tTime = startOfDay(relevantDate).getTime();
           } catch (e) {
             return true;
           }
-          
-          const start = new Date(dateRange.startDate);
-          const end = new Date(dateRange.endDate);
-          const startTime = Date.UTC(start.getFullYear(), start.getMonth(), start.getDate(), 0, 0, 0);
-          const endTime = Date.UTC(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59);
 
-          return tDate >= startTime && tDate <= endTime;
+          const startTime = startOfDay(dateRange.startDate).getTime();
+          const endTime = endOfDay(dateRange.endDate).getTime();
+
+          return tTime >= startTime && tTime <= endTime;
         })
       .sort((a, b) => {
-        // Sort by relevant date (paymentDate for paid, date for pending)
-        const aIsPaid = a.status === 'pago' || a.status === 'completed';
-        const bIsPaid = b.status === 'pago' || b.status === 'completed';
-        const aDate = aIsPaid && a.paymentDate ? a.paymentDate : a.date;
-        const bDate = bIsPaid && b.paymentDate ? b.paymentDate : b.date;
-        return new Date(bDate) - new Date(aDate);
+        // Sort by relevant date (local)
+        const aDate = extractTxDate(a);
+        const bDate = extractTxDate(b);
+        if (!aDate && !bDate) return 0;
+        if (!aDate) return 1;
+        if (!bDate) return -1;
+        return bDate.getTime() - aDate.getTime();
       });
     }, [txArray, typeFilter, statusFilter, categoryFilter, searchTerm, paymentMethodFilter, dateRange, categories]);
 
@@ -566,7 +561,7 @@ export default function TransactionsPage() {
                         paginatedTransactions.map((t) => (
                             <TableRow key={t.id} className="hover:bg-slate-50/50 group">
                                 <TableCell className="font-medium text-slate-600 pl-6 text-left">
-                                    {/* For paid transactions, show payment date; otherwise show due date */}
+                                    {/* Mostrar data da transação (vencimento) */}
                                     {(() => {
                                       try {
                                         const dt = extractTxDate(t);
