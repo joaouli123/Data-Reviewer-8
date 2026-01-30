@@ -49,6 +49,19 @@ const parseLocalDateString = (raw) => {
   return Number.isNaN(d.getTime()) ? null : d;
 };
 
+// Normaliza valores monetários em pt-BR para número
+const parseMoney = (value) => {
+  if (value === null || value === undefined) return 0;
+  if (typeof value === 'number') return value;
+  const cleaned = String(value)
+    .replace(/\s/g, '')
+    .replace('R$', '')
+    .replace(/\./g, '')
+    .replace(',', '.');
+  const parsed = parseFloat(cleaned);
+  return Number.isNaN(parsed) ? 0 : parsed;
+};
+
 // Retorna uma data válida a partir dos campos conhecidos ou null
 // Para pagas: usa data de pagamento; para pendentes: usa vencimento
 const extractTxDate = (t) => {
@@ -347,9 +360,9 @@ export default function TransactionsPage() {
           return;
         }
         
-        const amount = (parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0);
+        const amount = parseMoney(t.amount) + parseMoney(t.interest);
         // Considerar taxa de cartão para receitas
-        const cardFee = t.hasCardFee && isIncomeType(t.type) ? (Math.abs(parseFloat(t.amount) || 0) * (parseFloat(t.cardFee) || 0)) / 100 : 0;
+        const cardFee = t.hasCardFee && isIncomeType(t.type) ? (Math.abs(parseMoney(t.amount)) * (parseMoney(t.cardFee) || 0)) / 100 : 0;
         const netAmount = isIncomeType(t.type) ? amount - cardFee : amount;
 
         if (tDate < startTime) {
@@ -360,8 +373,8 @@ export default function TransactionsPage() {
 
       (periodTransactions || []).forEach(t => {
         if (!t) return;
-        const amount = (parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0);
-        const cardFee = t.hasCardFee && isIncomeType(t.type) ? (Math.abs(parseFloat(t.amount) || 0) * (parseFloat(t.cardFee) || 0)) / 100 : 0;
+        const amount = parseMoney(t.amount) + parseMoney(t.interest);
+        const cardFee = t.hasCardFee && isIncomeType(t.type) ? (Math.abs(parseMoney(t.amount)) * (parseMoney(t.cardFee) || 0)) / 100 : 0;
         const netAmount = isIncomeType(t.type) ? amount - cardFee : amount;
         if (isIncomeType(t.type)) periodIncome += netAmount;
         else if (isExpenseType(t.type)) periodExpense += Math.abs(amount);
