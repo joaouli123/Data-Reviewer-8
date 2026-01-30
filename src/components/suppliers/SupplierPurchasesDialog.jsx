@@ -266,10 +266,11 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
       if (!editingTransaction?.id) throw new Error('Transação inválida');
       return apiRequest('PATCH', `/api/transactions/${editingTransaction.id}`, payload);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success('Parcela atualizada!');
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
-      queryClient.refetchQueries({ queryKey: ['/api/transactions', { supplierId: supplier?.id }] });
+      // Força refetch imediato
+      await queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/transactions', { supplierId: supplier?.id }] });
       setEditOpen(false);
       setEditingTransaction(null);
     },

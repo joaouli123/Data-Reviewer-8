@@ -262,10 +262,11 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
       if (!editingTransaction?.id) throw new Error('Transação inválida');
       return apiRequest('PATCH', `/api/transactions/${editingTransaction.id}`, payload);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success('Parcela atualizada!', { duration: 4000 });
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
-      queryClient.refetchQueries({ queryKey: ['/api/transactions', { customerId: customer?.id }] });
+      // Força refetch imediato
+      await queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/transactions', { customerId: customer?.id }] });
       setEditOpen(false);
       setEditingTransaction(null);
     },

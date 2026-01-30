@@ -60,7 +60,7 @@ export default function InstallmentEditDialog({
     
     onConfirm({
       amount: currentAmount.toFixed(2),
-      date: dueDate
+      dueDate: dueDate
     });
   };
 
