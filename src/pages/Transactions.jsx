@@ -67,6 +67,18 @@ const extractTxDate = (t) => {
   }
 };
 
+// Data base para cálculo de saldo inicial: prioriza a data da transação
+const extractBalanceDate = (t) => {
+  if (!t) return null;
+  const candidate = t.date || t.paymentDate || t.payment_date || t.createdAt || t.created_at;
+  if (!candidate) return null;
+  try {
+    return parseLocalDateString(candidate);
+  } catch (e) {
+    return null;
+  }
+};
+
 export default function TransactionsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
@@ -325,7 +337,7 @@ export default function TransactionsPage() {
         const isPaid = ['pago', 'completed', 'parcial', 'paid', 'approved', 'aprovado'].includes(statusValue) || hasPaymentDate;
         if (!isPaid) return;
 
-        const relevantDate = extractTxDate(t);
+        const relevantDate = extractBalanceDate(t);
         if (!relevantDate) return;
         
         let tDate;
