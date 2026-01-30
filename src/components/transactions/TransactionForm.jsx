@@ -265,6 +265,13 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
         toast.error('Digite uma descrição', { duration: 5000 });
         return;
     }
+
+    // Requer data conforme o status
+    const requiredDate = formData.status === 'pago' ? formData.paymentDate : formData.date;
+    if (!requiredDate) {
+      toast.error('Selecione uma data', { duration: 5000 });
+      return;
+    }
     if (!formData.amount || Number(formData.amount) <= 0) {
         toast.error('Digite um valor válido', { duration: 5000 });
         return;
@@ -762,6 +769,12 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
                         type="date"
                         value={inst.due_date}
                         onChange={(e) => updateCustomInstallment(idx, 'due_date', e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Delete' || e.key === 'Backspace') {
+                            e.preventDefault();
+                            updateCustomInstallment(idx, 'due_date', '');
+                          }
+                        }}
                         className="h-8 text-xs"
                       />
                     </div>
@@ -795,8 +808,8 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
                   onSelect={(date) => setFormData({
                     ...formData,
                     ...(formData.status === 'pago'
-                      ? { paymentDate: date || new Date() }
-                      : { date: date || new Date() })
+                      ? { paymentDate: date || null }
+                      : { date: date || null })
                   })}
                   initialFocus
                   locale={ptBR}
