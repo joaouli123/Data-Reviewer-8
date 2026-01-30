@@ -144,8 +144,8 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
       const total = parseCurrency(formData.total_amount);
 
       const defaultAmount = parseFloat((total / numInstallments).toFixed(2));
-      // Primeira parcela: SEMPRE +30 dias a partir de HOJE
-      const baseDate = addDays(new Date(), 30);
+      // Primeira parcela: SEMPRE +1 mês a partir de HOJE (mantém o dia)
+      const baseDate = addMonths(new Date(), 1);
 
       const newCustomInstallments = Array.from({ length: numInstallments }, (_, i) => ({
         amount: defaultAmount || '',

@@ -202,11 +202,11 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
     const safeValue = Math.max(1, Math.min(60, Number(numValue) || 1));
     const newStatus = safeValue > 1 ? 'pendente' : formData.status;
 
-    // Regra: ao parcelar (>1), a 1ª parcela SEMPRE começa em +30 dias (nova transação)
+    // Regra: ao parcelar (>1), a 1ª parcela SEMPRE começa em +1 mês (nova transação)
     let nextDueDate = formData.date;
     if (safeValue > 1 && !initialData) {
-      // Sempre +30 dias para parcelamento novo
-      nextDueDate = addDays(new Date(), 30);
+      // Sempre +1 mês para parcelamento novo (mantém o dia do mês)
+      nextDueDate = addMonths(new Date(), 1);
     }
 
     setFormData(prev => ({

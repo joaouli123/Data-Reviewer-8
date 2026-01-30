@@ -237,12 +237,10 @@ export default function DashboardPage() {
 
     const netProfit = totalRevenue - totalExpenses;
 
-    // Contas a receber/pagar (sempre próximos 30 dias) - APENAS transações PENDENTES
+    // Contas a receber/pagar - USA O FILTRO SELECIONADO para transações PENDENTES
     // Usar data local (sem timezone UTC) para evitar problemas de comparação
-    const futureStartBase = startOfDay(new Date());
-    const futureEndBase = endOfDay(addDays(new Date(), 30));
-    const periodStart = new Date(futureStartBase.getFullYear(), futureStartBase.getMonth(), futureStartBase.getDate(), 0, 0, 0, 0);
-    const periodEnd = new Date(futureEndBase.getFullYear(), futureEndBase.getMonth(), futureEndBase.getDate(), 23, 59, 59, 999);
+    const periodStart = new Date(dateRange.startDate.getFullYear(), dateRange.startDate.getMonth(), dateRange.startDate.getDate(), 0, 0, 0, 0);
+    const periodEnd = new Date(dateRange.endDate.getFullYear(), dateRange.endDate.getMonth(), dateRange.endDate.getDate(), 23, 59, 59, 999);
     
     // Helper para verificar se transação está pendente
     const isPendingTransaction = (t) => {
@@ -327,7 +325,7 @@ export default function DashboardPage() {
       .filter(t => {
       const tDate = t.effectiveDate;
       if (!tDate) return false;
-      // Filtra apenas receitas PENDENTES com vencimento nos próximos 30 dias
+      // Filtra apenas receitas PENDENTES com vencimento no período do filtro
       const isIncome = isIncomeType(t.type);
       const isPending = isPendingTransaction(t);
       const isInRange = tDate >= periodStart && tDate <= periodEnd;
@@ -347,7 +345,7 @@ export default function DashboardPage() {
       .filter(t => {
       const tDate = t.effectiveDate;
       if (!tDate) return false;
-      // Filtra apenas despesas PENDENTES com vencimento nos próximos 30 dias
+      // Filtra apenas despesas PENDENTES com vencimento no período do filtro
       const isExpense = isExpenseType(t.type);
       const isPending = isPendingTransaction(t);
       const isInRange = tDate >= periodStart && tDate <= periodEnd;
@@ -502,7 +500,7 @@ export default function DashboardPage() {
       <div className="bg-white dark:bg-slate-900 rounded-lg p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
         <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
           <Wallet className="w-4 h-4 text-primary" />
-          Fluxo de Caixa Futuro (Próximos 30 dias)
+          Fluxo de Caixa Futuro ({dateRange.label || `${format(dateRange.startDate, 'dd/MM')} - ${format(dateRange.endDate, 'dd/MM')}`})
         </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -619,20 +617,20 @@ export default function DashboardPage() {
       <FutureTransactionsDialog
         open={showReceivablesDialog}
         onOpenChange={setShowReceivablesDialog}
-        title="Contas a Receber (Próximos 30 dias)"
+        title={`Contas a Receber (${dateRange.label || format(dateRange.startDate, 'dd/MM') + ' - ' + format(dateRange.endDate, 'dd/MM')})`}
         transactions={metrics.futureRevenueTransactions || []}
         type="income"
-        periodLabel={'Próximos 30 dias'}
+        periodLabel={dateRange.label || `${format(dateRange.startDate, 'dd/MM/yyyy')} - ${format(dateRange.endDate, 'dd/MM/yyyy')}`}
       />
 
       {/* Dialog de Contas a Pagar */}
       <FutureTransactionsDialog
         open={showPayablesDialog}
         onOpenChange={setShowPayablesDialog}
-        title="Contas a Pagar (Próximos 30 dias)"
+        title={`Contas a Pagar (${dateRange.label || format(dateRange.startDate, 'dd/MM') + ' - ' + format(dateRange.endDate, 'dd/MM')})`}
         transactions={metrics.futureExpensesTransactions || []}
         type="expense"
-        periodLabel={'Próximos 30 dias'}
+        periodLabel={dateRange.label || `${format(dateRange.startDate, 'dd/MM/yyyy')} - ${format(dateRange.endDate, 'dd/MM/yyyy')}`}
       />
     </div>
   );
