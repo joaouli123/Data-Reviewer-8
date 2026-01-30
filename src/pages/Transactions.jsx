@@ -50,10 +50,15 @@ const parseLocalDateString = (raw) => {
 };
 
 // Retorna uma data válida a partir dos campos conhecidos ou null
-// Prioriza a data da transação (vencimento) para filtros e saldos
+// Para pagas: usa data de pagamento; para pendentes: usa vencimento
 const extractTxDate = (t) => {
   if (!t) return null;
-  const candidate = t.date || t.paymentDate || t.payment_date || t.createdAt || t.created_at;
+  const statusValue = String(t.status || '').toLowerCase();
+  const hasPaymentDate = !!(t.paymentDate || t.payment_date);
+  const isPaid = ['pago', 'completed', 'parcial', 'paid', 'approved', 'aprovado'].includes(statusValue) || hasPaymentDate;
+  const candidate = isPaid
+    ? (t.paymentDate || t.payment_date || t.date || t.createdAt || t.created_at)
+    : (t.date || t.paymentDate || t.payment_date || t.createdAt || t.created_at);
   if (!candidate) return null;
   try {
     return parseLocalDateString(candidate);
