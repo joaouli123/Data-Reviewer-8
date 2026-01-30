@@ -319,7 +319,7 @@ export default function TransactionsPage() {
 
     const txArray = Array.isArray(transactionsData) ? transactionsData : (transactionsData?.data || []);
     
-    const calculateBalances = () => {
+    const calculateBalances = (periodTransactions) => {
       let openingBalance = 0;
       let periodIncome = 0;
       let periodExpense = 0;
@@ -355,10 +355,16 @@ export default function TransactionsPage() {
         if (tDate < startTime) {
           if (isIncomeType(t.type)) openingBalance += netAmount;
           else if (isExpenseType(t.type)) openingBalance -= Math.abs(amount);
-        } else if (tDate >= startTime && tDate <= endTime) {
-          if (isIncomeType(t.type)) periodIncome += netAmount;
-          else if (isExpenseType(t.type)) periodExpense += Math.abs(amount);
         }
+      });
+
+      (periodTransactions || []).forEach(t => {
+        if (!t) return;
+        const amount = (parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0);
+        const cardFee = t.hasCardFee && isIncomeType(t.type) ? (Math.abs(parseFloat(t.amount) || 0) * (parseFloat(t.cardFee) || 0)) / 100 : 0;
+        const netAmount = isIncomeType(t.type) ? amount - cardFee : amount;
+        if (isIncomeType(t.type)) periodIncome += netAmount;
+        else if (isExpenseType(t.type)) periodExpense += Math.abs(amount);
       });
 
       return {
@@ -370,8 +376,6 @@ export default function TransactionsPage() {
     };
 
     // Memoize calculations to prevent lag
-    const balances = React.useMemo(() => calculateBalances(), [txArray, dateRange]);
-
     const filteredTransactions = React.useMemo(() => {
       return txArray
         .filter(t => {
@@ -436,6 +440,11 @@ export default function TransactionsPage() {
         return bDate.getTime() - aDate.getTime();
       });
     }, [txArray, typeFilter, statusFilter, categoryFilter, searchTerm, paymentMethodFilter, dateRange, categories]);
+
+    const balances = React.useMemo(
+      () => calculateBalances(filteredTransactions),
+      [txArray, dateRange, filteredTransactions]
+    );
 
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
