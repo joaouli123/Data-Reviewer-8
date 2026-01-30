@@ -27,14 +27,53 @@ const EXPENSE_TYPES = ['compra', 'compra_prazo', 'despesa', 'expense', 'saida'];
 const isIncomeType = (type) => INCOME_TYPES.includes(type);
 const isExpenseType = (type) => EXPENSE_TYPES.includes(type);
 
+// Converte datas comuns (yyyy-mm-dd, dd/mm/yyyy, dd-mm-yyyy, ISO) para data local sem shift de fuso
+const parseLocalDateString = (raw) => {
+  const str = String(raw || '').trim();
+
+  const ymd = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (ymd) {
+    const year = Number(ymd[1]);
+    const month = Number(ymd[2]);
+    const day = Number(ymd[3]);
+    const d = new Date(year, month - 1, day, 12, 0, 0, 0);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+
+  const dmy = str.match(/^(\d{2})[\/\-](\d{2})[\/\-](\d{4})/);
+  if (dmy) {
+    const day = Number(dmy[1]);
+    const month = Number(dmy[2]);
+    const year = Number(dmy[3]);
+    const d = new Date(year, month - 1, day, 12, 0, 0, 0);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+
+  const d = new Date(str);
+  return Number.isNaN(d.getTime()) ? null : d;
+};
+
+// Normaliza valores monetários sem multiplicar por 100 quando já vierem com ponto decimal
+const parseMoney = (value) => {
+  if (value === null || value === undefined) return 0;
+  if (typeof value === 'number') return value;
+
+  const str = String(value).replace(/\s/g, '').replace('R$', '');
+  const usesComma = str.includes(',');
+  const normalized = usesComma ? str.replace(/\./g, '').replace(',', '.') : str;
+
+  const parsed = parseFloat(normalized);
+  return Number.isNaN(parsed) ? 0 : parsed;
+};
+
 export default function DashboardPage() {
-  // Initialize with UTC-normalized dates for São Paulo timezone
+  // Initialize with local day bounds to avoid UTC shifts
   const getInitialDateRange = () => {
-    const todayStr = new Date().toISOString().split('T')[0];
-    const thirtyDaysAgoStr = new Date(new Date().setDate(new Date().getDate() - 29)).toISOString().split('T')[0];
+    const today = new Date();
+    const thirtyDaysAgo = subDays(today, 29);
     return {
-      startDate: new Date(thirtyDaysAgoStr + 'T00:00:00Z'),
-      endDate: new Date(todayStr + 'T23:59:59Z'),
+      startDate: startOfDay(thirtyDaysAgo),
+      endDate: endOfDay(today),
       label: 'Últimos 30 dias'
     };
   };
@@ -134,14 +173,30 @@ export default function DashboardPage() {
   const extractTxDate = (t) => {
     if (!t) return null;
     const status = String(t.status || '').toLowerCase();
-    const isPaid = status === 'pago' || status === 'completed' || status === 'parcial';
+    const hasPaymentDate = !!(t.paymentDate || t.payment_date);
+    const isPaid = ['pago', 'completed', 'parcial', 'paid', 'approved', 'aprovado'].includes(status) || hasPaymentDate;
     const candidate = isPaid
-      ? (t.paymentDate || t.date || t.createdAt || t.created_at)
-      : (t.date || t.paymentDate || t.createdAt || t.created_at);
+      ? (t.paymentDate || t.payment_date || t.date || t.createdAt || t.created_at)
+      : (t.date || t.paymentDate || t.payment_date || t.createdAt || t.created_at);
     if (!candidate) return null;
     try {
-      const d = new Date(candidate);
-      return Number.isNaN(d.getTime()) ? null : d;
+      return parseLocalDateString(candidate);
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const extractBalanceDate = (t) => {
+    if (!t) return null;
+    const status = String(t.status || '').toLowerCase();
+    const hasPaymentDate = !!(t.paymentDate || t.payment_date);
+    const isPaid = ['pago', 'completed', 'parcial', 'paid', 'approved', 'aprovado'].includes(status) || hasPaymentDate;
+    const candidate = isPaid
+      ? (t.paymentDate || t.payment_date || t.date || t.createdAt || t.created_at)
+      : (t.date || t.paymentDate || t.payment_date || t.createdAt || t.created_at);
+    if (!candidate) return null;
+    try {
+      return parseLocalDateString(candidate);
     } catch (e) {
       return null;
     }
@@ -149,35 +204,36 @@ export default function DashboardPage() {
 
   // Calculate metrics based on date range
   const calculateMetrics = () => {
-    const startDateStr = format(dateRange.startDate, 'yyyy-MM-dd');
-    const endDateStr = format(dateRange.endDate, 'yyyy-MM-dd');
-    const startDate = parseISO(startDateStr);
-    const endDate = parseISO(endDateStr);
-    
-    // Filter transactions by date range
-    const filteredTransactions = allTransactions.filter(t => {
+    const startTime = startOfDay(dateRange.startDate).getTime();
+    const endTime = endOfDay(dateRange.endDate).getTime();
+
+    const isPaid = (t) => {
+      const status = String(t?.status || '').toLowerCase();
+      const hasPaymentDate = !!(t?.paymentDate || t?.payment_date);
+      return ['pago', 'completed', 'parcial', 'paid', 'approved', 'aprovado'].includes(status) || hasPaymentDate;
+    };
+
+    const paidTransactions = allTransactions.filter((t) => isPaid(t));
+
+    const filteredTransactions = paidTransactions.filter(t => {
       const tDate = extractTxDate(t);
       if (!tDate) return false;
-      return tDate >= startDate && tDate <= endDate;
+      const tTime = startOfDay(tDate).getTime();
+      return tTime >= startTime && tTime <= endTime;
     });
 
-    const totalRevenue = filteredTransactions
-      .filter(t => isIncomeType(t.type))
-      .reduce((acc, curr) => {
-        const amount = parseFloat(curr.amount) || 0;
-        const interest = parseFloat(curr.interest) || 0;
-        // Calcular taxa de cartão se aplicável
-        const cardFee = curr.hasCardFee ? (Math.abs(amount) * (parseFloat(curr.cardFee) || 0)) / 100 : 0;
-        return acc + Math.abs(amount) + interest - cardFee;
-      }, 0);
-    
-    const totalExpenses = filteredTransactions
-      .filter(t => isExpenseType(t.type))
-      .reduce((acc, curr) => {
-        const amount = parseFloat(curr.amount) || 0;
-        const interest = parseFloat(curr.interest) || 0;
-        return acc + Math.abs(amount + interest);
-      }, 0);
+    let totalRevenue = 0;
+    let totalExpenses = 0;
+
+    filteredTransactions.forEach((t) => {
+      const amount = parseMoney(t.amount) + parseMoney(t.interest);
+      const cardFee = t.hasCardFee && isIncomeType(t.type)
+        ? (Math.abs(parseMoney(t.amount)) * (parseMoney(t.cardFee) || 0)) / 100
+        : 0;
+      const netAmount = isIncomeType(t.type) ? amount - cardFee : amount;
+      if (isIncomeType(t.type)) totalRevenue += netAmount;
+      else if (isExpenseType(t.type)) totalExpenses += Math.abs(amount);
+    });
 
     const netProfit = totalRevenue - totalExpenses;
 
@@ -213,9 +269,8 @@ export default function DashboardPage() {
           const d = new Date(year, month - 1, day, 12, 0, 0, 0);
           return Number.isNaN(d.getTime()) ? null : d;
         }
-        const d = new Date(raw);
-        if (Number.isNaN(d.getTime())) return null;
-        // Normalizar para data local (ignorar timezone)
+        const d = parseLocalDateString(raw);
+        if (!d || Number.isNaN(d.getTime())) return null;
         return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12, 0, 0, 0);
       } catch (e) {
         return null;
@@ -307,7 +362,7 @@ export default function DashboardPage() {
     const monthsToShow = Array.from({ length: 6 }, (_, i) => startOfMonth(subMonths(new Date(), 5 - i)));
     const chartData = monthsToShow.map(monthStart => {
       const monthEnd = endOfMonth(monthStart);
-      const monthTrans = allTransactions.filter(t => {
+      const monthTrans = paidTransactions.filter(t => {
         const tDate = extractTxDate(t);
         if (!tDate) return false;
         return tDate >= monthStart && tDate <= monthEnd;
@@ -332,8 +387,25 @@ export default function DashboardPage() {
       };
     });
 
+    // Saldo inicial: todas as transações pagas anteriores ao início
+    let openingBalance = 0;
+    paidTransactions.forEach((t) => {
+      const d = extractBalanceDate(t);
+      if (!d) return;
+      const tTime = startOfDay(d).getTime();
+      if (tTime < startTime) {
+        const amount = parseMoney(t.amount) + parseMoney(t.interest);
+        const cardFee = t.hasCardFee && isIncomeType(t.type)
+          ? (Math.abs(parseMoney(t.amount)) * (parseMoney(t.cardFee) || 0)) / 100
+          : 0;
+        const netAmount = isIncomeType(t.type) ? amount - cardFee : amount;
+        if (isIncomeType(t.type)) openingBalance += netAmount;
+        else if (isExpenseType(t.type)) openingBalance -= Math.abs(amount);
+      }
+    });
+
     return {
-      openingBalance: 0, // Simplified - opening balance from recent transactions only
+      openingBalance,
       totalRevenue,
       totalExpenses,
       netProfit,
