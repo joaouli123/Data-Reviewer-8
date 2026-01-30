@@ -19,6 +19,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Customer, Supplier, ROLES } from '@/api/entities';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { apiRequest } from '@/lib/queryClient';
 
 export default function TransactionForm({ open, onOpenChange, onSubmit, initialData = null }) {
   const { company, user } = useAuth();
@@ -27,6 +28,18 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
   const [isSuggestingCategory, setIsSuggestingCategory] = useState(false);
   const [customInstallments, setCustomInstallments] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const updateInstallmentDatesMutation = useMutation({
+    mutationFn: ({ installmentGroup, newFirstDate }) => apiRequest('PATCH', `/api/transactions/group/${installmentGroup}/dates`, { newFirstDate }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/cash-flow'] });
+      toast.success('Vencimentos das parcelas atualizados!');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Erro ao atualizar vencimentos');
+    }
+  });
 
   // Use ROLES instead of direct strings to be safer
   const canEdit = user?.role === ROLES.ADMIN || user?.isSuperAdmin || (initialData ? user?.permissions?.edit_transactions : user?.permissions?.create_transactions);
@@ -236,6 +249,15 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
     setCustomInstallments(updated);
   };
 
+  const formatDateOnly = (dateObj) => {
+    if (!dateObj) return null;
+    const d = new Date(dateObj);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (isSubmitting) return;
@@ -285,16 +307,6 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
     } else {
       amount = Math.abs(numericAmount).toFixed(2);
     }
-
-    // Helper to convert Date to YYYY-MM-DD format (local date, no timezone)
-    const formatDateOnly = (dateObj) => {
-      if (!dateObj) return null;
-      const d = new Date(dateObj);
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    };
 
     let isoDate = formatDateOnly(formData.date);
 
@@ -791,6 +803,35 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
                 />
               </PopoverContent>
             </Popover>
+            {initialData?.installmentGroup && formData.status !== 'pago' && (
+              <div className="pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  disabled={updateInstallmentDatesMutation.isPending}
+                  onClick={() => {
+                    if (!formData.date) {
+                      toast.error('Selecione uma data de vencimento primeiro');
+                      return;
+                    }
+                    const installmentNumber = Number(initialData.installmentNumber || 1);
+                    const baseDate = new Date(formData.date);
+                    const firstDate = addMonths(baseDate, -(installmentNumber - 1));
+                    const newFirstDate = formatDateOnly(firstDate);
+                    updateInstallmentDatesMutation.mutate({
+                      installmentGroup: initialData.installmentGroup,
+                      newFirstDate
+                    });
+                  }}
+                >
+                  {updateInstallmentDatesMutation.isPending ? 'Atualizando...' : 'Atualizar vencimento de todas as parcelas'}
+                </Button>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Atualiza todas as parcelas do grupo mantendo o intervalo mensal.
+                </p>
+              </div>
+            )}
           </div>
 
           <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isSubmitting}>

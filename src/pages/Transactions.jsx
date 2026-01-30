@@ -388,6 +388,47 @@ export default function TransactionsPage() {
       };
     };
 
+    const isInDateRange = (t) => {
+      const relevantDate = extractTxDate(t);
+      if (!relevantDate) return false;
+      let tTime;
+      try {
+        tTime = startOfDay(relevantDate).getTime();
+      } catch (e) {
+        return false;
+      }
+
+      const startTime = startOfDay(dateRange.startDate).getTime();
+      const endTime = endOfDay(dateRange.endDate).getTime();
+      return tTime >= startTime && tTime <= endTime;
+    };
+
+    const periodBaseTransactions = React.useMemo(() => {
+      return txArray.filter(t => {
+        if (!t) return false;
+
+        // Tipo
+        if (typeFilter !== 'all') {
+          if (typeFilter === 'income' && !isIncomeType(t.type)) return false;
+          if (typeFilter === 'expense' && !isExpenseType(t.type)) return false;
+        }
+
+        // Status
+        if (statusFilter === 'paid') {
+          const statusValue = String(t.status || '').toLowerCase();
+          const isPaidOrPartial = ['pago', 'completed', 'parcial', 'paid', 'approved', 'aprovado'].includes(statusValue) || !!(t.paymentDate || t.payment_date);
+          if (!isPaidOrPartial) return false;
+        } else if (statusFilter === 'pending') {
+          const statusValue = String(t.status || '').toLowerCase();
+          const isPending = ['pendente', 'agendado', 'pending', 'scheduled'].includes(statusValue);
+          if (!isPending) return false;
+        }
+
+        // Data
+        return isInDateRange(t);
+      });
+    }, [txArray, typeFilter, statusFilter, dateRange]);
+
     // Memoize calculations to prevent lag
     const filteredTransactions = React.useMemo(() => {
       return txArray
@@ -428,20 +469,7 @@ export default function TransactionsPage() {
           if (!matchesPaymentMethod) return false;
 
           // 6. Filtrar por Data (sempre local para evitar trazer dia anterior)
-          const relevantDate = extractTxDate(t);
-          if (!relevantDate) return true; // Sem data, deixa visível
-
-          let tTime;
-          try {
-            tTime = startOfDay(relevantDate).getTime();
-          } catch (e) {
-            return true;
-          }
-
-          const startTime = startOfDay(dateRange.startDate).getTime();
-          const endTime = endOfDay(dateRange.endDate).getTime();
-
-          return tTime >= startTime && tTime <= endTime;
+          return isInDateRange(t);
         })
       .sort((a, b) => {
         // Sort by relevant date (local)
@@ -455,8 +483,8 @@ export default function TransactionsPage() {
     }, [txArray, typeFilter, statusFilter, categoryFilter, searchTerm, paymentMethodFilter, dateRange, categories]);
 
     const balances = React.useMemo(
-      () => calculateBalances(filteredTransactions),
-      [txArray, dateRange, filteredTransactions]
+      () => calculateBalances(periodBaseTransactions),
+      [txArray, dateRange, periodBaseTransactions]
     );
 
   const startIndex = (currentPage - 1) * pageSize;
