@@ -178,94 +178,80 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
       ...prev,
       description: '',
       amount: '',
-    const applyInstallments = (numValue) => {
-      const safeValue = Math.max(1, Math.min(60, Number(numValue) || 1));
-      const newStatus = safeValue > 1 ? 'pendente' : formData.status;
+      type: prev.entityType === 'customer' ? 'venda' : (prev.entityType === 'supplier' ? 'compra' : 'venda'),
+      categoryId: '',
+      date: new Date(),
+      installments: 1,
+      installment_amount: '',
+      status: 'pago',
+      paymentDate: new Date(),
+      entityType: prev.entityType || 'none',
+      customerId: prev.customerId || '',
+      supplierId: prev.supplierId || '',
+      hasCardFee: false,
+      cardFee: ''
+    }));
+    setCustomInstallments([]);
+  }, [initialData, open]);
 
-      // Regra: ao parcelar, a 1ª parcela deve ser por padrão em +30 dias
-      let nextDueDate = formData.date;
-      if (safeValue > 1 && !initialData) {
-        const current = formData.date ? new Date(formData.date) : new Date();
-        const isToday = startOfDay(current).getTime() === startOfDay(new Date()).getTime();
-        if (!formData.date || isToday) {
-          nextDueDate = addDays(new Date(), 30);
-        }
+  React.useEffect(() => {
+    setInstallmentsInput(String(formData.installments || '1'));
+  }, [formData.installments]);
+
+  const applyInstallments = (numValue) => {
+    const safeValue = Math.max(1, Math.min(60, Number(numValue) || 1));
+    const newStatus = safeValue > 1 ? 'pendente' : formData.status;
+
+    // Regra: ao parcelar, a 1ª parcela deve ser por padrão em +30 dias
+    let nextDueDate = formData.date;
+    if (safeValue > 1 && !initialData) {
+      const current = formData.date ? new Date(formData.date) : new Date();
+      const isToday = startOfDay(current).getTime() === startOfDay(new Date()).getTime();
+      if (!formData.date || isToday) {
+        nextDueDate = addDays(new Date(), 30);
       }
+    }
 
-      setFormData(prev => ({
-        ...prev,
-        date: nextDueDate,
-        installments: safeValue,
-        installment_amount: '',
-        status: newStatus,
-        paymentDate: newStatus === 'pendente' ? null : prev.paymentDate,
-      }));
+    setFormData(prev => ({
+      ...prev,
+      date: nextDueDate,
+      installments: safeValue,
+      installment_amount: '',
+      status: newStatus,
+      paymentDate: newStatus === 'pendente' ? null : prev.paymentDate,
+    }));
 
-      if (safeValue > 1) {
-        const totalAmount = parseCurrency(formData.amount);
-        const defaultAmount = totalAmount > 0 ? (totalAmount / safeValue).toFixed(2) : '0.00';
-        const baseDate = nextDueDate ? new Date(nextDueDate) : new Date();
-        const dayOfMonth = baseDate.getDate();
-        const monthIdx = baseDate.getMonth();
-        const yearVal = baseDate.getFullYear();
-
-        const newCustomInstallments = Array.from({ length: safeValue }, (_, i) => {
-          const installmentDate = new Date(yearVal, monthIdx + i, dayOfMonth);
-          const year = installmentDate.getFullYear();
-          const month = String(installmentDate.getMonth() + 1).padStart(2, '0');
-          const day = String(installmentDate.getDate()).padStart(2, '0');
-          return {
-            amount: defaultAmount,
-            due_date: `${year}-${month}-${day}`,
-          };
-        });
-        setCustomInstallments(newCustomInstallments);
-      } else {
-        setCustomInstallments([]);
-      }
-    };
-
-    const handleInstallmentsChange = (raw) => {
-      setInstallmentsInput(raw);
-      const cleaned = String(raw).replace(/[^0-9]/g, '');
-      if (!cleaned) return;
-      const parsed = Number(cleaned);
-      if (!Number.isFinite(parsed)) return;
-      applyInstallments(parsed);
-    };
-    });
-
-    if (numValue > 1) {
-      const totalAmount = parseFloat(formData.amount) || 0;
-      const defaultAmount = totalAmount > 0 ? (totalAmount / numValue).toFixed(2) : '0.00';
-
-      // Extract local date from formData.date (which might be Date or string)
-      let baseDate;
-      if (typeof formData.date === 'string') {
-        const [year, month, day] = formData.date.split('-');
-        baseDate = new Date(year, parseInt(month) - 1, parseInt(day));
-      } else {
-        baseDate = new Date(formData.date);
-      }
-      
+    if (safeValue > 1) {
+      const totalAmount = parseCurrency(formData.amount);
+      const defaultAmount = totalAmount > 0 ? (totalAmount / safeValue).toFixed(2) : '0.00';
+      const baseDate = nextDueDate ? new Date(nextDueDate) : new Date();
       const dayOfMonth = baseDate.getDate();
       const monthIdx = baseDate.getMonth();
       const yearVal = baseDate.getFullYear();
 
-      const newCustomInstallments = Array.from({ length: numValue }, (_, i) => {
+      const newCustomInstallments = Array.from({ length: safeValue }, (_, i) => {
         const installmentDate = new Date(yearVal, monthIdx + i, dayOfMonth);
         const year = installmentDate.getFullYear();
         const month = String(installmentDate.getMonth() + 1).padStart(2, '0');
         const day = String(installmentDate.getDate()).padStart(2, '0');
         return {
           amount: defaultAmount,
-          due_date: `${year}-${month}-${day}`
+          due_date: `${year}-${month}-${day}`,
         };
       });
       setCustomInstallments(newCustomInstallments);
     } else {
       setCustomInstallments([]);
     }
+  };
+
+  const handleInstallmentsChange = (raw) => {
+    setInstallmentsInput(raw);
+    const cleaned = String(raw).replace(/[^0-9]/g, '');
+    if (!cleaned) return;
+    const parsed = Number(cleaned);
+    if (!Number.isFinite(parsed)) return;
+    applyInstallments(parsed);
   };
 
   const updateCustomInstallment = (index, field, value) => {
