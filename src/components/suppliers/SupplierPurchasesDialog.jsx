@@ -349,7 +349,13 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                   {/* Lista de parcelas - recolhível */}
                   {isGroupExpanded(group.main.id) && (
                   <div className="divide-y divide-slate-100 border-t border-slate-100">
-                    {group.installments.map((installment, idx) => (
+                    {group.installments.map((installment, idx) => {
+                      // Verifica se a parcela foi alterada
+                      const wasModified = installment.originalAmount && 
+                        parseFloat(installment.originalAmount) !== parseFloat(installment.amount);
+                      const originalAmt = Math.abs(parseFloat(installment.originalAmount || 0));
+                      
+                      return (
                       <div key={installment.id} className="flex items-center justify-between gap-4 px-5 py-4">
                         <div className="flex items-center gap-4">
                           <div className="flex items-center justify-center w-7 h-7 rounded-full border-2 border-slate-300 text-slate-500 text-sm font-medium flex-shrink-0">
@@ -369,6 +375,12 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                                 return dt ? `Venc: ${format(dt, "dd/MM/yyyy", { locale: ptBR })}` : 'Venc: -';
                               })()}
                             </p>
+                            {/* Observação de parcela alterada */}
+                            {wasModified && (
+                              <p className="text-xs text-blue-600 mt-0.5">
+                                ✏️ Alterado (era R$ {originalAmt.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})
+                              </p>
+                            )}
                           </div>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
@@ -488,7 +500,8 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                           )}
                         </div>
                       </div>
-                    ))}
+                    );
+                    })}
                   </div>
                   )}
                 </div>
@@ -531,8 +544,11 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
           }}
           installment={editingTransaction}
           onConfirm={(data) => {
+            // Salva o valor original se for a primeira alteração
+            const originalAmount = editingTransaction?.originalAmount || editingTransaction?.amount;
             updateTransactionMutation.mutate({
               amount: data.amount.toString(),
+              originalAmount: originalAmount?.toString(),
               date: data.dueDate
             });
           }}

@@ -353,7 +353,20 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
                   {/* Lista de parcelas - recolhível */}
                   {isGroupExpanded(group.main.id) && (
                   <div className="divide-y divide-slate-100 border-t border-slate-100">
-                    {group.installments.map((installment, idx) => (
+                    {group.installments.map((installment, idx) => {
+                      // Verifica se a parcela foi alterada
+                      const wasModified = installment.originalAmount && 
+                        parseFloat(installment.originalAmount) !== parseFloat(installment.amount);
+                      const originalAmt = parseFloat(installment.originalAmount || 0);
+                      const currentAmt = parseFloat(installment.amount || 0);
+                      const amountDiff = currentAmt - originalAmt;
+                      
+                      // Calcula taxa do cartão
+                      const cardFeeAmount = installment.hasCardFee && parseFloat(installment.cardFee || 0) > 0
+                        ? (parseFloat(installment.paidAmount || installment.amount || 0) * parseFloat(installment.cardFee)) / 100
+                        : 0;
+                      
+                      return (
                       <div key={installment.id} className="flex items-center justify-between gap-4 px-5 py-4">
                         <div className="flex items-center gap-4">
                           <div className="flex items-center justify-center w-7 h-7 rounded-full border-2 border-slate-300 text-slate-500 text-sm font-medium flex-shrink-0">
@@ -373,6 +386,12 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
                                 return dt ? `Venc: ${format(dt, "dd/MM/yyyy")}` : 'Venc: -';
                               })()}
                             </p>
+                            {/* Observação de parcela alterada */}
+                            {wasModified && (
+                              <p className="text-xs text-blue-600 mt-0.5">
+                                ✏️ Alterado (era R$ {originalAmt.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})
+                              </p>
+                            )}
                           </div>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
@@ -399,6 +418,11 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
                                 {parseFloat(installment.interest || 0) > 0 && (
                                   <p className="text-xs text-amber-600">
                                     Juros: R$ {parseFloat(installment.interest).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </p>
+                                )}
+                                {cardFeeAmount > 0 && (
+                                  <p className="text-xs text-rose-500">
+                                    Taxa cartão: R$ {cardFeeAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({installment.cardFee}%)
                                   </p>
                                 )}
                               </div>
@@ -464,7 +488,8 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
                           )}
                         </div>
                       </div>
-                    ))}
+                    );
+                    })}
                   </div>
                   )}
                 </div>
@@ -508,8 +533,11 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
           }}
           installment={editingTransaction}
           onConfirm={(data) => {
+            // Salva o valor original se for a primeira alteração
+            const originalAmount = editingTransaction?.originalAmount || editingTransaction?.amount;
             updateTransactionMutation.mutate({
               amount: data.amount.toString(),
+              originalAmount: originalAmount?.toString(),
               date: data.dueDate
             });
           }}

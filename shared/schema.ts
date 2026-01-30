@@ -287,6 +287,7 @@ export const transactions = pgTable("transactions", {
   categoryId: varchar("category_id").references(() => categories.id, { onDelete: "cascade" }),
   type: text("type").notNull(),
   amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
+  originalAmount: decimal("original_amount", { precision: 15, scale: 2 }), // Valor original antes de alteração
   paidAmount: decimal("paid_amount", { precision: 15, scale: 2 }),
   interest: decimal("interest", { precision: 15, scale: 2 }).default("0"),
   cardFee: decimal("card_fee", { precision: 15, scale: 2 }).default("0"), // Taxa de cartão (débito/crédito)
@@ -460,6 +461,7 @@ export const insertTransactionSchema = z.object({
   categoryId: z.string().nullable().optional(),
   type: z.string(),
   amount: z.union([z.string(), z.number()]).transform(v => String(v)),
+  originalAmount: z.union([z.string(), z.number()]).nullable().optional().transform(v => v != null ? String(v) : null),
   paidAmount: z.union([z.string(), z.number()]).nullable().optional().transform(v => v != null ? String(v) : null),
   interest: z.union([z.string(), z.number()]).nullable().optional().transform(v => v != null ? String(v) : "0"),
   cardFee: z.union([z.string(), z.number()]).nullable().optional().transform(v => v != null ? String(v) : "0"),
