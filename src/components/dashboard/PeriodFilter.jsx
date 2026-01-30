@@ -58,80 +58,43 @@ export default function PeriodFilter({
     }
   };
 
-  // Helper to get local date string (not UTC) for proper timezone handling
-  const getLocalDateString = () => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+  const buildDayRange = (daysAgoStart) => {
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+    const start = new Date();
+    start.setDate(start.getDate() - daysAgoStart);
+    start.setHours(0, 0, 0, 0);
+    return { startDate: start, endDate: end };
   };
 
   const periodOptionsDays = {
     today: {
       label: 'Hoje',
-      getValue: () => {
-        const todayStr = getLocalDateString();
-        return { 
-          startDate: new Date(todayStr + 'T00:00:00Z'), 
-          endDate: new Date(todayStr + 'T23:59:59Z'),
-          label: 'Hoje' 
-        };
-      }
+      getValue: () => ({
+        ...buildDayRange(0),
+        label: 'Hoje'
+      })
     },
     last7Days: {
       label: 'Últimos 7 dias',
-      getValue: () => {
-        const todayStr = getLocalDateString();
-        const today = new Date();
-        const sevenDaysAgo = new Date(today);
-        sevenDaysAgo.setDate(today.getDate() - 6);
-        const year = sevenDaysAgo.getFullYear();
-        const month = String(sevenDaysAgo.getMonth() + 1).padStart(2, '0');
-        const day = String(sevenDaysAgo.getDate()).padStart(2, '0');
-        const sevenDaysAgoStr = `${year}-${month}-${day}`;
-        return { 
-          startDate: new Date(sevenDaysAgoStr + 'T12:00:00Z'), 
-          endDate: new Date(todayStr + 'T12:00:00Z'), 
-          label: 'Últimos 7 dias' 
-        };
-      }
+      getValue: () => ({
+        ...buildDayRange(6),
+        label: 'Últimos 7 dias'
+      })
     },
     last30Days: {
       label: 'Últimos 30 dias',
-      getValue: () => {
-        const todayStr = getLocalDateString();
-        const today = new Date();
-        const thirtyDaysAgo = new Date(today);
-        thirtyDaysAgo.setDate(today.getDate() - 29);
-        const year = thirtyDaysAgo.getFullYear();
-        const month = String(thirtyDaysAgo.getMonth() + 1).padStart(2, '0');
-        const day = String(thirtyDaysAgo.getDate()).padStart(2, '0');
-        const thirtyDaysAgoStr = `${year}-${month}-${day}`;
-        return { 
-          startDate: new Date(thirtyDaysAgoStr + 'T12:00:00Z'), 
-          endDate: new Date(todayStr + 'T12:00:00Z'), 
-          label: 'Últimos 30 dias' 
-        };
-      }
+      getValue: () => ({
+        ...buildDayRange(29),
+        label: 'Últimos 30 dias'
+      })
     },
     last90Days: {
       label: 'Últimos 90 dias',
-      getValue: () => {
-        const todayStr = getLocalDateString();
-        const today = new Date();
-        const ninetyDaysAgo = new Date(today);
-        ninetyDaysAgo.setDate(today.getDate() - 89);
-        const year = ninetyDaysAgo.getFullYear();
-        const month = String(ninetyDaysAgo.getMonth() + 1).padStart(2, '0');
-        const day = String(ninetyDaysAgo.getDate()).padStart(2, '0');
-        const ninetyDaysAgoStr = `${year}-${month}-${day}`;
-        return { 
-          startDate: new Date(ninetyDaysAgoStr + 'T12:00:00Z'), 
-          endDate: new Date(todayStr + 'T12:00:00Z'), 
-          label: 'Últimos 90 dias' 
-        };
-      }
+      getValue: () => ({
+        ...buildDayRange(89),
+        label: 'Últimos 90 dias'
+      })
     }
   };
 
@@ -166,12 +129,9 @@ export default function PeriodFilter({
           label: label
         };
       } else {
-        // For day mode, convert to UTC to match the behavior of hardcoded periods
-        const startStr = format(start, 'yyyy-MM-dd');
-        const endStr = format(end, 'yyyy-MM-dd');
         newRange = {
-          startDate: new Date(startStr + 'T00:00:00Z'),
-          endDate: new Date(endStr + 'T23:59:59Z'),
+          startDate: startOfDay(start),
+          endDate: endOfDay(end),
           label: label
         };
       }

@@ -49,16 +49,16 @@ const parseLocalDateString = (raw) => {
   return Number.isNaN(d.getTime()) ? null : d;
 };
 
-// Normaliza valores monetários em pt-BR para número
+// Normaliza valores monetários sem multiplicar por 100 quando já vierem com ponto decimal
 const parseMoney = (value) => {
   if (value === null || value === undefined) return 0;
   if (typeof value === 'number') return value;
-  const cleaned = String(value)
-    .replace(/\s/g, '')
-    .replace('R$', '')
-    .replace(/\./g, '')
-    .replace(',', '.');
-  const parsed = parseFloat(cleaned);
+
+  const str = String(value).replace(/\s/g, '').replace('R$', '');
+  const usesComma = str.includes(',');
+  const normalized = usesComma ? str.replace(/\./g, '').replace(',', '.') : str;
+
+  const parsed = parseFloat(normalized);
   return Number.isNaN(parsed) ? 0 : parsed;
 };
 
