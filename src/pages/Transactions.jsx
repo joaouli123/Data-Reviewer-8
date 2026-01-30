@@ -34,9 +34,11 @@ const EXPENSE_TYPES = ['compra', 'expense', 'compra_prazo', 'despesa', 'saida'];
 const isIncomeType = (type) => INCOME_TYPES.includes(type);
 const isExpenseType = (type) => EXPENSE_TYPES.includes(type);
 
-// Converte strings yyyy-mm-dd para data local, evitando shift de fuso
+// Converte datas comuns (yyyy-mm-dd, dd/mm/yyyy, dd-mm-yyyy, ISO) para data local sem shift de fuso
 const parseLocalDateString = (raw) => {
   const str = String(raw || '').trim();
+
+  // yyyy-mm-dd (ou com tempo)
   const ymd = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (ymd) {
     const year = Number(ymd[1]);
@@ -45,6 +47,18 @@ const parseLocalDateString = (raw) => {
     const d = new Date(year, month - 1, day, 12, 0, 0, 0);
     return Number.isNaN(d.getTime()) ? null : d;
   }
+
+  // dd/mm/yyyy ou dd-mm-yyyy (com barra ou hífen)
+  const dmy = str.match(/^(\d{2})[\/\-](\d{2})[\/\-](\d{4})/);
+  if (dmy) {
+    const day = Number(dmy[1]);
+    const month = Number(dmy[2]);
+    const year = Number(dmy[3]);
+    const d = new Date(year, month - 1, day, 12, 0, 0, 0);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+
+  // Fallback genérico
   const d = new Date(str);
   return Number.isNaN(d.getTime()) ? null : d;
 };
@@ -80,10 +94,18 @@ const extractTxDate = (t) => {
   }
 };
 
-// Data base para cálculo de saldo inicial: prioriza a data da transação
+// Data base para cálculo de saldo inicial: prioriza data de pagamento quando existir
 const extractBalanceDate = (t) => {
   if (!t) return null;
-  const candidate = t.date || t.paymentDate || t.payment_date || t.createdAt || t.created_at;
+
+  const statusValue = String(t.status || '').toLowerCase();
+  const hasPaymentDate = !!(t.paymentDate || t.payment_date);
+  const isPaid = ['pago', 'completed', 'parcial', 'paid', 'approved', 'aprovado'].includes(statusValue) || hasPaymentDate;
+
+  const candidate = isPaid
+    ? (t.paymentDate || t.payment_date || t.date || t.createdAt || t.created_at)
+    : (t.date || t.paymentDate || t.payment_date || t.createdAt || t.created_at);
+
   if (!candidate) return null;
   try {
     return parseLocalDateString(candidate);
