@@ -8,10 +8,10 @@ import { ptBR } from 'date-fns/locale';
 import { CheckCircle2, Clock, X, ChevronDown, ChevronRight, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import PaymentEditDialog from '../suppliers/PaymentEditDialog';
+import InstallmentEditDialog from '../transactions/InstallmentEditDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { Transaction } from '@/api/entities';
 import { apiRequest } from '@/lib/queryClient';
-import TransactionForm from '../transactions/TransactionForm';
 
 const parseLocalDate = (dateStr) => {
   if (!dateStr) return new Date();
@@ -499,14 +499,20 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
           amountLabel="Valor Recebido"
         />
 
-        <TransactionForm
-          open={editOpen}
-          onOpenChange={(next) => {
-            setEditOpen(next);
-            if (!next) setEditingTransaction(null);
+        <InstallmentEditDialog
+          isOpen={editOpen}
+          onClose={() => {
+            setEditOpen(false);
+            setEditingTransaction(null);
           }}
-          initialData={editingTransaction}
-          onSubmit={(payload) => updateTransactionMutation.mutateAsync(payload)}
+          installment={editingTransaction}
+          onConfirm={(data) => {
+            updateTransactionMutation.mutate({
+              amount: data.amount.toString(),
+              date: data.dueDate
+            });
+          }}
+          isLoading={updateTransactionMutation.isPending}
         />
       </DialogContent>
     </Dialog>
