@@ -144,13 +144,30 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
       const total = parseCurrency(formData.total_amount);
 
       const defaultAmount = parseFloat((total / numInstallments).toFixed(2));
-      // Primeira parcela: SEMPRE +1 mês a partir de HOJE (mantém o dia)
-      const baseDate = addMonths(new Date(), 1);
+      
+      // Primeira parcela: SEMPRE +1 mês a partir de HOJE, mantendo o dia original
+      const today = new Date();
+      const originalDayOfMonth = today.getDate(); // Dia original (ex: 30)
+      const monthIdx = today.getMonth();
+      const yearVal = today.getFullYear();
 
-      const newCustomInstallments = Array.from({ length: numInstallments }, (_, i) => ({
-        amount: defaultAmount || '',
-        due_date: format(addMonths(baseDate, i), 'yyyy-MM-dd')
-      }));
+      const newCustomInstallments = Array.from({ length: numInstallments }, (_, i) => {
+        // +1 porque a primeira parcela é no próximo mês
+        const targetMonth = monthIdx + 1 + i;
+        const targetYear = yearVal + Math.floor(targetMonth / 12);
+        const actualMonth = targetMonth % 12;
+        
+        // Calcula o último dia do mês alvo
+        const lastDayOfMonth = new Date(targetYear, actualMonth + 1, 0).getDate();
+        // Usa o dia original ou o último dia do mês se o original não existir
+        const day = Math.min(originalDayOfMonth, lastDayOfMonth);
+        
+        const installmentDate = new Date(targetYear, actualMonth, day);
+        return {
+          amount: defaultAmount || '',
+          due_date: format(installmentDate, 'yyyy-MM-dd')
+        };
+      });
 
       // Ajuste do centavo na última parcela
       const somaAtual = parseFloat((defaultAmount * numInstallments).toFixed(2));

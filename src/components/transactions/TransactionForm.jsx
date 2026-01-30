@@ -204,9 +204,12 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
 
     // Regra: ao parcelar (>1), a 1ª parcela SEMPRE começa em +1 mês (nova transação)
     let nextDueDate = formData.date;
+    const today = new Date();
+    const originalDayOfMonth = today.getDate(); // Dia original (ex: 30)
+    
     if (safeValue > 1 && !initialData) {
-      // Sempre +1 mês para parcelamento novo (mantém o dia do mês)
-      nextDueDate = addMonths(new Date(), 1);
+      // Sempre +1 mês para parcelamento novo
+      nextDueDate = addMonths(today, 1);
     }
 
     setFormData(prev => ({
@@ -221,19 +224,28 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
     if (safeValue > 1) {
       const totalAmount = parseCurrency(formData.amount);
       const defaultAmount = totalAmount > 0 ? (totalAmount / safeValue).toFixed(2) : '0.00';
-      const baseDate = nextDueDate ? new Date(nextDueDate) : new Date();
-      const dayOfMonth = baseDate.getDate();
-      const monthIdx = baseDate.getMonth();
-      const yearVal = baseDate.getFullYear();
+      const monthIdx = today.getMonth();
+      const yearVal = today.getFullYear();
 
       const newCustomInstallments = Array.from({ length: safeValue }, (_, i) => {
-        const installmentDate = new Date(yearVal, monthIdx + i, dayOfMonth);
+        // Sempre usa o dia original de hoje, adicionando meses a partir de hoje
+        // +1 porque a primeira parcela é no próximo mês
+        const targetMonth = monthIdx + 1 + i;
+        const targetYear = yearVal + Math.floor(targetMonth / 12);
+        const actualMonth = targetMonth % 12;
+        
+        // Calcula o último dia do mês alvo
+        const lastDayOfMonth = new Date(targetYear, actualMonth + 1, 0).getDate();
+        // Usa o dia original ou o último dia do mês se o original não existir
+        const day = Math.min(originalDayOfMonth, lastDayOfMonth);
+        
+        const installmentDate = new Date(targetYear, actualMonth, day);
         const year = installmentDate.getFullYear();
         const month = String(installmentDate.getMonth() + 1).padStart(2, '0');
-        const day = String(installmentDate.getDate()).padStart(2, '0');
+        const dayStr = String(installmentDate.getDate()).padStart(2, '0');
         return {
           amount: defaultAmount,
-          due_date: `${year}-${month}-${day}`,
+          due_date: `${year}-${month}-${dayStr}`,
         };
       });
       setCustomInstallments(newCustomInstallments);
