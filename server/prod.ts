@@ -7,6 +7,7 @@ import helmet from "helmet";
 import compression from "compression";
 import { randomUUID } from "crypto";
 import { createSimpleRateLimiter } from "./middleware";
+import { ensureCoreSchema } from "./schemaPatch";
 
 const app = express();
 const PORT = parseInt(process.env.PORT || "5000", 10);
@@ -119,6 +120,9 @@ process.on("SIGINT", () => shutdown("SIGINT"));
 
 (async () => {
   try {
+    if (process.env.DATABASE_URL) {
+      await ensureCoreSchema();
+    }
     // Register API routes (requires DATABASE_URL)
     if (process.env.DATABASE_URL) {
       const { registerAllRoutes } = await import("./routes/index");
