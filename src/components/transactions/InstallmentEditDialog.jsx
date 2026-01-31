@@ -44,9 +44,11 @@ export default function InstallmentEditDialog({
     }
   }, [installment, isOpen]);
 
-  const originalAmount = Math.abs(parseFloat(installment?.amount || 0));
+  const originalAmount = Math.abs(parseFloat((installment?.originalAmount ?? installment?.amount) || 0));
   const currentAmount = parseCurrency(amount);
   const difference = currentAmount - originalAmount;
+  const paidAmount = Math.abs(parseFloat(installment?.paidAmount || 0));
+  const saldoDevedor = Math.max(originalAmount - paidAmount, 0);
 
   const handleConfirm = () => {
     if (currentAmount <= 0) {
@@ -94,6 +96,16 @@ export default function InstallmentEditDialog({
                 <p className="text-xs text-blue-600">
                   Valor Original: R$ {originalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
+                {paidAmount > 0 && (
+                  <p className="text-xs text-emerald-600">
+                    Pago: R$ {paidAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </p>
+                )}
+                {paidAmount > 0 && saldoDevedor > 0 && (
+                  <p className="text-xs text-rose-600 font-medium">
+                    Saldo: R$ {saldoDevedor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </p>
+                )}
               </div>
             </div>
           </div>
