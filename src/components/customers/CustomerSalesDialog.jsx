@@ -366,6 +366,12 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
                         ? (parseFloat(installment.paidAmount || installment.amount || 0) * parseFloat(installment.cardFee)) / 100
                         : 0;
                       
+                      // Calcula saldo devedor para pagamento parcial
+                      const isParcial = installment.status === 'parcial';
+                      const valorParcela = parseFloat(installment.amount || 0);
+                      const valorPago = parseFloat(installment.paidAmount || 0);
+                      const saldoDevedor = valorParcela - valorPago;
+                      
                       return (
                       <div key={installment.id} className="flex items-center justify-between gap-4 px-5 py-4">
                         <div className="flex items-center gap-4">
@@ -391,6 +397,20 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
                               <p className="text-xs text-blue-600 mt-0.5">
                                 ✏️ Alterado (era R$ {originalAmt.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})
                               </p>
+                            )}
+                            {/* Saldo devedor para pagamento parcial */}
+                            {isParcial && saldoDevedor > 0 && (
+                              <div className="mt-1 p-1.5 bg-amber-50 border border-amber-200 rounded text-xs">
+                                <p className="text-amber-700">
+                                  Valor: R$ {valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                </p>
+                                <p className="text-emerald-600">
+                                  - Pago: R$ {valorPago.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                </p>
+                                <p className="text-rose-600 font-semibold">
+                                  = Saldo: R$ {saldoDevedor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                </p>
+                              </div>
                             )}
                           </div>
                         </div>
@@ -455,6 +475,62 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
                                 data-testid={`button-cancel-payment-${installment.id}`}
                               >
                                 <X className="w-4 h-4" />
+                              </Button>
+                            </>
+                          ) : installment.status === 'parcial' ? (
+                            <>
+                              <div className="flex flex-col items-end gap-0.5 mr-2">
+                                {installment.paymentDate && (
+                                  <p className="text-xs text-emerald-600">
+                                    {format(parseLocalDate(installment.paymentDate), "dd/MM/yyyy")}
+                                  </p>
+                                )}
+                                {installment.paidAmount && (
+                                  <p className="text-xs text-slate-500">
+                                    Pago: R$ {parseFloat(installment.paidAmount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                  </p>
+                                )}
+                                {installment.paymentMethod && (
+                                  <p className="text-xs text-slate-400">
+                                    Forma: {installment.paymentMethod}
+                                  </p>
+                                )}
+                                {parseFloat(installment.interest || 0) > 0 && (
+                                  <p className="text-xs text-amber-600">
+                                    Juros: R$ {parseFloat(installment.interest).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                  </p>
+                                )}
+                                {cardFeeAmount > 0 && (
+                                  <p className="text-xs text-rose-500">
+                                    Taxa: R$ {cardFeeAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} ({installment.cardFee}%)
+                                  </p>
+                                )}
+                              </div>
+                              <Badge className="bg-amber-50 text-amber-600 hover:bg-amber-50 border border-amber-200 shadow-none font-medium flex items-center gap-1.5 px-3 py-1 text-xs rounded-md">
+                                <Clock className="w-3.5 h-3.5" /> Parcial
+                              </Badge>
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedTransaction(installment);
+                                  setPaymentEditOpen(true);
+                                }}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-2 h-7 text-xs"
+                                disabled={confirmPaymentMutation.isPending}
+                              >
+                                Receber Resto
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingTransaction(installment);
+                                  setEditOpen(true);
+                                }}
+                                className="text-slate-400 hover:text-slate-700 h-8 w-8"
+                              >
+                                <Pencil className="w-4 h-4" />
                               </Button>
                             </>
                           ) : (

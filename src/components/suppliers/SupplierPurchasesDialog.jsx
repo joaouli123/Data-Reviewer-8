@@ -355,6 +355,12 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                         parseFloat(installment.originalAmount) !== parseFloat(installment.amount);
                       const originalAmt = Math.abs(parseFloat(installment.originalAmount || 0));
                       
+                      // Calcula saldo devedor para pagamento parcial
+                      const isParcial = installment.status === 'parcial';
+                      const valorParcela = Math.abs(parseFloat(installment.amount || 0));
+                      const valorPago = Math.abs(parseFloat(installment.paidAmount || 0));
+                      const saldoDevedor = valorParcela - valorPago;
+                      
                       return (
                       <div key={installment.id} className="flex items-center justify-between gap-4 px-5 py-4">
                         <div className="flex items-center gap-4">
@@ -380,6 +386,20 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                               <p className="text-xs text-blue-600 mt-0.5">
                                 ✏️ Alterado (era R$ {originalAmt.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})
                               </p>
+                            )}
+                            {/* Saldo devedor para pagamento parcial */}
+                            {isParcial && saldoDevedor > 0 && (
+                              <div className="mt-1 p-1.5 bg-amber-50 border border-amber-200 rounded text-xs">
+                                <p className="text-amber-700">
+                                  Valor: R$ {valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                </p>
+                                <p className="text-emerald-600">
+                                  - Pago: R$ {valorPago.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                </p>
+                                <p className="text-rose-600 font-semibold">
+                                  = Saldo: R$ {saldoDevedor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                </p>
+                              </div>
                             )}
                           </div>
                         </div>
@@ -455,6 +475,35 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                                 <Trash2 className="w-4 h-4" />
                               </Button>
                             </>
+                          ) : installment.status === 'parcial' ? (
+                            <div className="flex items-center gap-1">
+                              <Badge className="bg-amber-50 text-amber-600 hover:bg-amber-50 border border-amber-200 shadow-none font-medium flex items-center gap-1.5 px-3 py-1 text-xs rounded-md">
+                                <Clock className="w-3.5 h-3.5" /> Parcial
+                              </Badge>
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedTransaction(installment);
+                                  setPaymentEditOpen(true);
+                                }}
+                                className="bg-amber-600 hover:bg-amber-700 text-white font-medium px-3 h-8 text-xs"
+                                disabled={confirmPaymentMutation.isPending}
+                              >
+                                Pagar Resto
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingTransaction(installment);
+                                  setEditOpen(true);
+                                }}
+                                className="text-slate-400 hover:text-slate-700 h-8 w-8"
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                            </div>
                           ) : (
                             <div className="flex items-center gap-1">
                               <Button
