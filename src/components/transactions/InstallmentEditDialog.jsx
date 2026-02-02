@@ -23,10 +23,15 @@ export default function InstallmentEditDialog({
   const [amount, setAmount] = useState('');
   const [dueDate, setDueDate] = useState('');
 
+  const originalAmount = Math.abs(parseFloat((installment?.originalAmount ?? installment?.amount) || 0));
+  const paidAmount = Math.abs(parseFloat(installment?.paidAmount || 0));
+  const saldoDevedor = Math.max(originalAmount - paidAmount, 0);
+  const baseAmount = paidAmount > 0 ? saldoDevedor : originalAmount;
+
   // Reset values when installment changes or dialog opens
   useEffect(() => {
     if (installment && isOpen) {
-      const rawAmount = Math.abs(parseFloat(installment.amount || 0));
+      const rawAmount = Math.abs(parseFloat(baseAmount || 0));
       setAmount(rawAmount);
       
       // Parse date from installment
@@ -42,13 +47,10 @@ export default function InstallmentEditDialog({
         setDueDate(format(new Date(), 'yyyy-MM-dd'));
       }
     }
-  }, [installment, isOpen]);
+  }, [installment, isOpen, baseAmount]);
 
-  const originalAmount = Math.abs(parseFloat((installment?.originalAmount ?? installment?.amount) || 0));
   const currentAmount = parseCurrency(amount);
-  const difference = currentAmount - originalAmount;
-  const paidAmount = Math.abs(parseFloat(installment?.paidAmount || 0));
-  const saldoDevedor = Math.max(originalAmount - paidAmount, 0);
+  const difference = currentAmount - baseAmount;
 
   const handleConfirm = () => {
     if (currentAmount <= 0) {
@@ -112,7 +114,9 @@ export default function InstallmentEditDialog({
 
           {/* Valor da Parcela */}
           <div className="space-y-2">
-            <Label htmlFor="amount" className="text-sm font-medium">Valor da Parcela</Label>
+            <Label htmlFor="amount" className="text-sm font-medium">
+              {paidAmount > 0 ? 'Saldo a Pagar' : 'Valor da Parcela'}
+            </Label>
             <div className="flex items-center gap-2">
               <span className="text-slate-600 font-medium">R$</span>
               <CurrencyInput
@@ -126,8 +130,8 @@ export default function InstallmentEditDialog({
             </div>
             {difference !== 0 && (
               <p className={`text-xs ${difference > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
-                {difference > 0 ? '+' : ''}R$ {difference.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 
-                {difference > 0 ? ' (aumento)' : ' (desconto)'}
+                {difference > 0 ? '+' : ''}R$ {difference.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {paidAmount > 0 ? ' (ajuste do saldo)' : (difference > 0 ? ' (aumento)' : ' (ajuste)')}
               </p>
             )}
           </div>
@@ -151,7 +155,7 @@ export default function InstallmentEditDialog({
           {/* Resumo */}
           <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
             <div className="flex justify-between text-sm">
-              <span className="text-slate-600">Novo Valor:</span>
+              <span className="text-slate-600">{paidAmount > 0 ? 'Novo Saldo:' : 'Novo Valor:'}</span>
               <span className="font-bold text-slate-900">
                 R$ {currentAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
