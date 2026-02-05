@@ -43,32 +43,19 @@ function parseLocalDate(value: string | Date): Date {
   return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
 }
 
-// Calcula uma data segura para a parcela, espalhando por meses se todas vierem iguais
+// Calcula uma data segura para a parcela, respeitando as datas customizadas
 function computeInstallmentDate(baseDateStr: string, customInstallments: any[] | undefined, index: number) {
   const baseDate = parseLocalDate(baseDateStr);
 
-  if (customInstallments && customInstallments.length > 0) {
-    const first = parseLocalDate(customInstallments[0].due_date || customInstallments[0].date || baseDateStr);
-    const sameMonth = customInstallments.every(inst => {
-      const d = parseLocalDate(inst.due_date || inst.date || baseDateStr);
-      return d.getFullYear() === first.getFullYear() && d.getMonth() === first.getMonth();
-    });
-
-    // Se tem data específica na parcela, usa; senão recua para base
-    let dueDate = customInstallments[index]
-      ? parseLocalDate(customInstallments[index].due_date || customInstallments[index].date || baseDateStr)
-      : parseLocalDate(baseDateStr);
-
-    if (sameMonth) {
-      // Espalha pelas competências usando o índice
-      const spread = new Date(first);
-      spread.setMonth(first.getMonth() + index);
-      return spread;
+  if (customInstallments && customInstallments.length > 0 && customInstallments[index]) {
+    // Se tem data específica na parcela, usa diretamente
+    const customDate = customInstallments[index].due_date || customInstallments[index].date;
+    if (customDate) {
+      return parseLocalDate(customDate);
     }
-
-    return dueDate;
   }
 
+  // Se não tem parcelas customizadas, espalha por meses
   const spread = new Date(baseDate);
   spread.setMonth(baseDate.getMonth() + index);
   return spread;

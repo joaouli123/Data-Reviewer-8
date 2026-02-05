@@ -384,11 +384,8 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
                             </p>
                             <p className="text-xs text-slate-500">
                               {(() => {
-                                const dt = (() => {
-                                  if (!group.shouldOffset || !group.baseDate) return extractTxDate(installment);
-                                  const offset = Math.max(0, (Number(installment.installmentNumber) || idx + 1) - 1);
-                                  return addMonths(group.baseDate, offset);
-                                })();
+                                // Usa sempre a data da parcela vinda do banco de dados
+                                const dt = extractTxDate(installment);
                                 return dt ? `Venc: ${format(dt, "dd/MM/yyyy")}` : 'Venc: -';
                               })()}
                             </p>

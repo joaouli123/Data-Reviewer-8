@@ -296,9 +296,12 @@ export default function CashFlowForecastPage() {
 
           if (tDate <= todayEnd ? !isPaid : !isPending) return;
 
-          const amount = (parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0);
+          // Se for pagamento parcial, usa o valor efetivamente pago
+          const isParcial = t.status === 'parcial';
+          const baseAmount = isParcial ? (parseFloat(t.paidAmount) || 0) : (parseFloat(t.amount) || 0);
+          const amount = baseAmount + (parseFloat(t.interest) || 0);
           // Considerar taxa de cartão para receitas
-          const cardFee = t.hasCardFee ? (Math.abs(parseFloat(t.amount) || 0) * (parseFloat(t.cardFee) || 0)) / 100 : 0;
+          const cardFee = t.hasCardFee ? (Math.abs(baseAmount) * (parseFloat(t.cardFee) || 0)) / 100 : 0;
           
           if (t.type === 'venda' || t.type === 'income' || t.type === 'entrada') {
             const netRevenue = amount - cardFee;
@@ -358,9 +361,12 @@ export default function CashFlowForecastPage() {
 
         if (tDate <= todayEnd ? !isPaid : !isPending) return;
 
-        const amount = (parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0);
+        // Se for pagamento parcial, usa o valor efetivamente pago
+        const isParcial = t.status === 'parcial';
+        const baseAmount = isParcial ? (parseFloat(t.paidAmount) || 0) : (parseFloat(t.amount) || 0);
+        const amount = baseAmount + (parseFloat(t.interest) || 0);
         // Considerar taxa de cartão para receitas
-        const cardFee = t.hasCardFee ? (Math.abs(parseFloat(t.amount) || 0) * (parseFloat(t.cardFee) || 0)) / 100 : 0;
+        const cardFee = t.hasCardFee ? (Math.abs(baseAmount) * (parseFloat(t.cardFee) || 0)) / 100 : 0;
         
         if (t.type === 'venda' || t.type === 'income' || t.type === 'entrada') {
           const netRevenue = amount - cardFee;

@@ -382,9 +382,14 @@ export default function TransactionsPage() {
           return;
         }
         
-        const amount = parseMoney(t.amount) + parseMoney(t.interest);
+        // Se for pagamento parcial, usa o valor efetivamente pago
+        const statusVal = String(t.status || '').toLowerCase();
+        const baseAmount = statusVal === 'parcial' 
+          ? parseMoney(t.paidAmount || 0) 
+          : parseMoney(t.amount);
+        const amount = baseAmount + parseMoney(t.interest);
         // Considerar taxa de cartão para receitas
-        const cardFee = t.hasCardFee && isIncomeType(t.type) ? (Math.abs(parseMoney(t.amount)) * (parseMoney(t.cardFee) || 0)) / 100 : 0;
+        const cardFee = t.hasCardFee && isIncomeType(t.type) ? (Math.abs(baseAmount) * (parseMoney(t.cardFee) || 0)) / 100 : 0;
         const netAmount = isIncomeType(t.type) ? amount - cardFee : amount;
 
         if (tDate < startTime) {
@@ -395,8 +400,13 @@ export default function TransactionsPage() {
 
       (periodTransactions || []).forEach(t => {
         if (!t) return;
-        const amount = parseMoney(t.amount) + parseMoney(t.interest);
-        const cardFee = t.hasCardFee && isIncomeType(t.type) ? (Math.abs(parseMoney(t.amount)) * (parseMoney(t.cardFee) || 0)) / 100 : 0;
+        // Se for pagamento parcial, usa o valor efetivamente pago
+        const statusVal = String(t.status || '').toLowerCase();
+        const baseAmount = statusVal === 'parcial' 
+          ? parseMoney(t.paidAmount || 0) 
+          : parseMoney(t.amount);
+        const amount = baseAmount + parseMoney(t.interest);
+        const cardFee = t.hasCardFee && isIncomeType(t.type) ? (Math.abs(baseAmount) * (parseMoney(t.cardFee) || 0)) / 100 : 0;
         const netAmount = isIncomeType(t.type) ? amount - cardFee : amount;
         if (isIncomeType(t.type)) periodIncome += netAmount;
         else if (isExpenseType(t.type)) periodExpense += Math.abs(amount);
