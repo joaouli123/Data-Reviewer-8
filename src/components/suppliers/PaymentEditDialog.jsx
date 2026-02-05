@@ -20,9 +20,15 @@ export default function PaymentEditDialog({ isOpen, onClose, transaction, onConf
   // Reset values when transaction changes or dialog opens
   useEffect(() => {
     if (transaction) {
-      setPaidAmount(transaction.paidAmount ? parseFloat(transaction.paidAmount) : parseFloat(transaction.amount || 0));
-      setInterest(transaction.interest ? parseFloat(transaction.interest) : 0);
-      setPaymentDate(transaction.paymentDate ? format(new Date(transaction.paymentDate), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'));
+      // Se for pagamento parcial (já pagou algo), mostrar o SALDO DEVEDOR como valor sugerido
+      const isParcial = transaction.status === 'parcial';
+      const totalAmount = parseFloat(transaction.amount || 0);
+      const alreadyPaid = parseFloat(transaction.paidAmount || 0);
+      const remaining = isParcial && alreadyPaid > 0 ? Math.max(totalAmount - alreadyPaid, 0) : totalAmount;
+      
+      setPaidAmount(remaining);
+      setInterest(0); // Resetar juros para novo pagamento
+      setPaymentDate(format(new Date(), 'yyyy-MM-dd')); // Data atual para novo pagamento
       setPaymentMethod(transaction.paymentMethod || '');
       setHasCardFee(transaction.hasCardFee || false);
       setCardFee(transaction.cardFee ? transaction.cardFee.toString() : '');
@@ -30,6 +36,8 @@ export default function PaymentEditDialog({ isOpen, onClose, transaction, onConf
   }, [transaction]);
 
   const originalAmount = parseFloat(transaction?.amount || 0);
+  const alreadyPaidAmount = transaction?.status === 'parcial' ? parseFloat(transaction?.paidAmount || 0) : 0;
+  const remainingAmount = Math.max(originalAmount - alreadyPaidAmount, 0);
   const cardFeeAmount = hasCardFee && cardFee ? (paidAmount * parseFloat(cardFee)) / 100 : 0;
   const total = paidAmount + interest;
   const netAmount = paidAmount - cardFeeAmount;
@@ -76,11 +84,23 @@ export default function PaymentEditDialog({ isOpen, onClose, transaction, onConf
         </DialogHeader>
 
         <div className="space-y-3 py-2">
-          <div className="p-2 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-blue-600 flex-shrink-0" />
-            <p className="text-sm text-blue-800 font-medium">
-              Valor Original: R$ {originalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </p>
+          <div className="p-2 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-blue-600 flex-shrink-0" />
+              <p className="text-sm text-blue-800 font-medium">
+                Valor Original: R$ {originalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </p>
+            </div>
+            {alreadyPaidAmount > 0 && (
+              <div className="mt-1.5 ml-6 text-xs space-y-0.5">
+                <p className="text-emerald-700">
+                  Já pago: R$ {alreadyPaidAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </p>
+                <p className="text-rose-600 font-semibold">
+                  Saldo devedor: R$ {remainingAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">

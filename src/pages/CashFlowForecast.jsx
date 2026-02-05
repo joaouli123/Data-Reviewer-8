@@ -289,16 +289,71 @@ export default function CashFlowForecastPage() {
         transactions.forEach(t => {
           const tDate = getEffectiveTxDate(t);
           if (!tDate) return;
-          if (!isWithinInterval(tDate, { start: dStart, end: dEnd })) return;
 
           const isPaid = t.status === 'pago' || t.status === 'completed' || t.status === 'parcial';
           const isPending = t.status === 'pendente' || t.status === 'agendado' || t.status === 'pending';
+          const isParcial = t.status === 'parcial';
 
+          // Para pagamentos parciais: mostrar valor pago no histórico
+          if (isParcial) {
+            // Parte PAGA - usa paymentDate
+            const payDate = t.paymentDate ? new Date(t.paymentDate) : tDate;
+            if (isWithinInterval(payDate, { start: dStart, end: dEnd }) && payDate <= todayEnd) {
+              const paidBase = parseFloat(t.paidAmount) || 0;
+              const paidAmount = paidBase + (parseFloat(t.interest) || 0);
+              const cardFee = t.hasCardFee ? (Math.abs(paidBase) * (parseFloat(t.cardFee) || 0)) / 100 : 0;
+              
+              if (t.type === 'venda' || t.type === 'income' || t.type === 'entrada') {
+                const netRevenue = paidAmount - cardFee;
+                revenue += netRevenue;
+                revenueDetails.push({
+                  description: `${t.description} (Parcial)`,
+                  amount: netRevenue,
+                  date: payDate,
+                  category: t.type,
+                  cardFee: cardFee > 0 ? cardFee : undefined
+                });
+              } else if (t.type === 'compra' || t.type === 'expense' || t.type === 'saida') {
+                expense += paidAmount;
+                expenseDetails.push({
+                  description: `${t.description} (Parcial)`,
+                  amount: paidAmount,
+                  date: payDate,
+                  category: t.type
+                });
+              }
+            }
+            
+            // Parte RESTANTE - usa data de vencimento (t.date) como obrigação futura
+            const dueDate = t.date ? new Date(t.date) : null;
+            const remainingBase = (parseFloat(t.amount) || 0) - (parseFloat(t.paidAmount) || 0);
+            if (dueDate && remainingBase > 0 && isWithinInterval(dueDate, { start: dStart, end: dEnd })) {
+              if (t.type === 'venda' || t.type === 'income' || t.type === 'entrada') {
+                revenue += remainingBase;
+                revenueDetails.push({
+                  description: `${t.description} (Saldo a Receber)`,
+                  amount: remainingBase,
+                  date: dueDate,
+                  category: t.type
+                });
+              } else if (t.type === 'compra' || t.type === 'expense' || t.type === 'saida') {
+                expense += remainingBase;
+                expenseDetails.push({
+                  description: `${t.description} (Saldo a Pagar)`,
+                  amount: remainingBase,
+                  date: dueDate,
+                  category: t.type
+                });
+              }
+            }
+            return; // Já processou parcial, não continuar
+          }
+
+          // Transações normais (pagas ou pendentes)
+          if (!isWithinInterval(tDate, { start: dStart, end: dEnd })) return;
           if (tDate <= todayEnd ? !isPaid : !isPending) return;
 
-          // Se for pagamento parcial, usa o valor efetivamente pago
-          const isParcial = t.status === 'parcial';
-          const baseAmount = isParcial ? (parseFloat(t.paidAmount) || 0) : (parseFloat(t.amount) || 0);
+          const baseAmount = parseFloat(t.amount) || 0;
           const amount = baseAmount + (parseFloat(t.interest) || 0);
           // Considerar taxa de cartão para receitas
           const cardFee = t.hasCardFee ? (Math.abs(baseAmount) * (parseFloat(t.cardFee) || 0)) / 100 : 0;
@@ -354,16 +409,71 @@ export default function CashFlowForecastPage() {
       transactions.forEach(t => {
         const tDate = getEffectiveTxDate(t);
         if (!tDate) return;
-        if (!isWithinInterval(tDate, { start: monthStart, end: monthEnd })) return;
 
         const isPaid = t.status === 'pago' || t.status === 'completed' || t.status === 'parcial';
         const isPending = t.status === 'pendente' || t.status === 'agendado' || t.status === 'pending';
+        const isParcial = t.status === 'parcial';
 
+        // Para pagamentos parciais: mostrar valor pago no histórico + saldo como pendente
+        if (isParcial) {
+          // Parte PAGA - usa paymentDate
+          const payDate = t.paymentDate ? new Date(t.paymentDate) : tDate;
+          if (isWithinInterval(payDate, { start: monthStart, end: monthEnd }) && payDate <= todayEnd) {
+            const paidBase = parseFloat(t.paidAmount) || 0;
+            const paidAmount = paidBase + (parseFloat(t.interest) || 0);
+            const cardFee = t.hasCardFee ? (Math.abs(paidBase) * (parseFloat(t.cardFee) || 0)) / 100 : 0;
+            
+            if (t.type === 'venda' || t.type === 'income' || t.type === 'entrada') {
+              const netRevenue = paidAmount - cardFee;
+              revenue += netRevenue;
+              revenueDetails.push({
+                description: `${t.description} (Parcial)`,
+                amount: netRevenue,
+                date: payDate,
+                category: t.type,
+                cardFee: cardFee > 0 ? cardFee : undefined
+              });
+            } else if (t.type === 'compra' || t.type === 'expense' || t.type === 'saida') {
+              expense += paidAmount;
+              expenseDetails.push({
+                description: `${t.description} (Parcial)`,
+                amount: paidAmount,
+                date: payDate,
+                category: t.type
+              });
+            }
+          }
+          
+          // Parte RESTANTE - usa data de vencimento como obrigação futura
+          const dueDate = t.date ? new Date(t.date) : null;
+          const remainingBase = (parseFloat(t.amount) || 0) - (parseFloat(t.paidAmount) || 0);
+          if (dueDate && remainingBase > 0 && isWithinInterval(dueDate, { start: monthStart, end: monthEnd })) {
+            if (t.type === 'venda' || t.type === 'income' || t.type === 'entrada') {
+              revenue += remainingBase;
+              revenueDetails.push({
+                description: `${t.description} (Saldo a Receber)`,
+                amount: remainingBase,
+                date: dueDate,
+                category: t.type
+              });
+            } else if (t.type === 'compra' || t.type === 'expense' || t.type === 'saida') {
+              expense += remainingBase;
+              expenseDetails.push({
+                description: `${t.description} (Saldo a Pagar)`,
+                amount: remainingBase,
+                date: dueDate,
+                category: t.type
+              });
+            }
+          }
+          return; // Já processou parcial
+        }
+
+        // Transações normais (pagas ou pendentes)
+        if (!isWithinInterval(tDate, { start: monthStart, end: monthEnd })) return;
         if (tDate <= todayEnd ? !isPaid : !isPending) return;
 
-        // Se for pagamento parcial, usa o valor efetivamente pago
-        const isParcial = t.status === 'parcial';
-        const baseAmount = isParcial ? (parseFloat(t.paidAmount) || 0) : (parseFloat(t.amount) || 0);
+        const baseAmount = parseFloat(t.amount) || 0;
         const amount = baseAmount + (parseFloat(t.interest) || 0);
         // Considerar taxa de cartão para receitas
         const cardFee = t.hasCardFee ? (Math.abs(baseAmount) * (parseFloat(t.cardFee) || 0)) / 100 : 0;
@@ -459,10 +569,13 @@ export default function CashFlowForecastPage() {
     .reduce((acc, t) => {
       const isPaid = t.status === 'pago' || t.status === 'completed' || t.status === 'parcial';
       if (!isPaid) return acc;
-      const amount = (parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0);
+      // Para parcial, usar apenas o valor efetivamente pago
+      const isParcial = t.status === 'parcial';
+      const baseAmount = isParcial ? (parseFloat(t.paidAmount) || 0) : (parseFloat(t.amount) || 0);
+      const amount = baseAmount + (parseFloat(t.interest) || 0);
       // Considerar taxa de cartão para receitas
       const cardFee = t.hasCardFee && (t.type === 'venda' || t.type === 'income' || t.type === 'entrada') 
-        ? (Math.abs(parseFloat(t.amount) || 0) * (parseFloat(t.cardFee) || 0)) / 100 
+        ? (Math.abs(baseAmount) * (parseFloat(t.cardFee) || 0)) / 100 
         : 0;
       const netAmount = (t.type === 'venda' || t.type === 'income' || t.type === 'entrada') 
         ? amount - cardFee 

@@ -191,14 +191,18 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
       // Get the transaction first to check the amount
       const currentTransaction = await apiRequest('GET', `/api/transactions/${saleId}`);
 
-      // Determine status based on paid amount vs total amount
       const totalAmount = parseFloat(currentTransaction.amount || 0);
-      const paidAmountValue = parseFloat(paidAmount || 0);
+      const previouslyPaid = parseFloat(currentTransaction.paidAmount || 0);
+      const newPayment = parseFloat(paidAmount || 0);
       const interestValue = parseFloat(interest || 0);
-      const totalPaid = paidAmountValue + interestValue;
-
-      // Status should be 'pago' only if fully paid
-      const status = totalPaid >= totalAmount ? 'completed' : 'parcial';
+      
+      // Acumula: soma o que já foi pago + novo pagamento
+      const accumulatedPaid = (currentTransaction.status === 'parcial' && previouslyPaid > 0)
+        ? previouslyPaid + newPayment
+        : newPayment;
+      
+      // Status: completed se acumulado + juros >= total
+      const status = (accumulatedPaid + interestValue) >= totalAmount ? 'completed' : 'parcial';
 
       // Format payment date (NOT the due date - that stays unchanged)
       let formattedPaymentDate = new Date().toISOString();
@@ -207,10 +211,10 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
         formattedPaymentDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), 12, 0, 0).toISOString();
       }
 
-      // Update the transaction
+      // Update the transaction with accumulated paidAmount
       const transaction = await apiRequest('PATCH', `/api/transactions/${saleId}`, {
         status: status,
-        paidAmount: paidAmount ? paidAmount.toString() : totalAmount.toString(),
+        paidAmount: accumulatedPaid.toString(),
         interest: interest ? interest.toString() : '0',
         paymentDate: formattedPaymentDate,
         paymentMethod: paymentMethod,
