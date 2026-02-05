@@ -402,8 +402,14 @@ export default function TransactionsPage() {
 
       (periodTransactions || []).forEach(t => {
         if (!t) return;
-        // Se for pagamento parcial, usa o valor efetivamente pago
+        
+        // APENAS transações pagas ou parciais devem ser contabilizadas
         const statusVal = String(t.status || '').toLowerCase();
+        const hasPaymentDate = !!(t.paymentDate || t.payment_date);
+        const isPaid = ['pago', 'completed', 'parcial', 'paid', 'approved', 'aprovado'].includes(statusVal) || hasPaymentDate;
+        if (!isPaid) return;
+        
+        // Se for pagamento parcial, usa o valor efetivamente pago
         const baseAmount = statusVal === 'parcial' 
           ? parseMoney(t.paidAmount || 0) 
           : parseMoney(t.amount);

@@ -226,9 +226,13 @@ export default function DashboardPage() {
     let totalExpenses = 0;
 
     filteredTransactions.forEach((t) => {
-      const amount = parseMoney(t.amount) + parseMoney(t.interest);
+      const statusVal = String(t.status || '').toLowerCase();
+      const baseAmount = statusVal === 'parcial'
+        ? parseMoney(t.paidAmount || 0)
+        : parseMoney(t.amount);
+      const amount = baseAmount + parseMoney(t.interest);
       const cardFee = t.hasCardFee && isIncomeType(t.type)
-        ? (Math.abs(parseMoney(t.amount)) * (parseMoney(t.cardFee) || 0)) / 100
+        ? (Math.abs(baseAmount) * (parseMoney(t.cardFee) || 0)) / 100
         : 0;
       const netAmount = isIncomeType(t.type) ? amount - cardFee : amount;
       if (isIncomeType(t.type)) totalRevenue += netAmount;
