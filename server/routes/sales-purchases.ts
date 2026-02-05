@@ -47,17 +47,25 @@ function parseLocalDate(value: string | Date): Date {
 function computeInstallmentDate(baseDateStr: string, customInstallments: any[] | undefined, index: number) {
   const baseDate = parseLocalDate(baseDateStr);
 
+  // Log para debug
+  console.log(`[computeInstallmentDate] index=${index}, hasCustom=${!!customInstallments}, length=${customInstallments?.length || 0}`);
+  
   if (customInstallments && customInstallments.length > 0 && customInstallments[index]) {
     // Se tem data específica na parcela, usa diretamente
     const customDate = customInstallments[index].due_date || customInstallments[index].date;
+    console.log(`[computeInstallmentDate] customDate for index ${index}:`, customDate);
     if (customDate) {
-      return parseLocalDate(customDate);
+      const parsed = parseLocalDate(customDate);
+      console.log(`[computeInstallmentDate] parsed customDate:`, parsed);
+      return parsed;
     }
   }
 
-  // Se não tem parcelas customizadas, espalha por meses
+  // Se não tem parcelas customizadas com datas, espalha por meses
+  // Primeira parcela = próximo mês, segunda = +2 meses, etc.
   const spread = new Date(baseDate);
-  spread.setMonth(baseDate.getMonth() + index);
+  spread.setMonth(baseDate.getMonth() + 1 + index); // +1 para começar no próximo mês
+  console.log(`[computeInstallmentDate] spread date for index ${index}:`, spread);
   return spread;
 }
 
@@ -219,10 +227,15 @@ export function registerSalesPurchasesRoutes(app: Express) {
       const purchase = await storage.createPurchase(req.user.companyId, purchaseData as any);
       const installmentGroupId = `purchase-${purchase.id}-${Date.now()}`;
 
+      // DEBUG: Log das parcelas customizadas recebidas
+      console.log('[Purchases] customInstallments recebidas:', JSON.stringify(customInstallments, null, 2));
+
       // Lógica de Parcelas - Otimizado com Promise.all
       const count = (customInstallments && customInstallments.length > 0) 
         ? customInstallments.length 
         : (parseInt(installmentCount) || 1);
+
+      console.log('[Purchases] count de parcelas:', count);
 
       const amountPerInstallment = Math.floor((cleanTotal / count) * 100) / 100;
       const lastInstallmentAmount = (cleanTotal - (amountPerInstallment * (count - 1))).toFixed(2);

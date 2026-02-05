@@ -217,6 +217,9 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
       cardFee: formData.cardFee,
       customInstallments: customInstallments.length > 0 ? customInstallments : null
     });
+    
+    // DEBUG
+    console.log('[NewPurchaseDialog] Enviando customInstallments:', JSON.stringify(customInstallments, null, 2));
   };
 
   const updateCustomInstallment = (index, field, value) => {
