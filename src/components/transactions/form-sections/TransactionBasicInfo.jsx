@@ -5,7 +5,9 @@ import { Plus } from "lucide-react";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-export function TransactionBasicInfo({ formData, setFormData, categories, onNewCategory }) {
+export function TransactionBasicInfo({ formData, setFormData, categories: categoriesProp, onNewCategory }) {
+  const categories = Array.isArray(categoriesProp) ? categoriesProp : [];
+  
   return (
     <>
       <div className="space-y-2">

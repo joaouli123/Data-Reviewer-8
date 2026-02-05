@@ -68,11 +68,13 @@ export default function NewPurchaseDialog({ supplier, open, onOpenChange }) {
     setInstallmentsInput(String(formData.installments || '1'));
   }, [formData.installments]);
 
-  const { data: categories } = useQuery({
+  const { data: categoriesData } = useQuery({
     queryKey: ['/api/categories', company?.id],
     queryFn: () => apiRequest('GET', '/api/categories'),
     initialData: []
   });
+
+  const categories = Array.isArray(categoriesData) ? categoriesData : [];
 
   const createCategoryMutation = useMutation({
     mutationFn: (data) => apiRequest('POST', '/api/categories', data),

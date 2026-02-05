@@ -7,6 +7,7 @@ import {
   decimal,
   timestamp,
   boolean,
+  date,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -294,7 +295,7 @@ export const transactions = pgTable("transactions", {
   hasCardFee: boolean("has_card_fee").default(false), // Flag para indicar se tem taxa de cartão
   paymentDate: timestamp("payment_date"),
   description: text("description"),
-  date: timestamp("date").notNull(),
+  date: date("date", { mode: "string" }).notNull(),
   shift: text("shift").notNull(),
   status: text("status").notNull().default("pendente"),
   installmentGroup: text("installment_group"),
@@ -309,7 +310,7 @@ export const transactions = pgTable("transactions", {
 export const bankStatementItems = pgTable("bank_statement_items", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   companyId: varchar("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
-  date: timestamp("date").notNull(),
+  date: date("date", { mode: "string" }).notNull(),
   amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
   description: text("description").notNull(),
   status: text("status").notNull().default("PENDING"), // PENDING, MATCHED, IGNORED

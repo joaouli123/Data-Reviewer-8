@@ -23,12 +23,14 @@ export default function CategoriesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const { data: categories } = useQuery({
+  const { data: categoriesData } = useQuery({
     queryKey: ['/api/categories', company?.id],
     queryFn: () => Category.list(),
     initialData: [],
     enabled: !!company?.id
   });
+
+  const categories = Array.isArray(categoriesData) ? categoriesData : [];
 
   const createMutation = useMutation({
     mutationFn: (data) => Category.create(data),

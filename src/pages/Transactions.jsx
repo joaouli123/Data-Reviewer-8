@@ -164,12 +164,14 @@ export default function TransactionsPage() {
         VIEW_FINANCIAL: 'view_financial'
     };
 
-  const { data: categories } = useQuery({
+  const { data: categoriesData } = useQuery({
     queryKey: ['/api/categories', company?.id],
     queryFn: () => apiRequest('GET', '/api/categories'),
     initialData: [],
     enabled: !!company?.id
   });
+
+  const categories = Array.isArray(categoriesData) ? categoriesData : [];
 
   const { data: transactionsData, isLoading } = useQuery({
     queryKey: ['/api/transactions', company?.id],
@@ -706,8 +708,13 @@ export default function TransactionsPage() {
                                 <TableCell className={`text-right font-bold ${['venda', 'venda_prazo', 'receita', 'income'].includes(t.type) ? 'text-emerald-600' : 'text-rose-600'}`}>
                                     <div className="flex flex-col items-end">
                                         <span>
-                                            {['venda', 'venda_prazo', 'receita', 'income'].includes(t.type) ? '+' : '-'} R$ {Math.abs(parseFloat(t.amount || 0) + parseFloat(t.interest || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            {['venda', 'venda_prazo', 'receita', 'income'].includes(t.type) ? '+' : '-'} R$ {Math.abs(parseFloat(t.status === 'parcial' && t.paidAmount ? t.paidAmount : (t.amount || 0)) + parseFloat(t.interest || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                         </span>
+                                        {t.status === 'parcial' && t.paidAmount && (
+                                            <span className="text-[10px] text-amber-600 font-normal">
+                                                de R$ {parseFloat(t.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            </span>
+                                        )}
                                         {t.hasCardFee && parseFloat(t.cardFee) > 0 && (
                                             <span className="text-[10px] text-amber-600 font-normal">
                                                 Taxa: {parseFloat(t.cardFee).toFixed(2)}% (-R$ {((Math.abs(parseFloat(t.amount || 0)) * parseFloat(t.cardFee)) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})

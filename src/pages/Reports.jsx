@@ -130,12 +130,14 @@ export default function ReportsPage() {
     enabled: !!company?.id
   });
 
-  const { data: categories } = useQuery({
+  const { data: categoriesData } = useQuery({
     queryKey: ['/api/categories', company?.id],
     queryFn: () => Category.list(),
     initialData: [],
     enabled: !!company?.id
   });
+
+  const categories = Array.isArray(categoriesData) ? categoriesData : [];
 
   const { data: saleInstallments } = useQuery({
     queryKey: ['/api/sale-installments', company?.id],

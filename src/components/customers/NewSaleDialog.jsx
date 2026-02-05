@@ -67,11 +67,13 @@ export default function NewSaleDialog({ customer, open, onOpenChange }) {
 
   const queryClient = useQueryClient();
 
-  const { data: categories } = useQuery({
+  const { data: categoriesData } = useQuery({
     queryKey: ['/api/categories', company?.id],
     queryFn: () => apiRequest('GET', '/api/categories'),
     initialData: []
   });
+
+  const categories = Array.isArray(categoriesData) ? categoriesData : [];
 
   const createCategoryMutation = useMutation({
     mutationFn: (data) => apiRequest('POST', '/api/categories', data),

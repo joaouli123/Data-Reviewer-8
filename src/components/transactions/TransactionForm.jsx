@@ -97,25 +97,31 @@ export default function TransactionForm({ open, onOpenChange, onSubmit, initialD
   });
 
   // Fetch Categories, Customers, Suppliers
-  const { data: categories } = useQuery({
+  const { data: categoriesData } = useQuery({
     queryKey: ['/api/categories', company?.id],
     queryFn: () => Category.list(),
     initialData: []
   });
 
-  const { data: customers } = useQuery({
+  const categories = Array.isArray(categoriesData) ? categoriesData : [];
+
+  const { data: customersData } = useQuery({
     queryKey: ['/api/customers', company?.id],
     queryFn: () => Customer.list(),
     enabled: !!company?.id,
     initialData: []
   });
 
-  const { data: suppliers } = useQuery({
+  const customers = Array.isArray(customersData) ? customersData : [];
+
+  const { data: suppliersData } = useQuery({
     queryKey: ['/api/suppliers', company?.id],
     queryFn: () => Supplier.list(),
     enabled: !!company?.id,
     initialData: []
   });
+
+  const suppliers = Array.isArray(suppliersData) ? suppliersData : [];
 
   const createCategoryMutation = useMutation({
     mutationFn: (data) => Category.create(data),

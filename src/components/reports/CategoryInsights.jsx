@@ -8,7 +8,8 @@ import { AlertTriangle, TrendingUp, TrendingDown, Sparkles, Loader2, Target } fr
 import { toast } from 'sonner';
 import { format, subMonths } from 'date-fns';
 
-export default function CategoryInsights({ transactions, categories }) {
+export default function CategoryInsights({ transactions = [], categories: categoriesProp = [] }) {
+  const categories = Array.isArray(categoriesProp) ? categoriesProp : [];
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [insights, setInsights] = useState(null);
 

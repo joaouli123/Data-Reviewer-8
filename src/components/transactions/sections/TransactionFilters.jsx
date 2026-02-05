@@ -9,8 +9,10 @@ export function TransactionFilters({
   categoryFilter, setCategoryFilter, 
   statusFilter, setStatusFilter, 
   paymentMethodFilter, setPaymentMethodFilter,
-  categories 
+  categories: categoriesProp 
 }) {
+  const categories = Array.isArray(categoriesProp) ? categoriesProp : [];
+  
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
       <div className="relative">
