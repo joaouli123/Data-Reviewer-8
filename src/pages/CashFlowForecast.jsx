@@ -299,7 +299,7 @@ export default function CashFlowForecastPage() {
             // Parte PAGA - usa paymentDate
             const payDate = t.paymentDate ? new Date(t.paymentDate) : tDate;
             if (isWithinInterval(payDate, { start: dStart, end: dEnd }) && payDate <= todayEnd) {
-              const paidBase = parseFloat(t.paidAmount) || 0;
+              const paidBase = Math.abs(parseFloat(t.paidAmount) || 0);
               const paidAmount = paidBase + (parseFloat(t.interest) || 0);
               const cardFee = t.hasCardFee ? (Math.abs(paidBase) * (parseFloat(t.cardFee) || 0)) / 100 : 0;
               
@@ -326,7 +326,7 @@ export default function CashFlowForecastPage() {
             
             // Parte RESTANTE - usa data de vencimento (t.date) como obrigação futura
             const dueDate = t.date ? new Date(t.date) : null;
-            const remainingBase = (parseFloat(t.amount) || 0) - (parseFloat(t.paidAmount) || 0);
+            const remainingBase = Math.abs(parseFloat(t.amount) || 0) - Math.abs(parseFloat(t.paidAmount) || 0);
             if (dueDate && remainingBase > 0 && isWithinInterval(dueDate, { start: dStart, end: dEnd })) {
               if (t.type === 'venda' || t.type === 'income' || t.type === 'entrada') {
                 revenue += remainingBase;
@@ -419,7 +419,7 @@ export default function CashFlowForecastPage() {
           // Parte PAGA - usa paymentDate
           const payDate = t.paymentDate ? new Date(t.paymentDate) : tDate;
           if (isWithinInterval(payDate, { start: monthStart, end: monthEnd }) && payDate <= todayEnd) {
-            const paidBase = parseFloat(t.paidAmount) || 0;
+            const paidBase = Math.abs(parseFloat(t.paidAmount) || 0);
             const paidAmount = paidBase + (parseFloat(t.interest) || 0);
             const cardFee = t.hasCardFee ? (Math.abs(paidBase) * (parseFloat(t.cardFee) || 0)) / 100 : 0;
             
@@ -446,7 +446,7 @@ export default function CashFlowForecastPage() {
           
           // Parte RESTANTE - usa data de vencimento como obrigação futura
           const dueDate = t.date ? new Date(t.date) : null;
-          const remainingBase = (parseFloat(t.amount) || 0) - (parseFloat(t.paidAmount) || 0);
+          const remainingBase = Math.abs(parseFloat(t.amount) || 0) - Math.abs(parseFloat(t.paidAmount) || 0);
           if (dueDate && remainingBase > 0 && isWithinInterval(dueDate, { start: monthStart, end: monthEnd })) {
             if (t.type === 'venda' || t.type === 'income' || t.type === 'entrada') {
               revenue += remainingBase;

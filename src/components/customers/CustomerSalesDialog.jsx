@@ -117,6 +117,16 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
         return Math.round((acc + val) * 100) / 100;
       }, 0);
 
+      // Calcula saldo restante (o que falta receber)
+      const totalRemaining = sortedInstallments.reduce((acc, s) => {
+        if (s.status === 'completed' || s.status === 'pago') return acc;
+        if (s.status === 'parcial') {
+          const remaining = parseFloat(s.amount || 0) - parseFloat(s.paidAmount || 0);
+          return Math.round((acc + remaining) * 100) / 100;
+        }
+        return Math.round((acc + parseFloat(s.amount || 0)) * 100) / 100;
+      }, 0);
+
       const isPaid = sortedInstallments.every(s => s.status === 'completed' || s.status === 'pago');
       // Get base description without installment number
       const baseDescription = (main.description || '').replace(/\s*\(\d+\/\d+\)\s*$/, '').trim() || 'Venda';
@@ -138,6 +148,7 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
           ...main,
           description: baseDescription,
           totalAmount,
+          totalRemaining,
           isPaid,
           installmentTotal: sortedInstallments.length
         },
@@ -346,8 +357,11 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
                     </div>
                     <div className="text-right flex-shrink-0">
                       <p className="text-lg font-bold text-slate-900">
-                        R$ {group.main.totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        R$ {(group.main.isPaid ? group.main.totalAmount : group.main.totalRemaining).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
+                      {!group.main.isPaid && group.main.totalRemaining < group.main.totalAmount && (
+                        <p className="text-xs text-slate-400">de R$ {group.main.totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                      )}
                       <Badge className={`${group.main.isPaid ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-amber-50 text-amber-600 border-amber-200'} shadow-none font-medium text-xs`}>
                         {group.main.isPaid ? 'Pago' : 'Parcial'}
                       </Badge>
@@ -384,8 +398,16 @@ export default function CustomerSalesDialog({ customer, open, onOpenChange }) {
                           </div>
                           <div>
                             <p className="font-semibold text-slate-900">
-                              R$ {(parseFloat(installment.amount || 0) + parseFloat(installment.interest || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              R$ {(isParcial && saldoDevedor > 0
+                                ? saldoDevedor
+                                : (parseFloat(installment.amount || 0) + parseFloat(installment.interest || 0))
+                              ).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </p>
+                            {isParcial && saldoDevedor > 0 && (
+                              <p className="text-xs text-slate-400">
+                                de R$ {valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                              </p>
+                            )}
                             <p className="text-xs text-slate-500">
                               {(() => {
                                 // Usa sempre a data da parcela vinda do banco de dados

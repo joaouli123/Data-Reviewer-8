@@ -1,12 +1,11 @@
 @import url('https://rsms.me/inter/inter.css');
+@import "react-day-picker/dist/style.css";
+
 html { font-family: 'Inter', sans-serif; }
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Base styles for react-day-picker (layout, spacing) */
-@import "react-day-picker/dist/style.css";
 
 @layer base {
   html {

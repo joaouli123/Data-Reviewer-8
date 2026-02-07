@@ -125,12 +125,11 @@ export default function TransactionsPage() {
   // Initialize with local date (not UTC) to respect user timezone
   const getInitialDateRange = () => {
     const today = new Date();
-    const thirtyDaysAgo = subDays(today, 30);
     
     return {
-      startDate: startOfDay(thirtyDaysAgo),
+      startDate: startOfDay(today),
       endDate: endOfDay(today),
-      label: 'Últimos 30 dias'
+      label: 'Hoje'
     };
   };
 
@@ -542,7 +541,7 @@ export default function TransactionsPage() {
             <PeriodFilter 
               onPeriodChange={setDateRange}
               mode="days"
-              defaultPeriod="last30Days"
+              defaultPeriod="today"
             />
             {hasPermission('export_reports') && (
               <Button variant="outline" onClick={handleExport} className="flex items-center gap-2 flex-1 sm:flex-none">

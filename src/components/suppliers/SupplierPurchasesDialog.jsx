@@ -103,6 +103,17 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
       });
       const main = sortedInstallments[0];
       const totalAmount = sortedInstallments.reduce((acc, p) => acc + parseFloat(p.amount || 0), 0);
+
+      // Calcula saldo restante (o que falta pagar)
+      const totalRemaining = sortedInstallments.reduce((acc, p) => {
+        if (p.status === 'completed' || p.status === 'pago') return acc;
+        if (p.status === 'parcial') {
+          const remaining = Math.abs(parseFloat(p.amount || 0)) - Math.abs(parseFloat(p.paidAmount || 0));
+          return Math.round((acc + remaining) * 100) / 100;
+        }
+        return Math.round((acc + Math.abs(parseFloat(p.amount || 0))) * 100) / 100;
+      }, 0);
+
       const isPaid = sortedInstallments.every(p => p.status === 'completed' || p.status === 'pago');
       // Get base description without installment number
       const baseDescription = (main.description || '').replace(/\s*\(\d+\/\d+\)\s*$/, '').trim() || 'Compra';
@@ -124,6 +135,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
           ...main,
           description: baseDescription,
           totalAmount,
+          totalRemaining,
           isPaid,
           installmentTotal: sortedInstallments.length
         },
@@ -339,8 +351,11 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                     </div>
                     <div className="text-right flex-shrink-0">
                       <p className="text-lg font-bold text-slate-900">
-                        R$ {Math.abs(group.main.totalAmount).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        R$ {(group.main.isPaid ? Math.abs(group.main.totalAmount) : group.main.totalRemaining).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
+                      {!group.main.isPaid && group.main.totalRemaining < Math.abs(group.main.totalAmount) && (
+                        <p className="text-xs text-slate-400">de R$ {Math.abs(group.main.totalAmount).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                      )}
                       <Badge className={`${group.main.isPaid ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-amber-50 text-amber-600 border-amber-200'} shadow-none font-medium text-xs`}>
                         {group.main.isPaid ? 'Pago' : 'Parcial'}
                       </Badge>
@@ -370,8 +385,16 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                           </div>
                           <div>
                             <p className="font-semibold text-slate-900">
-                              R$ {Math.abs(parseFloat(installment.amount || 0) + parseFloat(installment.interest || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              R$ {(isParcial && saldoDevedor > 0
+                                ? saldoDevedor
+                                : Math.abs(parseFloat(installment.amount || 0) + parseFloat(installment.interest || 0))
+                              ).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </p>
+                            {isParcial && saldoDevedor > 0 && (
+                              <p className="text-xs text-slate-400">
+                                de R$ {valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                              </p>
+                            )}
                             <p className="text-xs text-slate-500">
                               {(() => {
                                 // Usa sempre a data da parcela vinda do banco de dados

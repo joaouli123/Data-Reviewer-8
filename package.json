@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "tsx server/index.ts",
     "build": "vite build && tsc --outDir dist --rootDir . --module commonjs --moduleResolution node server/index.ts && mv dist/server/index.js dist/index.cjs",
     "build:prod": "tsx script/build.ts",
     "start": "node dist/server/index.js",
