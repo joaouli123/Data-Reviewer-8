@@ -40,12 +40,20 @@ export default function ExecutiveSummary({ summary, transactions, saleInstallmen
   const profitMargin = currentRevenue > 0 ? (netProfit / currentRevenue * 100) : 0;
 
   const pendingReceivables = (saleInstallments || []).filter(i => 
-    (!i.paid || i.status === 'pendente' || i.status === 'pending') && i.type === 'venda'
-  ).reduce((sum, i) => sum + parseFloat(i.amount || 0), 0);
+    (!i.paid || i.status === 'pendente' || i.status === 'pending' || i.status === 'parcial') && i.type === 'venda'
+  ).reduce((sum, i) => {
+    const amount = parseFloat(i.amount || 0);
+    const paidAmt = parseFloat(i.paidAmount || 0);
+    return sum + (i.status === 'parcial' ? Math.max(amount - paidAmt, 0) : amount);
+  }, 0);
 
   const pendingPayables = (purchaseInstallments || []).filter(i => 
-    (!i.paid || i.status === 'pendente' || i.status === 'pending') && i.type === 'compra'
-  ).reduce((sum, i) => sum + parseFloat(i.amount || 0), 0);
+    (!i.paid || i.status === 'pendente' || i.status === 'pending' || i.status === 'parcial') && i.type === 'compra'
+  ).reduce((sum, i) => {
+    const amount = parseFloat(i.amount || 0);
+    const paidAmt = parseFloat(i.paidAmount || 0);
+    return sum + (i.status === 'parcial' ? Math.max(amount - paidAmt, 0) : amount);
+  }, 0);
 
   const pendingSalesCount = (saleInstallments || []).filter(i => 
     (!i.paid || i.status === 'pendente' || i.status === 'pending') && i.type === 'venda'

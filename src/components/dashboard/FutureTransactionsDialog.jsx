@@ -58,8 +58,12 @@ export default function FutureTransactionsDialog({
   const paginatedTransactions = sortedTransactions.slice(startIndex, startIndex + pageSize);
 
   const total = sortedTransactions.reduce((sum, t) => {
-    const amount = Math.abs(parseFloat(t.amount || 0));
-    const interest = parseFloat(t.interest || 0);
+    const statusVal = String(t.status || '').toLowerCase();
+    const isParcial = statusVal === 'parcial';
+    const amount = isParcial
+      ? Math.abs(parseFloat(t.amount || 0)) - Math.abs(parseFloat(t.paidAmount || 0))
+      : Math.abs(parseFloat(t.amount || 0));
+    const interest = isParcial ? 0 : parseFloat(t.interest || 0);
     const cardFee = t.hasCardFee ? (amount * (parseFloat(t.cardFee) || 0)) / 100 : 0;
     return sum + amount + interest - (isIncome ? cardFee : 0);
   }, 0);
@@ -109,9 +113,13 @@ export default function FutureTransactionsDialog({
                 </TableHeader>
                 <TableBody>
                   {paginatedTransactions.map((t, idx) => {
+                    const statusVal = String(t.status || '').toLowerCase();
+                    const isParcial = statusVal === 'parcial';
                     const txDate = extractDate(t);
-                    const amount = Math.abs(parseFloat(t.amount || 0));
-                    const interest = parseFloat(t.interest || 0);
+                    const amount = isParcial
+                      ? Math.abs(parseFloat(t.amount || 0)) - Math.abs(parseFloat(t.paidAmount || 0))
+                      : Math.abs(parseFloat(t.amount || 0));
+                    const interest = isParcial ? 0 : parseFloat(t.interest || 0);
                     const cardFee = t.hasCardFee ? (amount * (parseFloat(t.cardFee) || 0)) / 100 : 0;
                     const netAmount = amount + interest - (isIncome ? cardFee : 0);
                     
@@ -124,6 +132,9 @@ export default function FutureTransactionsDialog({
                           <div>
                             <p className="font-medium text-slate-900 text-sm">
                               {t.description}
+                              {isParcial && (
+                                <span className="ml-1 text-xs text-amber-600 font-normal">(Saldo Restante)</span>
+                              )}
                               {t.installmentNumber && t.installmentTotal && (
                                 <span className="ml-2 text-xs text-slate-500 font-normal">
                                   ({String(t.installmentNumber).padStart(2, '0')}/{String(t.installmentTotal).padStart(2, '0')})

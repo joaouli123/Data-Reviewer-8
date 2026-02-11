@@ -72,21 +72,27 @@ export default function DREComparison({ transactions = [], companyName = "" }) {
         return tDate >= monthStart && tDate <= monthEnd;
       });
       
-      // Calcular receita (considerando taxa de cartão)
+      // Calcular receita (considerando taxa de cartão e pagamentos parciais)
       const revenue = monthTransactions
         .filter(t => isIncomeType(t.type))
         .reduce((acc, t) => {
-          const amount = Math.abs(parseFloat(t.amount) || 0);
+          const statusVal = String(t.status || '').toLowerCase();
+          const amount = statusVal === 'parcial'
+            ? Math.abs(parseFloat(t.paidAmount) || 0)
+            : Math.abs(parseFloat(t.amount) || 0);
           const interest = parseFloat(t.interest) || 0;
           const cardFee = t.hasCardFee ? (amount * (parseFloat(t.cardFee) || 0)) / 100 : 0;
           return acc + amount + interest - cardFee;
         }, 0);
       
-      // Calcular despesas
+      // Calcular despesas (considerando pagamentos parciais)
       const expenses = monthTransactions
         .filter(t => isExpenseType(t.type))
         .reduce((acc, t) => {
-          const amount = Math.abs(parseFloat(t.amount) || 0);
+          const statusVal = String(t.status || '').toLowerCase();
+          const amount = statusVal === 'parcial'
+            ? Math.abs(parseFloat(t.paidAmount) || 0)
+            : Math.abs(parseFloat(t.amount) || 0);
           const interest = parseFloat(t.interest) || 0;
           return acc + amount + interest;
         }, 0);

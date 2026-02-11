@@ -246,8 +246,9 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
       // Revert the transaction status (description stays the same)
       const result = await apiRequest('PATCH', `/api/transactions/${purchaseId}`, {
           status: 'pendente', 
-          paidAmount: undefined, 
-          interest: '0'
+          paidAmount: null, 
+          interest: '0',
+          paymentDate: null
         });
 
       return result;

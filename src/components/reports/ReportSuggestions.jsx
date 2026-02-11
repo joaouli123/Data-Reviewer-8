@@ -36,13 +36,17 @@ export default function ReportSuggestions({ transactions, saleInstallments, purc
       const revenue = recentTransactions.filter(t => isIncomeType(t.type)).reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
       const expenses = recentTransactions.filter(t => isExpenseType(t.type)).reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
       
-      const pendingReceivables = saleInstallments.filter(i => !i.paid).reduce((sum, i) => {
+      const pendingReceivables = saleInstallments.filter(i => !i.paid || i.status === 'parcial').reduce((sum, i) => {
         const amount = typeof i.amount === 'string' ? parseFloat(i.amount) : i.amount;
-        return sum + (isNaN(amount) ? 0 : amount);
+        const paidAmt = parseFloat(i.paidAmount || 0);
+        const validAmount = isNaN(amount) ? 0 : amount;
+        return sum + (i.status === 'parcial' ? Math.max(validAmount - paidAmt, 0) : validAmount);
       }, 0);
-      const pendingPayables = purchaseInstallments.filter(i => !i.paid).reduce((sum, i) => {
+      const pendingPayables = purchaseInstallments.filter(i => !i.paid || i.status === 'parcial').reduce((sum, i) => {
         const amount = typeof i.amount === 'string' ? parseFloat(i.amount) : i.amount;
-        return sum + (isNaN(amount) ? 0 : amount);
+        const paidAmt = parseFloat(i.paidAmount || 0);
+        const validAmount = isNaN(amount) ? 0 : amount;
+        return sum + (i.status === 'parcial' ? Math.max(validAmount - paidAmt, 0) : validAmount);
       }, 0);
       
       const categoriesCount = [...new Set(transactions.map(t => t.categoryId))].length;

@@ -223,7 +223,7 @@ export default function CustomersPage() {
                                     {c.email ? <div className="flex items-center gap-2 text-sm text-slate-700"><Mail className="w-3 h-3" /> {c.email}</div> : <span className="text-slate-400">-</span>}
                                 </TableCell>
                                 <TableCell className="text-left">
-                                    {c.phone ? <div className="flex items-center gap-2 text-sm text-slate-700"><Phone className="w-3 h-3" /> {c.phone}</div> : <span className="text-slate-400">-</span>}
+                                    {c.phone ? <div className="flex items-center gap-2 text-sm text-slate-700"><Phone className="w-3 h-3" /> {formatPhoneNumber(c.phone)}</div> : <span className="text-slate-400">-</span>}
                                 </TableCell>
                                 <TableCell className="text-right">
                                     <div className="font-semibold text-emerald-600">

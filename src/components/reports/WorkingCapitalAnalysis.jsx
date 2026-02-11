@@ -34,7 +34,11 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
             const dueDate = new Date(inst.dueDate);
             return dueDate >= today && dueDate <= thirtyDaysFromNow && !inst.paidAt;
           })
-          .reduce((sum, inst) => sum + parseFloat(inst.amount || 0), 0)
+          .reduce((sum, inst) => {
+            const amount = parseFloat(inst.amount || 0);
+            const paidAmt = parseFloat(inst.paidAmount || 0);
+            return sum + (inst.status === 'parcial' ? Math.max(amount - paidAmt, 0) : amount);
+          }, 0)
       : 0;
 
     // Payables in next 30 days from installments
@@ -44,19 +48,26 @@ export default function WorkingCapitalAnalysis({ transactions, saleInstallments,
             const dueDate = new Date(inst.dueDate);
             return dueDate >= today && dueDate <= thirtyDaysFromNow && !inst.paidAt;
           })
-          .reduce((sum, inst) => sum + parseFloat(inst.amount || 0), 0)
+          .reduce((sum, inst) => {
+            const amount = parseFloat(inst.amount || 0);
+            const paidAmt = parseFloat(inst.paidAmount || 0);
+            return sum + (inst.status === 'parcial' ? Math.max(amount - paidAmt, 0) : amount);
+          }, 0)
       : 0;
 
     // Current Cash (from transactions total balance)
     const currentCash = Array.isArray(transactions)
       ? transactions.reduce((sum, t) => {
-          const amount = parseFloat(t.amount || 0);
-          // If transaction is in the past, it counts towards current cash
           const txnDate = extractTxDate(t);
-          if (txnDate && txnDate <= today) {
-            return sum + (isIncomeType(t.type) ? amount : isExpenseType(t.type) ? -amount : 0);
-          }
-          return sum;
+          if (!txnDate || txnDate > today) return sum;
+          const statusVal = String(t.status || '').toLowerCase();
+          // Only count completed/paid transactions and the paid portion of parcial ones
+          if (statusVal === 'pendente' || statusVal === 'agendado') return sum;
+          const isParcial = statusVal === 'parcial';
+          const amount = isParcial
+            ? Math.abs(parseFloat(t.paidAmount || 0))
+            : parseFloat(t.amount || 0);
+          return sum + (isIncomeType(t.type) ? amount : isExpenseType(t.type) ? -amount : 0);
         }, 0)
       : 0;
 

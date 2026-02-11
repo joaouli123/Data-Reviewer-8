@@ -246,11 +246,16 @@ export default function DashboardPage() {
     const periodStart = new Date(dateRange.startDate.getFullYear(), dateRange.startDate.getMonth(), dateRange.startDate.getDate(), 0, 0, 0, 0);
     const periodEnd = new Date(dateRange.endDate.getFullYear(), dateRange.endDate.getMonth(), dateRange.endDate.getDate(), 23, 59, 59, 999);
     
-    // Helper para verificar se transação está pendente
+    // Helper para verificar se transação está pendente (inclui parcial com saldo restante)
     const isPendingTransaction = (t) => {
       const s = String(t?.status || '').toLowerCase();
       if (['pendente', 'agendado', 'pending', 'scheduled'].includes(s)) return true;
-      if (['pago', 'completed', 'parcial', 'paid', 'approved', 'aprovado'].includes(s)) return false;
+      // Parcial: tem saldo restante a pagar/receber, então é pendente parcialmente
+      if (s === 'parcial') {
+        const remaining = Math.abs(parseMoney(t.amount)) - Math.abs(parseMoney(t.paidAmount || 0));
+        return remaining > 0.01; // Considera pendente se ainda tem saldo
+      }
+      if (['pago', 'completed', 'paid', 'approved', 'aprovado'].includes(s)) return false;
       return !t?.paymentDate; // fallback: sem status, considera pendente apenas se não tem pagamento
     };
     
@@ -338,8 +343,13 @@ export default function DashboardPage() {
     });
 
     const futureRevenue = futureRevenueTransactions.reduce((sum, t) => {
-      const amount = Math.abs(parseFloat(t.amount || 0));
-      const interest = parseFloat(t.interest || 0);
+      const statusVal = String(t.status || '').toLowerCase();
+      const isParcial = statusVal === 'parcial';
+      // Para parcial: usa apenas o saldo restante (amount - paidAmount)
+      const amount = isParcial
+        ? Math.abs(parseFloat(t.amount || 0)) - Math.abs(parseFloat(t.paidAmount || 0))
+        : Math.abs(parseFloat(t.amount || 0));
+      const interest = isParcial ? 0 : parseFloat(t.interest || 0); // juros já contabilizados no pagamento parcial
       const cardFee = t.hasCardFee ? (amount * (parseFloat(t.cardFee) || 0)) / 100 : 0;
       return sum + amount + interest - cardFee;
     }, 0);
@@ -356,7 +366,16 @@ export default function DashboardPage() {
       return isExpense && isPending && isInRange;
     });
     
-    const futureExpenses = futureExpensesTransactions.reduce((sum, t) => sum + Math.abs((parseFloat(t.amount || 0) + parseFloat(t.interest || 0))), 0);
+    const futureExpenses = futureExpensesTransactions.reduce((sum, t) => {
+      const statusVal = String(t.status || '').toLowerCase();
+      const isParcial = statusVal === 'parcial';
+      // Para parcial: usa apenas o saldo restante (amount - paidAmount)
+      const amount = isParcial
+        ? Math.abs(parseFloat(t.amount || 0)) - Math.abs(parseFloat(t.paidAmount || 0))
+        : Math.abs(parseFloat(t.amount || 0));
+      const interest = isParcial ? 0 : parseFloat(t.interest || 0);
+      return sum + amount + interest;
+    }, 0);
 
     // Count future transactions
     const futureSaleCount = futureRevenueTransactions.length;
@@ -375,14 +394,23 @@ export default function DashboardPage() {
       const income = monthTrans
         .filter(t => isIncomeType(t.type))
         .reduce((acc, t) => {
-          const amount = Math.abs(parseFloat(t.amount || 0));
+          const statusVal = String(t.status || '').toLowerCase();
+          const baseAmount = statusVal === 'parcial'
+            ? Math.abs(parseFloat(t.paidAmount || 0))
+            : Math.abs(parseFloat(t.amount || 0));
           const interest = parseFloat(t.interest || 0);
-          const cardFee = t.hasCardFee ? (amount * (parseFloat(t.cardFee) || 0)) / 100 : 0;
-          return acc + amount + interest - cardFee;
+          const cardFee = t.hasCardFee ? (baseAmount * (parseFloat(t.cardFee) || 0)) / 100 : 0;
+          return acc + baseAmount + interest - cardFee;
         }, 0);
       const expenseRaw = monthTrans
         .filter(t => isExpenseType(t.type))
-        .reduce((acc, t) => acc + ((parseFloat(t.amount) || 0) + (parseFloat(t.interest) || 0)), 0);
+        .reduce((acc, t) => {
+          const statusVal = String(t.status || '').toLowerCase();
+          const baseAmount = statusVal === 'parcial'
+            ? parseFloat(t.paidAmount || 0)
+            : parseFloat(t.amount || 0);
+          return acc + baseAmount + (parseFloat(t.interest) || 0);
+        }, 0);
 
       return {
         name: monthStart.toLocaleString('pt-BR', { month: 'short', year: '2-digit' }).toUpperCase(),
@@ -398,9 +426,13 @@ export default function DashboardPage() {
       if (!d) return;
       const tTime = startOfDay(d).getTime();
       if (tTime < startTime) {
-        const amount = parseMoney(t.amount) + parseMoney(t.interest);
+        const statusVal = String(t.status || '').toLowerCase();
+        const baseAmount = statusVal === 'parcial'
+          ? parseMoney(t.paidAmount || 0)
+          : parseMoney(t.amount);
+        const amount = baseAmount + parseMoney(t.interest);
         const cardFee = t.hasCardFee && isIncomeType(t.type)
-          ? (Math.abs(parseMoney(t.amount)) * (parseMoney(t.cardFee) || 0)) / 100
+          ? (Math.abs(baseAmount) * (parseMoney(t.cardFee) || 0)) / 100
           : 0;
         const netAmount = isIncomeType(t.type) ? amount - cardFee : amount;
         if (isIncomeType(t.type)) openingBalance += netAmount;

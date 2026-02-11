@@ -41,7 +41,7 @@ export default function PaymentEditDialog({ isOpen, onClose, transaction, onConf
   const cardFeeAmount = hasCardFee && cardFee ? (paidAmount * parseFloat(cardFee)) / 100 : 0;
   const total = paidAmount + interest;
   const netAmount = paidAmount - cardFeeAmount;
-  const difference = total - originalAmount;
+  const difference = total - remainingAmount;
 
   const handleConfirm = () => {
     if (paidAmount <= 0) {
