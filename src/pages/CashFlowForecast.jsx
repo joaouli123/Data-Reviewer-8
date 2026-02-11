@@ -32,12 +32,13 @@ const getTxDate = (t) => {
   if (!t) return null;
   const status = String(t.status || '').toLowerCase();
   const isPaid = status === 'pago' || status === 'completed' || status === 'parcial';
-  const candidate = isPaid
+  // Para parcial: usar date (vencimento) como referência principal, não paymentDate
+  const candidate = (isPaid && status !== 'parcial')
     ? (t.paymentDate || t.date || t.createdAt || t.created_at)
     : (t.date || t.paymentDate || t.createdAt || t.created_at);
   if (!candidate) return null;
   try {
-    const d = new Date(candidate);
+    const d = parseLocalDate(candidate);
     return isNaN(d.getTime()) ? null : d;
   } catch (e) {
     return null;
@@ -296,8 +297,8 @@ export default function CashFlowForecastPage() {
 
           // Para pagamentos parciais: mostrar valor pago no histórico
           if (isParcial) {
-            // Parte PAGA - usa paymentDate
-            const payDate = t.paymentDate ? new Date(t.paymentDate) : tDate;
+            // Parte PAGA - usa paymentDate (parseLocalDate para evitar shift de timezone)
+            const payDate = t.paymentDate ? parseLocalDate(t.paymentDate) : tDate;
             if (isWithinInterval(payDate, { start: dStart, end: dEnd }) && payDate <= todayEnd) {
               const paidBase = Math.abs(parseFloat(t.paidAmount) || 0);
               const paidAmount = paidBase + (parseFloat(t.interest) || 0);
@@ -325,7 +326,7 @@ export default function CashFlowForecastPage() {
             }
             
             // Parte RESTANTE - usa data de vencimento (t.date) como obrigação futura
-            const dueDate = t.date ? new Date(t.date) : null;
+            const dueDate = t.date ? parseLocalDate(t.date) : null;
             const remainingBase = Math.abs(parseFloat(t.amount) || 0) - Math.abs(parseFloat(t.paidAmount) || 0);
             if (dueDate && remainingBase > 0 && isWithinInterval(dueDate, { start: dStart, end: dEnd })) {
               if (t.type === 'venda' || t.type === 'income' || t.type === 'entrada') {
@@ -416,8 +417,8 @@ export default function CashFlowForecastPage() {
 
         // Para pagamentos parciais: mostrar valor pago no histórico + saldo como pendente
         if (isParcial) {
-          // Parte PAGA - usa paymentDate
-          const payDate = t.paymentDate ? new Date(t.paymentDate) : tDate;
+          // Parte PAGA - usa paymentDate (parseLocalDate para evitar shift de timezone)
+          const payDate = t.paymentDate ? parseLocalDate(t.paymentDate) : tDate;
           if (isWithinInterval(payDate, { start: monthStart, end: monthEnd }) && payDate <= todayEnd) {
             const paidBase = Math.abs(parseFloat(t.paidAmount) || 0);
             const paidAmount = paidBase + (parseFloat(t.interest) || 0);
@@ -445,7 +446,7 @@ export default function CashFlowForecastPage() {
           }
           
           // Parte RESTANTE - usa data de vencimento como obrigação futura
-          const dueDate = t.date ? new Date(t.date) : null;
+          const dueDate = t.date ? parseLocalDate(t.date) : null;
           const remainingBase = Math.abs(parseFloat(t.amount) || 0) - Math.abs(parseFloat(t.paidAmount) || 0);
           if (dueDate && remainingBase > 0 && isWithinInterval(dueDate, { start: monthStart, end: monthEnd })) {
             if (t.type === 'venda' || t.type === 'income' || t.type === 'entrada') {
