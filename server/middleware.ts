@@ -288,7 +288,7 @@ export function requireSuperAdmin(req: AuthenticatedRequest, res: Response, next
 }
 
 // ========== AUDIT LOGGING MIDDLEWARE ==========
-export async function auditMiddleware(action: string, resourceType: string) {
+export function auditMiddleware(action: string, resourceType: string) {
   return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const originalJson = res.json.bind(res);
     

@@ -53,7 +53,20 @@ export function registerAdminRoutes(app: Express) {
   app.patch("/api/admin/companies/:id", authMiddleware, requireSuperAdmin, async (req, res) => {
     try {
       const { id } = req.params;
-      const updates = req.body;
+      const body = req.body;
+      
+      // Whitelist allowed fields to prevent mass assignment
+      const allowedFields = ['name', 'subscriptionStatus', 'paymentStatus', 'subscriptionPlan'] as const;
+      const updates: Record<string, any> = {};
+      for (const field of allowedFields) {
+        if (body[field] !== undefined) {
+          updates[field] = body[field];
+        }
+      }
+      
+      if (Object.keys(updates).length === 0) {
+        return res.status(400).json({ error: "No valid fields to update" });
+      }
       
       await db.update(companies).set({
         ...updates,
@@ -294,9 +307,9 @@ export function registerAdminRoutes(app: Express) {
       }
 
       res.json({ success: true, message: `E-mail de teste enviado para ${email}`, id: emailResult.data?.id });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error sending test email:", error);
-      res.status(500).json({ error: "Failed to send test email", message: error.message });
+      res.status(500).json({ error: "Failed to send test email" });
     }
   });
 
@@ -332,104 +345,122 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
-  // Get dashboard metrics
+  // Get dashboard metrics (uses SQL aggregations for performance)
   app.get("/api/admin/metrics", authMiddleware, requireSuperAdmin, async (req, res) => {
     try {
-      const allCompanies = await db.select().from(companies);
-      const allUsers = await db.select().from(users);
-      const allSubscriptions = await db.select().from(subscriptions);
+      // Company metrics via SQL aggregation
+      const companyMetrics = await db.execute(sql`
+        SELECT
+          COUNT(*)::int AS total,
+          COUNT(*) FILTER (WHERE subscription_status = 'active')::int AS active,
+          COUNT(*) FILTER (WHERE subscription_status = 'suspended')::int AS suspended,
+          COUNT(*) FILTER (WHERE subscription_status = 'cancelled')::int AS cancelled
+        FROM companies
+      `);
+      const cm = (companyMetrics as any)?.rows?.[0] || { total: 0, active: 0, suspended: 0, cancelled: 0 };
 
-      // Calculate metrics
-      const now = new Date();
-      
-      // Company metrics
-      const activeCompanies = allCompanies.filter(c => c.subscriptionStatus === 'active').length;
-      const suspendedCompanies = allCompanies.filter(c => c.subscriptionStatus === 'suspended').length;
-      const cancelledCompanies = allCompanies.filter(c => c.subscriptionStatus === 'cancelled').length;
+      // Subscription metrics via SQL aggregation
+      const subMetrics = await db.execute(sql`
+        SELECT
+          COUNT(*)::int AS total,
+          COUNT(*) FILTER (
+            WHERE status NOT IN ('blocked', 'cancelled')
+              AND (is_lifetime = true OR expires_at > NOW() OR status = 'active')
+          )::int AS active,
+          COUNT(*) FILTER (
+            WHERE is_lifetime IS NOT TRUE AND expires_at <= NOW()
+          )::int AS expired,
+          COUNT(*) FILTER (WHERE status = 'blocked')::int AS blocked,
+          COUNT(*) FILTER (WHERE is_lifetime = true)::int AS lifetime,
+          COALESCE(SUM(CASE
+            WHEN status NOT IN ('blocked', 'cancelled')
+              AND (is_lifetime = true OR expires_at > NOW() OR status = 'active')
+            THEN COALESCE(amount, 0)
+            ELSE 0
+          END), 0)::numeric AS mrr
+        FROM subscriptions
+      `);
+      const sm = (subMetrics as any)?.rows?.[0] || { total: 0, active: 0, expired: 0, blocked: 0, lifetime: 0, mrr: 0 };
 
-      // Subscription metrics
-      const activeSubscriptions = allSubscriptions.filter(s => {
-        if (s.status === 'blocked' || s.status === 'cancelled') return false;
-        if (s.isLifetime) return true;
-        if (s.expiresAt) return new Date(s.expiresAt) > now;
-        return s.status === 'active';
-      });
+      // Plan distribution via SQL
+      const planMetrics = await db.execute(sql`
+        SELECT
+          COUNT(*) FILTER (WHERE plan = 'basic')::int AS basic,
+          COUNT(*) FILTER (WHERE plan = 'monthly')::int AS monthly,
+          COUNT(*) FILTER (WHERE plan = 'pro')::int AS pro,
+          COUNT(*) FILTER (WHERE plan = 'enterprise')::int AS enterprise
+        FROM subscriptions
+      `);
+      const pm = (planMetrics as any)?.rows?.[0] || { basic: 0, monthly: 0, pro: 0, enterprise: 0 };
 
-      const expiredSubscriptions = allSubscriptions.filter(s => {
-        if (s.isLifetime) return false;
-        if (s.expiresAt) return new Date(s.expiresAt) <= now;
-        return false;
-      });
-
-      const blockedSubscriptions = allSubscriptions.filter(s => s.status === 'blocked').length;
-      const lifetimeSubscriptions = allSubscriptions.filter(s => s.isLifetime).length;
-
-      // Revenue metrics (MRR - Monthly Recurring Revenue)
-      const mrr = activeSubscriptions.reduce((sum, s) => {
-        const amount = parseFloat(String(s.amount || 0));
-        return sum + amount;
-      }, 0);
-
-      // Plan distribution
-      const planDistribution = {
-        basic: allSubscriptions.filter(s => s.plan === 'basic').length,
-        pro: allSubscriptions.filter(s => s.plan === 'pro').length,
-        enterprise: allSubscriptions.filter(s => s.plan === 'enterprise').length,
-      };
-
-      // Payment method distribution
+      // Payment method distribution via SQL
+      const payMethodMetrics = await db.execute(sql`
+        SELECT COALESCE(payment_method, 'Outros') AS method, COUNT(*)::int AS count
+        FROM subscriptions
+        GROUP BY COALESCE(payment_method, 'Outros')
+      `);
       const paymentMethods: Record<string, number> = {};
-      allSubscriptions.forEach(s => {
-        const method = s.paymentMethod || 'Outros';
-        paymentMethods[method] = (paymentMethods[method] || 0) + 1;
-      });
+      for (const row of ((payMethodMetrics as any)?.rows ?? [])) {
+        paymentMethods[row.method] = row.count;
+      }
 
-      // User metrics
-      const activeUsers = allUsers.filter(u => u.status === 'active').length;
-      const suspendedUsers = allUsers.filter(u => u.status === 'suspended').length;
-      const inactiveUsers = allUsers.filter(u => u.status === 'inactive').length;
-      const admins = allUsers.filter(u => u.role === 'admin').length;
+      // User metrics via SQL aggregation
+      const userMetrics = await db.execute(sql`
+        SELECT
+          COUNT(*)::int AS total,
+          COUNT(*) FILTER (WHERE status = 'active')::int AS active,
+          COUNT(*) FILTER (WHERE status = 'suspended')::int AS suspended,
+          COUNT(*) FILTER (WHERE status = 'inactive')::int AS inactive,
+          COUNT(*) FILTER (WHERE role = 'admin')::int AS admins,
+          COUNT(*) FILTER (WHERE company_id IS NOT NULL)::int AS with_company
+        FROM users
+      `);
+      const um = (userMetrics as any)?.rows?.[0] || { total: 0, active: 0, suspended: 0, inactive: 0, admins: 0, with_company: 0 };
 
-      // Churn rate (cancelled / total)
-      const churnRate = allCompanies.length > 0 
-        ? ((cancelledCompanies + suspendedCompanies) / allCompanies.length * 100).toFixed(1) 
-        : '0.0';
-
-      // Average users per company
-      const avgUsersPerCompany = activeCompanies > 0 
-        ? (allUsers.filter(u => u.companyId).length / activeCompanies).toFixed(1) 
-        : '0';
+      const mrrValue = parseFloat(String(sm.mrr || 0));
+      const activeCompanies = Number(cm.active || 0);
+      const churnRate = Number(cm.total) > 0
+        ? (((Number(cm.cancelled) + Number(cm.suspended)) / Number(cm.total)) * 100)
+        : 0;
+      const avgUsersPerCompany = activeCompanies > 0
+        ? (Number(um.with_company) / activeCompanies)
+        : 0;
 
       res.json({
         companies: {
-          total: allCompanies.length,
+          total: Number(cm.total),
           active: activeCompanies,
-          suspended: suspendedCompanies,
-          cancelled: cancelledCompanies,
+          suspended: Number(cm.suspended),
+          cancelled: Number(cm.cancelled),
         },
         subscriptions: {
-          total: allSubscriptions.length,
-          active: activeSubscriptions.length,
-          expired: expiredSubscriptions.length,
-          blocked: blockedSubscriptions,
-          lifetime: lifetimeSubscriptions,
+          total: Number(sm.total),
+          active: Number(sm.active),
+          expired: Number(sm.expired),
+          blocked: Number(sm.blocked),
+          lifetime: Number(sm.lifetime),
         },
         revenue: {
-          mrr,
-          arr: mrr * 12,
+          mrr: mrrValue,
+          arr: mrrValue * 12,
         },
-        plans: planDistribution,
+        plans: {
+          basic: Number(pm.basic),
+          monthly: Number(pm.monthly),
+          pro: Number(pm.pro),
+          enterprise: Number(pm.enterprise),
+        },
         paymentMethods,
         users: {
-          total: allUsers.length,
-          active: activeUsers,
-          suspended: suspendedUsers,
-          inactive: inactiveUsers,
-          admins,
+          total: Number(um.total),
+          active: Number(um.active),
+          suspended: Number(um.suspended),
+          inactive: Number(um.inactive),
+          admins: Number(um.admins),
         },
         kpis: {
-          churnRate: parseFloat(churnRate),
-          avgUsersPerCompany: parseFloat(avgUsersPerCompany),
+          churnRate: parseFloat(churnRate.toFixed(1)),
+          avgUsersPerCompany: parseFloat(avgUsersPerCompany.toFixed(1)),
         }
       });
     } catch (error) {
@@ -442,7 +473,21 @@ export function registerAdminRoutes(app: Express) {
   app.patch("/api/admin/users/:id", authMiddleware, requireSuperAdmin, async (req, res) => {
     try {
       const { id } = req.params;
-      const updates = req.body;
+      const body = req.body;
+      
+      // Whitelist allowed fields to prevent mass assignment
+      // Notably: password, isSuperAdmin, id, companyId are NOT allowed
+      const allowedFields = ['name', 'firstName', 'lastName', 'email', 'phone', 'role', 'status', 'permissions'] as const;
+      const updates: Record<string, any> = {};
+      for (const field of allowedFields) {
+        if (body[field] !== undefined) {
+          updates[field] = body[field];
+        }
+      }
+      
+      if (Object.keys(updates).length === 0) {
+        return res.status(400).json({ error: "No valid fields to update" });
+      }
       
       await db.update(users).set({
         ...updates,
@@ -472,12 +517,12 @@ export function registerAdminRoutes(app: Express) {
       const { id } = req.params;
       const { newPassword } = req.body;
       
-      if (!newPassword || newPassword.length < 6) {
+      if (!newPassword || typeof newPassword !== 'string' || newPassword.length < 6) {
         return res.status(400).json({ error: "Password must be at least 6 characters" });
       }
 
-      const bcrypt = require('bcryptjs');
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      const { hashPassword } = await import("../auth");
+      const hashedPassword = await hashPassword(newPassword);
       
       await db.update(users).set({
         password: hashedPassword,
@@ -494,7 +539,16 @@ export function registerAdminRoutes(app: Express) {
   app.patch("/api/admin/subscriptions/:id", authMiddleware, requireSuperAdmin, async (req, res) => {
     try {
       const { id } = req.params;
-      const updates = req.body;
+      const body = req.body;
+
+      // Whitelist allowed fields to prevent mass assignment
+      const allowedFields = ['plan', 'status', 'subscriberName', 'paymentMethod', 'amount', 'isLifetime', 'expiresAt', 'ticket_url'] as const;
+      const updates: Record<string, any> = {};
+      for (const field of allowedFields) {
+        if (body[field] !== undefined) {
+          updates[field] = body[field];
+        }
+      }
 
       const [currentSub] = await db
         .select({ id: subscriptions.id, companyId: subscriptions.companyId })

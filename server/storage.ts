@@ -232,40 +232,58 @@ export class DatabaseStorage {
       .orderBy(transactions.installmentNumber);
   }
 
-  // Atualiza múltiplas transações de um grupo
+  // Atualiza múltiplas transações de um grupo (batched in a single transaction)
   async updateTransactionsInGroup(companyId: any, installmentGroup: string, updates: Array<{ id: string; date: Date }>) {
-    const results = [];
-    for (const update of updates) {
-      const [updated] = await db.update(transactions)
-        .set({ date: update.date })
-        .where(and(
-          eq(transactions.companyId, companyId),
-          eq(transactions.id, update.id)
-        ))
-        .returning();
-      if (updated) results.push(updated);
-    }
-    return results;
+    return await db.transaction(async (tx) => {
+      const results = [];
+      for (const update of updates) {
+        const [updated] = await tx.update(transactions)
+          .set({ date: update.date })
+          .where(and(
+            eq(transactions.companyId, companyId),
+            eq(transactions.id, update.id)
+          ))
+          .returning();
+        if (updated) results.push(updated);
+      }
+      return results;
+    });
   }
 
   async getCustomers(companyId: any) {
     if (!companyId) return [];
-    const allCustomers = await db.select().from(customers).where(eq(customers.companyId, companyId));
     
-    // Busca todas as transações de entrada (receita)
-    const allTransactions = await db.select().from(transactions).where(
-      and(
-        eq(transactions.companyId, companyId), 
-        sql`${transactions.type} IN ('venda', 'venda_prazo', 'receita', 'income')`
-      )
-    );
+    // Use SQL aggregation instead of loading all transactions into memory
+    const result = await db.execute(sql`
+      SELECT c.*,
+        COALESCE(t.total_sales, 0) AS total_sales
+      FROM customers c
+      LEFT JOIN (
+        SELECT customer_id,
+          SUM(ABS(COALESCE(amount, 0) + COALESCE(interest, 0))) AS total_sales
+        FROM transactions
+        WHERE company_id = ${companyId}
+          AND type IN ('venda', 'venda_prazo', 'receita', 'income')
+        GROUP BY customer_id
+      ) t ON t.customer_id = c.id
+      WHERE c.company_id = ${companyId}
+      ORDER BY c.name
+    `);
 
-    return allCustomers.map(customer => {
-      const totalSales = allTransactions
-        .filter(t => t.customerId === customer.id)
-        .reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || "0") + parseFloat(t.interest || "0")), 0);
-      return { ...customer, totalSales: totalSales.toFixed(2) };
-    });
+    return ((result as any)?.rows ?? []).map((row: any) => ({
+      id: row.id,
+      companyId: row.company_id,
+      name: row.name,
+      cpf: row.cpf,
+      cnpj: row.cnpj,
+      contact: row.contact,
+      email: row.email,
+      phone: row.phone,
+      category: row.category,
+      status: row.status,
+      createdAt: row.created_at,
+      totalSales: parseFloat(row.total_sales || '0').toFixed(2),
+    }));
   }
 
   async createCustomer(companyId: any, data: any) {
@@ -284,22 +302,39 @@ export class DatabaseStorage {
 
   async getSuppliers(companyId: any) {
     if (!companyId) return [];
-    const allSuppliers = await db.select().from(suppliers).where(eq(suppliers.companyId, companyId));
     
-    // Busca todas as transações de saída (despesa)
-    const allTransactions = await db.select().from(transactions).where(
-      and(
-        eq(transactions.companyId, companyId),
-        sql`${transactions.type} IN ('compra', 'compra_prazo', 'despesa', 'expense')`
-      )
-    );
+    // Use SQL aggregation instead of loading all transactions into memory
+    const result = await db.execute(sql`
+      SELECT s.*,
+        COALESCE(t.total_purchases, 0) AS total_purchases
+      FROM suppliers s
+      LEFT JOIN (
+        SELECT supplier_id,
+          SUM(ABS(COALESCE(amount, 0) + COALESCE(interest, 0))) AS total_purchases
+        FROM transactions
+        WHERE company_id = ${companyId}
+          AND type IN ('compra', 'compra_prazo', 'despesa', 'expense')
+        GROUP BY supplier_id
+      ) t ON t.supplier_id = s.id
+      WHERE s.company_id = ${companyId}
+      ORDER BY s.name
+    `);
 
-    return allSuppliers.map(supplier => {
-      const totalPurchases = allTransactions
-        .filter(t => t.supplierId === supplier.id)
-        .reduce((sum, t) => sum + Math.abs(parseFloat(t.amount || "0") + parseFloat(t.interest || "0")), 0);
-      return { ...supplier, totalPurchases: totalPurchases.toFixed(2) };
-    });
+    return ((result as any)?.rows ?? []).map((row: any) => ({
+      id: row.id,
+      companyId: row.company_id,
+      name: row.name,
+      contact: row.contact,
+      email: row.email,
+      phone: row.phone,
+      cpf: row.cpf,
+      cnpj: row.cnpj,
+      category: row.category,
+      paymentTerms: row.payment_terms,
+      status: row.status,
+      createdAt: row.created_at,
+      totalPurchases: parseFloat(row.total_purchases || '0').toFixed(2),
+    }));
   }
 
   // --- Fluxo de Caixa agregado ---

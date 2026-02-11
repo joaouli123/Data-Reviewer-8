@@ -1,8 +1,9 @@
 import { Express } from "express";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, sql } from "drizzle-orm";
 import { z } from "zod";
+import crypto from "crypto";
 import { db } from "../db";
-import { users, companies, subscriptions, categories, invitations, passwordResets } from "../../shared/schema";
+import { users, companies, subscriptions, categories, invitations, passwordResets, sessions } from "../../shared/schema";
 import { 
   findUserByUsername, 
   findUserByEmail, 
@@ -24,6 +25,23 @@ import { generateBoletoForCompany } from "../utils/boleto";
 export function registerAuthRoutes(app: Express) {
   const signupRateLimiter = createSimpleRateLimiter({ windowMs: 10 * 60 * 1000, max: 5, keyPrefix: "signup" });
   const resetRateLimiter = createSimpleRateLimiter({ windowMs: 10 * 60 * 1000, max: 5, keyPrefix: "password-reset" });
+
+  // Safe JSON parse helper
+  const safeParsePermissions = (perms: any): Record<string, boolean> => {
+    if (!perms) return {};
+    if (typeof perms === 'object' && perms !== null) return perms;
+    try {
+      return typeof perms === 'string' ? JSON.parse(perms) : {};
+    } catch {
+      return {};
+    }
+  };
+
+  // Secure token generator
+  const generateSecureToken = (): string => crypto.randomBytes(32).toString('hex');
+
+  const MAX_AVATAR_SIZE = 500_000; // 500KB max for avatar data URLs
+
   const loginSchema = z.object({
     username: z.string().min(1),
     password: z.string().min(1)
@@ -297,9 +315,10 @@ export function registerAuthRoutes(app: Express) {
       ];
 
       try {
-        for (const cat of defaultCategories) {
-          await db.insert(categories).values({ ...cat, companyId: company.id } as any);
-        }
+        // Bulk insert all categories in a single query
+        await db.insert(categories).values(
+          defaultCategories.map(cat => ({ ...cat, companyId: company.id }))
+        );
       } catch (catError) {
         console.error('Error creating default categories:', catError);
       }
@@ -403,13 +422,6 @@ export function registerAuthRoutes(app: Express) {
             name: user.name,
             firstName: user.firstName,
             lastName: user.lastName,
-            phone: user.phone,
-            cep: user.cep,
-            rua: user.rua,
-            numero: user.numero,
-            complemento: user.complemento,
-            estado: user.estado,
-            cidade: user.cidade,
             role: user.role,
             isSuperAdmin: user.isSuperAdmin,
             companyId: user.companyId
@@ -454,7 +466,7 @@ export function registerAuthRoutes(app: Express) {
           role: user.role, 
           isSuperAdmin: user.isSuperAdmin, 
           companyId: user.companyId, 
-          permissions: user.permissions ? (typeof user.permissions === 'string' ? JSON.parse(user.permissions) : user.permissions) : {} 
+          permissions: safeParsePermissions(user.permissions) 
         },
         company: company ? { 
           id: company.id, 
@@ -506,7 +518,7 @@ export function registerAuthRoutes(app: Express) {
           complemento: user.complemento, 
           estado: user.estado, 
           cidade: user.cidade, 
-          permissions: user.permissions ? JSON.parse(user.permissions) : {} 
+          permissions: safeParsePermissions(user.permissions) 
         },
         company: { 
           id: company.id, 
@@ -546,8 +558,24 @@ export function registerAuthRoutes(app: Express) {
       if (resolvedFirst) updateData.firstName = resolvedFirst;
       if (typeof resolvedLast !== "undefined") updateData.lastName = resolvedLast;
       
-      if (email) updateData.email = email;
-      if (avatar) updateData.avatar = avatar;
+      if (email) {
+        // Check email uniqueness before updating
+        const [existingUser] = await db.select({ id: users.id })
+          .from(users)
+          .where(and(eq(users.email, email), sql`${users.id} != ${req.user.id}`))
+          .limit(1);
+        if (existingUser) {
+          return res.status(409).json({ error: "Este e-mail já está em uso por outro usuário." });
+        }
+        updateData.email = email;
+      }
+      if (avatar) {
+        // Validate avatar size to prevent DB bloat / DoS
+        if (typeof avatar === 'string' && avatar.length > MAX_AVATAR_SIZE) {
+          return res.status(400).json({ error: "Avatar image is too large. Maximum size is 500KB." });
+        }
+        updateData.avatar = avatar;
+      }
 
       const [updatedUser] = await db.update(users)
         .set(updateData)
@@ -575,7 +603,7 @@ export function registerAuthRoutes(app: Express) {
           role: updatedUser.role, 
           isSuperAdmin: updatedUser.isSuperAdmin, 
           companyId: updatedUser.companyId, 
-          permissions: updatedUser.permissions ? JSON.parse(updatedUser.permissions) : {} 
+          permissions: safeParsePermissions(updatedUser.permissions) 
         }
       });
     } catch (error) {
@@ -584,15 +612,32 @@ export function registerAuthRoutes(app: Express) {
     }
   });
 
-  // Reset Password
-  app.post("/api/auth/reset-password", authMiddleware, async (req: AuthenticatedRequest, res) => {
+  // Change Password (authenticated user changing own password)
+  app.post("/api/auth/change-password", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
-      const parsed = changePasswordSchema.safeParse(req.body);
-      if (!parsed.success) return res.status(400).json({ error: "Password must be at least 6 characters" });
-      const { newPassword } = parsed.data;
+      const { currentPassword, newPassword } = req.body;
+      
+      if (!newPassword || typeof newPassword !== 'string' || newPassword.length < 8) {
+        return res.status(400).json({ error: "New password must be at least 8 characters" });
+      }
 
-      const { hashPassword } = await import("../auth");
+      // Require current password for security
+      if (!currentPassword || typeof currentPassword !== 'string') {
+        return res.status(400).json({ error: "Current password is required" });
+      }
+
+      const { hashPassword, verifyPassword: verifyPwd } = await import("../auth");
+
+      // Verify current password
+      const [currentUser] = await db.select().from(users).where(eq(users.id, req.user.id)).limit(1);
+      if (!currentUser) return res.status(404).json({ error: "User not found" });
+      
+      const isValid = await verifyPwd(currentPassword, currentUser.password);
+      if (!isValid) {
+        return res.status(401).json({ error: "Current password is incorrect" });
+      }
+
       const hashedPassword = await hashPassword(newPassword);
 
       await db.update(users)
@@ -612,6 +657,17 @@ export function registerAuthRoutes(app: Express) {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       const { avatarDataUrl } = req.body;
       
+      // Validate avatar size and content type
+      if (!avatarDataUrl || typeof avatarDataUrl !== 'string') {
+        return res.status(400).json({ error: "Invalid avatar data" });
+      }
+      if (avatarDataUrl.length > MAX_AVATAR_SIZE) {
+        return res.status(400).json({ error: "Avatar image is too large. Maximum size is 500KB." });
+      }
+      if (!avatarDataUrl.startsWith('data:image/')) {
+        return res.status(400).json({ error: "Avatar must be a valid image data URL" });
+      }
+
       const [updatedUser] = await db.update(users)
         .set({ avatar: avatarDataUrl })
         .where(eq(users.id, req.user.id))
@@ -630,7 +686,7 @@ export function registerAuthRoutes(app: Express) {
           role: updatedUser.role, 
           isSuperAdmin: updatedUser.isSuperAdmin, 
           companyId: updatedUser.companyId, 
-          permissions: updatedUser.permissions ? JSON.parse(updatedUser.permissions) : {} 
+          permissions: safeParsePermissions(updatedUser.permissions) 
         }
       });
     } catch (error) {
@@ -663,7 +719,28 @@ export function registerAuthRoutes(app: Express) {
   });
 
   app.post("/api/auth/logout", authMiddleware, async (req: AuthenticatedRequest, res) => {
-    res.json({ message: "Logged out" });
+    try {
+      if (req.user) {
+        // Invalidate all sessions for this user to ensure full logout
+        await db.delete(sessions).where(eq(sessions.userId, req.user.id));
+        
+        // Audit log
+        await createAuditLog(
+          req.user.id,
+          req.user.companyId,
+          "LOGOUT",
+          "user",
+          req.user.id,
+          undefined,
+          (req as any).clientIp || req.ip || 'unknown',
+          req.headers['user-agent'] || 'unknown'
+        );
+      }
+      res.json({ message: "Logged out successfully" });
+    } catch (error) {
+      console.error("Error during logout:", error);
+      res.json({ message: "Logged out" });
+    }
   });
 
   // User Management Routes
@@ -683,7 +760,7 @@ export function registerAuthRoutes(app: Express) {
         name: u.name,
         role: u.role,
         status: u.status,
-        permissions: u.permissions ? JSON.parse(u.permissions) : {}
+        permissions: safeParsePermissions(u.permissions)
       })));
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -696,7 +773,7 @@ export function registerAuthRoutes(app: Express) {
       if (!req.user) return res.status(401).json({ error: "Unauthorized" });
       
       const [dbUser] = await db.select().from(users).where(eq(users.id, req.user.id)).limit(1);
-      const perms = dbUser?.permissions ? (typeof dbUser.permissions === 'string' ? JSON.parse(dbUser.permissions) : dbUser.permissions) : {};
+      const perms = safeParsePermissions(dbUser?.permissions);
       
       const { email, role, permissions, name, username, password } = req.body;
 
@@ -778,12 +855,12 @@ export function registerAuthRoutes(app: Express) {
         return res.status(400).json({ error: "Email, nome e cargo são obrigatórios" });
       }
 
-      // Generate unique token
-      const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
+      // Generate unique token (cryptographically secure)
+      const token = generateSecureToken();
       
-      // Set expiration to 10 minutes
+      // Set expiration to 24 hours (secure tokens allow longer expiry)
       const expiresAt = new Date();
-      expiresAt.setMinutes(expiresAt.getMinutes() + 10);
+      expiresAt.setHours(expiresAt.getHours() + 24);
 
       // Create invitation
       await db.insert(invitations).values({
@@ -830,7 +907,7 @@ export function registerAuthRoutes(app: Express) {
               <p>Cargo: <strong>${role === 'admin' ? 'Admin' : 'Operacional'}</strong></p>
               <p>Clique no link abaixo para aceitar o convite e criar sua conta:</p>
               <p><a href="${inviteLink}" style="display: inline-block; padding: 12px 24px; background: #3b82f6; color: white; text-decoration: none; border-radius: 6px;">Aceitar Convite</a></p>
-              <p style="color: #666; font-size: 14px;">Este link expira em 10 minutos.</p>
+              <p style="color: #666; font-size: 14px;">Este link expira em 24 horas.</p>
               <p style="color: #666; font-size: 12px;">Se você não solicitou este convite, ignore este email.</p>
             </div>
           `
@@ -914,12 +991,12 @@ export function registerAuthRoutes(app: Express) {
         return res.status(400).json({ error: "Email, nome e cargo são obrigatórios" });
       }
 
-      // Generate unique token
-      const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
+      // Generate unique token (cryptographically secure)
+      const token = generateSecureToken();
       
-      // Set expiration to 10 minutes
+      // Set expiration to 24 hours
       const expiresAt = new Date();
-      expiresAt.setMinutes(expiresAt.getMinutes() + 10);
+      expiresAt.setHours(expiresAt.getHours() + 24);
 
       // Create invitation
       await db.insert(invitations).values({
@@ -963,8 +1040,8 @@ export function registerAuthRoutes(app: Express) {
         return res.json({ success: true, message: "Se o email existir, você receberá um link de redefinição" });
       }
 
-      // Generate unique token
-      const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
+      // Generate unique token (cryptographically secure)
+      const token = generateSecureToken();
       
       // Set expiration to 15 minutes
       const expiresAt = new Date();
@@ -984,7 +1061,7 @@ export function registerAuthRoutes(app: Express) {
       const resetUrl = `${process.env.APP_URL || 'http://localhost:5000'}/reset-password?token=${token}`;
 
       await resend.emails.send({
-        from: "HUA Control <noreply@huacontrol.com>",
+        from: "HUA Control <noreply@huacontrol.com.br>",
         to: email,
         subject: "Redefinição de Senha - HUA Control",
         html: `

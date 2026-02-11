@@ -211,6 +211,64 @@ export async function ensureCoreSchema() {
       );
     `);
     console.log("[SchemaPatch] Core schema ensured");
+
+    // Fix: make sessions.company_id nullable for super admins without a company
+    await pool.query(`
+      DO $$ BEGIN
+        IF EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'sessions' AND column_name = 'company_id' AND is_nullable = 'NO'
+        ) THEN
+          ALTER TABLE sessions ALTER COLUMN company_id DROP NOT NULL;
+        END IF;
+      END $$;
+    `);
+
+    // Cleanup old login attempts (older than 24 hours) to prevent unbounded growth
+    await pool.query(`
+      DELETE FROM login_attempts WHERE created_at < NOW() - INTERVAL '24 hours';
+    `);
+
+    // Performance indexes on frequently queried columns
+    await pool.query(`
+      -- Transaction indexes
+      CREATE INDEX IF NOT EXISTS idx_transactions_company_id ON transactions (company_id);
+      CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions (date);
+      CREATE INDEX IF NOT EXISTS idx_transactions_customer_id ON transactions (customer_id);
+      CREATE INDEX IF NOT EXISTS idx_transactions_supplier_id ON transactions (supplier_id);
+      CREATE INDEX IF NOT EXISTS idx_transactions_type ON transactions (type);
+      CREATE INDEX IF NOT EXISTS idx_transactions_company_type ON transactions (company_id, type);
+      CREATE INDEX IF NOT EXISTS idx_transactions_installment_group ON transactions (installment_group);
+
+      -- User indexes
+      CREATE INDEX IF NOT EXISTS idx_users_email ON users (email);
+      CREATE INDEX IF NOT EXISTS idx_users_company_id ON users (company_id);
+      CREATE INDEX IF NOT EXISTS idx_users_status ON users (status);
+
+      -- Customer & Supplier indexes
+      CREATE INDEX IF NOT EXISTS idx_customers_company_id ON customers (company_id);
+      CREATE INDEX IF NOT EXISTS idx_suppliers_company_id ON suppliers (company_id);
+
+      -- Session indexes
+      CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions (user_id);
+      CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions (token);
+      CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions (expires_at);
+
+      -- Audit log indexes
+      CREATE INDEX IF NOT EXISTS idx_audit_logs_company_id ON audit_logs (company_id);
+      CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs (user_id);
+
+      -- Subscription indexes
+      CREATE INDEX IF NOT EXISTS idx_subscriptions_company_id ON subscriptions (company_id);
+      CREATE INDEX IF NOT EXISTS idx_subscriptions_status ON subscriptions (status);
+
+      -- Bank statement indexes
+      CREATE INDEX IF NOT EXISTS idx_bank_statement_items_company_id ON bank_statement_items (company_id);
+
+      -- Category indexes
+      CREATE INDEX IF NOT EXISTS idx_categories_company_id ON categories (company_id);
+    `);
+    console.log("[SchemaPatch] Performance indexes ensured");
   } catch (error) {
     console.error("[SchemaPatch] Failed to patch schema", error);
   }

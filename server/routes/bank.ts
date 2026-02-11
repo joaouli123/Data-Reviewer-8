@@ -236,6 +236,7 @@ export function registerBankRoutes(app: Express) {
   });
 
   app.post("/api/bank/match", authMiddleware, requirePermission("import_bank"), async (req: AuthenticatedRequest, res) => {
+    try {
       if (!req.user?.companyId) return res.status(400).json({ error: "Company ID missing" });
       const parsed = matchSchema.safeParse(req.body);
       if (!parsed.success) {
@@ -243,8 +244,12 @@ export function registerBankRoutes(app: Express) {
       }
 
       const { bankItemId, transactionId } = parsed.data;
-        const matched = await storage.matchBankStatementItem(req.user.companyId, bankItemId, transactionId);
+      const matched = await storage.matchBankStatementItem(req.user.companyId, bankItemId, transactionId);
       res.json(matched);
+    } catch (error) {
+      console.error("[Bank] match error", error);
+      res.status(500).json({ error: "Failed to match bank statement item" });
+    }
   });
 
   app.delete("/api/bank/clear", authMiddleware, requirePermission("import_bank"), async (req: AuthenticatedRequest, res) => {

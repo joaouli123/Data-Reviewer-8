@@ -396,9 +396,9 @@ export const insertSubscriptionSchema = createInsertSchema(subscriptions).omit({
 });
 
 export const insertUserSchema = createInsertSchema(users, {
-  password: z.string().min(6, "Password must be at least 6 characters").optional(),
-  username: z.string().min(3, "Username must be at least 3 characters").optional(),
-  email: z.string().email("Invalid email").optional(),
+  password: z.string().min(8, "Password must be at least 8 characters").optional(),
+  username: z.string().min(3, "Username must be at least 3 characters").max(50, "Username must be at most 50 characters").optional(),
+  email: z.string().email("Invalid email").max(255, "Email must be at most 255 characters").optional(),
 }).omit({
   id: true,
   createdAt: true,

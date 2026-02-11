@@ -122,6 +122,9 @@ export function registerPaymentRoutes(app: Express) {
       let paymentStatus = 'pending';
       let mpPaymentId = null;
       let boletoDueDate: Date | null = null;
+      
+      // Default expiration: 30 days from now (used as fallback for CC)
+      const defaultExpiration = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
       const resolvePayer = async () => {
         const baseEmail = email || payer?.email || '';
@@ -178,10 +181,6 @@ export function registerPaymentRoutes(app: Express) {
       };
 
       const resolvedPayer = await resolvePayer();
-      if (resolvedPayer?.address) {
-        if (!resolvedPayer.address.street_number) resolvedPayer.address.street_number = 'S/N';
-        if (!resolvedPayer.address.neighborhood) resolvedPayer.address.neighborhood = 'S/N';
-      }
       if (resolvedPayer?.address) {
         if (!resolvedPayer.address.street_number) resolvedPayer.address.street_number = 'S/N';
         if (!resolvedPayer.address.neighborhood) resolvedPayer.address.neighborhood = 'S/N';
@@ -384,8 +383,8 @@ export function registerPaymentRoutes(app: Express) {
               transaction_amount: parseFloat(total_amount),
               token: token,
               installments: 1,
-              payment_method_id: payment_method_id === 'credit_card' ? 'master' : payment_method_id,
-              date_of_expiration: expirationDate.toISOString(),
+              payment_method_id: payment_method_id,
+              date_of_expiration: defaultExpiration.toISOString(),
               payer: {
                 email: email,
               },
@@ -529,8 +528,7 @@ export function registerPaymentRoutes(app: Express) {
           success: false,
           status: paymentStatus,
           message: 'Pagamento recusado',
-          error: paymentResponse?.status_detail || 'Payment failed',
-          mp_response: paymentResponse
+          error: paymentResponse?.status_detail || 'Payment failed'
         });
       }
 
@@ -549,30 +547,42 @@ export function registerPaymentRoutes(app: Express) {
       
       console.log("[Webhook] Received notification:", { type, action, data, xRequestId });
 
-      // Security Validation (HMAC SHA256)
-      if (MERCADOPAGO_WEBHOOK_SECRET && xSignature) {
+      // Security Validation (HMAC SHA256) - REQUIRED in production
+      if (MERCADOPAGO_WEBHOOK_SECRET) {
+        if (!xSignature) {
+          console.error("[Webhook] Missing x-signature header");
+          return res.status(401).send("Missing signature");
+        }
+
         const parts = xSignature.split(',');
         let ts: string | undefined;
         let v1: string | undefined;
 
         parts.forEach(part => {
-          const [key, value] = part.split('=');
-          if (key === 'ts') ts = value;
-          if (key === 'v1') v1 = value;
+          const [key, value] = part.trim().split('=');
+          if (key?.trim() === 'ts') ts = value?.trim();
+          if (key?.trim() === 'v1') v1 = value?.trim();
         });
 
-        if (ts && v1) {
-          const manifest = `id:${data.id};request-id:${xRequestId};ts:${ts};`;
-          const hmac = crypto.createHmac('sha256', MERCADOPAGO_WEBHOOK_SECRET);
-          hmac.update(manifest);
-          const sha = hmac.digest('hex');
-
-          if (sha !== v1) {
-            console.error("[Webhook] Invalid signature verification");
-            return res.status(401).send("Invalid signature");
-          }
-          console.log("[Webhook] Signature verified successfully");
+        if (!ts || !v1) {
+          console.error("[Webhook] Invalid signature format");
+          return res.status(401).send("Invalid signature format");
         }
+
+        // Mercado Pago signature manifest format
+        const manifest = `id:${data?.id};request-id:${xRequestId};ts:${ts};`;
+        const hmac = crypto.createHmac('sha256', MERCADOPAGO_WEBHOOK_SECRET);
+        hmac.update(manifest);
+        const sha = hmac.digest('hex');
+
+        if (!crypto.timingSafeEqual(Buffer.from(sha, 'hex'), Buffer.from(v1, 'hex'))) {
+          console.error("[Webhook] Invalid signature verification");
+          return res.status(401).send("Invalid signature");
+        }
+        console.log("[Webhook] Signature verified successfully");
+      } else if (process.env.NODE_ENV === 'production') {
+        console.error("[Webhook] CRITICAL: MERCADOPAGO_WEBHOOK_SECRET not configured in production!");
+        return res.status(500).send("Webhook not configured");
       }
 
       // We only care about payment updates
@@ -676,16 +686,44 @@ export function registerPaymentRoutes(app: Express) {
     }
   });
 
-  // Simulate approval (for test mode confirmation)
-  app.post("/api/payment/simulate-approval", async (req: Request, res: Response) => {
+  // Simulate approval (SUPER ADMIN ONLY - for test mode confirmation)
+  app.post("/api/payment/simulate-approval", authMiddleware, requireSuperAdmin, async (req: Request, res: Response) => {
     try {
+      // Only allow in test mode
+      const isTestMode = MERCADOPAGO_ACCESS_TOKEN?.startsWith('TEST-');
+      if (!isTestMode) {
+        return res.status(403).json({ error: "Simulate approval is only available in test mode" });
+      }
+
       const { companyId } = req.body;
 
-      if (!companyId) {
+      if (!companyId || typeof companyId !== 'string') {
         return res.status(400).json({ error: "Company ID is required" });
       }
 
       console.log("[Payment] Simulate approval for company:", companyId);
+
+      // 1. Update company to approved status
+      await db.update(companies)
+        .set({
+          subscriptionStatus: 'active',
+          paymentStatus: 'approved',
+          updatedAt: new Date(),
+        })
+        .where(eq(companies.id, companyId));
+
+      // 2. Update subscription to active
+      const [existingSub] = await db.select()
+        .from(subscriptions)
+        .where(eq(subscriptions.companyId, companyId))
+        .orderBy(desc(subscriptions.createdAt))
+        .limit(1);
+
+      if (existingSub) {
+        await db.update(subscriptions)
+          .set({ status: 'active', updatedAt: new Date() })
+          .where(eq(subscriptions.id, existingSub.id));
+      }
 
       // Get updated company data
       const [updatedCompany] = await db.select()
@@ -696,14 +734,14 @@ export function registerPaymentRoutes(app: Express) {
         return res.status(404).json({ error: "Company not found" });
       }
 
-      // Get the admin user for this company to generate token
+      // Get the admin user for this company (prefer admin role)
       const [adminUser] = await db.select()
         .from(users)
-        .where(eq(users.companyId, companyId))
+        .where(and(eq(users.companyId, companyId), eq(users.role, 'admin')))
         .limit(1);
 
       if (!adminUser) {
-        return res.status(404).json({ error: "User not found" });
+        return res.status(404).json({ error: "Admin user not found for this company" });
       }
 
       // Generate a new token for the user
@@ -747,8 +785,8 @@ export function registerPaymentRoutes(app: Express) {
     }
   });
 
-  // Get payment status
-  app.get("/api/payment/status/:paymentId", async (req: Request, res: Response) => {
+  // Get payment status (requires authentication)
+  app.get("/api/payment/status/:paymentId", authMiddleware, async (req: Request, res: Response) => {
     try {
       const { paymentId } = req.params;
       
@@ -775,10 +813,16 @@ export function registerPaymentRoutes(app: Express) {
     }
   });
 
-  // Regenerate boleto with next day expiration
-  app.post("/api/payment/regenerate-boleto", async (req: Request, res: Response) => {
+  // Regenerate boleto with next day expiration (requires authentication)
+  app.post("/api/payment/regenerate-boleto", authMiddleware, async (req: Request, res: Response) => {
     try {
       const { companyId: rawCompanyId, email: rawEmail, amount: rawAmount, plan: rawPlan, payer } = req.body;
+
+      // Tenant isolation: user can only regenerate boleto for their own company
+      const authReq = req as any;
+      if (rawCompanyId && authReq.user && !authReq.user.isSuperAdmin && rawCompanyId !== authReq.user.companyId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
 
       let companyId = rawCompanyId as string | undefined;
       let companyRecord: typeof companies.$inferSelect | undefined;

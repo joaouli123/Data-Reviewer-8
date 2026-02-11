@@ -3,13 +3,36 @@ import { storage } from "../storage";
 import { authMiddleware, AuthenticatedRequest, requirePermission } from "../middleware";
 import { z } from "zod";
 
-// Função auxiliar para garantir que o valor seja um número limpo (decimal US)
+// Função auxiliar para garantir que o valor seja um número limpo
+// Handles both Brazilian (1.234,56) and US (1234.56) formats
 function parseMoney(value: any): number {
   if (typeof value === 'number') return value;
-  const cleanValue = String(value || "0")
-    .replace(/\./g, '')    // Remove pontos de milhar
-    .replace(',', '.');    // Converte vírgula decimal em ponto
-  return parseFloat(cleanValue) || 0;
+  const str = String(value || '0').trim();
+  
+  // Detect format: if contains comma as decimal separator (Brazilian format)
+  // Brazilian: "1.234,56" or "1234,56"
+  // US: "1234.56" or "1,234.56"
+  const hasComma = str.includes(',');
+  const hasDot = str.includes('.');
+  
+  if (hasComma && hasDot) {
+    // Both present: check which comes last (that's the decimal separator)
+    const lastComma = str.lastIndexOf(',');
+    const lastDot = str.lastIndexOf('.');
+    if (lastComma > lastDot) {
+      // Brazilian: 1.234,56 → remove dots, replace comma with dot
+      return parseFloat(str.replace(/\./g, '').replace(',', '.')) || 0;
+    } else {
+      // US with thousands: 1,234.56 → remove commas
+      return parseFloat(str.replace(/,/g, '')) || 0;
+    }
+  } else if (hasComma) {
+    // Only comma: treat as Brazilian decimal (1234,56)
+    return parseFloat(str.replace(',', '.')) || 0;
+  } else {
+    // Only dot or no separator: treat as US format (1234.56)
+    return parseFloat(str) || 0;
+  }
 }
 
 // Evita shift de data por timezone e aceita YYYY-MM-DD ou DD/MM/YYYY
@@ -47,17 +70,11 @@ function parseLocalDate(value: string | Date): Date {
 function computeInstallmentDate(baseDateStr: string, customInstallments: any[] | undefined, index: number) {
   const baseDate = parseLocalDate(baseDateStr);
 
-  // Log para debug
-  console.log(`[computeInstallmentDate] index=${index}, hasCustom=${!!customInstallments}, length=${customInstallments?.length || 0}`);
-  
   if (customInstallments && customInstallments.length > 0 && customInstallments[index]) {
     // Se tem data específica na parcela, usa diretamente
     const customDate = customInstallments[index].due_date || customInstallments[index].date;
-    console.log(`[computeInstallmentDate] customDate for index ${index}:`, customDate);
     if (customDate) {
-      const parsed = parseLocalDate(customDate);
-      console.log(`[computeInstallmentDate] parsed customDate:`, parsed);
-      return parsed;
+      return parseLocalDate(customDate);
     }
   }
 
@@ -65,7 +82,6 @@ function computeInstallmentDate(baseDateStr: string, customInstallments: any[] |
   // Primeira parcela = próximo mês, segunda = +2 meses, etc.
   const spread = new Date(baseDate);
   spread.setMonth(baseDate.getMonth() + 1 + index); // +1 para começar no próximo mês
-  console.log(`[computeInstallmentDate] spread date for index ${index}:`, spread);
   return spread;
 }
 
@@ -227,15 +243,10 @@ export function registerSalesPurchasesRoutes(app: Express) {
       const purchase = await storage.createPurchase(req.user.companyId, purchaseData as any);
       const installmentGroupId = `purchase-${purchase.id}-${Date.now()}`;
 
-      // DEBUG: Log das parcelas customizadas recebidas
-      console.log('[Purchases] customInstallments recebidas:', JSON.stringify(customInstallments, null, 2));
-
-      // Lógica de Parcelas - Otimizado com Promise.all
+      // L\u00f3gica de Parcelas - Otimizado com Promise.all
       const count = (customInstallments && customInstallments.length > 0) 
         ? customInstallments.length 
         : (parseInt(installmentCount) || 1);
-
-      console.log('[Purchases] count de parcelas:', count);
 
       const amountPerInstallment = Math.floor((cleanTotal / count) * 100) / 100;
       const lastInstallmentAmount = (cleanTotal - (amountPerInstallment * (count - 1))).toFixed(2);

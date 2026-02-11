@@ -1,6 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 
-const API_KEY = process.env.GOOGLE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || process.env.VITE_GOOGLE_GEMINI_API_KEY || "";
+// NEVER use VITE_ prefixed env vars on server - they are exposed to the client bundle
+const API_KEY = process.env.GOOGLE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || "";
 
 // Inicialização diferente (conforme o texto que você mandou)
 const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY, apiVersion: "v1alpha" }) : null;
@@ -66,7 +67,10 @@ IMPORTANTE: Responda APENAS com um JSON válido, sem texto adicional antes ou de
       throw new Error("IA retornou resposta vazia");
     }
 
-    console.log("[AI Debug] Resposta bruta recebida:", responseText.substring(0, 500));
+    // Only log AI response metadata in development, not content (may contain sensitive financial data)
+    if (process.env.NODE_ENV !== 'production') {
+      console.log("[AI Debug] Resposta recebida, tamanho:", responseText.length);
+    }
 
     if (responseJsonSchema) {
       // Limpeza robusta do JSON
