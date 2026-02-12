@@ -578,56 +578,89 @@ export default function TransactionsPage() {
     }, [txArray, typeFilter, statusFilter, dateRange]);
 
     // Memoize calculations to prevent lag
+    // Expande transações com paymentHistory em linhas individuais por dia
     const filteredTransactions = React.useMemo(() => {
-      return txArray
-        .filter(t => {
-          if (!t) return false;
-          
-          // 1. Filtrar por Tipo
-          if (typeFilter !== 'all') {
-            if (typeFilter === 'income' && !isIncomeType(t.type)) return false;
-            if (typeFilter === 'expense' && !isExpenseType(t.type)) return false;
-          }
+      const startTime = startOfDay(dateRange.startDate).getTime();
+      const endTime = endOfDay(dateRange.endDate).getTime();
 
-          // 2. Filtrar por Status
-          if (statusFilter === 'paid') {
-            const statusValue = String(t.status || '').toLowerCase();
-            const isPaidOrPartial = ['pago', 'completed', 'parcial', 'paid', 'approved', 'aprovado'].includes(statusValue) || !!(t.paymentDate || t.payment_date);
-            if (!isPaidOrPartial) return false;
-          } else if (statusFilter === 'pending') {
-            const statusValue = String(t.status || '').toLowerCase();
-            const isPending = ['pendente', 'agendado', 'pending', 'scheduled'].includes(statusValue);
-            if (!isPending) return false;
-          }
-          
-          // 3. Filtrar por Categoria
-          const tCategoryName = t.categoryId ? categoryMap[t.categoryId] : (t.categoryName || t.category || 'Outros');
-          const matchesCategory = categoryFilter === 'all' || 
-                                 tCategoryName === categoryFilter ||
-                                 t.categoryId === categoryFilter;
-          if (!matchesCategory) return false;
+      const rows = [];
+      txArray.forEach(t => {
+        if (!t) return;
 
-          // 4. Filtrar por Busca
-          const matchesSearch = (t.description || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
-                                (tCategoryName && tCategoryName.toLowerCase().includes(searchTerm.toLowerCase()));
-          if (!matchesSearch) return false;
+        // 1. Filtrar por Tipo
+        if (typeFilter !== 'all') {
+          if (typeFilter === 'income' && !isIncomeType(t.type)) return;
+          if (typeFilter === 'expense' && !isExpenseType(t.type)) return;
+        }
 
-          // 5. Filtrar por Forma de Pagamento
-          const matchesPaymentMethod = paymentMethodFilter === 'all' || t.paymentMethod === paymentMethodFilter;
-          if (!matchesPaymentMethod) return false;
+        // 2. Filtrar por Status
+        if (statusFilter === 'paid') {
+          const statusValue = String(t.status || '').toLowerCase();
+          const isPaidOrPartial = ['pago', 'completed', 'parcial', 'paid', 'approved', 'aprovado'].includes(statusValue) || !!(t.paymentDate || t.payment_date);
+          if (!isPaidOrPartial) return;
+        } else if (statusFilter === 'pending') {
+          const statusValue = String(t.status || '').toLowerCase();
+          const isPending = ['pendente', 'agendado', 'pending', 'scheduled'].includes(statusValue);
+          if (!isPending) return;
+        }
 
-          // 6. Filtrar por Data (sempre local para evitar trazer dia anterior)
-          return isInDateRange(t);
-        })
-      .sort((a, b) => {
-        // Sort by relevant date (local)
-        const aDate = extractTxDate(a);
-        const bDate = extractTxDate(b);
+        // 3. Filtrar por Categoria
+        const tCategoryName = t.categoryId ? categoryMap[t.categoryId] : (t.categoryName || t.category || 'Outros');
+        const matchesCategory = categoryFilter === 'all' || 
+                               tCategoryName === categoryFilter ||
+                               t.categoryId === categoryFilter;
+        if (!matchesCategory) return;
+
+        // 4. Filtrar por Busca
+        const matchesSearch = (t.description || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+                              (tCategoryName && tCategoryName.toLowerCase().includes(searchTerm.toLowerCase()));
+        if (!matchesSearch) return;
+
+        // 5. Filtrar por Forma de Pagamento
+        const matchesPaymentMethod = paymentMethodFilter === 'all' || t.paymentMethod === paymentMethodFilter;
+        if (!matchesPaymentMethod) return;
+
+        // Se tem histórico de pagamentos parciais, expande cada entry como linha separada
+        const entries = parsePaymentHistory(t);
+        const statusVal = String(t.status || '').toLowerCase();
+        const isParcialOrPago = ['pago', 'completed', 'parcial', 'paid', 'approved', 'aprovado'].includes(statusVal);
+
+        if (entries.length > 1 && isParcialOrPago) {
+          // Cada pagamento parcial vira uma linha individual
+          entries.forEach((entry, idx) => {
+            const entryTime = startOfDay(entry.paymentDate).getTime();
+            if (entryTime < startTime || entryTime > endTime) return;
+
+            rows.push({
+              ...t,
+              _rowKey: `${t.id}-entry-${idx}`,
+              _isHistoryEntry: true,
+              _entryIndex: idx,
+              _entryTotal: entries.length,
+              _entryAmount: entry.amount,
+              _entryDate: entry.paymentDate,
+              _entryMethod: entry.paymentMethod || t.paymentMethod,
+              _originalAmount: parseMoney(t.amount),
+              _totalPaid: entries.reduce((sum, e) => sum + e.amount, 0),
+            });
+          });
+        } else {
+          // Transação normal (sem histórico ou 1 só pagamento)
+          if (!isInDateRange(t)) return;
+          rows.push({ ...t, _rowKey: String(t.id), _isHistoryEntry: false });
+        }
+      });
+
+      rows.sort((a, b) => {
+        const aDate = a._isHistoryEntry ? a._entryDate : extractTxDate(a);
+        const bDate = b._isHistoryEntry ? b._entryDate : extractTxDate(b);
         if (!aDate && !bDate) return 0;
         if (!aDate) return 1;
         if (!bDate) return -1;
         return bDate.getTime() - aDate.getTime();
       });
+
+      return rows;
     }, [txArray, typeFilter, statusFilter, categoryFilter, searchTerm, paymentMethodFilter, dateRange, categories]);
 
     const balances = React.useMemo(
@@ -774,16 +807,15 @@ export default function TransactionsPage() {
                 <TableBody>
                     {paginatedTransactions.length > 0 ? (
                         paginatedTransactions.map((t) => (
-                            <TableRow key={t.id} className="hover:bg-slate-50/50 group">
+                            <TableRow key={t._rowKey || t.id} className={`hover:bg-slate-50/50 group ${t._isHistoryEntry ? 'bg-slate-50/30' : ''}`}>
                                 <TableCell className="font-medium text-slate-600 pl-6 text-left">
-                                    {/* Mostrar data da transação (vencimento) */}
+                                    {/* Data: usa data da entry se for histórico expandido */}
                                     {(() => {
                                       try {
-                                        const dt = extractTxDate(t);
+                                        const dt = t._isHistoryEntry ? t._entryDate : extractTxDate(t);
                                         if (!dt) return '-';
                                         return format(dt, "dd/MM/yyyy", { locale: ptBR });
                                       } catch (e) {
-                                        console.error("Date formatting error:", e, t);
                                         return '-';
                                       }
                                     })()}
@@ -795,9 +827,15 @@ export default function TransactionsPage() {
                                             ({t.installmentNumber}/{t.installmentTotal})
                                         </span>
                                     )}
-                                    {(() => {
+                                    {t._isHistoryEntry && (
+                                      <span className="ml-1 text-[10px] text-slate-400 font-normal">
+                                        pgto {t._entryIndex + 1}/{t._entryTotal}
+                                      </span>
+                                    )}
+                                    {/* Chips de histórico só para linhas NÃO expandidas */}
+                                    {!t._isHistoryEntry && (() => {
                                       const paymentEntries = parsePaymentHistory(t);
-                                      if (paymentEntries.length === 0) return null;
+                                      if (paymentEntries.length <= 1) return null;
                                       return (
                                         <div className="mt-1 flex flex-wrap items-center gap-1">
                                           {paymentEntries.map((entry, idx) => (
@@ -821,7 +859,7 @@ export default function TransactionsPage() {
                                 </TableCell>
                                 <TableCell className="text-left">
                                     <span className="text-xs font-medium text-slate-600">
-                                        {t.paymentMethod && t.paymentMethod !== '-' ? t.paymentMethod : 'Outros'}
+                                        {t._isHistoryEntry ? (t._entryMethod || 'Outros') : (t.paymentMethod && t.paymentMethod !== '-' ? t.paymentMethod : 'Outros')}
                                     </span>
                                 </TableCell>
                                 <TableCell className="text-left">
@@ -839,13 +877,26 @@ export default function TransactionsPage() {
                                 </TableCell>
                                 <TableCell className={`text-right font-bold ${['venda', 'venda_prazo', 'receita', 'income'].includes(t.type) ? 'text-emerald-600' : 'text-rose-600'}`}>
                                     <div className="flex flex-col items-end">
-                                        <span>
-                                      {['venda', 'venda_prazo', 'receita', 'income'].includes(t.type) ? '+' : '-'} R$ {Math.abs((sumPaymentHistory(t) || parseFloat(t.status === 'parcial' && t.paidAmount ? t.paidAmount : (t.amount || 0))) + parseFloat(t.interest || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                        </span>
-                                        {t.status === 'parcial' && t.paidAmount && (
-                                            <span className="text-[10px] text-amber-600 font-normal">
-                                                de R$ {parseFloat(t.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · falta R$ {(parseFloat(t.amount || 0) - (sumPaymentHistory(t) || parseFloat(t.paidAmount || 0))).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        {t._isHistoryEntry ? (
+                                          <>
+                                            <span>
+                                              {['venda', 'venda_prazo', 'receita', 'income'].includes(t.type) ? '+' : '-'} R$ {t._entryAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                             </span>
+                                            <span className="text-[10px] text-slate-400 font-normal">
+                                              de R$ {t._originalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            </span>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <span>
+                                              {['venda', 'venda_prazo', 'receita', 'income'].includes(t.type) ? '+' : '-'} R$ {Math.abs((sumPaymentHistory(t) || parseFloat(t.status === 'parcial' && t.paidAmount ? t.paidAmount : (t.amount || 0))) + parseFloat(t.interest || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            </span>
+                                            {t.status === 'parcial' && t.paidAmount && (
+                                              <span className="text-[10px] text-amber-600 font-normal">
+                                                de R$ {parseFloat(t.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · falta R$ {(parseFloat(t.amount || 0) - (sumPaymentHistory(t) || parseFloat(t.paidAmount || 0))).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                              </span>
+                                            )}
+                                          </>
                                         )}
                                         {t.hasCardFee && parseFloat(t.cardFee) > 0 && (
                                             <span className="text-[10px] text-amber-600 font-normal">
@@ -871,6 +922,9 @@ export default function TransactionsPage() {
                                 </TableCell>
                                 <TableCell className="text-right pr-6">
                                     <div className="flex justify-end">
+                                      {t._isHistoryEntry ? (
+                                        <span className="text-[10px] text-slate-400">—</span>
+                                      ) : (
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
                                                 <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-slate-100" data-testid={`button-actions-${t.id}`}>
@@ -903,6 +957,7 @@ export default function TransactionsPage() {
                                                 )}
                                             </DropdownMenuContent>
                                         </DropdownMenu>
+                                      )}
                                     </div>
                                 </TableCell>
                             </TableRow>
