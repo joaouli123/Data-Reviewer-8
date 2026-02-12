@@ -1,0 +1,11 @@
+# Railway ignore file - forces fresh builds
+# Empty file to ensure Railway doesn't use stale cache
+
+# Build artifacts
+dist/
+build/
+*.log
+
+# Development files
+.env.local
+.env.development
