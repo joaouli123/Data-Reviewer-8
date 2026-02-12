@@ -460,14 +460,19 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                               </div>
                             )}
                             {paymentHistory.length > 0 && (
-                              <div className="mt-1 p-1.5 bg-slate-50 border border-slate-200 rounded text-xs">
-                                <p className="text-slate-600 font-medium mb-1">Histórico de pagamentos</p>
-                                <div className="space-y-0.5">
+                              <div className="mt-1 flex flex-wrap items-center gap-1">
+                                <span className="text-[10px] text-slate-500 font-medium">Histórico:</span>
+                                <div className="flex flex-wrap items-center gap-1">
                                   {paymentHistory.map((entry, hIdx) => (
-                                    <p key={`${installment.id}-payment-${hIdx}`} className="text-slate-500">
-                                      {format(parseLocalDate(entry.paymentDate), 'dd/MM/yyyy')} - R$ {Math.abs(parseFloat(entry.amount || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                      {entry.paymentMethod ? ` (${entry.paymentMethod})` : ''}
-                                    </p>
+                                    <span
+                                      key={`${installment.id}-payment-${hIdx}`}
+                                      className="inline-flex items-center gap-1 rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] leading-none text-slate-600"
+                                    >
+                                      <span>{format(parseLocalDate(entry.paymentDate), 'dd/MM/yyyy')}</span>
+                                      <span>•</span>
+                                      <span>R$ {Math.abs(parseFloat(entry.amount || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                      {entry.paymentMethod ? <span>• {entry.paymentMethod}</span> : null}
+                                    </span>
                                   ))}
                                 </div>
                               </div>

@@ -799,11 +799,16 @@ export default function TransactionsPage() {
                                       const paymentEntries = parsePaymentHistory(t);
                                       if (paymentEntries.length === 0) return null;
                                       return (
-                                        <div className="mt-1 space-y-0.5">
+                                        <div className="mt-1 flex flex-wrap items-center gap-1">
                                           {paymentEntries.map((entry, idx) => (
-                                            <p key={`${t.id}-history-${idx}`} className="text-[10px] text-slate-500 font-normal">
-                                              {format(entry.paymentDate, 'dd/MM/yyyy', { locale: ptBR })} - R$ {entry.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                            </p>
+                                            <span
+                                              key={`${t.id}-history-${idx}`}
+                                              className="inline-flex items-center gap-1 rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] leading-none text-slate-600 font-normal"
+                                            >
+                                              <span>{format(entry.paymentDate, 'dd/MM/yyyy', { locale: ptBR })}</span>
+                                              <span>•</span>
+                                              <span>R$ {entry.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                            </span>
                                           ))}
                                         </div>
                                       );
