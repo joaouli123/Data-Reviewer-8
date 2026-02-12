@@ -415,177 +415,233 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                       const paymentHistory = getPaymentHistory(installment);
                       
                       return (
-                      <div key={installment.id} className="px-5 py-4 space-y-3">
-                        {/* Linha principal da parcela */}
+                      <div key={installment.id} className="px-5 py-4">
                         <div className="flex items-center justify-between gap-4">
-                          <div className="flex items-center gap-4">
-                            <div className="flex items-center justify-center w-7 h-7 rounded-full border-2 border-slate-300 text-slate-500 text-sm font-medium flex-shrink-0">
-                              {idx + 1}
-                            </div>
-                            <div>
-                              <p className="font-semibold text-slate-900">
-                                R$ {(isParcial && saldoDevedor > 0
-                                  ? saldoDevedor
-                                  : Math.abs(parseFloat(installment.amount || 0) + parseFloat(installment.interest || 0))
-                                ).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                              </p>
-                              {isParcial && saldoDevedor > 0 && (
-                                <p className="text-xs text-slate-400">
-                                  de R$ {valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                                </p>
-                              )}
-                              <p className="text-xs text-slate-500">
-                                {(() => {
-                                  const dt = extractTxDate(installment);
-                                  return dt ? `Venc: ${format(dt, "dd/MM/yyyy", { locale: ptBR })}` : 'Venc: -';
-                                })()}
-                              </p>
-                              {wasModified && (
-                                <p className="text-xs text-blue-600 mt-0.5">
-                                  ✏️ Alterado (era R$ {originalAmt.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})
-                                </p>
-                              )}
-                            </div>
+                        <div className="flex items-center gap-4 min-w-0">
+                          <div className="flex items-center justify-center w-7 h-7 rounded-full border-2 border-slate-300 text-slate-500 text-sm font-medium flex-shrink-0">
+                            {idx + 1}
                           </div>
-                          <div className="flex items-center gap-2 flex-shrink-0">
-                            {(installment.status === 'completed' || installment.status === 'pago') ? (
-                              <>
-                                <div className="flex flex-col items-end gap-0.5 mr-2">
-                                  {installment.paymentDate && (
-                                    <p className="text-xs text-emerald-600">
-                                      {format(parseLocalDate(installment.paymentDate), "dd/MM/yyyy")}
+                          <div>
+                            <p className="font-semibold text-slate-900">
+                              R$ {(isParcial && saldoDevedor > 0
+                                ? saldoDevedor
+                                : Math.abs(parseFloat(installment.amount || 0) + parseFloat(installment.interest || 0))
+                              ).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </p>
+                            {isParcial && saldoDevedor > 0 && (
+                              <p className="text-xs text-slate-400">
+                                de R$ {valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                              </p>
+                            )}
+                            <p className="text-xs text-slate-500">
+                              {(() => {
+                                // Usa sempre a data da parcela vinda do banco de dados
+                                const dt = extractTxDate(installment);
+                                return dt ? `Venc: ${format(dt, "dd/MM/yyyy", { locale: ptBR })}` : 'Venc: -';
+                              })()}
+                            </p>
+                            {/* Observação de parcela alterada */}
+                            {wasModified && (
+                              <p className="text-xs text-blue-600 mt-0.5">
+                                ✏️ Alterado (era R$ {originalAmt.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {(installment.status === 'completed' || installment.status === 'pago') ? (
+                            <>
+                              <div className="flex flex-col items-end gap-0.5 mr-2">
+                                {installment.paymentDate && (
+                                  <p className="text-xs text-emerald-600">
+                                    {format(parseLocalDate(installment.paymentDate), "dd/MM/yyyy")}
+                                  </p>
+                                )}
+                                {(installment.paidAmount || installment.amount) && (
+                                  <div className="flex flex-col items-end gap-0.5">
+                                    <p className="text-xs text-slate-500">
+                                      Pago: R$ {Math.abs(parseFloat(installment.paidAmount || installment.amount || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </p>
-                                  )}
-                                  {(installment.paidAmount || installment.amount) && (
-                                    <div className="flex flex-col items-end gap-0.5">
-                                      <p className="text-xs text-slate-500">
-                                        Pago: R$ {Math.abs(parseFloat(installment.paidAmount || installment.amount || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    {installment.paymentMethod && (
+                                      <p className="text-xs text-slate-400">
+                                        Forma: {installment.paymentMethod}
                                       </p>
-                                      {installment.paymentMethod && (
-                                        <p className="text-xs text-slate-400">
-                                          Forma: {installment.paymentMethod}
-                                        </p>
-                                      )}
-                                    </div>
-                                  )}
-                                  {parseFloat(installment.interest || 0) > 0 && (
-                                    <p className="text-xs text-amber-600">
-                                      Juros: R$ {Math.abs(parseFloat(installment.interest)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                    </p>
-                                  )}
-                                </div>
-                                <Badge className="bg-emerald-50 text-emerald-600 hover:bg-emerald-50 border border-emerald-200 shadow-none font-medium flex items-center gap-1.5 px-3 py-1 text-xs rounded-md">
-                                  <CheckCircle2 className="w-3.5 h-3.5" /> Pago
-                                </Badge>
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setEditingTransaction(installment);
-                                    setEditOpen(true);
-                                  }}
-                                  className="text-slate-400 hover:text-slate-700"
-                                  data-testid={`button-edit-installment-${installment.id}`}
-                                >
-                                  <Pencil className="w-4 h-4" />
-                                </Button>
-                              </>
-                            ) : installment.status === 'parcial' ? (
+                                    )}
+                                  </div>
+                                )}
+                                {parseFloat(installment.interest || 0) > 0 && (
+                                  <p className="text-xs text-amber-600">
+                                    Juros: R$ {Math.abs(parseFloat(installment.interest)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </p>
+                                )}
+                              </div>
+                              <Badge className="bg-emerald-50 text-emerald-600 hover:bg-emerald-50 border border-emerald-200 shadow-none font-medium flex items-center gap-1.5 px-3 py-1 text-xs rounded-md">
+                                <CheckCircle2 className="w-3.5 h-3.5" /> Pago
+                              </Badge>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingTransaction(installment);
+                                  setEditOpen(true);
+                                }}
+                                className="text-slate-400 hover:text-slate-700"
+                                data-testid={`button-edit-installment-${installment.id}`}
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => {
+                                  if (confirm('Tem certeza que deseja cancelar este pagamento?')) {
+                                    cancelPaymentMutation.mutate(installment.id);
+                                  }
+                                }}
+                                disabled={cancelPaymentMutation.isPending}
+                                className="text-slate-400 hover:text-red-600"
+                                data-testid={`button-cancel-payment-${installment.id}`}
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => {
+                                  if (confirm('Tem certeza que deseja excluir permanentemente esta compra?')) {
+                                    deletePurchaseMutation.mutate(installment.id);
+                                  }
+                                }}
+                                disabled={deletePurchaseMutation.isPending}
+                                className="text-slate-400 hover:text-red-600"
+                                data-testid={`button-delete-purchase-${installment.id}`}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </>
+                          ) : installment.status === 'parcial' ? (
+                            <div className="flex items-center gap-1">
                               <Badge className="bg-amber-50 text-amber-600 hover:bg-amber-50 border border-amber-200 shadow-none font-medium flex items-center gap-1.5 px-3 py-1 text-xs rounded-md">
                                 <Clock className="w-3.5 h-3.5" /> Parcial
                               </Badge>
-                            ) : (
-                              <Badge className="bg-slate-50 text-slate-600 hover:bg-slate-50 border border-slate-200 shadow-none font-medium flex items-center gap-1.5 px-3 py-1 text-xs rounded-md">
-                                <Clock className="w-3.5 h-3.5" /> Pendente
-                              </Badge>
-                            )}
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handlePay(installment.id);
-                              }}
-                              className="text-slate-400 hover:text-blue-600"
-                              data-testid={`button-pay-installment-${installment.id}`}
-                            >
-                              <DollarSign className="w-4 h-4" />
-                            </Button>
-                          </div>
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedTransaction(installment);
+                                  setPaymentEditOpen(true);
+                                }}
+                                className="bg-amber-600 hover:bg-amber-700 text-white font-medium px-3 h-8 text-xs"
+                                disabled={confirmPaymentMutation.isPending}
+                              >
+                                Pagar Resto
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingTransaction(installment);
+                                  setEditOpen(true);
+                                }}
+                                className="text-slate-400 hover:text-slate-700 h-8 w-8"
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1">
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedTransaction(installment);
+                                  setPaymentEditOpen(true);
+                                }}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-3 h-8 text-xs"
+                                disabled={confirmPaymentMutation.isPending}
+                                data-testid={`button-confirm-payment-${installment.id}`}
+                              >
+                                Pagar
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingTransaction(installment);
+                                  setEditOpen(true);
+                                }}
+                                className="text-slate-400 hover:text-slate-700 h-8 w-8"
+                                data-testid={`button-edit-installment-${installment.id}`}
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => {
+                                  if (confirm('Tem certeza que deseja excluir esta compra pendente?')) {
+                                    deletePurchaseMutation.mutate(installment.id);
+                                  }
+                                }}
+                                disabled={deletePurchaseMutation.isPending}
+                                className="text-slate-400 hover:text-red-600 h-8 w-8"
+                                data-testid={`button-delete-purchase-${installment.id}`}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          )}
                         </div>
-                        
-                        {/* Saldo devedor - largura total */}
+                        </div>
+                        {/* Resumo do pagamento parcial - largura total */}
                         {isParcial && saldoDevedor > 0 && (
-                          <div className="w-full bg-gradient-to-r from-slate-50 to-white border border-slate-200 rounded-lg p-3">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-6">
-                                <div>
-                                  <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Valor Original</div>
-                                  <div className="text-base font-bold text-slate-700">R$ {valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
-                                </div>
-                                <div className="w-px h-10 bg-slate-200"></div>
-                                <div>
-                                  <div className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wider mb-1">Valor Pago</div>
-                                  <div className="text-base font-bold text-emerald-700">R$ {valorPago.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
-                                </div>
-                                <div className="w-px h-10 bg-slate-200"></div>
-                                <div>
-                                  <div className="text-[10px] font-semibold text-rose-600 uppercase tracking-wider mb-1">Saldo Restante</div>
-                                  <div className="text-base font-bold text-rose-700">R$ {saldoDevedor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
-                                </div>
-                              </div>
+                          <div className="mt-3 ml-11 flex items-center gap-4 p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-slate-500">Original:</span>
+                              <span className="font-bold text-slate-700">R$ {valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                            </div>
+                            <div className="w-px h-4 bg-slate-300" />
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-emerald-600">Pago:</span>
+                              <span className="font-bold text-emerald-700">R$ {valorPago.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                            </div>
+                            <div className="w-px h-4 bg-slate-300" />
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-rose-600">Restante:</span>
+                              <span className="font-bold text-rose-700">R$ {saldoDevedor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                             </div>
                           </div>
                         )}
-                        
-                        {/* Histórico de pagamentos - largura total */}
+                        {/* Histórico de pagamentos - tabela largura total */}
                         {paymentHistory.length > 0 && (
-                          <div className="w-full border border-slate-200 rounded-lg overflow-hidden">
-                            <div className="bg-slate-50 px-4 py-2 border-b border-slate-200">
-                              <span className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
-                                Histórico de Pagamentos
-                              </span>
-                              <span className="ml-2 text-xs text-slate-500">({paymentHistory.length} {paymentHistory.length === 1 ? 'pagamento' : 'pagamentos'})</span>
+                          <div className="mt-2 ml-11 border border-slate-200 rounded-lg overflow-hidden">
+                            <div className="bg-slate-50 px-3 py-1.5 border-b border-slate-200 flex items-center justify-between">
+                              <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-wide">Histórico de Pagamentos</span>
+                              <span className="text-[10px] text-slate-400 font-medium">{paymentHistory.length} registro(s)</span>
                             </div>
-                            <div className="bg-white">
-                              <table className="w-full">
-                                <thead className="bg-slate-50/50">
-                                  <tr className="border-b border-slate-100">
-                                    <th className="text-left py-2 px-4 text-[10px] font-semibold text-slate-600 uppercase tracking-wider w-12">#</th>
-                                    <th className="text-left py-2 px-4 text-[10px] font-semibold text-slate-600 uppercase tracking-wider">Data</th>
-                                    <th className="text-right py-2 px-4 text-[10px] font-semibold text-slate-600 uppercase tracking-wider">Valor</th>
-                                    <th className="text-right py-2 px-4 text-[10px] font-semibold text-slate-600 uppercase tracking-wider">Forma</th>
+                            <table className="w-full text-xs">
+                              <thead>
+                                <tr className="bg-slate-50/50 text-left">
+                                  <th className="pl-3 pr-2 py-1.5 font-semibold text-slate-500 w-8">#</th>
+                                  <th className="px-2 py-1.5 font-semibold text-slate-500">Data</th>
+                                  <th className="px-2 py-1.5 font-semibold text-slate-500 text-right">Valor</th>
+                                  <th className="px-3 py-1.5 font-semibold text-slate-500 text-right">Forma</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-100">
+                                {paymentHistory.map((entry, hIdx) => (
+                                  <tr key={`${installment.id}-h-${hIdx}`} className="hover:bg-blue-50/40 transition-colors">
+                                    <td className="pl-3 pr-2 py-2">
+                                      <span className="flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 text-blue-700 text-[9px] font-bold">{hIdx + 1}</span>
+                                    </td>
+                                    <td className="px-2 py-2 font-medium text-slate-700">{format(parseLocalDate(entry.paymentDate), 'dd/MM/yyyy')}</td>
+                                    <td className="px-2 py-2 text-right font-bold text-blue-600">R$ {Math.abs(parseFloat(entry.amount || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                    <td className="px-3 py-2 text-right text-slate-500">{entry.paymentMethod || '-'}</td>
                                   </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100">
-                                  {paymentHistory.map((entry, hIdx) => (
-                                    <tr key={`${installment.id}-payment-${hIdx}`} className="hover:bg-blue-50/30 transition-colors">
-                                      <td className="py-2.5 px-4">
-                                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold">
-                                          {hIdx + 1}
-                                        </span>
-                                      </td>
-                                      <td className="py-2.5 px-4 text-sm font-medium text-slate-700">
-                                        {format(parseLocalDate(entry.paymentDate), 'dd/MM/yyyy')}
-                                      </td>
-                                      <td className="py-2.5 px-4 text-right text-sm font-bold text-blue-600">
-                                        R$ {Math.abs(parseFloat(entry.amount || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                      </td>
-                                      <td className="py-2.5 px-4 text-right">
-                                        {entry.paymentMethod ? (
-                                          <span className="inline-block text-xs font-medium text-slate-600 bg-slate-100 px-2.5 py-1 rounded-md">
-                                            {entry.paymentMethod}
-                                          </span>
-                                        ) : (
-                                          <span className="text-xs text-slate-400">—</span>
-                                        )}
-                                      </td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
+                                ))}
+                              </tbody>
+                            </table>
                           </div>
                         )}
                       </div>
