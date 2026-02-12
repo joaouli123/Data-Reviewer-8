@@ -302,6 +302,7 @@ export const transactions = pgTable("transactions", {
   installmentNumber: integer("installment_number"),
   installmentTotal: integer("installment_total"),
   paymentMethod: text("payment_method"),
+  paymentHistory: text("payment_history").notNull().default('[]'),
   isReconciled: boolean("is_reconciled").default(false),
   createdAt: timestamp("created_at").notNull().default(sql`now()`),
   updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
@@ -479,6 +480,10 @@ export const insertTransactionSchema = z.object({
   installmentNumber: z.number().int().nullable().optional(),
   installmentTotal: z.number().int().nullable().optional(),
   paymentMethod: z.string().nullable().optional(),
+  paymentHistory: z.union([z.string(), z.array(z.any())]).nullable().optional().transform(v => {
+    if (v == null) return null;
+    return typeof v === 'string' ? v : JSON.stringify(v);
+  }),
   isReconciled: z.boolean().optional().default(false),
 });
 

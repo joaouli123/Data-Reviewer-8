@@ -45,6 +45,28 @@ const parseLocalDate = (value: string | Date) => {
   return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
 };
 
+const toDateOnly = (value: string | Date) => {
+  const date = parseLocalDate(value);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const parsePaymentHistory = (value: unknown): any[] => {
+  if (!value) return [];
+  if (Array.isArray(value)) return value;
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+};
+
 // Helper to check permissions
 const checkPermission = async (req: AuthenticatedRequest, permission: string) => {
   if (req.user?.role === 'admin' || req.user?.isSuperAdmin) return true;
@@ -79,7 +101,8 @@ export function registerTransactionRoutes(app: Express) {
 
       if (!transaction) return res.status(404).json({ error: "Transação não encontrada" });
 
-      res.json(transaction);
+      const parsedHistory = parsePaymentHistory((transaction as any).paymentHistory);
+      res.json({ ...transaction, paymentHistory: parsedHistory });
     } catch (error) {
       console.error("[Transactions] get error", error);
       res.status(500).json({ error: "Failed to fetch transaction" });
@@ -212,6 +235,20 @@ export function registerTransactionRoutes(app: Express) {
       if (!(data.date instanceof Date) || Number.isNaN(data.date.getTime())) {
         data = { ...data, date: new Date() };
       }
+
+      const paidOnCreate = parseFloat(String(data.paidAmount || 0));
+      if (paidOnCreate > 0) {
+        const paymentDate = data.paymentDate ? toDateOnly(data.paymentDate) : toDateOnly(new Date());
+        data.paymentHistory = JSON.stringify([
+          {
+            amount: paidOnCreate.toFixed(2),
+            paymentDate,
+            paymentMethod: data.paymentMethod || null,
+          },
+        ]);
+      } else {
+        data.paymentHistory = '[]';
+      }
       
       const transaction = await storage.createTransaction(req.user.companyId, data);
       res.status(201).json(transaction);
@@ -253,11 +290,58 @@ export function registerTransactionRoutes(app: Express) {
       if (body.date && typeof body.date === 'string') {
         body.date = parseLocalDate(body.date);
       }
+
+      const [existing] = await db
+        .select()
+        .from(transactions)
+        .where(and(eq(transactions.companyId, req.user.companyId), eq(transactions.id, req.params.id)))
+        .limit(1);
+
+      if (!existing) {
+        return res.status(404).json({ error: "Transação não encontrada" });
+      }
+
+      if (body.clearPaymentHistory) {
+        body.paymentHistory = '[]';
+      }
+
+      const appendEntry = body.appendPaymentEntry;
+      if (appendEntry) {
+        const currentHistory = parsePaymentHistory((existing as any).paymentHistory);
+        const amount = parseFloat(String(appendEntry.amount || 0));
+        if (amount > 0) {
+          const entryDate = appendEntry.paymentDate ? toDateOnly(String(appendEntry.paymentDate)) : toDateOnly(new Date());
+          currentHistory.push({
+            amount: amount.toFixed(2),
+            paymentDate: entryDate,
+            paymentMethod: appendEntry.paymentMethod || null,
+            interest: appendEntry.interest != null ? String(appendEntry.interest) : undefined,
+          });
+        }
+        const accumulatedPaid = currentHistory.reduce((acc, item) => acc + (parseFloat(String(item?.amount || 0)) || 0), 0);
+        body.paidAmount = accumulatedPaid > 0 ? accumulatedPaid.toFixed(2) : null;
+        body.paymentHistory = JSON.stringify(currentHistory);
+      } else if (Object.prototype.hasOwnProperty.call(body, 'paymentHistory')) {
+        const normalized = parsePaymentHistory(body.paymentHistory);
+        body.paymentHistory = JSON.stringify(normalized);
+      }
+
       if (isPendingStatus) {
         body.paymentDate = null;
       } else if (body.paymentDate && typeof body.paymentDate === 'string') {
         body.paymentDate = parseLocalDate(body.paymentDate);
       }
+
+      if (body.paymentHistory) {
+        const parsedHistory = parsePaymentHistory(body.paymentHistory);
+        const lastEntry = parsedHistory[parsedHistory.length - 1];
+        if (lastEntry?.paymentDate) {
+          body.paymentDate = parseLocalDate(lastEntry.paymentDate);
+        }
+      }
+
+      delete body.appendPaymentEntry;
+      delete body.clearPaymentHistory;
       
       const transaction = await storage.updateTransaction(req.user.companyId, req.params.id, body);
       res.json(transaction);

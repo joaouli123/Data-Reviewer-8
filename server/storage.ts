@@ -21,6 +21,29 @@ function normalizeDate(value: any): Date {
   return Number.isNaN(d.getTime()) ? new Date() : d;
 }
 
+function normalizePaymentHistory(value: any): string {
+  if (value == null) return '[]';
+  if (typeof value === 'string') return value;
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return '[]';
+  }
+}
+
+function mapTransactionForResponse(t: any) {
+  const fallback = t.paymentDate || t.createdAt || t.created_at;
+  const date = t.date ? normalizeDate(t.date) : normalizeDate(fallback);
+  let paymentHistory: any[] = [];
+  try {
+    const parsed = typeof t.paymentHistory === 'string' ? JSON.parse(t.paymentHistory) : t.paymentHistory;
+    paymentHistory = Array.isArray(parsed) ? parsed : [];
+  } catch {
+    paymentHistory = [];
+  }
+  return { ...t, date, paymentHistory };
+}
+
 export class DatabaseStorage {
 
   // --- MÉTODOS DE VENDAS E COMPRAS ---
@@ -117,11 +140,7 @@ export class DatabaseStorage {
   async getTransactions(companyId: any) {
     if (!companyId) return [];
     const rows = await db.select().from(transactions).where(eq(transactions.companyId, companyId)).orderBy(desc(transactions.date));
-    return rows.map((t: any) => {
-      const fallback = t.paymentDate || t.createdAt || t.created_at;
-      const date = t.date ? normalizeDate(t.date) : normalizeDate(fallback);
-      return { ...t, date };
-    });
+    return rows.map(mapTransactionForResponse);
   }
 
   async getTransactionsPaginated(
@@ -155,11 +174,7 @@ export class DatabaseStorage {
       .limit(filters.limit)
       .offset(filters.offset);
 
-    return rows.map((t: any) => {
-      const fallback = t.paymentDate || t.createdAt || t.created_at;
-      const date = t.date ? normalizeDate(t.date) : normalizeDate(fallback);
-      return { ...t, date };
-    });
+    return rows.map(mapTransactionForResponse);
   }
 
   async countTransactions(
@@ -200,8 +215,9 @@ export class DatabaseStorage {
     if (safeData.paymentDate) {
       safeData.paymentDate = normalizeDate(safeData.paymentDate);
     }
+    safeData.paymentHistory = normalizePaymentHistory(safeData.paymentHistory);
     const [transaction] = await db.insert(transactions).values({ ...safeData, companyId }).returning();
-    return transaction;
+    return mapTransactionForResponse(transaction);
   }
 
   async updateTransaction(companyId: any, id: any, data: any) {
@@ -212,8 +228,11 @@ export class DatabaseStorage {
     if (safeData.paymentDate) {
       safeData.paymentDate = normalizeDate(safeData.paymentDate);
     }
+    if (Object.prototype.hasOwnProperty.call(safeData, 'paymentHistory')) {
+      safeData.paymentHistory = normalizePaymentHistory(safeData.paymentHistory);
+    }
     const [updated] = await db.update(transactions).set(safeData).where(and(eq(transactions.companyId, companyId), eq(transactions.id, id))).returning();
-    return updated;
+    return mapTransactionForResponse(updated);
   }
 
   async deleteTransaction(companyId: any, id: any) {

@@ -40,6 +40,32 @@ const extractTxDate = (t) => {
   }
 };
 
+const getPaymentHistory = (transaction) => {
+  const raw = transaction?.paymentHistory;
+  let parsed = [];
+
+  if (Array.isArray(raw)) {
+    parsed = raw;
+  } else if (typeof raw === 'string') {
+    try {
+      const json = JSON.parse(raw);
+      parsed = Array.isArray(json) ? json : [];
+    } catch {
+      parsed = [];
+    }
+  }
+
+  if (parsed.length === 0 && (transaction?.paidAmount || transaction?.paymentDate)) {
+    parsed = [{
+      amount: String(Math.abs(parseFloat(transaction.paidAmount || transaction.amount || 0))),
+      paymentDate: transaction.paymentDate,
+      paymentMethod: transaction.paymentMethod || null,
+    }];
+  }
+
+  return parsed.filter((entry) => parseFloat(entry?.amount || 0) > 0);
+};
+
 export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }) {
   const { company } = useAuth();
   const queryClient = useQueryClient();
@@ -205,9 +231,11 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
 
       // Format payment date (NOT the due date - that stays unchanged)
       let formattedPaymentDate = new Date().toISOString();
+      let paymentDateYmd = format(new Date(), 'yyyy-MM-dd');
       if (paymentDate && paymentDate.trim()) {
         const [year, month, day] = paymentDate.split('-');
         formattedPaymentDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), 12, 0, 0).toISOString();
+        paymentDateYmd = `${year}-${month}-${day}`;
       }
 
       // Update the transaction with accumulated paidAmount
@@ -216,6 +244,12 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
           paidAmount: accumulatedPaid.toString(),
           interest: interest ? interest.toString() : '0',
           paymentDate: formattedPaymentDate,
+          appendPaymentEntry: {
+            amount: newPayment.toString(),
+            paymentDate: paymentDateYmd,
+            paymentMethod: paymentMethod || null,
+            interest: interest ? interest.toString() : '0',
+          },
           paymentMethod: paymentMethod,
           hasCardFee: hasCardFee || false,
           cardFee: hasCardFee ? (parseFloat(cardFee) || 0).toString() : '0'
@@ -248,7 +282,8 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
           status: 'pendente', 
           paidAmount: null, 
           interest: '0',
-          paymentDate: null
+          paymentDate: null,
+          clearPaymentHistory: true
         });
 
       return result;
@@ -377,6 +412,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                       const valorParcela = Math.abs(parseFloat(installment.amount || 0));
                       const valorPago = Math.abs(parseFloat(installment.paidAmount || 0));
                       const saldoDevedor = valorParcela - valorPago;
+                      const paymentHistory = getPaymentHistory(installment);
                       
                       return (
                       <div key={installment.id} className="flex items-center justify-between gap-4 px-5 py-4">
@@ -421,6 +457,19 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                                 <p className="text-rose-600 font-semibold">
                                   = Saldo: R$ {saldoDevedor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                 </p>
+                              </div>
+                            )}
+                            {paymentHistory.length > 0 && (
+                              <div className="mt-1 p-1.5 bg-slate-50 border border-slate-200 rounded text-xs">
+                                <p className="text-slate-600 font-medium mb-1">Histórico de pagamentos</p>
+                                <div className="space-y-0.5">
+                                  {paymentHistory.map((entry, hIdx) => (
+                                    <p key={`${installment.id}-payment-${hIdx}`} className="text-slate-500">
+                                      {format(parseLocalDate(entry.paymentDate), 'dd/MM/yyyy')} - R$ {Math.abs(parseFloat(entry.amount || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                      {entry.paymentMethod ? ` (${entry.paymentMethod})` : ''}
+                                    </p>
+                                  ))}
+                                </div>
                               </div>
                             )}
                           </div>
