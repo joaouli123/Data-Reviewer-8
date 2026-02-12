@@ -445,34 +445,51 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                                 ✏️ Alterado (era R$ {originalAmt.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})
                               </p>
                             )}
-                            {/* Saldo devedor para pagamento parcial */}
+                            {/* Saldo devedor para pagamento parcial - Layout em Grid */}
                             {isParcial && saldoDevedor > 0 && (
-                              <div className="mt-1 p-1.5 bg-amber-50 border border-amber-200 rounded text-xs">
-                                <p className="text-amber-700">
-                                  Valor: R$ {valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                                </p>
-                                <p className="text-emerald-600">
-                                  - Pago: R$ {valorPago.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                                </p>
-                                <p className="text-rose-600 font-semibold">
-                                  = Saldo: R$ {saldoDevedor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                                </p>
+                              <div className="mt-2 grid grid-cols-3 gap-2 p-2 bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 rounded-lg text-xs shadow-sm">
+                                <div className="flex flex-col">
+                                  <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-0.5">Original</span>
+                                  <span className="text-slate-700 font-bold">R$ {valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wide mb-0.5">Pago</span>
+                                  <span className="text-emerald-700 font-bold">R$ {valorPago.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className="text-[10px] font-semibold text-rose-600 uppercase tracking-wide mb-0.5">Restante</span>
+                                  <span className="text-rose-700 font-bold">R$ {saldoDevedor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                                </div>
                               </div>
                             )}
+                            {/* Histórico de Pagamentos - Layout estruturado */}
                             {paymentHistory.length > 0 && (
-                              <div className="mt-1 flex flex-wrap items-center gap-1">
-                                <span className="text-[10px] text-slate-500 font-medium">Histórico:</span>
-                                <div className="flex flex-wrap items-center gap-1">
+                              <div className="mt-2 border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+                                <div className="bg-gradient-to-r from-slate-100 to-slate-50 px-2.5 py-1.5 border-b border-slate-200">
+                                  <span className="text-[10px] font-bold text-slate-700 uppercase tracking-wide">
+                                    📋 Histórico de Pagamentos ({paymentHistory.length})
+                                  </span>
+                                </div>
+                                <div className="divide-y divide-slate-100 bg-white">
                                   {paymentHistory.map((entry, hIdx) => (
-                                    <span
-                                      key={`${installment.id}-payment-${hIdx}`}
-                                      className="inline-flex items-center gap-1 rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] leading-none text-slate-600"
-                                    >
-                                      <span>{format(parseLocalDate(entry.paymentDate), 'dd/MM/yyyy')}</span>
-                                      <span>•</span>
-                                      <span>R$ {Math.abs(parseFloat(entry.amount || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                      {entry.paymentMethod ? <span>• {entry.paymentMethod}</span> : null}
-                                    </span>
+                                    <div key={`${installment.id}-payment-${hIdx}`} className="flex items-center justify-between px-2.5 py-2 hover:bg-blue-50/50 transition-colors">
+                                      <div className="flex items-center gap-2.5">
+                                        <span className="flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 text-blue-700 text-[9px] font-bold">
+                                          {hIdx + 1}
+                                        </span>
+                                        <span className="text-xs font-semibold text-slate-700">
+                                          {format(parseLocalDate(entry.paymentDate), 'dd/MM/yyyy')}
+                                        </span>
+                                        <span className="text-xs font-bold text-blue-600">
+                                          R$ {Math.abs(parseFloat(entry.amount || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        </span>
+                                      </div>
+                                      {entry.paymentMethod && (
+                                        <span className="text-[10px] font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">
+                                          {entry.paymentMethod}
+                                        </span>
+                                      )}
+                                    </div>
                                   ))}
                                 </div>
                               </div>
