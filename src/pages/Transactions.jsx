@@ -76,6 +76,52 @@ const parseMoney = (value) => {
   return Number.isNaN(parsed) ? 0 : parsed;
 };
 
+const parsePaymentHistory = (transaction) => {
+  const raw = transaction?.paymentHistory;
+  let parsed = [];
+
+  if (Array.isArray(raw)) {
+    parsed = raw;
+  } else if (typeof raw === 'string') {
+    try {
+      const json = JSON.parse(raw);
+      parsed = Array.isArray(json) ? json : [];
+    } catch {
+      parsed = [];
+    }
+  }
+
+  const entries = parsed
+    .map((entry) => {
+      const amount = Math.abs(parseMoney(entry?.amount));
+      const paymentDate = parseLocalDateString(entry?.paymentDate);
+      return {
+        amount,
+        paymentDate,
+        paymentMethod: entry?.paymentMethod || null,
+      };
+    })
+    .filter((entry) => entry.amount > 0 && entry.paymentDate);
+
+  if (entries.length > 0) {
+    entries.sort((a, b) => a.paymentDate.getTime() - b.paymentDate.getTime());
+    return entries;
+  }
+
+  // Fallback para dados antigos sem paymentHistory
+  const fallbackPaid = Math.abs(parseMoney(transaction?.paidAmount || 0));
+  const fallbackDate = parseLocalDateString(transaction?.paymentDate || transaction?.payment_date);
+  if (fallbackPaid > 0 && fallbackDate) {
+    return [{ amount: fallbackPaid, paymentDate: fallbackDate, paymentMethod: transaction?.paymentMethod || null }];
+  }
+
+  return [];
+};
+
+const sumPaymentHistory = (transaction) => {
+  return parsePaymentHistory(transaction).reduce((acc, entry) => acc + entry.amount, 0);
+};
+
 // Retorna uma data válida a partir dos campos conhecidos ou null
 // Para pagas: usa data de pagamento; para pendentes: usa vencimento
 const extractTxDate = (t) => {
@@ -83,6 +129,14 @@ const extractTxDate = (t) => {
   const statusValue = String(t.status || '').toLowerCase();
   const hasPaymentDate = !!(t.paymentDate || t.payment_date);
   const isPaid = ['pago', 'completed', 'parcial', 'paid', 'approved', 'aprovado'].includes(statusValue) || hasPaymentDate;
+
+  if (isPaid) {
+    const entries = parsePaymentHistory(t);
+    if (entries.length > 0) {
+      return entries[entries.length - 1].paymentDate;
+    }
+  }
+
   const candidate = isPaid
     ? (t.paymentDate || t.payment_date || t.date || t.createdAt || t.created_at)
     : (t.date || t.paymentDate || t.payment_date || t.createdAt || t.created_at);
@@ -101,6 +155,13 @@ const extractBalanceDate = (t) => {
   const statusValue = String(t.status || '').toLowerCase();
   const hasPaymentDate = !!(t.paymentDate || t.payment_date);
   const isPaid = ['pago', 'completed', 'parcial', 'paid', 'approved', 'aprovado'].includes(statusValue) || hasPaymentDate;
+
+  if (isPaid) {
+    const entries = parsePaymentHistory(t);
+    if (entries.length > 0) {
+      return entries[entries.length - 1].paymentDate;
+    }
+  }
 
   const candidate = isPaid
     ? (t.paymentDate || t.payment_date || t.date || t.createdAt || t.created_at)
@@ -373,23 +434,39 @@ export default function TransactionsPage() {
         const isPaid = ['pago', 'completed', 'parcial', 'paid', 'approved', 'aprovado'].includes(statusValue) || hasPaymentDate;
         if (!isPaid) return;
 
+        const entries = parsePaymentHistory(t);
+        if (entries.length > 0) {
+          entries.forEach((entry, idx) => {
+            const entryDate = startOfDay(entry.paymentDate).getTime();
+            if (entryDate >= startTime) return;
+
+            const isLastEntry = idx === entries.length - 1;
+            const interest = isLastEntry ? parseMoney(t.interest) : 0;
+            const amount = entry.amount + interest;
+            const cardFee = t.hasCardFee && isIncomeType(t.type) ? (Math.abs(entry.amount) * (parseMoney(t.cardFee) || 0)) / 100 : 0;
+            const netAmount = isIncomeType(t.type) ? amount - cardFee : amount;
+
+            if (isIncomeType(t.type)) openingBalance += netAmount;
+            else if (isExpenseType(t.type)) openingBalance -= Math.abs(amount);
+          });
+          return;
+        }
+
         const relevantDate = extractBalanceDate(t);
         if (!relevantDate) return;
-        
+
         let tDate;
         try {
           tDate = startOfDay(relevantDate).getTime();
         } catch (e) {
           return;
         }
-        
-        // Se for pagamento parcial, usa o valor efetivamente pago
+
         const statusVal = String(t.status || '').toLowerCase();
-        const baseAmount = statusVal === 'parcial' 
-          ? parseMoney(t.paidAmount || 0) 
+        const baseAmount = statusVal === 'parcial'
+          ? parseMoney(t.paidAmount || 0)
           : parseMoney(t.amount);
         const amount = baseAmount + parseMoney(t.interest);
-        // Considerar taxa de cartão para receitas
         const cardFee = t.hasCardFee && isIncomeType(t.type) ? (Math.abs(baseAmount) * (parseMoney(t.cardFee) || 0)) / 100 : 0;
         const netAmount = isIncomeType(t.type) ? amount - cardFee : amount;
 
@@ -408,9 +485,25 @@ export default function TransactionsPage() {
         const isPaid = ['pago', 'completed', 'parcial', 'paid', 'approved', 'aprovado'].includes(statusVal) || hasPaymentDate;
         if (!isPaid) return;
         
-        // Se for pagamento parcial, usa o valor efetivamente pago
-        const baseAmount = statusVal === 'parcial' 
-          ? parseMoney(t.paidAmount || 0) 
+        const entries = parsePaymentHistory(t);
+        if (entries.length > 0) {
+          entries.forEach((entry, idx) => {
+            const entryTime = startOfDay(entry.paymentDate).getTime();
+            if (entryTime < startTime || entryTime > endTime) return;
+
+            const isLastEntry = idx === entries.length - 1;
+            const interest = isLastEntry ? parseMoney(t.interest) : 0;
+            const amount = entry.amount + interest;
+            const cardFee = t.hasCardFee && isIncomeType(t.type) ? (Math.abs(entry.amount) * (parseMoney(t.cardFee) || 0)) / 100 : 0;
+            const netAmount = isIncomeType(t.type) ? amount - cardFee : amount;
+            if (isIncomeType(t.type)) periodIncome += netAmount;
+            else if (isExpenseType(t.type)) periodExpense += Math.abs(amount);
+          });
+          return;
+        }
+
+        const baseAmount = statusVal === 'parcial'
+          ? parseMoney(t.paidAmount || 0)
           : parseMoney(t.amount);
         const amount = baseAmount + parseMoney(t.interest);
         const cardFee = t.hasCardFee && isIncomeType(t.type) ? (Math.abs(baseAmount) * (parseMoney(t.cardFee) || 0)) / 100 : 0;
@@ -428,6 +521,22 @@ export default function TransactionsPage() {
     };
 
     const isInDateRange = (t) => {
+      const statusValue = String(t?.status || '').toLowerCase();
+      const hasPaymentDate = !!(t?.paymentDate || t?.payment_date);
+      const isPaid = ['pago', 'completed', 'parcial', 'paid', 'approved', 'aprovado'].includes(statusValue) || hasPaymentDate;
+
+      if (isPaid) {
+        const entries = parsePaymentHistory(t);
+        if (entries.length > 0) {
+          const startTime = startOfDay(dateRange.startDate).getTime();
+          const endTime = endOfDay(dateRange.endDate).getTime();
+          return entries.some((entry) => {
+            const entryTime = startOfDay(entry.paymentDate).getTime();
+            return entryTime >= startTime && entryTime <= endTime;
+          });
+        }
+      }
+
       const relevantDate = extractTxDate(t);
       if (!relevantDate) return false;
       let tTime;
@@ -686,6 +795,19 @@ export default function TransactionsPage() {
                                             ({t.installmentNumber}/{t.installmentTotal})
                                         </span>
                                     )}
+                                    {(() => {
+                                      const paymentEntries = parsePaymentHistory(t);
+                                      if (paymentEntries.length === 0) return null;
+                                      return (
+                                        <div className="mt-1 space-y-0.5">
+                                          {paymentEntries.map((entry, idx) => (
+                                            <p key={`${t.id}-history-${idx}`} className="text-[10px] text-slate-500 font-normal">
+                                              {format(entry.paymentDate, 'dd/MM/yyyy', { locale: ptBR })} - R$ {entry.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            </p>
+                                          ))}
+                                        </div>
+                                      );
+                                    })()}
                                 </TableCell>
                                 <TableCell className="text-left">
                                     <Badge variant="secondary" className="capitalize font-normal bg-slate-100 text-slate-600 hover:bg-slate-200">
@@ -713,7 +835,7 @@ export default function TransactionsPage() {
                                 <TableCell className={`text-right font-bold ${['venda', 'venda_prazo', 'receita', 'income'].includes(t.type) ? 'text-emerald-600' : 'text-rose-600'}`}>
                                     <div className="flex flex-col items-end">
                                         <span>
-                                            {['venda', 'venda_prazo', 'receita', 'income'].includes(t.type) ? '+' : '-'} R$ {Math.abs(parseFloat(t.status === 'parcial' && t.paidAmount ? t.paidAmount : (t.amount || 0)) + parseFloat(t.interest || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                      {['venda', 'venda_prazo', 'receita', 'income'].includes(t.type) ? '+' : '-'} R$ {Math.abs((sumPaymentHistory(t) || parseFloat(t.status === 'parcial' && t.paidAmount ? t.paidAmount : (t.amount || 0))) + parseFloat(t.interest || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                         </span>
                                         {t.status === 'parcial' && t.paidAmount && (
                                             <span className="text-[10px] text-amber-600 font-normal">

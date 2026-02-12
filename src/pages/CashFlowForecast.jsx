@@ -56,6 +56,48 @@ const extractDateStr = (d) => {
   }
 };
 
+const parsePaymentHistory = (transaction) => {
+  const raw = transaction?.paymentHistory;
+  let parsed = [];
+
+  if (Array.isArray(raw)) {
+    parsed = raw;
+  } else if (typeof raw === 'string') {
+    try {
+      const json = JSON.parse(raw);
+      parsed = Array.isArray(json) ? json : [];
+    } catch {
+      parsed = [];
+    }
+  }
+
+  const entries = parsed
+    .map((entry) => {
+      const amount = Math.abs(parseFloat(entry?.amount) || 0);
+      const paymentDate = parseLocalDate(entry?.paymentDate);
+      return {
+        amount,
+        paymentDate,
+        paymentMethod: entry?.paymentMethod || null,
+      };
+    })
+    .filter((entry) => entry.amount > 0 && entry.paymentDate && !Number.isNaN(entry.paymentDate.getTime()));
+
+  if (entries.length > 0) {
+    entries.sort((a, b) => a.paymentDate.getTime() - b.paymentDate.getTime());
+    return entries;
+  }
+
+  const fallbackPaid = Math.abs(parseFloat(transaction?.paidAmount) || 0);
+  if (fallbackPaid > 0 && transaction?.paymentDate) {
+    return [{ amount: fallbackPaid, paymentDate: parseLocalDate(transaction.paymentDate), paymentMethod: transaction?.paymentMethod || null }];
+  }
+
+  return [];
+};
+
+const sumPaymentHistory = (transaction) => parsePaymentHistory(transaction).reduce((acc, entry) => acc + entry.amount, 0);
+
 // Custom Tooltip Component
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -295,59 +337,61 @@ export default function CashFlowForecastPage() {
           const isPending = t.status === 'pendente' || t.status === 'agendado' || t.status === 'pending';
           const isParcial = t.status === 'parcial';
 
-          // Para pagamentos parciais: mostrar valor pago no histórico
-          if (isParcial) {
-            // Parte PAGA - usa paymentDate (parseLocalDate para evitar shift de timezone)
-            const payDate = t.paymentDate ? parseLocalDate(t.paymentDate) : tDate;
-            if (isWithinInterval(payDate, { start: dStart, end: dEnd }) && payDate <= todayEnd) {
-              const paidBase = Math.abs(parseFloat(t.paidAmount) || 0);
-              const paidAmount = paidBase + (parseFloat(t.interest) || 0);
-              const cardFee = t.hasCardFee ? (Math.abs(paidBase) * (parseFloat(t.cardFee) || 0)) / 100 : 0;
-              
+          const paymentEntries = parsePaymentHistory(t);
+          if (paymentEntries.length > 0) {
+            paymentEntries.forEach((entry, index) => {
+              if (!isWithinInterval(entry.paymentDate, { start: dStart, end: dEnd }) || entry.paymentDate > todayEnd) return;
+
+              const isLastEntry = index === paymentEntries.length - 1;
+              const interest = isLastEntry ? (parseFloat(t.interest) || 0) : 0;
+              const paidAmount = entry.amount + interest;
+              const cardFee = t.hasCardFee ? (Math.abs(entry.amount) * (parseFloat(t.cardFee) || 0)) / 100 : 0;
+
               if (t.type === 'venda' || t.type === 'income' || t.type === 'entrada') {
                 const netRevenue = paidAmount - cardFee;
                 revenue += netRevenue;
                 revenueDetails.push({
-                  description: `${t.description} (Parcial)`,
+                  description: `${t.description} (${isLastEntry && !isParcial ? 'Quitação' : 'Parcial'})`,
                   amount: netRevenue,
-                  date: payDate,
+                  date: entry.paymentDate,
                   category: t.type,
                   cardFee: cardFee > 0 ? cardFee : undefined
                 });
               } else if (t.type === 'compra' || t.type === 'expense' || t.type === 'saida') {
                 expense += paidAmount;
                 expenseDetails.push({
-                  description: `${t.description} (Parcial)`,
+                  description: `${t.description} (${isLastEntry && !isParcial ? 'Quitação' : 'Parcial'})`,
                   amount: paidAmount,
-                  date: payDate,
+                  date: entry.paymentDate,
                   category: t.type
                 });
               }
-            }
-            
-            // Parte RESTANTE - usa data de vencimento (t.date) como obrigação futura
-            const dueDate = t.date ? parseLocalDate(t.date) : null;
-            const remainingBase = Math.abs(parseFloat(t.amount) || 0) - Math.abs(parseFloat(t.paidAmount) || 0);
-            if (dueDate && remainingBase > 0 && isWithinInterval(dueDate, { start: dStart, end: dEnd })) {
-              if (t.type === 'venda' || t.type === 'income' || t.type === 'entrada') {
-                revenue += remainingBase;
-                revenueDetails.push({
-                  description: `${t.description} (Saldo a Receber)`,
-                  amount: remainingBase,
-                  date: dueDate,
-                  category: t.type
-                });
-              } else if (t.type === 'compra' || t.type === 'expense' || t.type === 'saida') {
-                expense += remainingBase;
-                expenseDetails.push({
-                  description: `${t.description} (Saldo a Pagar)`,
-                  amount: remainingBase,
-                  date: dueDate,
-                  category: t.type
-                });
+            });
+
+            if (isParcial) {
+              const dueDate = t.date ? parseLocalDate(t.date) : null;
+              const remainingBase = Math.max(0, Math.abs(parseFloat(t.amount) || 0) - sumPaymentHistory(t));
+              if (dueDate && remainingBase > 0 && isWithinInterval(dueDate, { start: dStart, end: dEnd })) {
+                if (t.type === 'venda' || t.type === 'income' || t.type === 'entrada') {
+                  revenue += remainingBase;
+                  revenueDetails.push({
+                    description: `${t.description} (Saldo a Receber)`,
+                    amount: remainingBase,
+                    date: dueDate,
+                    category: t.type
+                  });
+                } else if (t.type === 'compra' || t.type === 'expense' || t.type === 'saida') {
+                  expense += remainingBase;
+                  expenseDetails.push({
+                    description: `${t.description} (Saldo a Pagar)`,
+                    amount: remainingBase,
+                    date: dueDate,
+                    category: t.type
+                  });
+                }
               }
             }
-            return; // Já processou parcial, não continuar
+            return;
           }
 
           // Transações normais (pagas ou pendentes)
@@ -415,59 +459,61 @@ export default function CashFlowForecastPage() {
         const isPending = t.status === 'pendente' || t.status === 'agendado' || t.status === 'pending';
         const isParcial = t.status === 'parcial';
 
-        // Para pagamentos parciais: mostrar valor pago no histórico + saldo como pendente
-        if (isParcial) {
-          // Parte PAGA - usa paymentDate (parseLocalDate para evitar shift de timezone)
-          const payDate = t.paymentDate ? parseLocalDate(t.paymentDate) : tDate;
-          if (isWithinInterval(payDate, { start: monthStart, end: monthEnd }) && payDate <= todayEnd) {
-            const paidBase = Math.abs(parseFloat(t.paidAmount) || 0);
-            const paidAmount = paidBase + (parseFloat(t.interest) || 0);
-            const cardFee = t.hasCardFee ? (Math.abs(paidBase) * (parseFloat(t.cardFee) || 0)) / 100 : 0;
-            
+        const paymentEntries = parsePaymentHistory(t);
+        if (paymentEntries.length > 0) {
+          paymentEntries.forEach((entry, index) => {
+            if (!isWithinInterval(entry.paymentDate, { start: monthStart, end: monthEnd }) || entry.paymentDate > todayEnd) return;
+
+            const isLastEntry = index === paymentEntries.length - 1;
+            const interest = isLastEntry ? (parseFloat(t.interest) || 0) : 0;
+            const paidAmount = entry.amount + interest;
+            const cardFee = t.hasCardFee ? (Math.abs(entry.amount) * (parseFloat(t.cardFee) || 0)) / 100 : 0;
+
             if (t.type === 'venda' || t.type === 'income' || t.type === 'entrada') {
               const netRevenue = paidAmount - cardFee;
               revenue += netRevenue;
               revenueDetails.push({
-                description: `${t.description} (Parcial)`,
+                description: `${t.description} (${isLastEntry && !isParcial ? 'Quitação' : 'Parcial'})`,
                 amount: netRevenue,
-                date: payDate,
+                date: entry.paymentDate,
                 category: t.type,
                 cardFee: cardFee > 0 ? cardFee : undefined
               });
             } else if (t.type === 'compra' || t.type === 'expense' || t.type === 'saida') {
               expense += paidAmount;
               expenseDetails.push({
-                description: `${t.description} (Parcial)`,
+                description: `${t.description} (${isLastEntry && !isParcial ? 'Quitação' : 'Parcial'})`,
                 amount: paidAmount,
-                date: payDate,
+                date: entry.paymentDate,
                 category: t.type
               });
             }
-          }
-          
-          // Parte RESTANTE - usa data de vencimento como obrigação futura
-          const dueDate = t.date ? parseLocalDate(t.date) : null;
-          const remainingBase = Math.abs(parseFloat(t.amount) || 0) - Math.abs(parseFloat(t.paidAmount) || 0);
-          if (dueDate && remainingBase > 0 && isWithinInterval(dueDate, { start: monthStart, end: monthEnd })) {
-            if (t.type === 'venda' || t.type === 'income' || t.type === 'entrada') {
-              revenue += remainingBase;
-              revenueDetails.push({
-                description: `${t.description} (Saldo a Receber)`,
-                amount: remainingBase,
-                date: dueDate,
-                category: t.type
-              });
-            } else if (t.type === 'compra' || t.type === 'expense' || t.type === 'saida') {
-              expense += remainingBase;
-              expenseDetails.push({
-                description: `${t.description} (Saldo a Pagar)`,
-                amount: remainingBase,
-                date: dueDate,
-                category: t.type
-              });
+          });
+
+          if (isParcial) {
+            const dueDate = t.date ? parseLocalDate(t.date) : null;
+            const remainingBase = Math.max(0, Math.abs(parseFloat(t.amount) || 0) - sumPaymentHistory(t));
+            if (dueDate && remainingBase > 0 && isWithinInterval(dueDate, { start: monthStart, end: monthEnd })) {
+              if (t.type === 'venda' || t.type === 'income' || t.type === 'entrada') {
+                revenue += remainingBase;
+                revenueDetails.push({
+                  description: `${t.description} (Saldo a Receber)`,
+                  amount: remainingBase,
+                  date: dueDate,
+                  category: t.type
+                });
+              } else if (t.type === 'compra' || t.type === 'expense' || t.type === 'saida') {
+                expense += remainingBase;
+                expenseDetails.push({
+                  description: `${t.description} (Saldo a Pagar)`,
+                  amount: remainingBase,
+                  date: dueDate,
+                  category: t.type
+                });
+              }
             }
           }
-          return; // Já processou parcial
+          return;
         }
 
         // Transações normais (pagas ou pendentes)
@@ -562,25 +608,41 @@ export default function CashFlowForecastPage() {
 
   // Calculate opening balance (all transactions before start date)
   const openingBalance = transactions
-    .filter(t => {
-      const tDate = getEffectiveTxDate(t);
-      if (!tDate) return false;
-      return tDate < startOfDay(dateRange.startDate);
-    })
     .reduce((acc, t) => {
       const isPaid = t.status === 'pago' || t.status === 'completed' || t.status === 'parcial';
       if (!isPaid) return acc;
-      // Para parcial, usar apenas o valor efetivamente pago
+
+      const startDate = startOfDay(dateRange.startDate);
+      const entries = parsePaymentHistory(t).filter((entry) => entry.paymentDate < startDate);
+
+      if (entries.length > 0) {
+        return acc + entries.reduce((sum, entry, idx) => {
+          const isLastEntry = idx === entries.length - 1;
+          const interest = isLastEntry ? (parseFloat(t.interest) || 0) : 0;
+          const amount = entry.amount + interest;
+          const cardFee = t.hasCardFee && (t.type === 'venda' || t.type === 'income' || t.type === 'entrada')
+            ? (Math.abs(entry.amount) * (parseFloat(t.cardFee) || 0)) / 100
+            : 0;
+          const netAmount = (t.type === 'venda' || t.type === 'income' || t.type === 'entrada')
+            ? amount - cardFee
+            : -amount;
+          return sum + netAmount;
+        }, 0);
+      }
+
       const isParcial = t.status === 'parcial';
       const baseAmount = isParcial ? (parseFloat(t.paidAmount) || 0) : (parseFloat(t.amount) || 0);
       const amount = baseAmount + (parseFloat(t.interest) || 0);
-      // Considerar taxa de cartão para receitas
-      const cardFee = t.hasCardFee && (t.type === 'venda' || t.type === 'income' || t.type === 'entrada') 
-        ? (Math.abs(baseAmount) * (parseFloat(t.cardFee) || 0)) / 100 
+      const cardFee = t.hasCardFee && (t.type === 'venda' || t.type === 'income' || t.type === 'entrada')
+        ? (Math.abs(baseAmount) * (parseFloat(t.cardFee) || 0)) / 100
         : 0;
-      const netAmount = (t.type === 'venda' || t.type === 'income' || t.type === 'entrada') 
-        ? amount - cardFee 
+      const netAmount = (t.type === 'venda' || t.type === 'income' || t.type === 'entrada')
+        ? amount - cardFee
         : -amount;
+
+      const tDate = getEffectiveTxDate(t);
+      if (!tDate || tDate >= startDate) return acc;
+
       return acc + netAmount;
     }, 0);
 
