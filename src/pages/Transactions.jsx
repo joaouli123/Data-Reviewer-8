@@ -844,7 +844,7 @@ export default function TransactionsPage() {
                                         </span>
                                         {t.status === 'parcial' && t.paidAmount && (
                                             <span className="text-[10px] text-amber-600 font-normal">
-                                                de R$ {parseFloat(t.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                de R$ {parseFloat(t.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · falta R$ {(parseFloat(t.amount || 0) - (sumPaymentHistory(t) || parseFloat(t.paidAmount || 0))).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                             </span>
                                         )}
                                         {t.hasCardFee && parseFloat(t.cardFee) > 0 && (

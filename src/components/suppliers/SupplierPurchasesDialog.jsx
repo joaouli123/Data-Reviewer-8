@@ -423,14 +423,17 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                           </div>
                           <div>
                             <p className="font-semibold text-slate-900">
-                              R$ {(isParcial && saldoDevedor > 0
-                                ? saldoDevedor
+                              R$ {(isParcial && valorPago > 0
+                                ? valorPago
                                 : Math.abs(parseFloat(installment.amount || 0) + parseFloat(installment.interest || 0))
                               ).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              {isParcial && valorPago > 0 && (
+                                <span className="text-xs font-normal text-blue-600 ml-1">pago</span>
+                              )}
                             </p>
                             {isParcial && saldoDevedor > 0 && (
                               <p className="text-xs text-slate-400">
-                                de R$ {valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                de R$ {valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} · falta R$ {saldoDevedor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                               </p>
                             )}
                             <p className="text-xs text-slate-500">
