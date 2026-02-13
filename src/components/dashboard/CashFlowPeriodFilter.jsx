@@ -9,38 +9,17 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { format, addMonths, startOfDay, endOfDay } from 'date-fns';
+import { format, startOfDay, endOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-export default function CashFlowPeriodFilter({ onPeriodChange, minDate = null, maxDate = null }) {
-  const [period, setPeriod] = useState('allTime');
+export default function CashFlowPeriodFilter({ onPeriodChange }) {
+  const [period, setPeriod] = useState('next30Days');
   const [customLabel, setCustomLabel] = useState(null);
   const [customOpen, setCustomOpen] = useState(false);
   const [dateRange, setDateRange] = useState({ from: undefined, to: undefined });
   const [initialized, setInitialized] = useState(false);
 
-  // Use provided minDate/maxDate or default to smart calculation
-  const getDefaultStart = () => {
-    if (minDate) return new Date(minDate);
-    const today = new Date();
-    today.setMonth(today.getMonth() - 3); // Default to 3 months back
-    return today;
-  };
-
-  const getDefaultEnd = () => {
-    if (maxDate) return addMonths(new Date(maxDate), 12);
-    return addMonths(new Date(), 12); // 12 months forward
-  };
-
   const periodOptions = {
-    allTime: {
-      label: 'Todo o Período',
-      getValue: () => {
-        const start = getDefaultStart();
-        const end = getDefaultEnd();
-        return { startDate: start, endDate: end, label: 'Todo o Período' };
-      }
-    },
     next30Days: {
       label: 'Próximos 30 dias',
       getValue: () => {
@@ -108,7 +87,7 @@ export default function CashFlowPeriodFilter({ onPeriodChange, minDate = null, m
 
   useEffect(() => {
     if (!initialized) {
-      const periodData = periodOptions.allTime.getValue();
+      const periodData = periodOptions.next30Days.getValue();
       onPeriodChange(periodData);
       setInitialized(true);
     }

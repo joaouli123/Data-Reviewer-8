@@ -291,7 +291,7 @@ export default function CashFlowForecastPage() {
   }, [transactionsData, saleInstallments, purchaseInstallments]);
   const [expandedMonths, setExpandedMonths] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(20);
 
   if (isLoading || !company?.id) {
     return (
