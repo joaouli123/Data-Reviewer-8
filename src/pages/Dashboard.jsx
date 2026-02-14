@@ -477,7 +477,7 @@ export default function DashboardPage() {
           <PeriodFilter 
             onPeriodChange={setDateRange}
             mode="days"
-            defaultPeriod="today"
+            defaultPeriod="last30Days"
           />
           {hasPermission('create_transactions') && (
             <Button 
