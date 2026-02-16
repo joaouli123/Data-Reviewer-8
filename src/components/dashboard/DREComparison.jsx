@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -55,7 +55,7 @@ const VariationBadge = ({ current, previous }) => {
 
 export default function DREComparison({ transactions = [], companyName = "" }) {
   const [monthsToShow, setMonthsToShow] = useState(12);
-  const [scrollOffset, setScrollOffset] = useState(0);
+  const [scrollOffset, setScrollOffset] = useState(6);
   
   // Calculate DRE data for each month
   const dreData = useMemo(() => {
@@ -150,6 +150,11 @@ export default function DREComparison({ transactions = [], companyName = "" }) {
   const canScrollLeft = scrollOffset > 0;
   const canScrollRight = scrollOffset < dreData.length - 6;
 
+  useEffect(() => {
+    const maxOffset = Math.max(0, dreData.length - 6);
+    setScrollOffset((current) => Math.min(current, maxOffset));
+  }, [dreData.length]);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -162,7 +167,14 @@ export default function DREComparison({ transactions = [], companyName = "" }) {
         </div>
         
         <div className="flex gap-2 flex-wrap">
-          <Select value={monthsToShow.toString()} onValueChange={(v) => { setMonthsToShow(parseInt(v)); setScrollOffset(0); }}>
+          <Select
+            value={monthsToShow.toString()}
+            onValueChange={(v) => {
+              const nextMonths = parseInt(v, 10);
+              setMonthsToShow(nextMonths);
+              setScrollOffset(Math.max(0, nextMonths - 6));
+            }}
+          >
             <SelectTrigger className="w-[160px]">
               <CalendarIcon className="w-4 h-4 mr-2" />
               <SelectValue />
