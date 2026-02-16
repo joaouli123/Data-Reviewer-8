@@ -70,6 +70,15 @@ export default function DashboardPage() {
   // Initialize with local day bounds to avoid UTC shifts
   const getInitialDateRange = () => {
     const today = new Date();
+    return {
+      startDate: startOfDay(today),
+      endDate: endOfDay(today),
+      label: 'Hoje'
+    };
+  };
+
+  const getInitialCashFlowDateRange = () => {
+    const today = new Date();
     const thirtyDaysAgo = subDays(today, 29);
     return {
       startDate: startOfDay(thirtyDaysAgo),
@@ -79,6 +88,7 @@ export default function DashboardPage() {
   };
 
   const [dateRange, setDateRange] = useState(getInitialDateRange());
+  const [cashFlowDateRange] = useState(getInitialCashFlowDateRange());
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [showReceivablesDialog, setShowReceivablesDialog] = useState(false);
   const [showPayablesDialog, setShowPayablesDialog] = useState(false);
@@ -241,10 +251,10 @@ export default function DashboardPage() {
 
     const netProfit = totalRevenue - totalExpenses;
 
-    // Contas a receber/pagar - USA O FILTRO SELECIONADO para transações PENDENTES
+    // Contas a receber/pagar - usa período próprio de Fluxo de Caixa (fixo em últimos 30 dias)
     // Usar data local (sem timezone UTC) para evitar problemas de comparação
-    const periodStart = new Date(dateRange.startDate.getFullYear(), dateRange.startDate.getMonth(), dateRange.startDate.getDate(), 0, 0, 0, 0);
-    const periodEnd = new Date(dateRange.endDate.getFullYear(), dateRange.endDate.getMonth(), dateRange.endDate.getDate(), 23, 59, 59, 999);
+    const periodStart = new Date(cashFlowDateRange.startDate.getFullYear(), cashFlowDateRange.startDate.getMonth(), cashFlowDateRange.startDate.getDate(), 0, 0, 0, 0);
+    const periodEnd = new Date(cashFlowDateRange.endDate.getFullYear(), cashFlowDateRange.endDate.getMonth(), cashFlowDateRange.endDate.getDate(), 23, 59, 59, 999);
     
     // Helper para verificar se transação está pendente (inclui parcial com saldo restante)
     const isPendingTransaction = (t) => {
@@ -477,7 +487,7 @@ export default function DashboardPage() {
           <PeriodFilter 
             onPeriodChange={setDateRange}
             mode="days"
-            defaultPeriod="last30Days"
+            defaultPeriod="today"
           />
           {hasPermission('create_transactions') && (
             <Button 
@@ -536,7 +546,7 @@ export default function DashboardPage() {
       <div className="bg-white dark:bg-slate-900 rounded-lg p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
         <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
           <Wallet className="w-4 h-4 text-primary" />
-          Fluxo de Caixa Futuro ({dateRange.label || `${format(dateRange.startDate, 'dd/MM')} - ${format(dateRange.endDate, 'dd/MM')}`})
+          Fluxo de Caixa Futuro ({cashFlowDateRange.label || `${format(cashFlowDateRange.startDate, 'dd/MM')} - ${format(cashFlowDateRange.endDate, 'dd/MM')}`})
         </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -653,20 +663,20 @@ export default function DashboardPage() {
       <FutureTransactionsDialog
         open={showReceivablesDialog}
         onOpenChange={setShowReceivablesDialog}
-        title={`Contas a Receber (${dateRange.label || format(dateRange.startDate, 'dd/MM') + ' - ' + format(dateRange.endDate, 'dd/MM')})`}
+        title={`Contas a Receber (${cashFlowDateRange.label || format(cashFlowDateRange.startDate, 'dd/MM') + ' - ' + format(cashFlowDateRange.endDate, 'dd/MM')})`}
         transactions={metrics.futureRevenueTransactions || []}
         type="income"
-        periodLabel={dateRange.label || `${format(dateRange.startDate, 'dd/MM/yyyy')} - ${format(dateRange.endDate, 'dd/MM/yyyy')}`}
+        periodLabel={cashFlowDateRange.label || `${format(cashFlowDateRange.startDate, 'dd/MM/yyyy')} - ${format(cashFlowDateRange.endDate, 'dd/MM/yyyy')}`}
       />
 
       {/* Dialog de Contas a Pagar */}
       <FutureTransactionsDialog
         open={showPayablesDialog}
         onOpenChange={setShowPayablesDialog}
-        title={`Contas a Pagar (${dateRange.label || format(dateRange.startDate, 'dd/MM') + ' - ' + format(dateRange.endDate, 'dd/MM')})`}
+        title={`Contas a Pagar (${cashFlowDateRange.label || format(cashFlowDateRange.startDate, 'dd/MM') + ' - ' + format(cashFlowDateRange.endDate, 'dd/MM')})`}
         transactions={metrics.futureExpensesTransactions || []}
         type="expense"
-        periodLabel={dateRange.label || `${format(dateRange.startDate, 'dd/MM/yyyy')} - ${format(dateRange.endDate, 'dd/MM/yyyy')}`}
+        periodLabel={cashFlowDateRange.label || `${format(cashFlowDateRange.startDate, 'dd/MM/yyyy')} - ${format(cashFlowDateRange.endDate, 'dd/MM/yyyy')}`}
       />
     </div>
   );
