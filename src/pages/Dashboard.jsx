@@ -79,11 +79,11 @@ export default function DashboardPage() {
 
   const getInitialCashFlowDateRange = () => {
     const today = new Date();
-    const thirtyDaysAgo = subDays(today, 29);
+    const nextThirtyDays = addDays(today, 30);
     return {
-      startDate: startOfDay(thirtyDaysAgo),
-      endDate: endOfDay(today),
-      label: 'Últimos 30 dias'
+      startDate: startOfDay(today),
+      endDate: endOfDay(nextThirtyDays),
+      label: 'Próximos 30 dias'
     };
   };
 
