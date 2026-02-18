@@ -251,10 +251,13 @@ export default function DashboardPage() {
 
     const netProfit = totalRevenue - totalExpenses;
 
-    // Contas a receber/pagar - usa período próprio de Fluxo de Caixa (fixo em últimos 30 dias)
-    // Usar data local (sem timezone UTC) para evitar problemas de comparação
-    const periodStart = new Date(cashFlowDateRange.startDate.getFullYear(), cashFlowDateRange.startDate.getMonth(), cashFlowDateRange.startDate.getDate(), 0, 0, 0, 0);
-    const periodEnd = new Date(cashFlowDateRange.endDate.getFullYear(), cashFlowDateRange.endDate.getMonth(), cashFlowDateRange.endDate.getDate(), 23, 59, 59, 999);
+    // Período selecionado (filtro de cima) - sempre respeitado pelos KPIs
+    const selectedPeriodStart = new Date(dateRange.startDate.getFullYear(), dateRange.startDate.getMonth(), dateRange.startDate.getDate(), 0, 0, 0, 0);
+    const selectedPeriodEnd = new Date(dateRange.endDate.getFullYear(), dateRange.endDate.getMonth(), dateRange.endDate.getDate(), 23, 59, 59, 999);
+
+    // Fluxo de caixa futuro - período próprio (fixo em próximos 30 dias), NÃO depende do filtro de cima
+    const cashFlowPeriodStart = new Date(cashFlowDateRange.startDate.getFullYear(), cashFlowDateRange.startDate.getMonth(), cashFlowDateRange.startDate.getDate(), 0, 0, 0, 0);
+    const cashFlowPeriodEnd = new Date(cashFlowDateRange.endDate.getFullYear(), cashFlowDateRange.endDate.getMonth(), cashFlowDateRange.endDate.getDate(), 23, 59, 59, 999);
     
     // Helper para verificar se transação está pendente (inclui parcial com saldo restante)
     const isPendingTransaction = (t) => {
@@ -338,58 +341,74 @@ export default function DashboardPage() {
         0
       );
     };
-    
-    const futureRevenueTransactions = allTransactions
-      .map((t) => ({ ...t, effectiveDate: getEffectiveDueDate(t) }))
-      .filter(t => {
-      const tDate = t.effectiveDate;
-      if (!tDate) return false;
-      // Filtra apenas receitas PENDENTES com vencimento no período do filtro
-      const isIncome = isIncomeType(t.type);
-      const isPending = isPendingTransaction(t);
-      const isInRange = tDate >= periodStart && tDate <= periodEnd;
-      
-      return isIncome && isPending && isInRange;
-    });
 
-    const futureRevenue = futureRevenueTransactions.reduce((sum, t) => {
-      const statusVal = String(t.status || '').toLowerCase();
-      const isParcial = statusVal === 'parcial';
-      // Para parcial: usa apenas o saldo restante (amount - paidAmount)
-      const amount = isParcial
-        ? Math.abs(parseFloat(t.amount || 0)) - Math.abs(parseFloat(t.paidAmount || 0))
-        : Math.abs(parseFloat(t.amount || 0));
-      const interest = isParcial ? 0 : parseFloat(t.interest || 0); // juros já contabilizados no pagamento parcial
-      const cardFee = t.hasCardFee ? (amount * (parseFloat(t.cardFee) || 0)) / 100 : 0;
-      return sum + amount + interest - cardFee;
-    }, 0);
-    
-    const futureExpensesTransactions = allTransactions
-      .map((t) => ({ ...t, effectiveDate: getEffectiveDueDate(t) }))
-      .filter(t => {
-      const tDate = t.effectiveDate;
-      if (!tDate) return false;
-      // Filtra apenas despesas PENDENTES com vencimento no período do filtro
-      const isExpense = isExpenseType(t.type);
-      const isPending = isPendingTransaction(t);
-      const isInRange = tDate >= periodStart && tDate <= periodEnd;
-      return isExpense && isPending && isInRange;
-    });
-    
-    const futureExpenses = futureExpensesTransactions.reduce((sum, t) => {
-      const statusVal = String(t.status || '').toLowerCase();
-      const isParcial = statusVal === 'parcial';
-      // Para parcial: usa apenas o saldo restante (amount - paidAmount)
-      const amount = isParcial
-        ? Math.abs(parseFloat(t.amount || 0)) - Math.abs(parseFloat(t.paidAmount || 0))
-        : Math.abs(parseFloat(t.amount || 0));
-      const interest = isParcial ? 0 : parseFloat(t.interest || 0);
-      return sum + amount + interest;
-    }, 0);
+    const buildPendingByRange = (rangeStart, rangeEnd) => {
+      const pendingIncomeTransactions = allTransactions
+        .map((t) => ({ ...t, effectiveDate: getEffectiveDueDate(t) }))
+        .filter((t) => {
+          const tDate = t.effectiveDate;
+          if (!tDate) return false;
+          const isIncome = isIncomeType(t.type);
+          const isPending = isPendingTransaction(t);
+          const isInRange = tDate >= rangeStart && tDate <= rangeEnd;
+          return isIncome && isPending && isInRange;
+        });
 
-    // Count future transactions
-    const futureSaleCount = futureRevenueTransactions.length;
-    const futurePurchaseCount = futureExpensesTransactions.length;
+      const pendingIncomeAmount = pendingIncomeTransactions.reduce((sum, t) => {
+        const statusVal = String(t.status || '').toLowerCase();
+        const isParcial = statusVal === 'parcial';
+        const amount = isParcial
+          ? Math.abs(parseFloat(t.amount || 0)) - Math.abs(parseFloat(t.paidAmount || 0))
+          : Math.abs(parseFloat(t.amount || 0));
+        const interest = isParcial ? 0 : parseFloat(t.interest || 0);
+        const cardFee = t.hasCardFee ? (amount * (parseFloat(t.cardFee) || 0)) / 100 : 0;
+        return sum + amount + interest - cardFee;
+      }, 0);
+
+      const pendingExpenseTransactions = allTransactions
+        .map((t) => ({ ...t, effectiveDate: getEffectiveDueDate(t) }))
+        .filter((t) => {
+          const tDate = t.effectiveDate;
+          if (!tDate) return false;
+          const isExpense = isExpenseType(t.type);
+          const isPending = isPendingTransaction(t);
+          const isInRange = tDate >= rangeStart && tDate <= rangeEnd;
+          return isExpense && isPending && isInRange;
+        });
+
+      const pendingExpenseAmount = pendingExpenseTransactions.reduce((sum, t) => {
+        const statusVal = String(t.status || '').toLowerCase();
+        const isParcial = statusVal === 'parcial';
+        const amount = isParcial
+          ? Math.abs(parseFloat(t.amount || 0)) - Math.abs(parseFloat(t.paidAmount || 0))
+          : Math.abs(parseFloat(t.amount || 0));
+        const interest = isParcial ? 0 : parseFloat(t.interest || 0);
+        return sum + amount + interest;
+      }, 0);
+
+      return {
+        pendingIncomeTransactions,
+        pendingExpenseTransactions,
+        pendingIncomeAmount,
+        pendingExpenseAmount,
+      };
+    };
+    
+    // Contas a receber/pagar (KPIs) - respeita o período selecionado
+    const selectedPending = buildPendingByRange(selectedPeriodStart, selectedPeriodEnd);
+    const receivablesAmount = selectedPending.pendingIncomeAmount;
+    const payablesAmount = selectedPending.pendingExpenseAmount;
+    const receivablesCount = selectedPending.pendingIncomeTransactions.length;
+    const payablesCount = selectedPending.pendingExpenseTransactions.length;
+
+    // Fluxo de caixa futuro - próximos 30 dias (fixo)
+    const cashFlowPending = buildPendingByRange(cashFlowPeriodStart, cashFlowPeriodEnd);
+    const cashFlowFutureRevenue = cashFlowPending.pendingIncomeAmount;
+    const cashFlowFutureExpenses = cashFlowPending.pendingExpenseAmount;
+    const cashFlowFutureRevenueTransactions = cashFlowPending.pendingIncomeTransactions;
+    const cashFlowFutureExpensesTransactions = cashFlowPending.pendingExpenseTransactions;
+    const cashFlowFutureRevenueCount = cashFlowFutureRevenueTransactions.length;
+    const cashFlowFutureExpensesCount = cashFlowFutureExpensesTransactions.length;
 
     // Chart data - always last 6 months (fill zeros if no data)
     const monthsToShow = Array.from({ length: 6 }, (_, i) => startOfMonth(subMonths(new Date(), 5 - i)));
@@ -455,12 +474,18 @@ export default function DashboardPage() {
       totalRevenue,
       totalExpenses,
       netProfit,
-      futureRevenue,
-      futureExpenses,
-      futureRevenueCount: futureSaleCount,
-      futureExpensesCount: futurePurchaseCount,
-      futureRevenueTransactions,
-      futureExpensesTransactions,
+      receivablesAmount,
+      payablesAmount,
+      receivablesCount,
+      payablesCount,
+      receivablesTransactions: selectedPending.pendingIncomeTransactions,
+      payablesTransactions: selectedPending.pendingExpenseTransactions,
+      cashFlowFutureRevenue,
+      cashFlowFutureExpenses,
+      cashFlowFutureRevenueCount,
+      cashFlowFutureExpensesCount,
+      cashFlowFutureRevenueTransactions,
+      cashFlowFutureExpensesTransactions,
       chartData,
       filteredTransactions
     };
@@ -523,9 +548,9 @@ export default function DashboardPage() {
 
         <KPIWidget
           title="Contas a receber"
-          value={`R$ ${metrics.futureRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+          value={`R$ ${metrics.receivablesAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           icon={Clock}
-          trendValue={`${metrics.futureRevenueCount} parcelas`}
+          trendValue={`${metrics.receivablesCount} parcelas`}
           trend="up"
           className="text-emerald-600"
           onClick={() => setShowReceivablesDialog(true)}
@@ -533,9 +558,9 @@ export default function DashboardPage() {
 
         <KPIWidget
           title="Contas a pagar"
-          value={`R$ ${metrics.futureExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+          value={`R$ ${metrics.payablesAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           icon={Clock}
-          trendValue={`${metrics.futureExpensesCount} parcelas`}
+          trendValue={`${metrics.payablesCount} parcelas`}
           trend="down"
           className="text-rose-600"
           onClick={() => setShowPayablesDialog(true)}
@@ -553,21 +578,21 @@ export default function DashboardPage() {
           <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
             <p className="text-xs font-medium text-emerald-700 dark:text-emerald-400 mb-1">Receitas previstas</p>
             <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
-              R$ {metrics.futureRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              R$ {metrics.cashFlowFutureRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
 
           <div className="bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 rounded-lg p-4">
             <p className="text-xs font-medium text-rose-700 dark:text-rose-400 mb-1">Despesas previstas</p>
             <p className="text-2xl font-bold text-rose-700 dark:text-rose-300">
-              R$ {metrics.futureExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              R$ {metrics.cashFlowFutureExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
 
           <div className="bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800 rounded-lg p-4">
             <p className="text-xs font-medium text-sky-700 dark:text-sky-400 mb-1">Saldo projetado</p>
-            <p className={`text-2xl font-bold ${metrics.futureRevenue - metrics.futureExpenses >= 0 ? 'text-sky-700 dark:text-sky-300' : 'text-slate-700 dark:text-slate-300'}`}>
-              {metrics.futureRevenue - metrics.futureExpenses >= 0 ? '+' : ''} R$ {(metrics.futureRevenue - metrics.futureExpenses).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            <p className={`text-2xl font-bold ${metrics.cashFlowFutureRevenue - metrics.cashFlowFutureExpenses >= 0 ? 'text-sky-700 dark:text-sky-300' : 'text-slate-700 dark:text-slate-300'}`}>
+              {metrics.cashFlowFutureRevenue - metrics.cashFlowFutureExpenses >= 0 ? '+' : ''} R$ {(metrics.cashFlowFutureRevenue - metrics.cashFlowFutureExpenses).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
         </div>
@@ -663,20 +688,20 @@ export default function DashboardPage() {
       <FutureTransactionsDialog
         open={showReceivablesDialog}
         onOpenChange={setShowReceivablesDialog}
-        title={`Contas a Receber (${cashFlowDateRange.label || format(cashFlowDateRange.startDate, 'dd/MM') + ' - ' + format(cashFlowDateRange.endDate, 'dd/MM')})`}
-        transactions={metrics.futureRevenueTransactions || []}
+        title={`Contas a Receber (${dateRange.label || format(dateRange.startDate, 'dd/MM') + ' - ' + format(dateRange.endDate, 'dd/MM')})`}
+        transactions={metrics.receivablesTransactions || []}
         type="income"
-        periodLabel={cashFlowDateRange.label || `${format(cashFlowDateRange.startDate, 'dd/MM/yyyy')} - ${format(cashFlowDateRange.endDate, 'dd/MM/yyyy')}`}
+        periodLabel={dateRange.label || `${format(dateRange.startDate, 'dd/MM/yyyy')} - ${format(dateRange.endDate, 'dd/MM/yyyy')}`}
       />
 
       {/* Dialog de Contas a Pagar */}
       <FutureTransactionsDialog
         open={showPayablesDialog}
         onOpenChange={setShowPayablesDialog}
-        title={`Contas a Pagar (${cashFlowDateRange.label || format(cashFlowDateRange.startDate, 'dd/MM') + ' - ' + format(cashFlowDateRange.endDate, 'dd/MM')})`}
-        transactions={metrics.futureExpensesTransactions || []}
+        title={`Contas a Pagar (${dateRange.label || format(dateRange.startDate, 'dd/MM') + ' - ' + format(dateRange.endDate, 'dd/MM')})`}
+        transactions={metrics.payablesTransactions || []}
         type="expense"
-        periodLabel={cashFlowDateRange.label || `${format(cashFlowDateRange.startDate, 'dd/MM/yyyy')} - ${format(cashFlowDateRange.endDate, 'dd/MM/yyyy')}`}
+        periodLabel={dateRange.label || `${format(dateRange.startDate, 'dd/MM/yyyy')} - ${format(dateRange.endDate, 'dd/MM/yyyy')}`}
       />
     </div>
   );
