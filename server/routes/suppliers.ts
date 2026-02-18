@@ -22,7 +22,13 @@ export function registerSupplierRoutes(app: Express) {
       if (!req.user.companyId) return res.status(400).json({ error: "Company ID missing" });
       if (!await checkPermission(req, 'view_suppliers')) return res.status(403).json({ error: "Acesso negado" });
       const suppliers = await storage.getSuppliers(req.user.companyId);
-      res.json(suppliers.map((s: any) => ({ ...s, totalPurchases: Number(s.totalPurchases || 0) })));
+      res.json(suppliers.map((s: any) => ({
+        ...s,
+        totalPurchases: Number(s.totalPurchases || 0),
+        totalPaid: Number(s.totalPaid || 0),
+        totalOpen: Number(s.totalOpen || 0),
+        totalOverdue: Number(s.totalOverdue || 0),
+      })));
     } catch (error) {
       console.error("[Suppliers] list error", error);
       res.status(500).json({ error: "Failed to fetch suppliers" });
