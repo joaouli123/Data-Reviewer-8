@@ -22,7 +22,13 @@ export function registerCustomerRoutes(app: Express) {
       if (!req.user.companyId) return res.status(400).json({ error: "Company ID missing" });
       if (!await checkPermission(req, 'view_customers')) return res.status(403).json({ error: "Acesso negado" });
       const customers = await storage.getCustomers(req.user.companyId);
-      res.json(customers.map((c: any) => ({ ...c, totalSales: Number(c.totalSales || 0) })));
+      res.json(customers.map((c: any) => ({
+        ...c,
+        totalSales: Number(c.totalSales || 0),
+        totalReceived: Number(c.totalReceived || 0),
+        totalOpen: Number(c.totalOpen || 0),
+        totalOverdue: Number(c.totalOverdue || 0),
+      })));
     } catch (error) {
       console.error("[Customers] list error", error);
       res.status(500).json({ error: "Failed to fetch customers" });

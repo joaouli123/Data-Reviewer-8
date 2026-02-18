@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Mail, Phone, User, MoreHorizontal, Trash2, TrendingUp, Eye, Edit } from 'lucide-react';
+import { Plus, Search, User, MoreHorizontal, Trash2, TrendingUp, Eye, Edit } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -17,7 +17,6 @@ import CustomerSalesDialog from '../components/customers/CustomerSalesDialog';
 import NewSaleDialog from '../components/customers/NewSaleDialog';
 import CustomerFormDialog from '../components/customers/CustomerFormDialog';
 import Pagination from '../components/Pagination';
-import { formatPhoneNumber, formatCPF, formatCNPJ } from '@/utils/masks';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function CustomersPage() {
@@ -129,6 +128,10 @@ export default function CustomersPage() {
     return customer?.totalSales || 0;
   };
 
+  const formatMoney = (value) => {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value || 0));
+  };
+
   const filteredCustomers = (customers || [])
     .filter(c => {
       const search = searchTerm.toLowerCase();
@@ -191,10 +194,10 @@ export default function CustomersPage() {
                 <TableHeader className="bg-slate-50">
                     <TableRow>
                         <TableHead className="pl-6 text-left">Nome</TableHead>
-                        <TableHead className="text-left">CPF/CNPJ</TableHead>
-                        <TableHead className="text-left">Email</TableHead>
-                        <TableHead className="text-left">Telefone</TableHead>
                         <TableHead className="text-right">Total em Vendas</TableHead>
+                  <TableHead className="text-right">Total Recebido</TableHead>
+                  <TableHead className="text-right">Total em Aberto</TableHead>
+                  <TableHead className="text-right">Total em Atraso</TableHead>
                         <TableHead className="text-right pr-6">Ações</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -210,26 +213,18 @@ export default function CustomersPage() {
                                         <span className="font-medium text-slate-900">{c.name}</span>
                                     </div>
                                 </TableCell>
-                                <TableCell className="text-left">
-                                    {c.cpf ? (
-                                      <span className="font-medium text-slate-700">{formatCPF(c.cpf)}</span>
-                                    ) : c.cnpj ? (
-                                      <span className="font-medium text-slate-700">{formatCNPJ(c.cnpj)}</span>
-                                    ) : (
-                                      <span className="text-slate-400">-</span>
-                                    )}
-                                </TableCell>
-                                <TableCell className="text-left">
-                                    {c.email ? <div className="flex items-center gap-2 text-sm text-slate-700"><Mail className="w-3 h-3" /> {c.email}</div> : <span className="text-slate-400">-</span>}
-                                </TableCell>
-                                <TableCell className="text-left">
-                                    {c.phone ? <div className="flex items-center gap-2 text-sm text-slate-700"><Phone className="w-3 h-3" /> {formatPhoneNumber(c.phone)}</div> : <span className="text-slate-400">-</span>}
-                                </TableCell>
                                 <TableCell className="text-right">
-                                    <div className="font-semibold text-emerald-600">
-                                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(c.totalSales || 0)}
-                                    </div>
+                                      <div className="font-semibold text-emerald-600">{formatMoney(c.totalSales)}</div>
                                 </TableCell>
+                                    <TableCell className="text-right">
+                                      <div className="font-semibold text-slate-800">{formatMoney(c.totalReceived)}</div>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                      <div className="font-semibold text-amber-700">{formatMoney(c.totalOpen)}</div>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                      <div className="font-semibold text-rose-700">{formatMoney(c.totalOverdue)}</div>
+                                    </TableCell>
                                 <TableCell className="text-right pr-6">
                                     <div className="flex justify-end">
                                         <DropdownMenu>
@@ -277,7 +272,7 @@ export default function CustomersPage() {
                         ))
                     ) : (
                         <TableRow>
-                            <TableCell colSpan={6} className="text-center py-10 text-slate-500">
+                        <TableCell colSpan={6} className="text-center py-10 text-slate-500">
                                 Nenhum cliente encontrado.
                             </TableCell>
                         </TableRow>

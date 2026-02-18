@@ -275,11 +275,57 @@ export class DatabaseStorage {
     // Use SQL aggregation instead of loading all transactions into memory
     const result = await db.execute(sql`
       SELECT c.*,
-        COALESCE(t.total_sales, 0) AS total_sales
+        COALESCE(t.total_sales, 0) AS total_sales,
+        COALESCE(t.total_received, 0) AS total_received,
+        COALESCE(t.total_open, 0) AS total_open,
+        COALESCE(t.total_overdue, 0) AS total_overdue
       FROM customers c
       LEFT JOIN (
         SELECT customer_id,
-          SUM(ABS(COALESCE(amount, 0) + COALESCE(interest, 0))) AS total_sales
+          SUM(ABS(COALESCE(amount, 0) + COALESCE(interest, 0))) AS total_sales,
+
+          -- Total recebido: pago/completo conta valor total; parcial conta apenas o que foi pago
+          SUM(
+            CASE
+              WHEN lower(COALESCE(status, '')) IN ('completed','pago','paid','approved','aprovado') OR payment_date IS NOT NULL
+                THEN ABS(COALESCE(amount, 0) + COALESCE(interest, 0))
+              WHEN lower(COALESCE(status, '')) = 'parcial'
+                THEN ABS(COALESCE(paid_amount, 0) + COALESCE(interest, 0))
+              ELSE 0
+            END
+          ) AS total_received,
+
+          -- Total em aberto: pendente/agendado + saldo restante de parcial
+          SUM(
+            CASE
+              WHEN lower(COALESCE(status, '')) = 'parcial' AND (ABS(COALESCE(amount, 0)) - ABS(COALESCE(paid_amount, 0))) > 0.01
+                THEN GREATEST(ABS(COALESCE(amount, 0)) - ABS(COALESCE(paid_amount, 0)), 0)
+              WHEN lower(COALESCE(status, '')) IN ('pendente','agendado','pending','scheduled')
+                THEN ABS(COALESCE(amount, 0))
+              WHEN payment_date IS NULL AND (status IS NULL OR lower(COALESCE(status, '')) NOT IN ('completed','pago','paid','approved','aprovado'))
+                THEN ABS(COALESCE(amount, 0))
+              ELSE 0
+            END
+          ) AS total_open,
+
+          -- Total em atraso: em aberto com vencimento antes de hoje
+          SUM(
+            CASE
+              WHEN (date::date < CURRENT_DATE) AND (
+                (lower(COALESCE(status, '')) = 'parcial' AND (ABS(COALESCE(amount, 0)) - ABS(COALESCE(paid_amount, 0))) > 0.01)
+                OR lower(COALESCE(status, '')) IN ('pendente','agendado','pending','scheduled')
+                OR (payment_date IS NULL AND (status IS NULL OR lower(COALESCE(status, '')) NOT IN ('completed','pago','paid','approved','aprovado')))
+              )
+              THEN (
+                CASE
+                  WHEN lower(COALESCE(status, '')) = 'parcial'
+                    THEN GREATEST(ABS(COALESCE(amount, 0)) - ABS(COALESCE(paid_amount, 0)), 0)
+                  ELSE ABS(COALESCE(amount, 0))
+                END
+              )
+              ELSE 0
+            END
+          ) AS total_overdue
         FROM transactions
         WHERE company_id = ${companyId}
           AND type IN ('venda', 'venda_prazo', 'receita', 'income')
@@ -302,6 +348,9 @@ export class DatabaseStorage {
       status: row.status,
       createdAt: row.created_at,
       totalSales: parseFloat(row.total_sales || '0').toFixed(2),
+      totalReceived: parseFloat(row.total_received || '0').toFixed(2),
+      totalOpen: parseFloat(row.total_open || '0').toFixed(2),
+      totalOverdue: parseFloat(row.total_overdue || '0').toFixed(2),
     }));
   }
 
