@@ -114,6 +114,24 @@ export function registerPaymentRoutes(app: Express) {
 
       // Avoid logging sensitive payment details in production
 
+      // Single source of truth: resolve plan price server-side
+      let resolvedTotalAmount = total_amount;
+      try {
+        const planResult = await db.execute(sql`
+          select price
+          from plan_catalog
+          where key = ${plan} and is_active = true
+          limit 1
+        `);
+        const price = Number((planResult as any)?.rows?.[0]?.price ?? NaN);
+        if (Number.isFinite(price) && price >= 0) {
+          resolvedTotalAmount = price.toFixed(2);
+        }
+      } catch (e) {
+        // Fallback keeps backward compatibility if catalog isn't available
+        console.warn("[Payment] Could not resolve plan price from catalog; using provided total_amount");
+      }
+
       // Calculate expiration date based on plan
       const isLifetime = plan === 'pro';
       const expiresAt = isLifetime ? null : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days for monthly
@@ -210,7 +228,7 @@ export function registerPaymentRoutes(app: Express) {
               'X-Idempotency-Key': `${companyId}-${Date.now()}`,
             },
             body: JSON.stringify({
-              transaction_amount: parseFloat(total_amount),
+              transaction_amount: parseFloat(resolvedTotalAmount),
               payment_method_id: 'pix',
               payer: {
                 email: email,
@@ -308,15 +326,15 @@ export function registerPaymentRoutes(app: Express) {
             };
 
             const boletoPayload = {
-              transaction_amount: Number(parseFloat(total_amount).toFixed(2)),
+              transaction_amount: Number(parseFloat(resolvedTotalAmount).toFixed(2)),
               payment_method_id: methodId,
               payer: payerData,
-              description: `Assinatura Mensal - HUACONTROL`,
+              description: `Assinatura ${String(plan || 'monthly').toUpperCase()} - HUACONTROL`,
               external_reference: companyId,
               date_of_expiration: expirationDate.toISOString(),
               metadata: {
                 company_id: companyId,
-                plan: 'monthly'
+                plan: plan
               }
             };
 
@@ -380,7 +398,7 @@ export function registerPaymentRoutes(app: Express) {
               'X-Idempotency-Key': `${companyId}-${Date.now()}`,
             },
             body: JSON.stringify({
-              transaction_amount: parseFloat(total_amount),
+              transaction_amount: parseFloat(resolvedTotalAmount),
               token: token,
               installments: 1,
               payment_method_id: payment_method_id,
@@ -452,7 +470,7 @@ export function registerPaymentRoutes(app: Express) {
           status: paymentStatus === 'approved' ? 'active' : 'pending',
           subscriberName: `${resolvedPayer?.first_name || ''} ${resolvedPayer?.last_name || ''}`.trim() || email,
           paymentMethod: payment_method_id,
-          amount: total_amount,
+          amount: resolvedTotalAmount,
           isLifetime,
           expiresAt,
           ticket_url: paymentResponse?.transaction_details?.external_resource_url,

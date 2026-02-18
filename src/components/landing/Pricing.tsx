@@ -1,9 +1,37 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Check, Star } from 'lucide-react';
 import { Link } from "wouter";
 
+const formatPlanPrice = (value: number) => {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(Number(value || 0));
+};
+
 const Pricing: React.FC = () => {
+  const [monthlyPrice, setMonthlyPrice] = useState<number>(215);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/public/plans')
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error('Failed to fetch plans'))))
+      .then((data) => {
+        if (cancelled) return;
+        const list = Array.isArray(data) ? data : data?.data || [];
+        const monthly = list.find((p: any) => p?.key === 'monthly');
+        const price = Number(monthly?.price);
+        if (Number.isFinite(price) && price >= 0) setMonthlyPrice(price);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <section className="py-16 md:py-24 bg-white" id="precos">
       <div className="container mx-auto px-4">
@@ -30,7 +58,7 @@ const Pricing: React.FC = () => {
             </div>
             
             <div className="mb-8">
-              <span className="text-6xl font-bold text-white tracking-tighter">R$ 215</span>
+              <span className="text-6xl font-bold text-white tracking-tighter">{formatPlanPrice(monthlyPrice)}</span>
               <span className="text-white font-bold text-sm ml-1">/mês</span>
             </div>
 

@@ -28,6 +28,7 @@ import SuperAdminDashboard from "./pages/admin/super-dashboard";
 import AdminCustomers from "./pages/admin/customers";
 import AdminSubscriptions from "./pages/admin/subscriptions";
 import AdminUsers from "./pages/admin/users";
+import AdminPlans from "./pages/admin/plans";
 import TeamPage from "./pages/settings/Team";
 import Profile from "./pages/Profile";
 import TermsOfUse from "./pages/TermsOfUse";
@@ -59,6 +60,7 @@ function MainApp() {
             <Route path="/admin/customers" component={AdminCustomers} />
             <Route path="/admin/subscriptions" component={AdminSubscriptions} />
             <Route path="/admin/users" component={AdminUsers} />
+            <Route path="/admin/plans" component={AdminPlans} />
           </>
         )}
         

@@ -24,6 +24,7 @@ export default function Layout({ children }) {
     { name: 'Dashboard', icon: LayoutDashboard, path: '/admin', roles: ['super_admin'], permission: null },
     { name: 'Assinaturas', icon: Receipt, path: '/admin/subscriptions', roles: ['super_admin'], permission: null },
     { name: 'Usuários', icon: Users, path: '/admin/users', roles: ['super_admin'], permission: null },
+    { name: 'Planos', icon: Settings, path: '/admin/plans', roles: ['super_admin'], permission: null },
   ];
 
   // Regular user navigation

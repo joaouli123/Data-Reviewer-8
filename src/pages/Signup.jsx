@@ -9,7 +9,16 @@ import { Building2, FileText, User, UserCheck, Mail, Lock, CheckCircle2, UserPlu
 import { formatCNPJ, formatCPF, formatPhone } from "@/utils/masks";
 
 const PLANS = {
-  monthly: { name: 'Mensal', price: 'R$ 215', features: 'Acesso completo ao sistema' },
+  monthly: { name: 'Mensal', features: 'Acesso completo ao sistema' },
+};
+
+const formatPlanPrice = (value) => {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(Number(value || 0));
 };
 
 export default function Signup() {
@@ -35,6 +44,7 @@ export default function Signup() {
   const { signup } = useAuth();
   const [, setLocation] = useLocation();
   const [selectedPlan, setSelectedPlan] = useState("monthly");
+  const [planPrices, setPlanPrices] = useState({ monthly: 215 });
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -43,6 +53,29 @@ export default function Signup() {
       setSelectedPlan(planParam);
       setFormData(prev => ({ ...prev, plan: planParam }));
     }
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/public/plans')
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error('Failed to fetch plans'))))
+      .then((data) => {
+        if (cancelled) return;
+        const list = Array.isArray(data) ? data : data?.data || [];
+        const map = {};
+        list.forEach((p) => {
+          if (!p?.key) return;
+          const price = Number(p.price);
+          if (Number.isFinite(price) && price >= 0) map[p.key] = price;
+        });
+        if (Object.keys(map).length > 0) {
+          setPlanPrices((prev) => ({ ...prev, ...map }));
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleChange = (e) => {
@@ -251,7 +284,7 @@ export default function Signup() {
             <div>
               <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">Plano Selecionado</p>
               <p className="text-lg font-bold text-blue-900 dark:text-blue-100">
-                {PLANS[selectedPlan]?.name} - {PLANS[selectedPlan]?.price}/mês
+                {PLANS[selectedPlan]?.name} - {formatPlanPrice(planPrices[selectedPlan] ?? 215)}/mês
               </p>
               <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">{PLANS[selectedPlan]?.features}</p>
             </div>

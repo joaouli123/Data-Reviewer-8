@@ -7,7 +7,7 @@ import { ArrowLeft, Check, Lock, Zap, Shield, Headphones, CreditCard, Wallet2, B
 import { formatCurrency } from '@/utils/formatters';
 import { useAuth } from '@/contexts/AuthContext';
 
-const PLANS = {
+const DEFAULT_PLANS = {
   monthly: {
     name: 'Mensal',
     price: 215,
@@ -48,6 +48,7 @@ export default function Checkout() {
   const [, setLocation] = useLocation();
   const { user, company, loading: authLoading } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState(null);
+  const [plans, setPlans] = useState(DEFAULT_PLANS);
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState(null);
@@ -80,9 +81,37 @@ export default function Checkout() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const plan = params.get('plan');
-    setSelectedPlan(plan && PLANS[plan] ? plan : 'monthly');
+    setSelectedPlan(plan && plans[plan] ? plan : 'monthly');
     setPaymentMethod('boleto');
     setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/public/plans')
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error('Failed to fetch plans'))))
+      .then((data) => {
+        if (cancelled) return;
+        const list = Array.isArray(data) ? data : data?.data || [];
+        if (!Array.isArray(list) || list.length === 0) return;
+
+        setPlans((prev) => {
+          const next = { ...prev };
+          list.forEach((p) => {
+            const key = p?.key;
+            if (!key || !next[key]) return;
+            const price = Number(p.price);
+            if (Number.isFinite(price) && price >= 0) {
+              next[key] = { ...next[key], price };
+            }
+          });
+          return next;
+        });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -170,7 +199,7 @@ export default function Checkout() {
         companyId: company?.id,
         plan: selectedPlan,
         email: user?.email,
-        total_amount: PLANS[selectedPlan].price.toFixed(2),
+        total_amount: (plans[selectedPlan]?.price ?? 0).toFixed(2),
         payment_method_id: payment_method_id,
         recurring: true,
         payer: {
@@ -247,7 +276,7 @@ export default function Checkout() {
   };
 
   if (loading || !selectedPlan) return <div className="flex items-center justify-center min-h-screen"><div className="text-slate-500">Carregando...</div></div>;
-  const plan = PLANS[selectedPlan];
+  const plan = plans[selectedPlan];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">

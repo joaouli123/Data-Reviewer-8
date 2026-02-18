@@ -156,6 +156,18 @@ export const subscriptions = pgTable("subscriptions", {
   updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
 });
 
+// Plan catalog - global pricing configuration for checkout/LP
+export const planCatalog = pgTable("plan_catalog", {
+  key: text("key").primaryKey(),
+  displayName: text("display_name").notNull(),
+  price: decimal("price", { precision: 15, scale: 2 }).notNull(),
+  currency: text("currency").notNull().default("BRL"),
+  interval: text("interval").notNull().default("month"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
+});
+
 // Users table with RBAC support and Super Admin flag
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

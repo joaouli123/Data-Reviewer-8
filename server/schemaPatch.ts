@@ -44,6 +44,22 @@ export async function ensureCoreSchema() {
         updated_at timestamp NOT NULL DEFAULT now()
       );
 
+      -- Catálogo de Planos (preços globais)
+      CREATE TABLE IF NOT EXISTS plan_catalog (
+        key text PRIMARY KEY,
+        display_name text NOT NULL,
+        price numeric(15, 2) NOT NULL,
+        currency text NOT NULL DEFAULT 'BRL',
+        interval text NOT NULL DEFAULT 'month',
+        is_active boolean NOT NULL DEFAULT true,
+        created_at timestamp NOT NULL DEFAULT now(),
+        updated_at timestamp NOT NULL DEFAULT now()
+      );
+
+      INSERT INTO plan_catalog (key, display_name, price, currency, interval, is_active)
+      VALUES ('monthly', 'Mensal', 215, 'BRL', 'month', true)
+      ON CONFLICT (key) DO NOTHING;
+
       -- Categorias
       CREATE TABLE IF NOT EXISTS categories (
         id varchar PRIMARY KEY DEFAULT gen_random_uuid(),

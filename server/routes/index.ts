@@ -10,6 +10,7 @@ import { registerBankRoutes } from "./bank";
 import { registerCashFlowRoutes } from "./cash-flow";
 import { registerAdminRoutes } from "./admin";
 import { registerPaymentRoutes } from "./payment";
+import { registerPlanRoutes } from "./plans";
 
 export function registerAllRoutes(app: Express) {
   registerAuthRoutes(app);
@@ -23,6 +24,7 @@ export function registerAllRoutes(app: Express) {
   registerCashFlowRoutes(app);
   registerAdminRoutes(app);
   registerPaymentRoutes(app);
+  registerPlanRoutes(app);
   
   // Health check
   app.get("/api/health", (req, res) => {
