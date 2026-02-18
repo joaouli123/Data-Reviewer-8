@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { Transaction } from '@/api/entities';
@@ -83,8 +83,12 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
   };
 
   const isGroupExpanded = (groupId) => {
-    return expandedGroups[groupId] !== false;
+    return !!expandedGroups[groupId];
   };
+
+  useEffect(() => {
+    if (open) setExpandedGroups({});
+  }, [open, supplier?.id]);
 
   const { data: transactionsData = [] } = useQuery({
     queryKey: ['/api/transactions', { supplierId: supplier?.id }],
@@ -332,7 +336,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader className="pb-2">
           <DialogTitle className="text-lg">Compras - {supplier.name}</DialogTitle>
         </DialogHeader>
@@ -364,7 +368,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                 <div key={group.main.id} className="bg-white border border-slate-200 rounded-lg overflow-hidden">
                   {/* Header da compra - clicável para expandir/recolher */}
                   <div 
-                    className="flex items-center justify-between gap-4 p-5 cursor-pointer hover:bg-slate-50 transition-colors"
+                    className="flex items-center justify-between gap-4 p-4 cursor-pointer hover:bg-slate-50 transition-colors"
                     onClick={() => toggleGroup(group.main.id)}
                     data-testid={`toggle-purchase-${group.main.id}`}
                   >
@@ -386,7 +390,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                       </div>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <p className="text-lg font-bold text-slate-900">
+                      <p className="text-base font-bold text-slate-900">
                         R$ {(group.main.isPaid ? Math.abs(group.main.totalAmount) : group.main.totalRemaining).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
                       {!group.main.isPaid && group.main.totalRemaining < Math.abs(group.main.totalAmount) && (
@@ -415,7 +419,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                       const paymentHistory = getPaymentHistory(installment);
                       
                       return (
-                      <div key={installment.id} className="px-5 py-4">
+                      <div key={installment.id} className="px-4 py-3">
                         <div className="flex items-center justify-between gap-4">
                         <div className="flex items-center gap-4 min-w-0">
                           <div className="flex items-center justify-center w-7 h-7 rounded-full border-2 border-slate-300 text-slate-500 text-sm font-medium flex-shrink-0">
@@ -599,7 +603,7 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                         </div>
                         {/* Resumo do pagamento parcial - largura total */}
                         {isParcial && saldoDevedor > 0 && (
-                          <div className="mt-3 ml-11 flex items-center gap-4 p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs">
+                          <div className="mt-2.5 ml-10 flex items-center gap-4 p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs">
                             <div className="flex items-center gap-1.5">
                               <span className="text-slate-500">Original:</span>
                               <span className="font-bold text-slate-700">R$ {valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
@@ -618,29 +622,29 @@ export default function SupplierPurchasesDialog({ supplier, open, onOpenChange }
                         )}
                         {/* Histórico de pagamentos - tabela largura total */}
                         {paymentHistory.length > 0 && (
-                          <div className="mt-2 ml-11 border border-slate-200 rounded-lg overflow-hidden">
-                            <div className="bg-slate-50 px-3 py-1.5 border-b border-slate-200 flex items-center justify-between">
+                          <div className="mt-2 ml-10 border border-slate-200 rounded-lg overflow-hidden">
+                            <div className="bg-slate-50 px-3 py-1 border-b border-slate-200 flex items-center justify-between">
                               <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-wide">Histórico de Pagamentos</span>
                               <span className="text-[10px] text-slate-400 font-medium">{paymentHistory.length} registro(s)</span>
                             </div>
                             <table className="w-full text-xs">
                               <thead>
                                 <tr className="bg-slate-50/50 text-left">
-                                  <th className="pl-3 pr-2 py-1.5 font-semibold text-slate-500 w-8">#</th>
-                                  <th className="px-2 py-1.5 font-semibold text-slate-500">Data</th>
-                                  <th className="px-2 py-1.5 font-semibold text-slate-500 text-right">Valor</th>
-                                  <th className="px-3 py-1.5 font-semibold text-slate-500 text-right">Forma</th>
+                                  <th className="pl-3 pr-2 py-1 font-semibold text-slate-500 w-8">#</th>
+                                  <th className="px-2 py-1 font-semibold text-slate-500">Data</th>
+                                  <th className="px-2 py-1 font-semibold text-slate-500 text-right">Valor</th>
+                                  <th className="px-3 py-1 font-semibold text-slate-500 text-right">Forma</th>
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-slate-100">
                                 {paymentHistory.map((entry, hIdx) => (
                                   <tr key={`${installment.id}-h-${hIdx}`} className="hover:bg-blue-50/40 transition-colors">
-                                    <td className="pl-3 pr-2 py-2">
+                                    <td className="pl-3 pr-2 py-1.5">
                                       <span className="flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 text-blue-700 text-[9px] font-bold">{hIdx + 1}</span>
                                     </td>
-                                    <td className="px-2 py-2 font-medium text-slate-700">{format(parseLocalDate(entry.paymentDate), 'dd/MM/yyyy')}</td>
-                                    <td className="px-2 py-2 text-right font-bold text-blue-600">R$ {Math.abs(parseFloat(entry.amount || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                    <td className="px-3 py-2 text-right text-slate-500">{entry.paymentMethod || '-'}</td>
+                                    <td className="px-2 py-1.5 font-medium text-slate-700">{format(parseLocalDate(entry.paymentDate), 'dd/MM/yyyy')}</td>
+                                    <td className="px-2 py-1.5 text-right font-bold text-blue-600">R$ {Math.abs(parseFloat(entry.amount || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                    <td className="px-3 py-1.5 text-right text-slate-500">{entry.paymentMethod || '-'}</td>
                                   </tr>
                                 ))}
                               </tbody>
